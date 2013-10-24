@@ -111,12 +111,6 @@ QAlderInterviewWidget::~QAlderInterviewWidget()
   this->ModalityLookup.clear();
 }
 
-void initializeTreeWidget()
-{
-  std::vector< vtkSmartPointer< Alder::Modality > > modalityList;
-  Alder::Modality::GetAll( &modalityList );
-}
-
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 vtkMedicalImageViewer* QAlderInterviewWidget::GetViewer()
 {
