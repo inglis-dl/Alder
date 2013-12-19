@@ -177,6 +177,7 @@
     <addaction name="actionOpenInterview"/>
     <addaction name="actionShowAtlas"/>
     <addaction name="actionShowDicomTags"/>
+    <addaction name="actionSaveImage"/>
     <addaction name="separator"/>
     <addaction name="actionLogin"/>
     <addaction name="actionChangePassword"/>
@@ -297,6 +298,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+P</string>
+   </property>
+  </action>
+  <action name="actionSaveImage">
+   <property name="text">
+    <string>Save Image</string>
+   </property>
+   <property name="toolTip">
+    <string>Save image to file</string>
    </property>
   </action>
  </widget>

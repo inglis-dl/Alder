@@ -539,6 +539,12 @@ void QAlderInterviewWidget::updateViewer()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderInterviewWidget::saveImage( const QString& fileName )
+{
+  this->Viewer->WriteSlice( fileName.toStdString().c_str() );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderInterviewWidget::updateEnabled()
 {
   Alder::Application *app = Alder::Application::GetInstance();

@@ -362,6 +362,11 @@ public:
   void SetFrameRate( const int& );
   vtkGetMacro( FrameRate, int );
 
+  /**
+   * Save the current slice view to file
+   */
+   void WriteSlice( const std::string& );
+
 protected:
   vtkMedicalImageViewer();
   ~vtkMedicalImageViewer();
