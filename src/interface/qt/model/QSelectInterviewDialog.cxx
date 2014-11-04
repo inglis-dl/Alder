@@ -103,7 +103,7 @@ void QSelectInterviewDialog::slotSearch()
   QString text = QInputDialog::getText(
     this,
     QObject::tr( "Search Term" ),
-    QObject::tr( 
+    QObject::tr(
       "Provide some or all of the interviews to search for,\nusing commas to separate terms:" ),
     QLineEdit::Normal,
     QString(),
@@ -121,7 +121,7 @@ void QSelectInterviewDialog::slotSearch()
     else
     {
       this->searchText << text;
-    }  
+    }
     this->updateInterface();
     QApplication::restoreOverrideCursor();
   }
@@ -138,17 +138,17 @@ void QSelectInterviewDialog::slotAccepted()
    // interview
 
 
-  if( !ranges.empty() )  
+  if( !ranges.empty() )
   {
     int uiCol = this->columnIndex["UId"];
     int dateCol = this->columnIndex["VisitDate"];
     bool first = true;
 
-    vtkSmartPointer< Alder::Interview > interview = 
+    vtkSmartPointer< Alder::Interview > interview =
       vtkSmartPointer< Alder::Interview >::New();
 
     std::map< std::string, std::string > map;
-    
+
     bool doProgress = ranges.size() > 1 || ranges.at(0).rowCount() > 1;
     // create a progress dialog to observe the progress of the update
     QVTKProgressDialog dialog( this->parentWidget() );
@@ -159,17 +159,17 @@ void QSelectInterviewDialog::slotAccepted()
       dialog.setWindowTitle( tr( "Downloading Exam Images" ) );
       dialog.setMessage( tr( "Please wait while the interview's images are downloaded." ) );
       dialog.open();
-    } 
+    }
 
-    for( QList< QTableWidgetSelectionRange >::const_iterator it = 
+    for( QList< QTableWidgetSelectionRange >::const_iterator it =
          ranges.constBegin(); it != ranges.constEnd(); ++it )
-    { 
+    {
       for( int row = (*it).topRow(); row <= (*it).bottomRow(); ++row )
       {
         QTableWidgetItem* item = this->ui->interviewTableWidget->item( row, uiCol );
         map["UId"] = item->text().toStdString();
 
-        item = this->ui->interviewTableWidget->item( row, dateCol );         
+        item = this->ui->interviewTableWidget->item( row, dateCol );
         map["VisitDate"] = item->text().toStdString();
 
         interview->Load( map );
@@ -183,7 +183,7 @@ void QSelectInterviewDialog::slotAccepted()
           first = false;
         }
       }
-    }  
+    }
 
     if( doProgress) dialog.accept();
   }
@@ -204,28 +204,36 @@ void QSelectInterviewDialog::slotSelectionChanged()
     int uiCol = this->columnIndex["UId"];
     int dateCol = this->columnIndex["VisitDate"];
 
-    vtkSmartPointer< Alder::Interview > interview = 
+    vtkSmartPointer< Alder::Interview > interview =
       vtkSmartPointer< Alder::Interview >::New();
 
     std::map< std::string, std::string > map;
 
-    for( QList< QTableWidgetSelectionRange >::const_iterator it = 
+    for( QList< QTableWidgetSelectionRange >::const_iterator it =
          ranges.constBegin(); it != ranges.constEnd(); ++it )
-    { 
+    {
       for( int row = (*it).topRow(); row <= (*it).bottomRow(); ++row )
       {
         QTableWidgetItem* item = this->ui->interviewTableWidget->item( row, uiCol );
         map["UId"] = item->text().toStdString();
 
-        item = this->ui->interviewTableWidget->item( row, dateCol );         
+        item = this->ui->interviewTableWidget->item( row, dateCol );
         map["VisitDate"] = item->text().toStdString();
 
         interview->Load( map );
 
         if( !interview->HasExamData() )
         {
-          interview->UpdateExamData();
-        }  
+          try
+          {
+            interview->UpdateExamData();
+          }
+          catch( std::runtime_error& e )
+          {
+            QApplication::restoreOverrideCursor();
+            throw e;
+          }
+        }
         this->updateRow( row, interview );
       }
     }
@@ -239,7 +247,7 @@ void QSelectInterviewDialog::slotHeaderClicked( int index )
   // reverse order if already sorted
   if( this->sortColumn == index )
   {
-    this->sortOrder = 
+    this->sortOrder =
       Qt::AscendingOrder == this->sortOrder ? Qt::DescendingOrder : Qt::AscendingOrder;
   }
 
@@ -254,7 +262,7 @@ void QSelectInterviewDialog::updateRow( const int row, Alder::Interview *intervi
   Alder::Exam *exam;
   Alder::User *user = Alder::Application::GetInstance()->GetActiveUser();
   QString UId = QString( interview->Get( "UId" ).ToString().c_str() );
-  
+
   std::map< std::string, bool > updateItemText;
   std::map< std::string, int > examCount;
   std::map< std::string, int > ratedCount;
@@ -284,7 +292,7 @@ void QSelectInterviewDialog::updateRow( const int row, Alder::Interview *intervi
     vtkSmartPointer< Alder::Modality > modality;
     exam->GetRecord( modality );
     modalityName = modality->Get( "Name" ).ToString();
-    
+
     // NOTE: it is possible that an exam with state "Ready" has valid data, but we are leaving
     // those exams out for now since we don't know for sure whether they are always valid
 
@@ -350,13 +358,13 @@ void QSelectInterviewDialog::updateInterface()
   if( this->searchText.empty() ) return;
 
   vtkSmartPointer< Alder::QueryModifier > modifier = vtkSmartPointer< Alder::QueryModifier >::New();
-  for( QStringList::const_iterator it = this->searchText.constBegin(); 
+  for( QStringList::const_iterator it = this->searchText.constBegin();
        it != this->searchText.constEnd(); ++it )
   {
     // create a modifier using the search text
     std::string where = (*it).toStdString();
     where += "%";
-    modifier->Where( "UId", "LIKE", vtkVariant( where ), true, 
+    modifier->Where( "UId", "LIKE", vtkVariant( where ), true,
       (it != this->searchText.constBegin()) );
   }
 
@@ -385,7 +393,7 @@ void QSelectInterviewDialog::updateInterface()
   { // for every interview, add a new row
     Alder::Interview *interview = *it;
     QString UId = QString( interview->Get( "UId" ).ToString().c_str() );
-    
+
     if( this->searchText.empty() || this->searchTextInUId( UId ) )
     {
       this->ui->interviewTableWidget->insertRow( 0 );

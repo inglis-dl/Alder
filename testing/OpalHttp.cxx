@@ -34,9 +34,9 @@ size_t writeToString(void *ptr, size_t size, size_t count, void *stream)
 
 int main( int argc, char** argv )
 {
-  if( !( 5 <= argc && argc <= 6 ) )
+  if( !( 6 <= argc && argc <= 7 ) )
   {
-    std::cout << "Usage: OpalHttp <username> <host> <port> <ws> [outfile]" << endl
+    std::cout << "Usage: OpalHttp <username> <password> <host> <port> <ws> [outfile]" << endl
               << "Example:" << endl
               << "  OpalHttp username localhost 8843 <ws> output.jpg" << endl
               << "  Where <ws> can be any of the following:" << endl
@@ -86,17 +86,13 @@ int main( int argc, char** argv )
 
   // get the arguments
   string username = argv[1];
-  string password;
-  string host = argv[2];
-  string port = argv[3];
-  string ws = argv[4];
+  string password = argv[2];
+  string host = argv[3];
+  string port = argv[4];
+  string ws = argv[5];
   string outfile = "";
-  bool toFile = 6 == argc;
-  if( toFile ) outfile = argv[5];
-
-  // ask for the password
-  cout << "password: ";
-  cin >> password;
+  bool toFile = 7 == argc;
+  if( toFile ) outfile = argv[6];
 
   // encode the credentials
   string credentials = "";
@@ -121,7 +117,6 @@ int main( int argc, char** argv )
     else curl_easy_setopt( curl, CURLOPT_WRITEDATA, &output );
 
     curl_easy_setopt( curl, CURLOPT_TIMEOUT, 10 );
-    curl_easy_setopt( curl, CURLOPT_SSLVERSION, 3 );
     curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, 0 );
     curl_easy_setopt( curl, CURLOPT_HTTPHEADER, headers );
     res = curl_easy_perform( curl );
