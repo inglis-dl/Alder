@@ -55,7 +55,7 @@ namespace Alder
       // if the downTotal is 0 then we can't send a progress event
       std::pair<bool, double> progress =
         std::pair<bool, double>( global, ( 0.0 == downTotal ? downTotal : downNow / downTotal ) );
-       
+
       app->InvokeEvent( vtkCommand::ProgressEvent, static_cast<void *>( &progress ) );
     }
 
@@ -74,16 +74,25 @@ namespace Alder
     this->Timeout = 10;
   }
 
+  OpalService::~OpalService()
+  {
+    curl_global_cleanup();
+  }
+
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void OpalService::Setup(
-    const std::string username, const std::string password,
-    const std::string host, const int port, const int timeout )
+    const std::string& username,
+    const std::string& password,
+    const std::string& host,
+    const int& port,
+    const int& timeout )
   {
     this->Username = username;
     this->Password = password;
     this->Host = host;
     this->Port = port;
     this->Timeout = timeout;
+    curl_global_init( CURL_GLOBAL_SSL );
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -96,7 +105,7 @@ namespace Alder
     std::stringstream urlStream;
     std::string credentials, url, result;
     struct curl_slist *headers = NULL;
-    CURLcode res;
+    CURLcode res = CURLE_OK;
     Json::Value root;
     Json::Reader reader;
     Application *app = Application::GetInstance();
@@ -110,15 +119,15 @@ namespace Alder
     app->Log( "Querying Opal: " + url );
 
     curl = curl_easy_init();
-    if( !curl ) 
+    if( !curl )
       throw std::runtime_error( "Unable to create cURL connection to Opal" );
 
-    // put the credentials in a header and the option to return data in json format
+    // put the credentials in a header and the option to return data in jsoIn format
     headers = curl_slist_append( headers, "Accept: application/json" );
     headers = curl_slist_append( headers, credentials.c_str() );
 
     // if we are writing to a file, open it
-    if( toFile ) 
+    if( toFile )
     {
       file = fopen( fileName.c_str(), "wb" );
 
@@ -137,22 +146,22 @@ namespace Alder
       curl_easy_setopt( curl, CURLOPT_WRITEDATA, &result );
     }
 
-    curl_easy_setopt( curl, CURLOPT_SSLVERSION, 3 );
-    curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, 0 );
+    curl_easy_setopt( curl, CURLOPT_VERBOSE, 1 );
+    curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, 0L );
     curl_easy_setopt( curl, CURLOPT_HTTPHEADER, headers );
     curl_easy_setopt( curl, CURLOPT_URL, url.c_str() );
     if( progress )
     {
       curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 0L );
       curl_easy_setopt( curl, CURLOPT_PROGRESSFUNCTION, OpalService::curlProgressCallback );
-    }  
+    }
 
     // we are using the local progress bar for curl progress, not the global one
     bool global = false;
 
     // invoke the start event using the local progress bar
     app->InvokeEvent( vtkCommand::StartEvent, static_cast<void *>( &global ) );
-     
+
     // if set, the configure event will be performed during the first callback within curl progress
     res = curl_easy_perform( curl );
 
@@ -164,7 +173,7 @@ namespace Alder
     curl_easy_cleanup( curl );
     if( toFile ) fclose( file );
 
-    if( 0 != res )
+    if( CURLE_OK != res )
     {
       // don't display abort errors (code 42) when the user initiated the abort
       if( !( CURLE_ABORTED_BY_CALLBACK == res && app->GetAbortFlag() ) )
@@ -194,7 +203,7 @@ namespace Alder
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table << "/entities";
     Json::Value root = this->Read( stream.str() );
-    
+
     std::vector< std::string > list;
     for( int i = 0; i < root.size(); ++i )
     {
@@ -206,7 +215,7 @@ namespace Alder
     std::sort( list.begin(), list.end() );
     return list;
   }
-  
+
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::map< std::string, std::map< std::string, std::string > > OpalService::GetRows(
     const std::string dataSource, const std::string table, const int offset, const int limit ) const
@@ -218,7 +227,7 @@ namespace Alder
     stream << "/datasource/" << dataSource << "/table/" << table
            << "/valueSets?offset=" << offset << "&limit=" << limit;
     Json::Value root = this->Read( stream.str() );
-    
+
     for( int i = 0; i < root["valueSets"].size(); ++i )
     {
       identifier = root["valueSets"][i].get( "identifier", "" ).asString();
@@ -250,7 +259,7 @@ namespace Alder
     stream << "/datasource/" << dataSource << "/table/" << table
            << "/valueSet/" << identifier;
     Json::Value root = this->Read( stream.str(), "", false );
-    
+
     if( 0 < root["valueSets"][0].get( "identifier", "" ).asString().size() )
     {
       for( int j = 0; j < root["valueSets"][0]["values"].size(); ++j )
@@ -277,7 +286,7 @@ namespace Alder
            << "/valueSets?offset=" << offset << "&limit=" << limit
            << "&select=name().eq('" << variable << "')";
     Json::Value root = this->Read( stream.str() );
-    
+
     for( int i = 0; i < root["valueSets"].size(); ++i )
     {
       identifier = root["valueSets"][i].get( "identifier", "" ).asString();

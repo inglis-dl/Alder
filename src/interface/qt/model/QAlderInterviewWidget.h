@@ -50,6 +50,7 @@ public slots:
   virtual void updateRating();
   virtual void updateViewer();
   virtual void updateEnabled();
+  virtual void saveImage( const QString& fileName );
 
 protected:
 

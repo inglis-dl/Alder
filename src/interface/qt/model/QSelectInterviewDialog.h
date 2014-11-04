@@ -37,9 +37,10 @@ public slots:
   virtual void slotHeaderClicked( int index );
 
 protected:
-  void updateRow( int, Alder::Interview* );
+  void updateRow( const int, Alder::Interview* );
   void updateInterface();
-  QString searchText;
+  bool searchTextInUId( const QString );
+  QStringList searchText;
   int sortColumn;
   Qt::SortOrder sortOrder;
   std::map< std::string, int > columnIndex;

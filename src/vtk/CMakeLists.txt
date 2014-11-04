@@ -9,6 +9,7 @@ SET( AlderVTK_SRCS
   vtkFrameAnimationPlayer.cxx
   vtkImageCoordinateWidget.cxx
   vtkImageDataReader.cxx
+  vtkImageDataWriter.cxx
   vtkImageWindowLevel.cxx
   vtkMedicalImageViewer.cxx
   vtkXMLFileReader.cxx

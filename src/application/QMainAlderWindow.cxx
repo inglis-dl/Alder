@@ -28,6 +28,7 @@
 #include <QVTKProgressDialog.h>
 
 #include <QCloseEvent>
+#include <QFileDialog>
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QSettings>
@@ -66,6 +67,9 @@ QMainAlderWindow::QMainAlderWindow( QWidget* parent )
   QObject::connect(
     this->ui->actionExit, SIGNAL( triggered() ),
     qApp, SLOT( closeAllWindows() ) );  
+  QObject::connect(
+    this->ui->actionSaveImage, SIGNAL( triggered() ),
+    this, SLOT( slotSaveImage() ) );  
   
   // connect the help menu items
   QObject::connect(
@@ -345,6 +349,21 @@ void QMainAlderWindow::slotManual()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindow::slotSaveImage()
+{
+  QString fileName = QFileDialog::getSaveFileName( this,
+    tr("Save Image to File"), this->lastSavePath,
+    tr("Images (*.png *.pnm *.bmp *.jpg *.jpeg *.tif *.tiff)"));
+
+  if( fileName.isEmpty() ) return;
+  else
+  {
+    this->ui->interviewWidget->saveImage( fileName );
+    this->lastSavePath = QFileInfo( fileName ).path();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QMainAlderWindow::readSettings()
 {
   QSettings settings( "CLSA", "Alder" );
@@ -382,6 +401,7 @@ void QMainAlderWindow::updateInterface()
   this->ui->actionOpenInterview->setEnabled( loggedIn );
   this->ui->actionChangePassword->setEnabled( loggedIn );
   this->ui->actionShowAtlas->setEnabled( loggedIn );
+  this->ui->actionSaveImage->setEnabled( loggedIn );
 
   this->ui->framePlayerWidget->setEnabled( loggedIn );
   this->ui->splitter->setEnabled( loggedIn );

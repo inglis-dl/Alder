@@ -38,6 +38,7 @@ public slots:
   virtual void slotChangePassword();
   virtual void slotUserManagement();
   virtual void slotUpdateDatabase();
+  virtual void slotSaveImage();
 
   // help event functions
   virtual void slotAbout();
@@ -63,6 +64,7 @@ private:
   bool atlasVisible;
   bool dicomTagsVisible;
   QAlderDicomTagWidget* DicomTagWidget;
+  QString lastSavePath;
 
   void adminUserManagement();
   void adminUpdateDatabase();

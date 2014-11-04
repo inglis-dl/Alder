@@ -111,12 +111,6 @@ QAlderInterviewWidget::~QAlderInterviewWidget()
   this->ModalityLookup.clear();
 }
 
-void initializeTreeWidget()
-{
-  std::vector< vtkSmartPointer< Alder::Modality > > modalityList;
-  Alder::Modality::GetAll( &modalityList );
-}
-
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 vtkMedicalImageViewer* QAlderInterviewWidget::GetViewer()
 {
@@ -542,6 +536,12 @@ void QAlderInterviewWidget::updateViewer()
   Alder::Image *image = Alder::Application::GetInstance()->GetActiveImage();
   if( image ) this->Viewer->Load( image->GetFileName().c_str() );
   else this->Viewer->SetImageToSinusoid();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderInterviewWidget::saveImage( const QString& fileName )
+{
+  this->Viewer->WriteSlice( fileName.toStdString().c_str() );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

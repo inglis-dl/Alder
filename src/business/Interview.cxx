@@ -234,16 +234,13 @@ namespace Alder
   int Interview::GetImageCount()
   {
     // loop through all exams and sum the image count
-    int total = 0;
-
     std::vector< vtkSmartPointer< Exam > > examList;
     this->GetList( &examList );
-    for( auto examIt = examList.cbegin(); examIt != examList.cend(); ++examIt )
+    int total = 0;
+    for( auto it = examList.cbegin(); it != examList.cend(); ++it )
     {
-      Exam *exam = *(examIt);
-      total += exam->GetCount( "Image" );
+      total += (*it)->GetCount( "Image" );
     }
-
     return total;
   }
 
@@ -279,10 +276,9 @@ namespace Alder
 
     std::vector< vtkSmartPointer< Exam > > examList;
     this->GetList( &examList );
-    for( auto examIt = examList.cbegin(); examIt != examList.cend(); ++examIt )
+    for( auto it = examList.cbegin(); it != examList.cend(); ++it )
     {
-      Exam *exam = *(examIt);
-      if( !exam->HasImageData() ) return false;
+      if( !(*it)->HasImageData() ) return false;
     }
 
     return true;

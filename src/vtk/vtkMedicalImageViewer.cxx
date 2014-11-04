@@ -18,9 +18,13 @@
 #include <vtkDataArray.h>
 #include <vtkFrameAnimationPlayer.h>
 #include <vtkImageActor.h>
+#include <vtkImageChangeInformation.h>
+#include <vtkImageClip.h>
 #include <vtkImageCoordinateWidget.h>
 #include <vtkImageData.h>
 #include <vtkImageDataReader.h>
+#include <vtkImageDataWriter.h>
+#include <vtkImagePermute.h>
 #include <vtkImageSinusoidSource.h>
 #include <vtkImageWindowLevel.h>
 #include <vtkCustomInteractorStyleImage.h>
@@ -276,6 +280,55 @@ bool vtkMedicalImageViewer::Load( const std::string& fileName )
 vtkImageData* vtkMedicalImageViewer::GetInput()
 {
   return vtkImageData::SafeDownCast( this->WindowLevel->GetInput() );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void vtkMedicalImageViewer::WriteSlice( const std::string& fileName )
+{
+  vtkImageData* image = this->GetInput();
+  if( image && vtkImageDataWriter::IsValidFileName( fileName.c_str() ) )
+  {
+    vtkNew< vtkImageDataWriter > writer;
+    writer->SetFileName( fileName.c_str() );
+    vtkNew< vtkImageClip > clip;
+    clip->SetOutputWholeExtent( this->ImageActor->GetDisplayExtent() );
+    clip->ClipDataOn();
+    clip->SetInputConnection( image->GetProducerPort() );
+    clip->Update();
+
+    int ec[6];
+    clip->GetOutput()->GetWholeExtent(ec);
+
+    int axis = this->GetViewOrientation();
+    int et[] = {0,0,0};     // extent translation
+    int op[] = {0,1,2};     // output axes permutation
+
+    // have to translate to a purely x-y plane:
+    // 1) change extents by vtkImageChangeInformation
+    // 2) permute the axes
+    switch ( axis )
+    {
+      case 0: et[0] = -ec[0];
+              op[0] = 2; op[1] = 0; op[2] = 1; 
+              break;  //YZ 
+      case 1: et[1] = -ec[2];
+              op[0] = 0; op[1] = 2; op[2] = 1; 
+              break;  //XZ 
+      case 2: et[2] = -ec[4];
+              break;  //XY 
+    }
+
+    vtkNew< vtkImageChangeInformation > change;
+    change->SetExtentTranslation(et);
+    change->SetInputConnection(clip->GetOutputPort());
+
+    vtkNew< vtkImagePermute > permute;
+    permute->SetFilteredAxes(op);
+    permute->SetInputConnection(change->GetOutputPort());
+
+    writer->SetInput( permute->GetOutput() );
+    writer->Write();
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

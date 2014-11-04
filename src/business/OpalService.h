@@ -12,12 +12,12 @@
 /**
  * @class OpalService
  * @namespace Alder
- * 
+ *
  * @author Patrick Emond <emondpd AT mcmaster DOT ca>
  * @author Dean Inglis <inglisd AT mcmaster DOT ca>
- * 
+ *
  * @brief Class for interacting with Opal
- * 
+ *
  * This class provides a programming interface to Opal's RESTful interface by using the
  * curl library.  A description of Opal can be found
  * <a href="http://www.obiba.org/?q=node/63">here</a>.
@@ -56,23 +56,23 @@ namespace Alder
      * Defines connection parameters to use when communicating with the Opal server
      */
     void Setup(
-      const std::string username,
-      const std::string password,
-      const std::string host,
-      const int port = 8843,
-      const int timeout = 10 );
+      const std::string& username,
+      const std::string& password,
+      const std::string& host,
+      const int& port = 8843,
+      const int& timeout = 10 );
 
     vtkGetMacro( Port, int );
     vtkSetMacro( Port, int );
 
     vtkGetMacro( Timeout, int );
     vtkSetMacro( Timeout, int );
-  
+
     /**
      * Call before invoking the application StartEvent for progress monitoring.
-     * If check is true, then the first curl progress callback will set 
+     * If check is true, then the first curl progress callback will set
      * whether the fine level (local) progress should be a regular progress
-     * meter or a busy meter, based on whether the expected size of the data 
+     * meter or a busy meter, based on whether the expected size of the data
      * to be downloaded is non-zero.  For file type data, this should be called
      * with false, since we expect (image) files to have significant size.
      */
@@ -162,7 +162,7 @@ namespace Alder
 
   protected:
     OpalService();
-    ~OpalService() {}
+    ~OpalService();
 
     /**
      * Returns the response provided by Opal for a given service path, or if fileName is not
