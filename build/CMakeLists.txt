@@ -4,7 +4,7 @@ PROJECT( Alder )
 # The major version number is incremented after major milestones are met
 SET( ALDER_VERSION_MAJOR 1 )
 # The minor version number is incremented after a development branch is merged to qa
-SET( ALDER_VERSION_MINOR 2 )
+SET( ALDER_VERSION_MINOR 3 )
 # The patch version number is incremented when changes are made to the release branch
 SET( ALDER_VERSION_PATCH 1 )
 
