@@ -285,10 +285,10 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Interview::UpdateExamData()
+  void Interview::UpdateExamData( const bool& updateMetaData )
   {
     // only update the exams if there are none in the database
-    if( this->HasExamData() ) return;
+    if( !updateMetaData && this->HasExamData() ) return;
 
     OpalService *opal = Application::GetInstance()->GetOpal();
 
