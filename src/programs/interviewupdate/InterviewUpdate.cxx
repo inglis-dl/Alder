@@ -85,7 +85,7 @@ int main( int argc, char** argv )
   if( !ApplicationInit() )
   {
     return EXIT_FAILURE;
-  } 
+  }
 
   vtkNew< Alder::User > user;
   user->Load( "Name", "administrator" );
@@ -98,6 +98,7 @@ int main( int argc, char** argv )
   }
 
   Alder::Application *app = Alder::Application::GetInstance();
+  app->SetupOpalService();
 
   // search the Alder db for dexa exams of type Hip, Forearm and WholeBody
   // process the images report which ones had the dicom Patient Name tag populated
@@ -105,7 +106,7 @@ int main( int argc, char** argv )
   std::vector< vtkSmartPointer< Alder::Interview > > interviewList;
   Alder::Interview::GetAll( &interviewList );
   if( !interviewList.empty() )
-  {    
+  {
     int i = 1;
     int count = interviewList.size();
     for( auto interviewIt = interviewList.begin(); interviewIt != interviewList.end(); ++interviewIt )
@@ -128,30 +129,31 @@ bool ApplicationInit()
 {
   bool status = true;
   Alder::Application *app = Alder::Application::GetInstance();
-  if( !app->ReadConfiguration( ALDER_CONFIG_FILE ) ) 
-  {   
-    std::cout << "ERROR: error while reading configuration file \"" 
+  std::cout << "Initializing application using file: " << ALDER_CONFIG_FILE << std::endl;
+  if( !app->ReadConfiguration( ALDER_CONFIG_FILE ) )
+  {
+    std::cout << "ERROR: error while reading configuration file \""
               << ALDER_CONFIG_FILE << "\"" << std::endl;
-    status = false;          
-  }   
+    status = false;
+  }
   else if( !app->OpenLogFile() )
-  {   
+  {
     std::string logPath = app->GetConfig()->GetValue( "Path", "Log" );
-    std::cout << "ERROR: unable to open log file \"" 
+    std::cout << "ERROR: unable to open log file \""
               << logPath << "\"" << std::endl;
-    status = false;          
-  }   
+    status = false;
+  }
   else if( !app->TestImageDataPath() )
-  {   
+  {
     std::string imageDataPath = app->GetConfig()->GetValue( "Path", "ImageData" );
-    std::cout << "ERROR: no write access to image data directory \"" 
+    std::cout << "ERROR: no write access to image data directory \""
               << imageDataPath << "\"" << std::endl;
-    status = false;          
-  }   
+    status = false;
+  }
   else if( !app->ConnectToDatabase() )
-  {   
+  {
     std::cout << "ERROR: error while connecting to the database" << std::endl;
-    status = false;          
+    status = false;
   }
   if( !status )
   {
