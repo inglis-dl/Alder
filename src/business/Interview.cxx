@@ -293,7 +293,7 @@ namespace Alder
     OpalService *opal = Application::GetInstance()->GetOpal();
 
     // get exam metadata from Opal for this interview
-    std::map< std::string, std::string > examData = 
+    std::map< std::string, std::string > examData =
       opal->GetRow( "alder", "Exam", this->Get( "UId" ).ToString() );
 
     // build a map of modalities and exams
@@ -317,7 +317,7 @@ namespace Alder
      modalityMap["Retinal"] = {
        {"RetinalScan","left"},
        {"RetinalScan","right"}
-     };  
+     };
 
     vtkVariant interviewId = this->Get( "Id" );
 
@@ -328,15 +328,61 @@ namespace Alder
       vtkVariant modalityId = modality->Get( "Id" );
       for( auto vecIt = mapIt->second.cbegin(); vecIt != mapIt->second.cend(); ++vecIt )
       {
-        vtkNew<Exam> exam;
-        exam->Set( "InterviewId", interviewId );
-        exam->Set( "ModalityId", modalityId );
-        exam->Set( "Type", vecIt->first );
-        exam->Set( "Laterality", vecIt->second );
-        exam->Set( "Stage", examData[ vecIt->first + ".Stage" ] );
-        exam->Set( "Interviewer", examData[ vecIt->first + ".Interviewer"] );
-        exam->Set( "DatetimeAcquired", examData[ vecIt->first + ".DatetimeAcquired"] );
-        exam->Save();
+        bool create = true;
+        if( updateMetaData )
+        {
+          vtkSmartPointer< Alder::QueryModifier > modifier =
+            vtkSmartPointer< Alder::QueryModifier >::New();
+          modifier->Where( "ModalityId", "=", vtkVariant( modalityId ) );
+          modifier->Where( "Type", "=", vtkVariant( vecIt->first ) );
+          modifier->Where( "Laterality", "=", vtkVariant( vecIt->second ) );
+
+          std::vector< vtkSmartPointer< Exam > > examList;
+          this->GetList( &examList, modifier );
+          if( !examList.empty() )
+          {
+            create = false;
+            auto it = examList.cbegin();
+            Alder::Exam * exam = it->GetPointer();
+            // check if the data need to be updated
+            std::string value = examData[ vecIt->first + ".Stage" ];
+            bool save = false;
+            if( exam->Get("Stage").ToString() != value )
+            {
+              exam->Set( "Stage", value );
+              save = true;
+            }
+
+            value = examData[ vecIt->first + ".Interviewer"];
+            if( exam->Get("Interviewer").ToString() != value )
+            {
+              exam->Set( "Interviewer", value );
+              save = true;
+            }
+
+            value = examData[ vecIt->first + ".DatetimeAcquired"];
+            if( exam->Get("DatetimeAcquired").ToString() != value )
+            {
+              exam->Set( "DatetimeAcquired", value );
+              save = true;
+            }
+
+            if( save ) exam->Save();
+          }
+        }
+
+        if( create )
+        {
+          vtkNew<Exam> exam;
+          exam->Set( "InterviewId", interviewId );
+          exam->Set( "ModalityId", modalityId );
+          exam->Set( "Type", vecIt->first );
+          exam->Set( "Laterality", vecIt->second );
+          exam->Set( "Stage", examData[ vecIt->first + ".Stage" ] );
+          exam->Set( "Interviewer", examData[ vecIt->first + ".Interviewer"] );
+          exam->Set( "DatetimeAcquired", examData[ vecIt->first + ".DatetimeAcquired"] );
+          exam->Save();
+        }
       }
     }
   }
@@ -362,7 +408,7 @@ namespace Alder
 
       Database *db = app->GetDB();
       vtkSmartPointer<vtkAlderMySQLQuery> query = db->GetQuery();
-             
+
       app->Log( "Querying Database: " + stream.str() );
       query->SetQuery( stream.str().c_str() );
       query->Execute();
@@ -381,7 +427,7 @@ namespace Alder
       }
     }
     else
-    { 
+    {
       this->GetList( &examList );
     }
 
@@ -391,7 +437,7 @@ namespace Alder
       std::vector< vtkSmartPointer< Exam > > revisedList;
       for( auto it = examList.cbegin(); it != examList.cend(); ++it )
       {
-         if( !(*it)->HasImageData() ) 
+         if( !(*it)->HasImageData() )
            revisedList.push_back( *it );
       }
       examList.clear();
@@ -483,7 +529,7 @@ namespace Alder
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::string Interview::GetSimilarImage( std::string const &imageId )
-  { 
+  {
     this->AssertPrimaryId();
     std::string matchId;
     if( imageId.empty() ) return matchId;
@@ -493,7 +539,7 @@ namespace Alder
     bool hasParent = image->Get( "ParentImageId" ).IsValid();
 
     std::stringstream stream;
-    
+
     // given an image Id, find an image in this record having the same
     // characteristics
     stream << "SELECT Image.Id "
