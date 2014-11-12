@@ -164,7 +164,7 @@ int main( int argc, char** argv )
           uid_list_str += ',';
         }
       }
-      uid_list_str.pop_back();
+      uid_list_str.erase( uid_list_str.end() - 1 );
       modifier->Where( "UId", "IN", vtkVariant( uid_list_str ), false );
     }
     if( query_site )
