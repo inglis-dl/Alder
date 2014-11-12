@@ -111,6 +111,7 @@ int main( int argc, char** argv )
     for( auto interviewIt = interviewList.begin(); interviewIt != interviewList.end(); ++interviewIt )
     {
       Alder::Interview *interview = interviewIt->GetPointer();
+      interview->UpdateExamData( true );
       std::cout << "-------------- PROCESSING INTERVIEW " << i++ << " of " << count << " --------------" << std::endl;
       std::cout << "UID: " << interview->Get( "UId" ) << std::endl;
       std::cout << "VisitDate: " << interview->Get( "VisitDate" ) << std::endl;
