@@ -79,6 +79,30 @@ std::string getpass( const char *prompt, bool show_asterisk = true )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 int main( int argc, char** argv )
 {
+  bool query_site = false;
+  bool query_uid = false;
+  std::string site_str = "";
+  std::string uid_str = "";
+  if( argc > 1 )
+  {
+    int i = 1;
+    do{
+      if( std::string( argv[i] ) == "-u" && i+1 < argc)
+      {
+        query_uid = true;
+        uid_str = argv[i+1];
+      }
+      if( std::string( argv[i] ) == "-s" && i+1 < argc)
+      {
+        query_site = true;
+        site_str = argv[i+1];
+        site_str.erase(
+          remove( site_str.begin(), site_str.end(), '\"' ), site_str.end() );
+      }
+      i+=2;
+    } while( i+1 < argc );
+  }
+
   // stand alone console application that makes use of the
   // Alder business logic
 
@@ -104,7 +128,27 @@ int main( int argc, char** argv )
   // process the images report which ones had the dicom Patient Name tag populated
 
   std::vector< vtkSmartPointer< Alder::Interview > > interviewList;
-  Alder::Interview::GetAll( &interviewList );
+
+  if( query_uid || query_site )
+  {
+    vtkSmartPointer< Alder::QueryModifier > modifier = vtkSmartPointer< Alder::QueryModifier >::New();
+
+    if( query_uid )
+    {
+      modifier->Where( "UId", "=", vtkVariant( uid_str ) );
+    }
+    if( query_site )
+    {
+      modifier->Where( "Site", "=", vtkVariant( site_str ) );
+    }
+
+    Alder::Interview::GetAll( &interviewList, modifier );
+  }
+  else
+  {
+    Alder::Interview::GetAll( &interviewList );
+  }
+
   if( !interviewList.empty() )
   {
     int i = 1;
