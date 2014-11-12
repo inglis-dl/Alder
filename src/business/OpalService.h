@@ -60,7 +60,8 @@ namespace Alder
       const std::string& password,
       const std::string& host,
       const int& port = 8843,
-      const int& timeout = 10 );
+      const int& timeout = 10,
+      const int& verbose = 0 );
 
     vtkGetMacro( Port, int );
     vtkSetMacro( Port, int );
@@ -181,6 +182,7 @@ namespace Alder
     std::string Host;
     int Port;
     int Timeout;
+    int Verbose;
 
   private:
     OpalService( const OpalService& ); /** Not implemented. */
