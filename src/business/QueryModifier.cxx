@@ -64,7 +64,7 @@ namespace Alder
   void QueryModifier::Order( std::string column, bool desc )
   {
     this->OrderList[column] = desc;
-  } 
+  }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void QueryModifier::Limit( int count, int offset )
@@ -119,8 +119,9 @@ namespace Alder
           statement = it->column;
           statement += " ";
           statement += it->oper;
-          statement += " ";
+          statement += ( "IN" == it->oper ? " (" : " " );
           statement += value.ToString();
+          statement += ( "IN" == it->oper ? " )" : "" );
         }
       }
 
@@ -142,7 +143,7 @@ namespace Alder
 
     return sql;
   }
-  
+
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::string QueryModifier::GetGroup() const
   {
@@ -157,7 +158,7 @@ namespace Alder
 
     return sql.str();
   }
-  
+
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::string QueryModifier::GetOrder() const
   {
@@ -172,7 +173,7 @@ namespace Alder
 
     return sql.str();
   }
-  
+
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::string QueryModifier::GetLimit() const
   {

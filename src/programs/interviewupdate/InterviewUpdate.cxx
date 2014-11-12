@@ -23,6 +23,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <iostream>
+#include <sstream>
+#include <fstream>
 
 bool ApplicationInit();
 
@@ -81,18 +83,25 @@ int main( int argc, char** argv )
 {
   bool query_site = false;
   bool query_uid = false;
+  bool query_uid_list = false;
   std::string site_str = "";
   std::string uid_str = "";
+  std::string uid_file_name = "";
   if( argc > 1 )
   {
     int i = 1;
     do{
-      if( std::string( argv[i] ) == "-u" && i+1 < argc)
+      if( std::string( argv[i] ) == "-l" && i+1 < argc)
+      {
+        query_uid_list = true;
+        uid_file_name = argv[i+1];
+      }
+      else if( std::string( argv[i] ) == "-u" && i+1 < argc)
       {
         query_uid = true;
         uid_str = argv[i+1];
       }
-      if( std::string( argv[i] ) == "-s" && i+1 < argc)
+      else if( std::string( argv[i] ) == "-s" && i+1 < argc)
       {
         query_site = true;
         site_str = argv[i+1];
@@ -129,7 +138,7 @@ int main( int argc, char** argv )
 
   std::vector< vtkSmartPointer< Alder::Interview > > interviewList;
 
-  if( query_uid || query_site )
+  if( query_uid || query_site || query_uid_list )
   {
     vtkSmartPointer< Alder::QueryModifier > modifier = vtkSmartPointer< Alder::QueryModifier >::New();
 
@@ -137,10 +146,33 @@ int main( int argc, char** argv )
     {
       modifier->Where( "UId", "=", vtkVariant( uid_str ) );
     }
+    if( query_uid_list )
+    {
+      ifstream infile( uid_file_name.c_str() );
+      std::string uid_list_str = "";
+      while( infile )
+      {
+        std::string line;
+        if( !getline( infile, line ) ) break;
+        std::istringstream str_str( line );
+        while( str_str )
+        {
+          std::string str;
+          if( !getline( str_str, str, ',' ) ) break;
+          str.erase( remove_if( str.begin(), str.end(), ::isspace ), str.end() );
+          uid_list_str += '"' + str + '"';
+          uid_list_str += ',';
+        }
+      }
+      uid_list_str.pop_back();
+      modifier->Where( "UId", "IN", vtkVariant( uid_list_str ), false );
+    }
     if( query_site )
     {
       modifier->Where( "Site", "=", vtkVariant( site_str ) );
     }
+
+    std::cout << modifier->GetSql() << std::endl;
 
     Alder::Interview::GetAll( &interviewList, modifier );
   }
@@ -162,6 +194,10 @@ int main( int argc, char** argv )
       std::cout << "VisitDate: " << interview->Get( "VisitDate" ) << std::endl;
       std::cout << "Site: " << interview->Get( "Site" ) << std::endl;
     }
+  }
+  else
+  {
+    std::cout << "No interviews found" << std::endl;
   }
 
   Alder::Application::DeleteInstance();
