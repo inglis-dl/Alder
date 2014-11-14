@@ -140,6 +140,7 @@ void QSelectInterviewDialog::slotAccepted()
 
   if( !ranges.empty() )
   {
+    Alder::Application *app = Alder::Application::GetInstance();
     int uiCol = this->columnIndex["UId"];
     int dateCol = this->columnIndex["VisitDate"];
     bool first = true;
@@ -175,11 +176,24 @@ void QSelectInterviewDialog::slotAccepted()
         interview->Load( map );
 
         if( !interview->HasImageData() && doProgress )
-          interview->UpdateImageData();
+        {
+          try
+          {
+            interview->UpdateImageData();
+          }
+          catch( std::exception& e )
+          {
+            std::string err = "There was an error while trying to query the database ( UId : ";
+            err += interview->Get( "UId" ).ToString();
+            err += " ). Error: ";
+            err += e.what();
+            app->Log( err );
+          }
+        }
 
         if( first )
         {
-          Alder::Application::GetInstance()->SetActiveInterview( interview );
+          app->SetActiveInterview( interview );
           first = false;
         }
       }
