@@ -39,6 +39,7 @@ TARGET_LINK_LIBRARIES( AlderVTK
   vtkIO
   vtkRendering
   vtkgdcm
+  vtkWidgets
   ${MYSQL_LIBRARY}
   ${CRYPTO++_LIBRARIES}
   ${LIBXML2_LIBRARIES}
