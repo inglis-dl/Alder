@@ -63,13 +63,13 @@ public:
       case vtkCommand::WindowLevelEvent:
         this->Viewer->DoWindowLevel();
         break;
-      case vtkCommand::EndWindowLevelEvent: break; 
+      case vtkCommand::EndWindowLevelEvent: break;
     }
   }
 
   vtkWindowLevelCallback():Viewer( 0 ){}
   ~vtkWindowLevelCallback(){ this->Viewer = 0; }
- 
+
   vtkMedicalImageViewer* Viewer;
 };
 
@@ -111,7 +111,7 @@ class vtkAnimationCueCallback : public vtkCommand
     }
 
   vtkAnimationCueCallback():Viewer( 0 ), Player( 0 ){}
-  ~vtkAnimationCueCallback(){ this->Viewer = 0; this->Player = 0; } 
+  ~vtkAnimationCueCallback(){ this->Viewer = 0; this->Player = 0; }
   vtkMedicalImageViewer* Viewer;
   vtkFrameAnimationPlayer* Player;
 };
@@ -166,13 +166,13 @@ vtkMedicalImageViewer::vtkMedicalImageViewer()
   this->AnimationScene->SetFrameRate( this->FrameRate );
 
   this->AnimationPlayer->SetAnimationScene( this->AnimationScene );
-  
-  vtkSmartPointer<vtkAnimationCueCallback> cbk = 
+
+  vtkSmartPointer<vtkAnimationCueCallback> cbk =
     vtkSmartPointer<vtkAnimationCueCallback>::New();
   cbk->Viewer = this;
   cbk->Player = this->AnimationPlayer;
   this->AnimationCue->AddObserver( vtkCommand::AnimationCueTickEvent, cbk );
-  
+
   this->MaintainLastWindowLevel = 0;
   this->OriginalWindow = 255.0;
   this->OriginalLevel = 127.5;
@@ -233,25 +233,26 @@ void vtkMedicalImageViewer::SetInput( vtkImageData* input )
 {
   this->UnInstallPipeline();
   if( !input ) return;
-  
-  this->WindowLevel->SetInputConnection( input->GetProducerPort() );
+
+  this->WindowLevel->SetInput( input );
   this->ImageActor->SetInput( this->WindowLevel->GetOutput() );
 
   input->Update();
   int components = input->GetNumberOfScalarComponents();
   switch( components )
-  {    
+  {
     case 1: this->SetMappingToLuminance(); break;
     case 2:
     case 3: this->SetMappingToColor(); break;
     case 4: this->SetMappingToColorAlpha(); break;
-  }    
+  }
 
   this->InstallPipeline();
   this->InitializeWindowLevel();
   this->InitializeCameraViews();
+  this->Slice = this->LastSlice[this->ViewOrientation];
   this->UpdateDisplayExtent();
-  this->Render(); 
+  this->SetSlice( this->GetSliceMin() );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -275,12 +276,12 @@ bool vtkMedicalImageViewer::Load( const std::string& fileName )
       {
         if( NULL != properties->GetUserDefinedValue( "CineRate" ) )
         {
-          this->SetMaxFrameRate( 
+          this->SetMaxFrameRate(
             vtkVariant( properties->GetUserDefinedValue( "CineRate" ) ).ToInt() );
-          this->SetFrameRate( this->MaxFrameRate );  
+          this->SetFrameRate( this->MaxFrameRate );
         }
       }
-    }  
+    }
   }
 
   return success;
@@ -309,7 +310,7 @@ void vtkMedicalImageViewer::WriteSlice( const std::string& fileName )
     vtkNew< vtkImageClip > clip;
     clip->SetOutputWholeExtent( this->ImageActor->GetDisplayExtent() );
     clip->ClipDataOn();
-    clip->SetInputConnection( image->GetProducerPort() );
+    clip->SetInput( image );
     clip->Update();
 
     int ec[6];
@@ -326,21 +327,21 @@ void vtkMedicalImageViewer::WriteSlice( const std::string& fileName )
     {
       case 0: et[0] = -ec[0];
               op[0] = 2; op[1] = 0; op[2] = 1;
-              break;  //YZ 
+              break;  //YZ
       case 1: et[1] = -ec[2];
               op[0] = 0; op[1] = 2; op[2] = 1;
-              break;  //XZ 
+              break;  //XZ
       case 2: et[2] = -ec[4];
-              break;  //XY 
+              break;  //XY
     }
 
     vtkNew< vtkImageChangeInformation > change;
-    change->SetExtentTranslation(et);
-    change->SetInputConnection(clip->GetOutputPort());
+    change->SetExtentTranslation( et );
+    change->SetInput( clip->GetOutput() );
 
     vtkNew< vtkImagePermute > permute;
-    permute->SetFilteredAxes(op);
-    permute->SetInputConnection(change->GetOutputPort());
+    permute->SetFilteredAxes( op );
+    permute->SetInput( change->GetOutput() );
 
     writer->SetInput( permute->GetOutput() );
     writer->Write();
@@ -381,9 +382,9 @@ void vtkMedicalImageViewer::SetInteractor( vtkRenderWindowInteractor *arg )
 
   if( this->Interactor )
     this->Interactor->UnRegister( this );
-    
+
   this->Interactor = arg;
-  
+
   if( this->Interactor )
     this->Interactor->Register( this );
 
@@ -399,9 +400,9 @@ void vtkMedicalImageViewer::SetRenderWindow( vtkRenderWindow *arg )
 
   if( this->RenderWindow )
     this->RenderWindow->UnRegister( this );
-    
+
   this->RenderWindow = arg;
-  
+
   if( this->RenderWindow )
     this->RenderWindow->Register( this );
 
@@ -422,9 +423,9 @@ void vtkMedicalImageViewer::SetRenderer( vtkRenderer *arg )
 
   if( this->Renderer )
     this->Renderer->UnRegister( this );
- 
+
  this->Renderer = arg;
-  
+
   if( this->Renderer )
     this->Renderer->Register( this );
 
@@ -447,7 +448,7 @@ void vtkMedicalImageViewer::InstallPipeline()
       this->SetInteractorStyle( vtkSmartPointer<vtkCustomInteractorStyleImage>::New() );
       }
 
-    this->InteractorStyle->AutoAdjustCameraClippingRangeOn();     
+    this->InteractorStyle->AutoAdjustCameraClippingRangeOn();
     this->Interactor->SetInteractorStyle( this->InteractorStyle );
 
     if( this->RenderWindow )
@@ -458,14 +459,14 @@ void vtkMedicalImageViewer::InstallPipeline()
   {
     vtkSmartPointer< vtkWindowLevelCallback > cbk = vtkSmartPointer< vtkWindowLevelCallback >::New();
     cbk->Viewer = this;
-     
-    this->WindowLevelCallbackTags.push_back( 
+
+    this->WindowLevelCallbackTags.push_back(
       this->InteractorStyle->AddObserver( vtkCommand::StartWindowLevelEvent, cbk ) );
-    this->WindowLevelCallbackTags.push_back( 
+    this->WindowLevelCallbackTags.push_back(
       this->InteractorStyle->AddObserver( vtkCommand::WindowLevelEvent, cbk ) );
-    this->WindowLevelCallbackTags.push_back( 
+    this->WindowLevelCallbackTags.push_back(
       this->InteractorStyle->AddObserver( vtkCommand::EndWindowLevelEvent, cbk ) );
-    this->WindowLevelCallbackTags.push_back( 
+    this->WindowLevelCallbackTags.push_back(
       this->InteractorStyle->AddObserver( vtkCommand::ResetWindowLevelEvent, cbk ) );
   }
 
@@ -474,14 +475,14 @@ void vtkMedicalImageViewer::InstallPipeline()
     this->Renderer->GetActiveCamera()->ParallelProjectionOn();
     this->Renderer->AddViewProp( this->ImageActor );
   }
-  
+
   this->InstallAnnotation();
   this->InstallCursor();
   this->InstallAxes();
 
   if( this->Renderer && this->GetInput() )
   {
-    this->AnimationCue->SetEndTime( 
+    this->AnimationCue->SetEndTime(
       this->GetNumberOfSlices() / this->AnimationScene->GetFrameRate() );
     this->AnimationScene->SetStartTime(0.);
     this->AnimationScene->SetEndTime( this->AnimationCue->GetEndTime());
@@ -499,12 +500,12 @@ void vtkMedicalImageViewer::UnInstallPipeline()
   if( this->InteractorStyle && !this->WindowLevelCallbackTags.empty() )
   {
     std::vector<unsigned long>::iterator it;
- 
+
     for( it = this->WindowLevelCallbackTags.begin();
          it != this->WindowLevelCallbackTags.end(); it++ )
-    {     
+    {
       this->InteractorStyle->RemoveObserver( ( *it ) );
-    }  
+    }
   }
 
   if( this->RenderWindow && this->Renderer )
@@ -525,7 +526,7 @@ void vtkMedicalImageViewer::InitializeWindowLevel()
 {
   vtkImageData* input = this->GetInput();
   if( !input ) return;
-  
+
   input->UpdateInformation();
   input->Update();
 
@@ -574,7 +575,7 @@ void vtkMedicalImageViewer::InitializeWindowLevel()
   {
     this->OriginalLevel = 0.001 * ( this->OriginalLevel < 0.0 ? -1 : 1 );
   }
-  
+
   // VTK_LUMINANCE is defined in vtkSystemIncludes.h
   if( this->WindowLevel->GetOutputFormat() == VTK_LUMINANCE )
   {
@@ -617,8 +618,8 @@ void vtkMedicalImageViewer::InitializeCameraViews()
     fpt[v] = pos[v] = origin[v] + 0.5 * spacing[v] * ( extent[2*v] + extent[2*v+1] );
 
     // setup the in and out
-    fpt[w] = origin[w] + spacing[w] * extent[2*w];
-    pos[w] = origin[w] + ( w == 1 ? -1.0 : 1.0 ) * spacing[w] * extent[2*w+1];
+    fpt[w] = origin[w] + spacing[w] * extent[2*w+1];
+    pos[w] = origin[w] + ( w == 1 ? -1.0 : 1.0 ) * spacing[w] * extent[2*w];
 
     for( int i = 0; i < 3; ++i )
     {
@@ -645,11 +646,11 @@ void vtkMedicalImageViewer::RecordCameraView()
     cam->GetFocalPoint( fpt );
     cam->GetViewUp( v );
     for( int i = 0; i < 3; ++i )
-    {   
+    {
       this->CameraPosition[this->ViewOrientation][i]   = pos[i];
       this->CameraFocalPoint[this->ViewOrientation][i] = fpt[i];
       this->CameraViewUp[this->ViewOrientation][i]     = v[i];
-    }   
+    }
     this->CameraParallelScale[this->ViewOrientation] = cam->GetParallelScale();
   }
 }
@@ -665,11 +666,11 @@ void vtkMedicalImageViewer::UpdateCameraView()
     double fpt[3];
     double v[3];
     for( int i = 0; i < 3; ++i )
-    {   
+    {
       pos[i] = this->CameraPosition[this->ViewOrientation][i];
       fpt[i] = this->CameraFocalPoint[this->ViewOrientation][i];
       v[i]   = this->CameraViewUp[this->ViewOrientation][i];
-    }   
+    }
     cam->SetPosition( pos );
     cam->SetFocalPoint( fpt );
     cam->SetViewUp( v );
@@ -732,7 +733,7 @@ int* vtkMedicalImageViewer::GetSliceRange()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-int vtkMedicalImageViewer::GetSliceMin() 
+int vtkMedicalImageViewer::GetSliceMin()
 {
   int *range = this->GetSliceRange();
   if( range )
@@ -743,7 +744,7 @@ int vtkMedicalImageViewer::GetSliceMin()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-int vtkMedicalImageViewer::GetSliceMax() 
+int vtkMedicalImageViewer::GetSliceMax()
 {
   int *range = this->GetSliceRange();
   if( range )
@@ -769,11 +770,9 @@ void vtkMedicalImageViewer::SetSlice( int slice )
     }
   }
 
-  if( this->Slice == slice ) return;
-
-  this->LastSlice[this->ViewOrientation] =  this->Slice;
+  this->LastSlice[this->ViewOrientation] = this->Slice;
   this->RecordCameraView();
- 
+
   this->Slice = slice;
   this->Modified();
 
@@ -783,7 +782,7 @@ void vtkMedicalImageViewer::SetSlice( int slice )
   {
     this->CursorWidget->UpdateMessageString();
     this->Annotation->SetText( 0, this->CursorWidget->GetMessageString() );
-  }   
+  }
 
   this->Render();
 }
@@ -796,16 +795,17 @@ void vtkMedicalImageViewer::SetViewOrientation( const int& orientation )
   {
     return;
   }
-  
+
   if( this->ViewOrientation == orientation ) return;
-    
-  this->Slice = this->LastSlice[this->ViewOrientation];
-  this->RecordCameraView();
+
   this->ViewOrientation = orientation;
   this->Slice = this->LastSlice[this->ViewOrientation];
   this->UpdateCameraView();
+  bool first = VTK_FLOAT_MIN == this->CameraParallelScale[this->ViewOrientation];
   this->UpdateDisplayExtent();
   this->Render();
+  if( first )
+    this->SetSlice( this->GetSliceMin() );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -826,8 +826,7 @@ void vtkMedicalImageViewer::UpdateDisplayExtent()
     this->Slice = static_cast<int>( ( slice_min + slice_max ) * 0.5 );
   }
 
-  // Set the image actor
-
+  // Set the image actor display extent
   switch ( this->ViewOrientation )
   {
     case vtkMedicalImageViewer::VIEW_ORIENTATION_XY:
@@ -851,22 +850,22 @@ void vtkMedicalImageViewer::UpdateDisplayExtent()
 
   if( this->Renderer )
   {
-    if( this->CameraParallelScale[this->ViewOrientation] == VTK_FLOAT_MIN )
+    if( VTK_FLOAT_MIN == this->CameraParallelScale[this->ViewOrientation] )
     {
       this->Renderer->ResetCamera();
-      this->RecordCameraView();
     }
     else
     {
       this->Renderer->ResetCameraClippingRange( this->ImageActor->GetBounds() );
     }
+    this->RecordCameraView();
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkMedicalImageViewer::Render()
 {
-  if( this->Interactor ) this->Interactor->Render();
+  if( this->RenderWindow ) this->RenderWindow->Render();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -931,7 +930,7 @@ void vtkMedicalImageViewer::DoWindowLevel()
   {
     dx = dx * window;
   }
-  else 
+  else
   {
     dx = dx * ( window < 0 ? -0.01 : 0.01 );
   }
@@ -939,7 +938,7 @@ void vtkMedicalImageViewer::DoWindowLevel()
   {
     dy = dy * level;
   }
-  else 
+  else
   {
     dy = dy * ( level < 0 ? -0.01 : 0.01 );
   }
@@ -1029,7 +1028,7 @@ void vtkMedicalImageViewer::InstallAnnotation()
   this->Annotation->SetWindowLevel( this->WindowLevel );
   this->Annotation->SetVisibility( this->Annotate );
   this->Renderer->AddViewProp( this->Annotation );
-  
+
   this->Annotation->SetText( 2, "" );
   if( this->GetInput() && this->GetImageDimensionality() > 2 )
   {
@@ -1138,9 +1137,9 @@ void vtkMedicalImageViewer::SetAnnotate( const int& arg )
 {
   this->Annotate = arg;
 
-  if( this->Annotate ) 
+  if( this->Annotate )
     this->InstallAnnotation();
-  else 
+  else
     this->UnInstallAnnotation();
 
   if( this->GetInput() ) this->Render();
@@ -1151,9 +1150,9 @@ void vtkMedicalImageViewer::SetAxesDisplay( const int& arg )
 {
   this->AxesDisplay = arg;
 
-  if( this->AxesDisplay ) 
+  if( this->AxesDisplay )
     this->InstallAxes();
-  else 
+  else
     this->UnInstallAxes();
 
   if( this->GetInput() ) this->Render();
@@ -1186,13 +1185,13 @@ void vtkMedicalImageViewer::FlipCameraHorizontal()
     this->RecordCameraView();
     for( int i=0; i < 3; i++ )
     {
-      this->CameraPosition[this->ViewOrientation][i] = 
-        2.0*this->CameraFocalPoint[this->ViewOrientation][i] - 
+      this->CameraPosition[this->ViewOrientation][i] =
+        2.0*this->CameraFocalPoint[this->ViewOrientation][i] -
         this->CameraPosition[this->ViewOrientation][i];
     }
     this->Renderer->GetActiveCamera()->SetPosition(
       this->CameraPosition[this->ViewOrientation] );
-    this->Renderer->ResetCameraClippingRange(); 
+    this->Renderer->ResetCameraClippingRange();
     this->Render();
   }
 }
@@ -1205,17 +1204,17 @@ void vtkMedicalImageViewer::FlipCameraVertical()
     this->RecordCameraView();
     for( int i=0; i < 3; i++ )
     {
-      this->CameraViewUp[this->ViewOrientation][i] = 
-        -this->CameraViewUp[this->ViewOrientation][i]; 
-      this->CameraPosition[this->ViewOrientation][i] = 
-        2.0*this->CameraFocalPoint[this->ViewOrientation][i] - 
+      this->CameraViewUp[this->ViewOrientation][i] =
+        -this->CameraViewUp[this->ViewOrientation][i];
+      this->CameraPosition[this->ViewOrientation][i] =
+        2.0*this->CameraFocalPoint[this->ViewOrientation][i] -
         this->CameraPosition[this->ViewOrientation][i];
     }
     this->Renderer->GetActiveCamera()->SetPosition(
       this->CameraPosition[this->ViewOrientation] );
     this->Renderer->GetActiveCamera()->SetViewUp(
       this->CameraViewUp[this->ViewOrientation] );
-    this->Renderer->ResetCameraClippingRange(); 
+    this->Renderer->ResetCameraClippingRange();
     this->Render();
   }
 }
@@ -1234,7 +1233,7 @@ void vtkMedicalImageViewer::PrintSelf( ostream& os, vtkIndent indent )
   {
     os << "None";
   }
-  
+
   os << indent << "Renderer:\n";
   if( this->Renderer )
   {
@@ -1255,7 +1254,7 @@ void vtkMedicalImageViewer::PrintSelf( ostream& os, vtkIndent indent )
   {
     os << "None";
   }
-  
+
   os << indent << "Interactor: " << endl;
   if( this->Interactor )
   {
@@ -1269,10 +1268,10 @@ void vtkMedicalImageViewer::PrintSelf( ostream& os, vtkIndent indent )
 
   os << indent << "ImageActor:\n";
   this->ImageActor->PrintSelf( os, indent.GetNextIndent() );
-  
+
   os << indent << "WindowLevel:\n" << endl;
   this->WindowLevel->PrintSelf( os, indent.GetNextIndent() );
-  
+
   os << indent << "Slice: " << this->Slice << endl;
   os << indent << "ViewOrientation: " << this->ViewOrientation << endl;
   os << indent << "MaintainLastWindowLevel: " << this->MaintainLastWindowLevel << endl;
