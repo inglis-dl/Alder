@@ -289,7 +289,7 @@
     <string>Show Dicom Tags</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+D</string>
+    <string>Ctrl+T</string>
    </property>
   </action>
   <action name="actionChangePassword">

@@ -12,6 +12,7 @@
     <Username>%OPAL_USERNAME%</Username>
     <Password>%OPAL_PASSWORD%</Password>
     <Timeout>%OPAL_TIMEOUT%</Timeout>
+    <Verbose>%OPAL_VERBOSE%</Verbose>
   </Opal>
   <Path>
     <Log>%LOG_PATH%</Log>

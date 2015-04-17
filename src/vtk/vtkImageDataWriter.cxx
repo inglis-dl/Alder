@@ -292,7 +292,7 @@ void vtkImageDataWriter::Write()
     double range[2];
     this->ImageData->UpdateInformation();
     this->ImageData->GetScalarRange(range);
-    castFilter->SetInputConnection( this->ImageData->GetProducerPort() );
+    castFilter->SetInput( this->ImageData );
 
     int type = this->ImageData->GetScalarType();
     castFilter->SetOutputScalarType( type );

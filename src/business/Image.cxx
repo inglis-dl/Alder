@@ -84,9 +84,17 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Image::ValidateFile()
   {
-    bool valid;
-    std::string fileName = this->GetFileName();
     Application *app = Application::GetInstance();
+    bool valid = false;
+    std::string fileName;
+    try{
+      fileName = this->GetFileName();
+    }
+    catch( std::runtime_error& e )
+    {
+      app->Log( e.what() );
+      return valid;
+    }
 
     // now check the file, if it is empty delete the image and the file
     if( 0 == Utilities::getFileLength( fileName ) )
@@ -128,7 +136,7 @@ namespace Alder
 
     // now look for image files in that directory
     vtkNew< vtkDirectory > directory;
-    
+
     if( !directory->Open( path.c_str() ) )
     {
       std::stringstream error;
@@ -159,7 +167,7 @@ namespace Alder
   bool Image::IsRatedBy( User* user )
   {
     this->AssertPrimaryId();
-    
+
     // make sure the user is not null
     if( !user ) throw std::runtime_error( "Tried to get rating for null user" );
 
@@ -172,7 +180,7 @@ namespace Alder
     // we have found a rating, make sure it is not null
     return rating->Get( "Rating" ).IsValid();
   }
-  
+
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::string Image::GetDICOMTag( std::string const &tagName )
   {
@@ -206,7 +214,7 @@ namespace Alder
     // suppress gdcm warnings
     bool warn = gdcm::Trace::GetWarningFlag();
     gdcm::Trace::WarningOff();
-    std::string value = 
+    std::string value =
       gdcm::DirectoryHelper::GetStringValueFromTag( tag, ds );
     gdcm::Trace::SetWarning( warn );
     return value;
@@ -229,12 +237,12 @@ namespace Alder
       throw std::runtime_error( "Unable to read file as DICOM." );
     }
     gdcm::Image &image = reader.GetImage();
-    
+
     std::vector<int> dims;
     for( int i = 0; i < 3; ++i )
       dims.push_back( image.GetDimension(i) );
-    
-    return dims;  
+
+    return dims;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -277,24 +285,24 @@ namespace Alder
     {
       std::string latStr = exam->Get( "Laterality" ).ToString();
       if( latStr != "none" )
-      {   
+      {
         try{
           std::string tagStr = this->GetDICOMTag( "Laterality" );
-          if( tagStr.size() > 0 ) 
-          {   
+          if( tagStr.size() > 0 )
+          {
             tagStr = Utilities::toLower( tagStr );
-            if( tagStr.compare(0, 1, latStr, 0, 1) != 0 ) 
-            {   
+            if( tagStr.compare(0, 1, latStr, 0, 1) != 0 )
+            {
               latStr = tagStr.compare(0, 1, "l", 0, 1) == 0 ? "left" : "right";
               exam->Set( "Laterality", latStr );
               exam->Save();
-            }   
-          }    
-        }   
+            }
+          }
+        }
         catch(...)
-        {   
-        }   
-      } 
+        {
+        }
+      }
     }
   }
 
@@ -306,7 +314,7 @@ namespace Alder
     {
       return exam->IsDICOM();
     }
-    return false; 
+    return false;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -416,10 +424,10 @@ namespace Alder
     query->Execute();
 
     if( query->HasError() )
-    {   
+    {
       app->Log( query->GetLastErrorText() );
       throw std::runtime_error( "There was an error while trying to query the database." );
-    }   
+    }
 
     vtkSmartPointer<Image> image = vtkSmartPointer<Image>::New();
     if( query->NextRow() ) image->Load( "Id", query->DataValue( 0 ).ToString() );
@@ -460,8 +468,8 @@ namespace Alder
       return true;
     }
 
-    if( examType == -1 ) return false;  
-    
+    if( examType == -1 ) return false;
+
     std::string fileName = this->GetFileName();
     vtkNew<vtkImageDataReader> reader;
     reader->SetFileName( fileName.c_str() );
@@ -474,7 +482,7 @@ namespace Alder
 
     // start in the middle of the left edge,
     // increment across until the color changes to 255,255,255
-    
+
     // left edge coordinates for each DEXA exam type
     int x0[5] = { 168, 168, 168, 168, 193 };
     // bottom edge coordinates
@@ -483,17 +491,17 @@ namespace Alder
     int y1[5] = { 1648, 1648, 1138, 1403, 1456 };
 
     bool found = false;
-    // start search from the middle of the left edge 
+    // start search from the middle of the left edge
     int ix = x0[ examType ];
-    int iy = y0[ examType ] + ( y1[ examType ] - y0[ examType ] )/2; 
-    do  
+    int iy = y0[ examType ] + ( y1[ examType ] - y0[ examType ] )/2;
+    do
     {
       int val = static_cast<int>( image->GetScalarComponentAsFloat( ix++, iy, 0, 0 ) );
       if( val == 255 )
-      {   
+      {
         found = true;
         ix--;
-      }   
+      }
     }while( !found && ix < extent[1] );
 
     if( !found )
@@ -554,6 +562,6 @@ namespace Alder
     // anonymize the PatientsName dicom tag
     this->AnonymizeDICOM();
 
-    return true;  
+    return true;
   }
 }

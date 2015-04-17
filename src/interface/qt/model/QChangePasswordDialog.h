@@ -30,7 +30,7 @@ public slots:
   virtual void slotAccepted();
 
 signals:
-  virtual void passwordChange( QString const &pwd );
+  void passwordChange( QString const &pwd );
 
 protected:
   bool checkNewPassword();

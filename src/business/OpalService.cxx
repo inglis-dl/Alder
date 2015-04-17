@@ -72,6 +72,7 @@ namespace Alder
     this->Host = "localhost";
     this->Port = 8843;
     this->Timeout = 10;
+    this->Verbose = 0;
   }
 
   OpalService::~OpalService()
@@ -85,13 +86,15 @@ namespace Alder
     const std::string& password,
     const std::string& host,
     const int& port,
-    const int& timeout )
+    const int& timeout,
+    const int& verbose )
   {
     this->Username = username;
     this->Password = password;
     this->Host = host;
     this->Port = port;
     this->Timeout = timeout;
+    this->Verbose = verbose;
     curl_global_init( CURL_GLOBAL_SSL );
   }
 
@@ -146,7 +149,7 @@ namespace Alder
       curl_easy_setopt( curl, CURLOPT_WRITEDATA, &result );
     }
 
-    curl_easy_setopt( curl, CURLOPT_VERBOSE, 1 );
+    curl_easy_setopt( curl, CURLOPT_VERBOSE, this->Verbose );
     curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, 0L );
     curl_easy_setopt( curl, CURLOPT_HTTPHEADER, headers );
     curl_easy_setopt( curl, CURLOPT_URL, url.c_str() );

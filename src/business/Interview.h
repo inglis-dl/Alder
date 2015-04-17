@@ -57,7 +57,7 @@ namespace Alder
      * Updates all exam and image data associated with the interview from Opal
      * Note: exam data must be downloaded before image data
      */
-    void UpdateExamData();
+    void UpdateExamData( const bool& updateMetaData = false );
     void UpdateImageData();
     /**
      * Given an image Id, find an image in this record having the same

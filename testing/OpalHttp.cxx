@@ -38,7 +38,7 @@ int main( int argc, char** argv )
   {
     std::cout << "Usage: OpalHttp <username> <password> <host> <port> <ws> [outfile]" << endl
               << "Example:" << endl
-              << "  OpalHttp username localhost 8843 <ws> output.jpg" << endl
+              << "  OpalHttp username password localhost 8843 <ws> output.jpg" << endl
               << "  Where <ws> can be any of the following:" << endl
               << "    /datasources" << endl
               << "      All datasources" << endl
