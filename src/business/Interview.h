@@ -12,10 +12,10 @@
 /**
  * @class Interview
  * @namespace Alder
- * 
+ *
  * @author Patrick Emond <emondpd AT mcmaster DOT ca>
  * @author Dean Inglis <inglisd AT mcmaster DOT ca>
- * 
+ *
  * @brief An active record for the Interview table
  */
 
@@ -59,6 +59,18 @@ namespace Alder
      */
     void UpdateExamData( const bool& updateMetaData = false );
     void UpdateImageData();
+
+    /**
+     * Loads exam and image data associated with interviews from Opal
+     * from a list of participant identifiers (UIDs).
+     * Caveats:
+     * 1) the administrator must update the interview data in the database first
+     *    to ensure the requested UIDs can be retrieved
+     * 2) only the images the user is permitted to review are downloaded
+     * @return int The number of UIDs loaded
+     */
+    static int LoadFromUIDList( std::vector< std::string > const &uidList );
+
     /**
      * Given an image Id, find an image in this record having the same
      * characteristics and return its Id

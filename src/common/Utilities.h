@@ -49,6 +49,9 @@ namespace Alder
   {
   public:
 
+    /**
+     *  Encrypt a string with SHA256 hash algorithm
+     */
     inline static void hashString( std::string input, std::string &output )
     {
       input += ALDER_SALT_STRING;
@@ -63,6 +66,9 @@ namespace Alder
             new CryptoPP::StringSink( output ) ) ) );
     }
 
+    /**
+     *  Base64 encode a string
+     */
     inline static void base64String( std::string input, std::string &output )
     {
       output = "";
@@ -74,18 +80,27 @@ namespace Alder
           new CryptoPP::StringSink( output ) ) );
     }
 
+    /**
+     *  Write data to a FILE stream via pointer access
+     */
     inline static size_t writePointerToFile( void *ptr, size_t size, size_t nmemb, FILE *stream )
     {
       size_t written = fwrite( ptr, size, nmemb, stream );
       return written;
     }
 
+    /**
+     *  Append data to a string via pointer access
+     */
     inline static size_t writePointerToString( void *ptr, size_t size, size_t count, void *stream )
     {
       ( (std::string*) stream )->append( (char*) ptr, 0, size * count );
       return size * count;
     }
 
+    /**
+     *  Execute a command using popen/pclose
+     */
     inline static std::string exec( std::string const &command )
     {
       FILE* pipe = popen( command.c_str(), "r" );
@@ -95,8 +110,11 @@ namespace Alder
       while( !feof( pipe ) ) if( fgets( buffer, 128, pipe ) != NULL ) result += buffer;
       pclose( pipe );
       return result;
-    } 
+    }
 
+    /**
+     *  Gets the time in a specified format using strftime
+     */
     inline static std::string getTime( std::string const &format )
     {
       char buffer[256];
@@ -106,6 +124,9 @@ namespace Alder
       return std::string( buffer );
     }
 
+    /**
+     *  Converts a string to lowercase
+     */
     inline static std::string toLower( std::string const &str )
     {
       std::string returnString = str;
@@ -113,6 +134,9 @@ namespace Alder
       return returnString;
     }
 
+    /**
+     *  Converts a string to uppercase
+     */
     inline static std::string toUpper( std::string const &str )
     {
       std::string returnString = str;
@@ -120,6 +144,9 @@ namespace Alder
       return returnString;
     }
 
+    /**
+     *  Removes leading and trailing occurances of a specified char (default is space)
+     */
     inline static std::string removeLeadingTrailing( std::string const &str,
       const char ch = ' ' )
     {
@@ -139,20 +166,29 @@ namespace Alder
       return result;
     }
 
+    /**
+     *  Tests if a file exists
+     */
     inline static bool fileExists( std::string const &filename )
     {
       if( filename.empty() ) return false;
       return access( filename.c_str(), R_OK ) == 0;
     }
 
+    /**
+     * Gets the last . separated portion of a file name
+     */
     inline static std::string getFileExtension( std::string const &filename )
     {
       std::string::size_type dot_pos = filename.rfind(".");
       std::string extension = (dot_pos == std::string::npos) ? "" :
         filename.substr( dot_pos );
-      return extension;  
+      return extension;
     }
 
+    /**
+     * Gets the path portion of a file name
+     */
     inline static std::string getFilenamePath( std::string const &filename )
     {
       std::string::size_type slash_pos = filename.rfind("/");
@@ -175,12 +211,18 @@ namespace Alder
       }
     }
 
+    /**
+     * Gets the size in bytes of a file
+     */
     inline static unsigned long getFileLength( std::string const &filename )
     {
       struct stat fs;
       return 0 != stat( filename.c_str(), &fs ) ? 0 : static_cast<unsigned long>( fs.st_size );
     }
-    
+
+    /**
+     * Gets the last / separated part of a unix file name
+     */
     inline static std::string getFilenameName( std::string filename )
     {
       std::string::size_type slash_pos = filename.find_last_of("/");
@@ -194,6 +236,9 @@ namespace Alder
       }
     }
 
+    /**
+     * Divides a string by the provided separator, returning the results as a vector of strings
+     */
     inline static std::vector< std::string > explode( std::string str, std::string separator )
     {
       std::vector< std::string > results;
@@ -206,6 +251,38 @@ namespace Alder
       }
       if( str.size() > 0 ) results.push_back( str );
       return results;
+    }
+
+    /**
+     * Removes all space characters (as defined by std::isspace) from the left side of a string
+     */
+    inline static std::string &ltrim( std::string &s )
+    {
+      s.erase(
+        s.begin(), std::find_if(
+          s.begin(), s.end(), std::not1(
+            std::ptr_fun<int, int>( std::isspace ) ) ) );
+      return s;
+    }
+
+    /**
+     * Removes all space characters (as defined by std::isspace) from the right side of a string
+     */
+    inline static std::string &rtrim( std::string &s )
+    {
+      s.erase(
+        std::find_if(
+          s.rbegin(), s.rend(), std::not1(
+            std::ptr_fun<int, int>( std::isspace ) ) ).base(), s.end() );
+      return s;
+    }
+
+    /**
+     * Removes all space characters (as defined by std::isspace) from both sides of a string
+     */
+    inline static std::string &trim(std::string &s)
+    {
+      return ltrim(rtrim(s));
     }
 
   protected:

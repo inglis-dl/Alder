@@ -170,7 +170,7 @@ namespace Alder
      * empty then writes the response to the given filename (returning an empty json value).
      * @param servicePath string
      * @param fileName string
-     * @param doProgress bool
+     * @param progress bool
      * @throws runtime_error
      */
     virtual Json::Value Read(
