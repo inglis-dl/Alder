@@ -460,7 +460,7 @@ namespace Alder
         progressConfig.second = index / size;
         app->InvokeEvent( vtkCommand::ProgressEvent, static_cast<void *>( &progressConfig ) );
         if( app->GetAbortFlag() ) break;
-        ( *it )->UpdateImageData(); // invokes progress events
+        ( *it )->UpdateImageData(); // invokes curl progress events
       }
 
       if( app->GetAbortFlag() ) app->SetAbortFlag( false );
@@ -491,7 +491,6 @@ namespace Alder
     // we tell opal service on the first curl callback to check if the data
     // has a substantial return size that we can monitor using curl progress
     OpalService::SetCurlProgressChecking( true );
-
     app->InvokeEvent( vtkCommand::StartEvent, static_cast<void *>( &global ) );
 
     do
@@ -499,7 +498,7 @@ namespace Alder
       progressConfig.second = index / size;
       app->InvokeEvent( vtkCommand::ProgressEvent, static_cast<void *>( &progressConfig ) );
       if( app->GetAbortFlag() ) break;
-      list = opal->GetRows( "alder", "Interview", index, limit ); // invokes progress events
+      list = opal->GetRows( "alder", "Interview", index, limit ); // invokes curl progress events
 
       for( auto it = list.cbegin(); it != list.cend(); ++it )
       {
@@ -525,6 +524,74 @@ namespace Alder
 
     if( app->GetAbortFlag() ) app->SetAbortFlag( false );
     else app->InvokeEvent( vtkCommand::EndEvent, static_cast<void *>( &global ) );
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  int Interview::LoadFromUIDList( std::vector< std::string > const &uidList )
+  {
+    vtkSmartPointer< QueryModifier > modifier = vtkSmartPointer< QueryModifier >::New();
+    for( auto it = uidList.cbegin(); it != uidList.cend(); ++it )
+    {
+      // create a modifier using the search text
+      std::string where = *it;
+      where += "%";
+      modifier->Where( "UId", "LIKE", vtkVariant( where ), true,
+        (it != uidList.cbegin()) );
+    }
+
+    // get all the interviews given the search text
+    std::vector< vtkSmartPointer< Interview > > interviewList;
+    Interview::GetAll( &interviewList, modifier );
+
+    if( interviewList.empty() )
+    {
+      return 0;
+    }
+
+    Application *app = Application::GetInstance();
+    OpalService *opal = app->GetOpal();
+    bool global = true;
+    std::pair<bool, double> progressConfig = std::pair<bool, double>( global, 0.0 );
+    OpalService::SetCurlProgressChecking( false );
+    app->InvokeEvent( vtkCommand::StartEvent, static_cast<void *>( &global ) );
+    double size = (double) interviewList.size();
+    int index = 0;
+    for( auto it = interviewList.begin(); it != interviewList.end(); ++it )
+    {
+      progressConfig.second = index++ / size;
+      std::cout <<  progressConfig.second *100 << " %" << std::endl;
+      app->InvokeEvent( vtkCommand::ProgressEvent, static_cast<void *>( &progressConfig ) );
+      if( app->GetAbortFlag() ) break;
+
+      Interview *interview = *it;
+      if( !interview->HasExamData() )
+      {
+        try
+        {
+          interview->UpdateExamData();
+        }
+        catch( std::runtime_error& e )
+        {
+          continue;
+        }
+      }
+      if( !interview->HasImageData() )
+      {
+        try
+        {
+          interview->UpdateImageData();
+        }
+        catch( std::runtime_error& e )
+        {
+          continue;
+        }
+      }
+    }
+
+    if( app->GetAbortFlag() ) app->SetAbortFlag( false );
+    else app->InvokeEvent( vtkCommand::EndEvent, static_cast<void *>( &global ) );
+
+    return index;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

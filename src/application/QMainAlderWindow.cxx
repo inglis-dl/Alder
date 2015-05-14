@@ -32,6 +32,7 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QSettings>
+#include <QTextStream>
 
 #include <stdexcept>
 
@@ -41,7 +42,7 @@ QMainAlderWindow::QMainAlderWindow( QWidget* parent )
 {
   this->ui = new Ui_QMainAlderWindow;
   this->ui->setupUi( this );
-  
+
   // connect the menu items
   QObject::connect(
     this->ui->actionOpenInterview, SIGNAL( triggered() ),
@@ -65,12 +66,15 @@ QMainAlderWindow::QMainAlderWindow( QWidget* parent )
     this->ui->actionUpdateDatabase, SIGNAL( triggered() ),
     this, SLOT( slotUpdateDatabase() ) );
   QObject::connect(
+    this->ui->actionLoadUIDs, SIGNAL( triggered() ),
+    this, SLOT( slotLoadUIDs() ) );
+  QObject::connect(
     this->ui->actionExit, SIGNAL( triggered() ),
-    qApp, SLOT( closeAllWindows() ) );  
+    qApp, SLOT( closeAllWindows() ) );
   QObject::connect(
     this->ui->actionSaveImage, SIGNAL( triggered() ),
-    this, SLOT( slotSaveImage() ) );  
-  
+    this, SLOT( slotSaveImage() ) );
+
   // connect the help menu items
   QObject::connect(
     this->ui->actionAbout, SIGNAL( triggered() ),
@@ -79,7 +83,7 @@ QMainAlderWindow::QMainAlderWindow( QWidget* parent )
     this->ui->actionManual, SIGNAL( triggered() ),
     this, SLOT( slotManual() ) );
 
-  QObject::connect( 
+  QObject::connect(
     this->ui->atlasWidget, SIGNAL( showing( bool ) ),
     this->ui->interviewWidget, SLOT( slotHideControls( bool ) ) );
 
@@ -213,7 +217,7 @@ void QMainAlderWindow::slotShowDicomTags()
 
   this->dicomTagsVisible = !this->dicomTagsVisible;
 
-  this->ui->actionShowDicomTags->setText( 
+  this->ui->actionShowDicomTags->setText(
     tr( this->dicomTagsVisible ? "Hide Dicom Tags" : "Show Dicom Tags" ) );
 
   if( this->dicomTagsVisible )
@@ -253,7 +257,7 @@ void QMainAlderWindow::adminLoginDo( void (QMainAlderWindow::*fn)() )
       QObject::tr( "User Management" ),
       QObject::tr( attempt > 1 ? "Wrong password, try again:" : "Administrator password:" ),
       QLineEdit::Password );
-    
+
     // do nothing if the user hit the cancel button
     if( text.isEmpty() ) break;
 
@@ -269,6 +273,79 @@ void QMainAlderWindow::adminLoginDo( void (QMainAlderWindow::*fn)() )
       break;
     }
     attempt++;
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindow::slotLoadUIDs()
+{
+  QString fileName = QFileDialog::getOpenFileName( this,
+    tr("Open File"), QString(), tr("CSV files (*.csv)"));
+
+  bool error = false;
+  QString errorMsg;
+
+  if( fileName.isEmpty() ) return;
+
+  QFile file(fileName);
+  if( !file.open(QIODevice::ReadOnly | QIODevice::Text) )
+  {
+    error = true;
+    errorMsg = "Failed to open file";
+  }
+  else
+  {
+    std::vector< std::string > uidList;
+
+    QTextStream in(&file);
+    while( !in.atEnd() )
+    {
+      QString line = in.readLine();
+      std::string str = line.toStdString();
+      str = Alder::Utilities::trim( str );
+      str = Alder::Utilities::removeLeadingTrailing( str, '"' );
+      uidList.push_back( str );
+    }
+    file.close();
+    if( uidList.empty() )
+    {
+      error = true;
+      errorMsg = "Failed to parse UIDs from csv file";
+    }
+    else
+    {
+      // create a progress dialog to observe the progress of the update
+      QVTKProgressDialog dialog( this );
+      dialog.setModal( true );
+      dialog.setWindowTitle( tr( "Downloading Images" ) );
+      dialog.setMessage( tr( "Please wait while the images are downloaded." ) );
+      dialog.open();
+      int numLoadedUIDs = Alder::Interview::LoadFromUIDList( uidList );
+      Alder::Application *app = Alder::Application::GetInstance();
+      std::stringstream log;
+      log << "Loaded "
+          << numLoadedUIDs
+          << " of "
+          << uidList.size()
+          << " requested UIDs from file "
+          << fileName.toStdString();
+      app->Log( log.str() );
+      dialog.accept();
+      if(numLoadedUIDs != uidList.size())
+      {
+        error = true;
+        errorMsg = log.str().c_str();
+      }
+    }
+  }
+
+  if( error )
+  {
+    QMessageBox messageBox( this );
+    messageBox.setWindowModality( Qt::WindowModal );
+    messageBox.setIcon( QMessageBox::Warning );
+    messageBox.setText( errorMsg );
+    messageBox.exec();
   }
 }
 
@@ -296,10 +373,10 @@ void QMainAlderWindow::adminUserManagement( )
   Alder::Application *app = Alder::Application::GetInstance();
   if(  NULL != app->GetActiveUser() )
   {
-    QObject::connect( 
-      &usersDialog , SIGNAL( userModalityChanged() ), 
+    QObject::connect(
+      &usersDialog, SIGNAL( userModalityChanged() ),
      this->ui->interviewWidget, SLOT( updateExamTreeWidget() ));
-  }   
+  }
   usersDialog.exec();
 }
 
@@ -313,11 +390,11 @@ void QMainAlderWindow::slotChangePassword()
     QString password = user->Get("Password").ToString().c_str();
     QChangePasswordDialog dialog( password, this );
     dialog.setModal( true );
-    QObject::connect( 
-      &dialog , SIGNAL( passwordChange( QString ) ), 
+    QObject::connect(
+      &dialog, SIGNAL( passwordChange( QString ) ),
      this, SLOT( changeActiveUserPassword( QString ) ));
     dialog.exec();
-  }   
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -367,7 +444,7 @@ void QMainAlderWindow::slotSaveImage()
 void QMainAlderWindow::readSettings()
 {
   QSettings settings( "CLSA", "Alder" );
-  
+
   settings.beginGroup( "MainAlderWindow" );
   if( settings.contains( "size" ) ) this->resize( settings.value( "size" ).toSize() );
   if( settings.contains( "pos" ) ) this->move( settings.value( "pos" ).toPoint() );
@@ -380,7 +457,6 @@ void QMainAlderWindow::readSettings()
 void QMainAlderWindow::writeSettings()
 {
   QSettings settings( "CLSA", "Alder" );
-  
   settings.beginGroup( "MainAlderWindow" );
   settings.setValue( "size", this->size() );
   settings.setValue( "pos", this->pos() );
@@ -402,6 +478,7 @@ void QMainAlderWindow::updateInterface()
   this->ui->actionChangePassword->setEnabled( loggedIn );
   this->ui->actionShowAtlas->setEnabled( loggedIn );
   this->ui->actionSaveImage->setEnabled( loggedIn );
+  this->ui->actionLoadUIDs->setEnabled( loggedIn );
 
   this->ui->framePlayerWidget->setEnabled( loggedIn );
   this->ui->splitter->setEnabled( loggedIn );

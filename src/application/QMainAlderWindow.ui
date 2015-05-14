@@ -178,6 +178,7 @@
     <addaction name="actionShowAtlas"/>
     <addaction name="actionShowDicomTags"/>
     <addaction name="actionSaveImage"/>
+    <addaction name="actionLoadUIDs"/>
     <addaction name="separator"/>
     <addaction name="actionLogin"/>
     <addaction name="actionChangePassword"/>
@@ -306,6 +307,11 @@
    </property>
    <property name="toolTip">
     <string>Save image to file</string>
+   </property>
+  </action>
+  <action name="actionLoadUIDs">
+   <property name="text">
+    <string>Load UIDs</string>
    </property>
   </action>
  </widget>

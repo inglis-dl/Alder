@@ -36,6 +36,7 @@ public slots:
   virtual void slotShowDicomTags();
   virtual void slotLogin();
   virtual void slotChangePassword();
+  virtual void slotLoadUIDs();
   virtual void slotUserManagement();
   virtual void slotUpdateDatabase();
   virtual void slotSaveImage();
@@ -66,6 +67,7 @@ private:
   QAlderDicomTagWidget* DicomTagWidget;
   QString lastSavePath;
 
+  void adminLoadUIDs();
   void adminUserManagement();
   void adminUpdateDatabase();
   void adminLoginDo( void (QMainAlderWindow::*fn)() );

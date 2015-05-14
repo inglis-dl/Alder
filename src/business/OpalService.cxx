@@ -95,6 +95,8 @@ namespace Alder
     this->Port = port;
     this->Timeout = timeout;
     this->Verbose = verbose;
+    Application *app = Application::GetInstance();
+    app->Log( "Setup Opal service using cURL version: " + std::string( curl_version() ) );
     curl_global_init( CURL_GLOBAL_SSL );
   }
 
@@ -125,7 +127,7 @@ namespace Alder
     if( !curl )
       throw std::runtime_error( "Unable to create cURL connection to Opal" );
 
-    // put the credentials in a header and the option to return data in jsoIn format
+    // put the credentials in a header and the option to return data in json format
     headers = curl_slist_append( headers, "Accept: application/json" );
     headers = curl_slist_append( headers, credentials.c_str() );
 
@@ -221,7 +223,8 @@ namespace Alder
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::map< std::string, std::map< std::string, std::string > > OpalService::GetRows(
-    const std::string dataSource, const std::string table, const int offset, const int limit ) const
+    const std::string dataSource, const std::string table,
+    const int offset, const int limit ) const
   {
     std::map< std::string, std::map< std::string, std::string > > list;
     std::string identifier, key, value;
@@ -326,7 +329,7 @@ namespace Alder
            << "/valueSet/" << identifier << "/variable/" << variable;
 
     // loop through the values array and get all the values
-    Json::Value values = this->Read( stream.str() ).get( "values", "" );
+    Json::Value values = this->Read( stream.str(), "", false ).get( "values", "" );
 
     for( int i = 0; i < values.size(); ++i )
       retValues.push_back( values[i].get( "value", "" ).asString() );
