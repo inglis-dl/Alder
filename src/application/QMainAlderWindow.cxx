@@ -144,12 +144,12 @@ void QMainAlderWindow::slotOpenInterview()
     {
       // create a progress dialog to observe the progress of the update
       QVTKProgressDialog dialog( this );
-      dialog.setModal( true );
-      dialog.setWindowTitle( tr( "Downloading Exam Images" ) );
-      dialog.setMessage( tr( "Please wait while the interview's images are downloaded." ) );
-      dialog.open();
-      app->UpdateActiveInterviewImageData();
-      dialog.accept();
+      Alder::SingleInterviewProgressFunc func( activeInterview );
+      dialog.Run(
+        "Downloading Exam Images",
+        "Please wait while the interview's images are downloaded.",
+        func );
+      app->InvokeEvent( Alder::Application::ActiveInterviewUpdateImageDataEvent );
     }
   }
 }
@@ -316,11 +316,13 @@ void QMainAlderWindow::slotLoadUIDs()
     {
       // create a progress dialog to observe the progress of the update
       QVTKProgressDialog dialog( this );
-      dialog.setModal( true );
-      dialog.setWindowTitle( tr( "Downloading Images" ) );
-      dialog.setMessage( tr( "Please wait while the images are downloaded." ) );
-      dialog.open();
-      int numLoadedUIDs = Alder::Interview::LoadFromUIDList( uidList );
+      Alder::ListInterviewProgressFunc func( uidList );
+      dialog.Run(
+        "Downloading Images",
+        "Please wait while the images are downloaded.",
+        func );
+
+      int numLoadedUIDs = func.GetNumLoaded();
       Alder::Application *app = Alder::Application::GetInstance();
       std::stringstream log;
       log << "Loaded "
@@ -330,7 +332,6 @@ void QMainAlderWindow::slotLoadUIDs()
           << " requested UIDs from file "
           << fileName.toStdString();
       app->Log( log.str() );
-      dialog.accept();
       if(numLoadedUIDs != uidList.size())
       {
         error = true;
@@ -354,12 +355,11 @@ void QMainAlderWindow::adminUpdateDatabase()
 {
   // create a progress dialog to observe the progress of the update
   QVTKProgressDialog dialog( this );
-  dialog.setModal( true );
-  dialog.setWindowTitle( tr( "Updating Database" ) );
-  dialog.setMessage( tr( "Please wait while the database is updated." ) );
-  dialog.open();
-  Alder::Interview::UpdateInterviewData();
-  dialog.accept();
+  Alder::MultiInterviewProgressFunc func;
+  dialog.Run(
+    "Updating Database",
+    "Please wait while the database is updated.",
+    func );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

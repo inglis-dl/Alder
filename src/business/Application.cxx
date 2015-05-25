@@ -327,6 +327,8 @@ namespace Alder
     this->InvokeEvent( Application::ActiveAtlasImageEvent );
   }
   
+/*
+
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Application::UpdateActiveInterviewImageData()
   {
@@ -336,4 +338,6 @@ namespace Alder
       this->InvokeEvent( Application::ActiveInterviewUpdateImageDataEvent );
     }  
   }
+
+*/  
 }

@@ -13,6 +13,7 @@
 
 #include <Application.h>
 #include <Configuration.h>
+#include <ProgressProxy.h>
 #include <Utilities.h>
 
 #include <vtkCommand.h>
@@ -26,40 +27,23 @@
 
 namespace Alder
 {
-  // initialize the configureEventSent static ivar
-  bool OpalService::configureEventSent = false;
-  bool OpalService::curlProgressChecking = true;
+  bool OpalService::curlProgress = false;
 
   // this function is used by curl to send progress signals
   int OpalService::curlProgressCallback(
-    const void * const notUsed,
+    void* clientData,
     const double downTotal, const double downNow,
     const double upTotal, const double upNow )
   {
-    Application *app = Application::GetInstance();
-
-    if( !app->GetAbortFlag() )
+    double progress = 0.0 == downTotal ? downTotal : downNow / downTotal;
+    ProgressProxy* proxy = static_cast<ProgressProxy*>(clientData);
+    if( 0.0 == downTotal && !proxy->GetBusyProgress() )
     {
-      bool global = false;
-      // send the configure event if it hasn't been sent yet
-      if( !OpalService::configureEventSent  )
-      {
-        // send a pair, the first argument is that this is the local progress, the second to set the mode
-        bool progressBusy = OpalService::curlProgressChecking ? (0.0 == downTotal) : false;
-        std::pair<bool, bool> configureProgress = std::pair<bool, bool>( global, progressBusy );
-        app->InvokeEvent( vtkCommand::ConfigureEvent, static_cast<void *>( &configureProgress ) );
-        OpalService::configureEventSent = true;
-        return 0;
-      }
-
-      // if the downTotal is 0 then we can't send a progress event
-      std::pair<bool, double> progress =
-        std::pair<bool, double>( global, ( 0.0 == downTotal ? downTotal : downNow / downTotal ) );
-
-      app->InvokeEvent( vtkCommand::ProgressEvent, static_cast<void *>( &progress ) );
+      proxy->SetBusyProgressOn();
+      proxy->ConfigureProgress();
     }
-
-    return app->GetAbortFlag() ? 1 : 0;
+    proxy->UpdateProgress( progress );
+    return proxy->GetAbortStatus();
   }
 
   vtkStandardNewMacro( OpalService );
@@ -73,8 +57,10 @@ namespace Alder
     this->Port = 8843;
     this->Timeout = 10;
     this->Verbose = 0;
+    OpalService::curlProgress = false;
   }
 
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   OpalService::~OpalService()
   {
     curl_global_cleanup();
@@ -98,6 +84,12 @@ namespace Alder
     Application *app = Application::GetInstance();
     app->Log( "Setup Opal service using cURL version: " + std::string( curl_version() ) );
     curl_global_init( CURL_GLOBAL_SSL );
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void OpalService::SetCurlProgress( const bool state )
+  {
+    OpalService::curlProgress = state;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -155,28 +147,30 @@ namespace Alder
     curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, 0L );
     curl_easy_setopt( curl, CURLOPT_HTTPHEADER, headers );
     curl_easy_setopt( curl, CURLOPT_URL, url.c_str() );
-    if( progress )
+
+    ProgressProxy proxy;
+    if( progress && OpalService::curlProgress )
     {
+      proxy.SetProgressTypeLocal();
+      proxy.SetBusyProgressOn();
+      proxy.ConfigureProgress();
       curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 0L );
+      curl_easy_setopt( curl, CURLOPT_PROGRESSDATA, (void*)(&proxy) );
       curl_easy_setopt( curl, CURLOPT_PROGRESSFUNCTION, OpalService::curlProgressCallback );
+      proxy.StartProgress();
     }
 
-    // we are using the local progress bar for curl progress, not the global one
-    bool global = false;
-
-    // invoke the start event using the local progress bar
-    app->InvokeEvent( vtkCommand::StartEvent, static_cast<void *>( &global ) );
-
-    // if set, the configure event will be performed during the first callback within curl progress
     res = curl_easy_perform( curl );
-
-    // invoke the end event using the local progress bar
-    app->InvokeEvent( vtkCommand::EndEvent, static_cast<void *>( &global ) );
 
     // clean up
     curl_slist_free_all( headers );
     curl_easy_cleanup( curl );
     if( toFile ) fclose( file );
+
+    if( progress && OpalService::curlProgress )
+    {
+      proxy.EndProgress();
+    }
 
     if( CURLE_OK != res )
     {

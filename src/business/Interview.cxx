@@ -388,7 +388,7 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Interview::UpdateImageData()
+  void Interview::UpdateImageData( ProgressProxy& proxy )
   {
     Application *app = Application::GetInstance();
     User* user = app->GetActiveUser();
@@ -435,70 +435,54 @@ namespace Alder
     {
       // only update image data for exams which have not been downloaded
       std::vector< vtkSmartPointer< Exam > > revisedList;
-      for( auto it = examList.cbegin(); it != examList.cend(); ++it )
+      for( auto examIt = examList.cbegin(); examIt != examList.cend(); ++examIt )
       {
-         if( !(*it)->HasImageData() )
-           revisedList.push_back( *it );
+        if( !(*examIt)->HasImageData() )
+          revisedList.push_back( *examIt );
       }
       examList.clear();
       if( revisedList.empty() ) return;
 
+      proxy.StartProgress();
+
       double index = 0;
-      bool global = true;
-      std::pair<bool, double> progressConfig = std::pair<bool, double>( global, 0.0 );
-      Application *app = Application::GetInstance();
-
-      // we are going to be downloading file type data here, so
-      // we tell opal service on the first curl callback to NOT check if the data
-      // has a substantial return size, and force that we monitor all file downloads using curl progress
-      OpalService::SetCurlProgressChecking( false );
-
-      app->InvokeEvent( vtkCommand::StartEvent, static_cast<void *>( &global ) );
       double size = revisedList.size();
-      for( auto it = revisedList.cbegin(); it != revisedList.cend(); ++it, ++index )
+      for( auto examIt = revisedList.cbegin(); examIt != revisedList.cend(); ++examIt, ++index )
       {
-        progressConfig.second = index / size;
-        app->InvokeEvent( vtkCommand::ProgressEvent, static_cast<void *>( &progressConfig ) );
-        if( app->GetAbortFlag() ) break;
-        ( *it )->UpdateImageData(); // invokes curl progress events
+        double progress = index / size;
+        proxy.UpdateProgress( progress );
+        if( proxy.GetAbortStatus() ) break;
+        ( *examIt )->UpdateImageData();
       }
 
-      if( app->GetAbortFlag() ) app->SetAbortFlag( false );
-
-      app->InvokeEvent( vtkCommand::EndEvent, static_cast<void *>( &global ) );
+      proxy.EndProgress();
     }
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Interview::UpdateInterviewData()
+  void Interview::UpdateInterviewData( ProgressProxy& proxy )
   {
     Application *app = Application::GetInstance();
     OpalService *opal = app->GetOpal();
 
     // get a list of all interview start dates
+    std::vector< std::string > identifierList = opal->GetIdentifiers( "alder", "Interview" );
     std::map< std::string, std::map< std::string, std::string > > list;
     std::map< std::string, std::string > map, key;
     bool done = false;
-    bool global = true;
-    std::pair<bool, double> progressConfig = std::pair<bool, double>( global, 0.0 );
     int limit = 100;
     double index = 0;
-
-    std::vector< std::string > identifierList = opal->GetIdentifiers( "alder", "Interview" );
     double size = (double) identifierList.size();
 
-    // we are going to be downloading non file type data here, so
-    // we tell opal service on the first curl callback to check if the data
-    // has a substantial return size that we can monitor using curl progress
-    OpalService::SetCurlProgressChecking( true );
-    app->InvokeEvent( vtkCommand::StartEvent, static_cast<void *>( &global ) );
+    proxy.StartProgress();
 
     do
     {
-      progressConfig.second = index / size;
-      app->InvokeEvent( vtkCommand::ProgressEvent, static_cast<void *>( &progressConfig ) );
-      if( app->GetAbortFlag() ) break;
-      list = opal->GetRows( "alder", "Interview", index, limit ); // invokes curl progress events
+      double progress = index/size;
+      proxy.UpdateProgress( progress );
+      if( proxy.GetAbortStatus() ) break;
+
+      list = opal->GetRows( "alder", "Interview", index, limit );
 
       for( auto it = list.cbegin(); it != list.cend(); ++it )
       {
@@ -522,12 +506,11 @@ namespace Alder
       index += list.size();
     } while ( !list.empty() );
 
-    if( app->GetAbortFlag() ) app->SetAbortFlag( false );
-    else app->InvokeEvent( vtkCommand::EndEvent, static_cast<void *>( &global ) );
+    proxy.EndProgress();
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  int Interview::LoadFromUIDList( std::vector< std::string > const &uidList )
+  int Interview::LoadFromUIDList( std::vector< std::string > const &uidList, ProgressProxy& proxy )
   {
     vtkSmartPointer< QueryModifier > modifier = vtkSmartPointer< QueryModifier >::New();
     for( auto it = uidList.cbegin(); it != uidList.cend(); ++it )
@@ -549,19 +532,21 @@ namespace Alder
     }
 
     Application *app = Application::GetInstance();
-    OpalService *opal = app->GetOpal();
-    bool global = true;
-    std::pair<bool, double> progressConfig = std::pair<bool, double>( global, 0.0 );
-    OpalService::SetCurlProgressChecking( false );
-    app->InvokeEvent( vtkCommand::StartEvent, static_cast<void *>( &global ) );
     double size = (double) interviewList.size();
     int index = 0;
-    for( auto it = interviewList.begin(); it != interviewList.end(); ++it )
+
+    ProgressProxy innerProxy;
+    innerProxy.SetProgressTypeLocal();
+    innerProxy.SetCurlProgressOff();
+
+    proxy.StartProgress();
+
+    for( auto it = interviewList.begin(); it != interviewList.end(); ++it, ++index )
     {
-      progressConfig.second = index++ / size;
-      std::cout <<  progressConfig.second *100 << " %" << std::endl;
-      app->InvokeEvent( vtkCommand::ProgressEvent, static_cast<void *>( &progressConfig ) );
-      if( app->GetAbortFlag() ) break;
+      double progress = index / size;
+      proxy.UpdateProgress( progress );
+      std::cout << "outer progress: " << (int)(100*progress) << std::endl;
+      if( proxy.GetAbortStatus() ) break;
 
       Interview *interview = *it;
       if( !interview->HasExamData() )
@@ -572,6 +557,11 @@ namespace Alder
         }
         catch( std::runtime_error& e )
         {
+          std::string err = "There was an error while trying to update exam data ( UId : ";
+          err += interview->Get( "UId" ).ToString();
+          err += " ). Error: ";
+          err += e.what();
+          app->Log( err );
           continue;
         }
       }
@@ -579,17 +569,22 @@ namespace Alder
       {
         try
         {
-          interview->UpdateImageData();
+          interview->UpdateImageData( innerProxy );
+          if( innerProxy.GetAbortStatus() ) break;
         }
         catch( std::runtime_error& e )
         {
+          std::string err = "There was an error while trying to update image data ( UId : ";
+          err += interview->Get( "UId" ).ToString();
+          err += " ). Error: ";
+          err += e.what();
+          app->Log( err );
           continue;
         }
       }
     }
 
-    if( app->GetAbortFlag() ) app->SetAbortFlag( false );
-    else app->InvokeEvent( vtkCommand::EndEvent, static_cast<void *>( &global ) );
+    proxy.EndProgress();
 
     return index;
   }

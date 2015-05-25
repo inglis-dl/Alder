@@ -12,6 +12,8 @@
 #include <ui_QVTKProgressDialog.h>
 
 #include <Application.h>
+#include <Interview.h>
+#include <ProgressProxy.h>
 
 #include <utility>
 
@@ -21,7 +23,7 @@ QVTKProgressDialog::QVTKProgressDialog( QWidget* parent )
 {
   this->ui = new Ui_QVTKProgressDialog;
   this->ui->setupUi( this );
-  
+
   QObject::connect(
     this->ui->buttonBox, SIGNAL( rejected() ),
     this, SLOT( slotCancel() ) );
@@ -58,43 +60,65 @@ void QVTKProgressDialog::slotCancel()
 void QVTKProgressDialog::Command::Execute(
   vtkObject *caller, unsigned long eventId, void *callData )
 {
-  if( this->ui )
-  {
-    QProgressBar *progressBar;
-
-    if( vtkCommand::ConfigureEvent == eventId )
-    { // configure the progress bar
-      // pair contains two bools: < which progress bar?, show as busy? >
-      std::pair<bool, bool> progressConfig = *( static_cast< std::pair<bool, bool>* >( callData ) );
-      progressBar = progressConfig.first ? this->ui->globalProgressBar : this->ui->localProgressBar;
-      progressBar->setRange( 0, progressConfig.second ? 0 : 100 );
+  if( vtkCommand::ConfigureEvent == eventId )
+  { // configure the progress bar
+    // pair contains int, bool: < progress bar type, show as busy? >
+    std::pair<int, bool> progressConfig = *( static_cast< std::pair<int, bool>* >( callData ) );
+    QProgressBar* progressBar =
+      Alder::ProgressProxy::Global == progressConfig.first ?
+      this->ui->globalProgressBar : this->ui->localProgressBar;
+    int max = progressConfig.second ? 0 : 100;
+    if( max != progressBar->maximum() )
+    {
+      progressBar->setRange( 0, max );
     }
-    else if( vtkCommand::StartEvent == eventId )
-    { // set the progress to 0
-      // which progress bar?
-      bool global = *( static_cast< bool* >( callData ) );
-      progressBar = global ? this->ui->globalProgressBar : this->ui->localProgressBar;
-      if( 0 < progressBar->maximum() ) progressBar->setValue( 0 );
-    }
-    else if( vtkCommand::ProgressEvent == eventId )
-    { // set the progress to the call data
-      // pair contains bool and double; < which progress bar?, progress value >
-      std::pair<bool, double> progressConfig = *( static_cast< std::pair<bool, double>* >( callData ) );
-      progressBar = progressConfig.first ? this->ui->globalProgressBar : this->ui->localProgressBar;
-      if( 0 < progressBar->maximum() )
-      {
-        int percent = static_cast<int>( 100 * progressConfig.second );
-        progressBar->setValue( percent );
-      }
-    }
-    else if( vtkCommand::EndEvent == eventId )
-    { // set the progress to 100
-      // which progress bar?
-      bool global = *( static_cast< bool* >( callData ) );
-      progressBar = global ? this->ui->globalProgressBar : this->ui->localProgressBar;
-      progressBar->setValue( 100 );
-    }
-
-    QApplication::processEvents();
+    progressBar->parentWidget()->repaint();
   }
+  else if( vtkCommand::StartEvent == eventId )
+  { // set the progress to 0
+    // which progress bar?
+    int progressType = *( static_cast< int* >( callData ) );
+    QProgressBar* progressBar =
+      Alder::ProgressProxy::Global == progressType ?
+      this->ui->globalProgressBar : this->ui->localProgressBar;
+    progressBar->reset();
+  }
+  else if( vtkCommand::ProgressEvent == eventId )
+  { // set the progress to the call data
+    // pair contains int and double; < progress bar type, progress value >
+    std::pair<int, double> progressConfig = *( static_cast< std::pair<int, double>* >( callData ) );
+    QProgressBar* progressBar =
+      Alder::ProgressProxy::Global == progressConfig.first ?
+      this->ui->globalProgressBar : this->ui->localProgressBar;
+    this->ui->localProgressBar->repaint();
+    if( 0 < progressBar->maximum() )
+    {
+      this->ui->localProgressBar->repaint();
+      progressBar->setValue(
+        static_cast<int>( 100 * progressConfig.second ) );
+    }
+  }
+  else if( vtkCommand::EndEvent == eventId )
+  { // set the progress to 100
+    // which progress bar?
+    int progressType = *( static_cast< int* >( callData ) );
+    QProgressBar* progressBar =
+      Alder::ProgressProxy::Global == progressType ?
+      this->ui->globalProgressBar : this->ui->localProgressBar;
+    if( 0 < progressBar->maximum() )
+      progressBar->setValue( 100 );
+  }
+  QApplication::processEvents();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QVTKProgressDialog::Run( const std::string& title, const std::string& message,
+  Alder::BaseInterviewProgressFunc& func )
+{
+  this->setWindowTitle( tr( title.c_str() ) );
+  this->setMessage( tr( message.c_str() ) );
+  this->setModal(true);
+  this->show();
+  func.progressFunc();
+  this->accept();
 }

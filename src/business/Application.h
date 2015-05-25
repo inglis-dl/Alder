@@ -132,7 +132,7 @@ namespace Alder
     /**
      * Proxy request for the active interview to update/download its image data
      */
-    virtual void UpdateActiveInterviewImageData();
+    //virtual void UpdateActiveInterviewImageData();
 
     /**
      * Creates a new instance of a model object given its class name

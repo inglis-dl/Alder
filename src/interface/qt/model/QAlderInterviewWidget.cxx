@@ -175,12 +175,11 @@ void QAlderInterviewWidget::updateActiveInterview( Alder::Interview* interview )
     {
       // create a progress dialog to observe the progress of the update
       QVTKProgressDialog dialog( this );
-      dialog.setModal( true );
-      dialog.setWindowTitle( tr( "Downloading Exam Images" ) );
-      dialog.setMessage( tr( "Please wait while the interview's images are downloaded." ) );
-      dialog.open();
-      interview->UpdateImageData();
-      dialog.accept();
+      Alder::SingleInterviewProgressFunc func( interview );
+      dialog.Run( 
+       "Downloading Exam Images",
+       "Please wait while the interview's images are downloaded.",
+       func ); 
     }
     Alder::Application::GetInstance()->SetActiveInterview( interview );
   }

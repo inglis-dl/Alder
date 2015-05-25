@@ -141,65 +141,53 @@ void QSelectInterviewDialog::slotAccepted()
   if( !ranges.empty() )
   {
     Alder::Application *app = Alder::Application::GetInstance();
-    int uiCol = this->columnIndex["UId"];
+    int uidCol = this->columnIndex["UId"];
     int dateCol = this->columnIndex["VisitDate"];
     bool first = true;
 
     vtkSmartPointer< Alder::Interview > interview =
       vtkSmartPointer< Alder::Interview >::New();
 
-    std::map< std::string, std::string > map;
-
     bool doProgress = ranges.size() > 1 || ranges.at(0).rowCount() > 1;
-    // create a progress dialog to observe the progress of the update
-    QVTKProgressDialog dialog( this->parentWidget() );
-    if( doProgress )
-    {
-      this->hide();
-      dialog.setModal( true );
-      dialog.setWindowTitle( tr( "Downloading Exam Images" ) );
-      dialog.setMessage( tr( "Please wait while the interview's images are downloaded." ) );
-      dialog.open();
-    }
+    std::vector< std::string> uidList;
+    std::map< std::string, std::string > map;
 
     for( QList< QTableWidgetSelectionRange >::const_iterator it =
          ranges.constBegin(); it != ranges.constEnd(); ++it )
     {
       for( int row = (*it).topRow(); row <= (*it).bottomRow(); ++row )
       {
-        QTableWidgetItem* item = this->ui->interviewTableWidget->item( row, uiCol );
-        map["UId"] = item->text().toStdString();
-
+        QTableWidgetItem* item = this->ui->interviewTableWidget->item( row, uidCol );
+        std::string uid = item->text().toStdString();
         item = this->ui->interviewTableWidget->item( row, dateCol );
-        map["VisitDate"] = item->text().toStdString();
+        std::string visitDate = item->text().toStdString();
 
+        map["UId"] = uid;
+        map["VisitDate"] = visitDate;
         interview->Load( map );
-
-        if( !interview->HasImageData() && doProgress )
+        if( !interview->HasImageData() )
+          uidList.push_back( uid );
+        else
         {
-          try
+          if( first )
           {
-            interview->UpdateImageData();
+            app->SetActiveInterview( interview );
+            first = false;
           }
-          catch( std::exception& e )
-          {
-            std::string err = "There was an error while trying to query the database ( UId : ";
-            err += interview->Get( "UId" ).ToString();
-            err += " ). Error: ";
-            err += e.what();
-            app->Log( err );
-          }
-        }
-
-        if( first )
-        {
-          app->SetActiveInterview( interview );
-          first = false;
         }
       }
     }
 
-    if( doProgress) dialog.accept();
+    if( !uidList.empty() && doProgress )
+    {
+      QVTKProgressDialog dialog( this->parentWidget() );
+      Alder::ListInterviewProgressFunc func( uidList );
+      this->hide();
+      dialog.Run(
+        "Downloading Images",
+        "Please wait while the images are downloaded.",
+        func );      
+    }
   }
 
   this->accept();

@@ -71,17 +71,13 @@ namespace Alder
 
     /**
      * Call before invoking the application StartEvent for progress monitoring.
-     * If check is true, then the first curl progress callback will set
+     * If state is true, then the first curl progress callback will set
      * whether the fine level (local) progress should be a regular progress
      * meter or a busy meter, based on whether the expected size of the data
      * to be downloaded is non-zero.  For file type data, this should be called
      * with false, since we expect (image) files to have significant size.
      */
-    static void SetCurlProgressChecking( const bool check = true )
-    {
-      OpalService::configureEventSent = false;
-      OpalService::curlProgressChecking = check;
-    };
+    static void SetCurlProgress( const bool state = true );
 
     /**
      * Returns a list of all identifiers in a particular data source and table
@@ -188,9 +184,10 @@ namespace Alder
     OpalService( const OpalService& ); /** Not implemented. */
     void operator=( const OpalService& ); /** Not implemented. */
 
-    static int curlProgressCallback( const void* const , const double, const double, const double, const double );
-    static bool configureEventSent;
-    static bool curlProgressChecking;
+    static int curlProgressCallback( void* , const double, const double, const double, const double );
+
+  public:  
+    static bool curlProgress;
   };
 }
 

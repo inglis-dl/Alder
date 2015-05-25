@@ -19,6 +19,11 @@
 
 class Ui_QVTKProgressDialog;
 
+namespace Alder
+{
+  class BaseInterviewProgressFunc;
+}  
+
 class QVTKProgressDialog : public QDialog
 {
   Q_OBJECT
@@ -29,6 +34,7 @@ private:
     static Command *New() { return new Command; }
     void Execute( vtkObject *caller, unsigned long eventId, void *callData );
     Ui_QVTKProgressDialog *ui;
+    QWidget *parent;
 
   protected:
     Command() { this->ui = NULL; }
@@ -41,6 +47,9 @@ public:
   ~QVTKProgressDialog();
 
   void setMessage( QString message );
+
+  void Run( const std::string& title, const std::string& message, 
+    Alder::BaseInterviewProgressFunc& func );
   
 public slots:
   virtual void slotCancel();
