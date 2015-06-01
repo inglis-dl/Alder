@@ -5,7 +5,7 @@ WHERE Dimensionality IS NULL
 AND ModalityId IN
 (
   SELECT Id FROM Modality
-  WHERE name IN ('Retinal','Dexa')
+  WHERE Name IN ('Retinal','Dexa')
 );
 
 UPDATE Image
@@ -20,7 +20,7 @@ JOIN Exam ON Exam.Id=Image.ExamId
 SET Dimensionality=2
 WHERE Dimensionality IS NULL
 AND Type='CarotidIntima'
-AND ParentImageId IS NOT NULL
+AND ParentImageId IS NOT NULL;
 
 UPDATE Image
 JOIN Rating ON Image.Id=Rating.ImageId
@@ -34,7 +34,7 @@ AND (
   LOCATE('NO',Image.Note) OR
   LOCATE('NA',Image.Note) OR
   LOCATE('NI',Image.Note)
-)
+);
 
 UPDATE Image
 JOIN Rating ON Image.Id=Rating.ImageId
@@ -56,7 +56,7 @@ AND (
         LOCATE('SB',Image.Note)
       )
   )
-)
+);
 
 UPDATE Image
 JOIN Rating ON Image.Id=Rating.ImageId
@@ -78,8 +78,4 @@ AND (
         LOCATE('ME',Image.Note)
       )
   )
-)
-
-
-
-
+);
