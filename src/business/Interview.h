@@ -26,8 +26,6 @@
 #include <ProgressProxy.h>
 #include <Image.h>
 
-#include <iostream>
-
 /**
  * @addtogroup Alder
  * @{
@@ -144,7 +142,7 @@ namespace Alder
         if( !this->curlProgress )
         {
           proxy.SetProgressTypeLocal();
-        }  
+        }
         proxy.ConfigureProgress();
         this->interview->UpdateImageData( proxy );
       }

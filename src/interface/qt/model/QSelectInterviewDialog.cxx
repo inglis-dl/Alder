@@ -186,7 +186,7 @@ void QSelectInterviewDialog::slotAccepted()
       dialog.Run(
         "Downloading Images",
         "Please wait while the images are downloaded.",
-        func );      
+        func );
     }
   }
 
@@ -291,9 +291,7 @@ void QSelectInterviewDialog::updateRow( const int row, Alder::Interview *intervi
   for( auto examIt = examList.begin(); examIt != examList.end(); ++examIt )
   {
     exam = examIt->GetPointer();
-    vtkSmartPointer< Alder::Modality > modality;
-    exam->GetRecord( modality );
-    modalityName = modality->Get( "Name" ).ToString();
+    modalityName = exam->GetModalityName();
 
     // NOTE: it is possible that an exam with state "Ready" has valid data, but we are leaving
     // those exams out for now since we don't know for sure whether they are always valid

@@ -121,7 +121,6 @@ void QAlderFramePlayerWidgetPrivate::PipelineInfoType::printSelf()const
             << "Last frame request: " << this->currentFrame << std::endl
             << "Maximum frame rate: " << this->maxFrameRate << std::endl
             << "Is connected: " << this->isConnected << std::endl;
-
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

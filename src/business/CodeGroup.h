@@ -1,7 +1,7 @@
 /*=========================================================================
 
   Program:  Alder (CLSA Medical Image Quality Assessment Tool)
-  Module:   Modality.h
+  Module:   CodeGroup.h
   Language: C++
 
   Author: Patrick Emond <emondpd AT mcmaster DOT ca>
@@ -10,17 +10,17 @@
 =========================================================================*/
 
 /**
- * @class Modality
+ * @class CodeGroup
  * @namespace Alder
  *
  * @author Patrick Emond <emondpd AT mcmaster DOT ca>
  * @author Dean Inglis <inglisd AT mcmaster DOT ca>
  *
- * @brief An active record for the Modality table
+ * @brief An active record for the CodeGroup table
  */
 
-#ifndef __Modality_h
-#define __Modality_h
+#ifndef __CodeGroup_h
+#define __CodeGroup_h
 
 #include <ActiveRecord.h>
 
@@ -31,20 +31,20 @@
 
 namespace Alder
 {
-  class Modality : public ActiveRecord
+  class CodeGroup : public ActiveRecord
   {
   public:
-    static Modality *New();
-    vtkTypeMacro( Modality, ActiveRecord );
-    std::string GetName() const { return "Modality"; }
+    static CodeGroup *New();
+    vtkTypeMacro( CodeGroup, ActiveRecord );
+    std::string GetName() const { return "CodeGroup"; }
 
   protected:
-    Modality() {}
-    ~Modality() {}
+    CodeGroup() {}
+    ~CodeGroup() {}
 
   private:
-    Modality( const Modality& ); // Not implemented
-    void operator=( const Modality& ); // Not implemented
+    CodeGroup( const CodeGroup& ); // Not implemented
+    void operator=( const CodeGroup& ); // Not implemented
   };
 }
 

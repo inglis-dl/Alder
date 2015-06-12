@@ -310,11 +310,7 @@ namespace Alder
   bool Image::IsDICOM()
   {
     vtkSmartPointer< Exam > exam;
-    if( this->GetRecord( exam ) )
-    {
-      return exam->IsDICOM();
-    }
-    return false;
+    return this->GetRecord( exam ) ? exam->IsDICOM() : false;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -331,12 +327,14 @@ namespace Alder
     stream << "SELECT Image.Id "
            << "FROM Image "
            << "JOIN Exam ON Image.ExamId = Exam.Id "
+           << "JOIN ScanType ON Exam.ScanTypeId = Exam.ScanTypeId "
            << "JOIN Interview ON Exam.InterviewId = Interview.Id "
            << "JOIN Rating ON Image.Id = Rating.ImageId "
            << "JOIN User ON Rating.UserId = User.Id "
-           << "WHERE Exam.Type = ( "
-           <<   "SELECT Exam.Type "
+           << "WHERE Exam.ScanTypeId = ( "
+           <<   "SELECT Exam.ScanTypeId "
            <<   "FROM Exam "
+           <<   "JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
            <<   "JOIN Image ON Exam.Id = Image.ExamId "
            <<   "WHERE Image.Id = " << this->Get( "Id" ).ToString() << " "
            << ") "
@@ -410,9 +408,10 @@ namespace Alder
     stream << "SELECT Image.Id "
            << "FROM Image "
            << "JOIN Exam ON Image.ExamId = Exam.Id "
+           << "JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
            << "JOIN Rating ON Image.Id = Rating.ImageId "
            << "JOIN User ON Rating.UserId = User.Id "
-           << "WHERE Exam.Type = " << query->EscapeString( exam->Get( "Type" ).ToString() ) << " "
+           << "WHERE ScanType.Type = " << query->EscapeString( exam->GetScanType() ) << " "
            << "AND Image.ParentImageId IS " << ( hasParent ? "NOT" : "" ) << " NULL "
            << "AND Rating = " << rating << " "
            << "AND User.Expert = true "
@@ -444,23 +443,23 @@ namespace Alder
       throw std::runtime_error( "ERROR: no exam record for this image." );
 
     std::string latStr = exam->Get( "Laterality" ).ToString();
-    std::string typeStr = exam->Get( "Type" ).ToString();
+    std::string typeStr = exam->GetScanType();
     int examType = -1;
 
-    if( typeStr == "DualHipBoneDensity" )
+    if( "DualHipBoneDensity" == typeStr )
     {
-      examType = latStr == "left" ? 0 : 1;
+      examType = "left" == latStr ? 0 : 1;
     }
-    else if( typeStr == "ForearmBoneDensity" )
+    else if( "ForearmBoneDensity" == typeStr )
     {
       examType = 2;
     }
-    else if( typeStr == "WholeBodyBoneDensity" )
+    else if( "WholeBodyBoneDensity" == typeStr )
     {
       // check if the image has a parent, if so, it is a body composition file
-      examType =( this->Get( "ParentImageId" ).IsValid() ) ? 4 : 3;
+      examType = this->Get( "ParentImageId" ).IsValid() ? 4 : 3;
     }
-    else if( typeStr == "LateralBoneDensity" )
+    else if( "LateralBoneDensity" == typeStr )
     {
       // the lateral spine scans do not have a report to clean:
       // anoymize the PatientsName dicom tag
@@ -468,7 +467,7 @@ namespace Alder
       return true;
     }
 
-    if( examType == -1 ) return false;
+    if( -1 == examType ) return false;
 
     std::string fileName = this->GetFileName();
     vtkNew<vtkImageDataReader> reader;
@@ -497,7 +496,7 @@ namespace Alder
     do
     {
       int val = static_cast<int>( image->GetScalarComponentAsFloat( ix++, iy, 0, 0 ) );
-      if( val == 255 )
+      if( 255 == val )
       {
         found = true;
         ix--;

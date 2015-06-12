@@ -12,10 +12,13 @@
 #include <ui_QAlderInterviewWidget.h>
 
 #include <Application.h>
+#include <Code.h>
+#include <CodeType.h>
 #include <Exam.h>
 #include <Image.h>
 #include <Interview.h>
 #include <Modality.h>
+#include <QueryModifier.h>
 #include <Rating.h>
 #include <User.h>
 
@@ -37,10 +40,10 @@ QAlderInterviewWidget::QAlderInterviewWidget( QWidget* parent )
   : QWidget( parent )
 {
   Alder::Application *app = Alder::Application::GetInstance();
-  
+
   this->ui = new Ui_QAlderInterviewWidget;
   this->ui->setupUi( this );
-  
+
   // set up child widgets
   this->ui->examTreeWidget->header()->hide();
 
@@ -53,12 +56,23 @@ QAlderInterviewWidget::QAlderInterviewWidget( QWidget* parent )
   QObject::connect(
     this->ui->examTreeWidget, SIGNAL( itemSelectionChanged() ),
     this, SLOT( slotTreeSelectionChanged() ) );
+
+  QObject::connect(
+     this->ui->codeTableWidget, SIGNAL( itemClicked(QTableWidgetItem*) ),
+     this, SLOT( slotCodeChanged(QTableWidgetItem*) ) );
+
   QObject::connect(
     this->ui->ratingSlider, SIGNAL( valueChanged( int ) ),
     this, SLOT( slotRatingChanged( int ) ) );
   QObject::connect(
     this->ui->noteTextEdit, SIGNAL( textChanged() ),
     this, SLOT( slotNoteChanged() ) );
+  QObject::connect(
+    this->ui->resetRatingPushButton, SIGNAL( clicked() ),
+    this, SLOT( slotResetRating() ) );
+  QObject::connect(
+    this->ui->useDerivedCheckBox, SIGNAL( clicked() ),
+    this, SLOT( slotDerivedRatingToggle() ) );
 
   this->Connections = vtkSmartPointer<vtkEventQtSlotConnect>::New();
   this->Connections->Connect( app,
@@ -73,6 +87,10 @@ QAlderInterviewWidget::QAlderInterviewWidget( QWidget* parent )
     Alder::Application::ActiveImageEvent,
     this,
     SLOT( updateInfo() ) );
+  this->Connections->Connect( app,
+    Alder::Application::ActiveImageEvent,
+    this,
+    SLOT( updateCodeList() ) );
   this->Connections->Connect( app,
     Alder::Application::ActiveImageEvent,
     this,
@@ -100,7 +118,7 @@ QAlderInterviewWidget::QAlderInterviewWidget( QWidget* parent )
   this->Viewer->InterpolateOff();
   this->Viewer->SetImageToSinusoid();
 
-  this->updateEnabled();  
+  this->updateEnabled();
 
   this->initializeTreeWidget();
 };
@@ -129,7 +147,7 @@ void QAlderInterviewWidget::slotPrevious()
       this->ui->loadedCheckBox->isChecked(),
       this->ui->unratedCheckBox->isChecked() );
 
-    this->updateActiveInterview( interview );  
+    this->updateActiveInterview( interview );
   }
 }
 
@@ -145,7 +163,7 @@ void QAlderInterviewWidget::slotNext()
       this->ui->loadedCheckBox->isChecked(),
       this->ui->unratedCheckBox->isChecked() );
 
-    this->updateActiveInterview( interview );  
+    this->updateActiveInterview( interview );
   }
 }
 
@@ -170,16 +188,16 @@ void QAlderInterviewWidget::updateActiveInterview( Alder::Interview* interview )
     if( !interview->HasExamData() )
     {
       interview->UpdateExamData();
-    } 
+    }
     if( !interview->HasImageData() )
     {
       // create a progress dialog to observe the progress of the update
       QVTKProgressDialog dialog( this );
       Alder::SingleInterviewProgressFunc func( interview );
-      dialog.Run( 
+      dialog.Run(
        "Downloading Exam Images",
        "Please wait while the interview's images are downloaded.",
-       func ); 
+       func );
     }
     Alder::Application::GetInstance()->SetActiveInterview( interview );
   }
@@ -226,8 +244,8 @@ void QAlderInterviewWidget::slotRatingChanged( int value )
 
     rating->Save();
   }
-  this->ui->ratingValueLabel->setText( 0 == value ? 
-    tr( "N/A" ) : 
+  this->ui->ratingValueLabel->setText( 0 == value ?
+    tr( "N/A" ) :
     QString::number( value ) );
 }
 
@@ -249,10 +267,10 @@ void QAlderInterviewWidget::slotHideControls( bool hide )
     {
       if( QWidgetItem* item = dynamic_cast<QWidgetItem*>(
           layout->itemAt( j ) ) )
-      {    
+      {
         widgets.append( item->widget() );
-      }  
-    }  
+      }
+    }
   }
   for( int i = 0; i < widgets.count(); ++i )
   {
@@ -317,20 +335,156 @@ void QAlderInterviewWidget::updateInfo()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderInterviewWidget::updateCodeList()
+{
+  Alder::Application *app = Alder::Application::GetInstance();
+  Alder::Image *image = app->GetActiveImage();
+  if( !image ) return;
+  vtkSmartPointer< Alder::Exam > exam;
+  image->GetRecord( exam );
+  std::map<int,std::string> codeMap = exam->GetCodeTypeData();
+
+  int colCount = 4;
+  int imax = codeMap.size()-1;
+  if( colCount > imax ) colCount = imax;
+  int rowCount = 0;
+  for( int i = 0; i < imax; i += colCount ) rowCount++;
+
+  this->ui->codeTableWidget->clear();
+  this->ui->codeTableWidget->setColumnCount(colCount);
+  this->ui->codeTableWidget->setRowCount(rowCount);
+
+  auto it = codeMap.begin();
+  for( int row = 0; row < rowCount;  ++row )
+  {
+    for( int column = 0; column < colCount; ++column )
+    {
+      if( it != codeMap.end() )
+      {
+        QTableWidgetItem* item = new QTableWidgetItem();
+        this->ui->codeTableWidget->setItem(row,column,item);
+        QCheckBox* box = new QCheckBox(tr(it->second.c_str()));
+        this->ui->codeTableWidget->setCellWidget(row,column, box );
+        box->setProperty("column", QVariant(column));
+        box->setProperty("row", QVariant(row));
+        box->setProperty("codeTypeId", QVariant(it->first));
+        QObject::connect(
+          box, SIGNAL( toggled(bool) ),
+          this, SLOT( slotCodeSelected() ) );
+        Qt::ItemFlags flags = item->flags();
+        flags &= ~(Qt::ItemIsDropEnabled|Qt::ItemIsDragEnabled|Qt::ItemIsSelectable|Qt::ItemIsEditable);
+        item->setFlags(flags);
+        ++it;
+      }
+      else
+      {
+        QTableWidgetItem* item = this->ui->codeTableWidget->itemAt( row, column );
+        Qt::ItemFlags flags = Qt::NoItemFlags;
+        item->setFlags(flags);
+      }
+    }
+  }
+  this->ui->codeTableWidget->resizeColumnsToContents();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderInterviewWidget::slotCodeChanged(QTableWidgetItem* item)
+{
+  QCheckBox* box = qobject_cast<QCheckBox*>(this->ui->codeTableWidget->cellWidget(item->row(), item->column()));
+  if( box )
+  {
+    box->setChecked(!box->isChecked());
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderInterviewWidget::slotCodeSelected()
+{
+  // who sent this?
+  QCheckBox* box = qobject_cast<QCheckBox*>(sender());
+  if( box )
+  {
+    int column = box->property("column").toInt();
+    int row = box->property("row").toInt();
+    std::string codeTypeId = box->property("codeTypeId").toString().toStdString();
+    bool codeSelected = box->isChecked();
+    std::string codeStr = box->text().toStdString();
+    // update the rating, the string of codes, and the slider
+
+    Alder::Application *app = Alder::Application::GetInstance();
+
+    // make sure we have an active image
+    Alder::User *user = app->GetActiveUser();
+    Alder::Image *image = app->GetActiveImage();
+
+    if( user && image )
+    {
+      // get the codetype
+      vtkNew< Alder::CodeType > codeType;
+      if( codeType->Load( "Id", codeTypeId ) )
+      {
+        std::map< std::string, std::string > map;
+        vtkVariant userId = user->Get( "Id" );
+        vtkVariant imageId = image->Get( "Id" );
+        map["UserId"] = userId.ToString();
+        map["ImageId"] = imageId.ToString();
+        vtkNew< Alder::Rating > rating;
+        if( !rating->Load( map ) )
+        { // no record exists, set the user and image ids
+          rating->Set( "UserId", userId.ToInt() );
+          rating->Set( "ImageId", imageId.ToInt() );
+          rating->Save();
+        }
+
+        vtkNew< Alder::Code > code;
+        map["CodeTypeId"] = codeTypeId;
+        if( codeSelected )
+        {
+          if( !code->Load( map ) )
+          {
+            code->Set( "UserId", userId.ToInt() );
+            code->Set( "ImageId", imageId.ToInt() );
+            code->Set( "CodeTypeId", codeTypeId );
+            code->Save();
+          }
+        }
+        else
+        {
+          if( code->Load( map ) )
+            code->Remove();
+        }
+
+        bool useDerived = this->ui->useDerivedCheckBox->isChecked();
+        rating->UpdateDerivedRating( useDerived );
+        vtkVariant derivedRating = rating->Get("DerivedRating");
+        this->ui->derivedRatingLabel->setText( tr( "Derived Rating " ) + derivedRating.ToString().c_str() );
+        if( useDerived )
+        {
+          bool oldSignalState = this->ui->ratingSlider->blockSignals( true );
+          this->ui->ratingSlider->setValue( derivedRating.ToInt() );
+          this->ui->ratingValueLabel->setText( QString::number( derivedRating.ToInt() ) );
+          this->ui->ratingSlider->blockSignals( oldSignalState );
+        }
+      }
+    }
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderInterviewWidget::initializeTreeWidget()
 {
   std::vector< vtkSmartPointer< Alder::Modality > > modalityList;
   Alder::Modality::GetAll( &modalityList );
   QTreeWidgetItem *item = NULL;
   this->ModalityLookup.clear();
-  
+
   QTreeWidgetItem *root = new QTreeWidgetItem( this->ui->examTreeWidget );
   root->setText( 0, "Interview" );
   root->setExpanded( true );
   root->setFlags( Qt::ItemIsEnabled );
   this->ui->examTreeWidget->addTopLevelItem( root );
 
-  for( auto modalityIt = modalityList.begin(); 
+  for( auto modalityIt = modalityList.begin();
        modalityIt != modalityList.end(); ++modalityIt )
   {
     Alder::Modality *modality = modalityIt->GetPointer();
@@ -338,7 +492,7 @@ void QAlderInterviewWidget::initializeTreeWidget()
     item = new QTreeWidgetItem( root );
     item->setText( 0, name.c_str() );
     item->setExpanded( false );
-    item->setDisabled( true );    
+    item->setDisabled( true );
     this->ModalityLookup[name] = item;
   }
 }
@@ -393,17 +547,15 @@ void QAlderInterviewWidget::updateExamTreeWidget()
       item = this->ModalityLookup[name];
       item->setDisabled( false );
     }
-    
+
     std::vector< vtkSmartPointer< Alder::Exam > > examList;
     interview->GetList( &examList );
 
     for( auto examIt = examList.begin(); examIt != examList.end(); ++examIt )
     {
       Alder::Exam *exam = examIt->GetPointer();
-
-      vtkSmartPointer< Alder::Modality > modality;
-      exam->GetRecord( modality );
-      item = this->ModalityLookup[ modality->Get("Name").ToString() ];
+      std::string modalityName = exam->GetModalityName();
+      item = this->ModalityLookup[ modalityName ];
       if( item->isDisabled() ) continue;
 
       name = tr( "Exam" ) + ": ";
@@ -414,7 +566,7 @@ void QAlderInterviewWidget::updateExamTreeWidget()
         name += " ";
       }
 
-      std::string examType = exam->Get( "Type" ).ToString();
+      std::string examType = exam->GetScanType();
       name += tr( examType.c_str() );
 
       QTreeWidgetItem *examItem = new QTreeWidgetItem( item );
@@ -431,14 +583,14 @@ void QAlderInterviewWidget::updateExamTreeWidget()
 
       // display the status of the exam
       examItem->setIcon( 0,
-        imageList.empty() ? 
-        QIcon(":/icons/x-icon" ) : 
+        imageList.empty() ?
+        QIcon(":/icons/x-icon" ) :
         QIcon(":/icons/eye-visible-icon" ) );
 
       for( auto imageIt = imageList.begin(); imageIt != imageList.end(); ++imageIt )
       {
         Alder::Image *image = imageIt->GetPointer();
-        
+
         name = tr( "Image #" );
         name += image->Get( "Acquisition" ).ToString().c_str();
         QTreeWidgetItem *imageItem = new QTreeWidgetItem( examItem );
@@ -447,9 +599,9 @@ void QAlderInterviewWidget::updateExamTreeWidget()
 
         if( image->Get( "Dimensionality" ).ToInt() == 3 )
         {
-          imageItem->setIcon(0, QIcon(":/icons/movie-icon" ) );             
+          imageItem->setIcon(0, QIcon(":/icons/movie-icon" ) );
         }
-         
+
         imageItem->setExpanded( true );
         imageItem->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
 
@@ -483,8 +635,8 @@ void QAlderInterviewWidget::updateExamTreeWidget()
 
   // set and expand the selected item after restoring signals
   // so that other UI elements get updated
-  if( selectedItem ) 
-  { 
+  if( selectedItem )
+  {
     QTreeWidgetItem* item = selectedItem;
     while( item->parent() ) item = item->parent();
     this->ui->examTreeWidget->expandItem( item );
@@ -495,38 +647,161 @@ void QAlderInterviewWidget::updateExamTreeWidget()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderInterviewWidget::slotResetRating()
+{
+  Alder::Application *app = Alder::Application::GetInstance();
+
+  // make sure we have an active image
+  Alder::User *user = app->GetActiveUser();
+  Alder::Image *image = app->GetActiveImage();
+
+  if( user && image )
+  {
+    std::map< std::string, std::string > map;
+    vtkVariant userId = user->Get( "Id" );
+    vtkVariant imageId = image->Get( "Id" );
+    map["UserId"] = userId.ToString();
+    map["ImageId"] = imageId.ToString();
+    vtkNew< Alder::Rating > rating;
+    if( rating->Load( map ) )
+      rating->Remove();
+
+    std::vector< vtkSmartPointer< Alder::Code > > codeList;
+    vtkSmartPointer< Alder::QueryModifier > modifier = vtkSmartPointer< Alder::QueryModifier >::New();
+    modifier->Where( "UserId", "=" , userId );
+    modifier->Where( "ImageId", "=" , imageId );
+    Alder::Code::GetAll( &codeList, modifier );
+    for( auto it = codeList.begin(); it != codeList.end(); ++it )
+      (*it)->Remove();
+
+    for( int row = 0; row < this->ui->codeTableWidget->rowCount(); ++row )
+      for( int col = 0; col < this->ui->codeTableWidget->columnCount(); ++col )
+      {
+        QCheckBox* box = qobject_cast<QCheckBox*>(this->ui->codeTableWidget->cellWidget( row, col ));
+        if( box )
+        {
+          box->blockSignals( true );
+          box->setChecked( false );
+          box->blockSignals( false );
+        }
+      }
+
+    this->ui->derivedRatingLabel->setText( tr( "Derived Rating N/A" ) );
+
+    bool oldSignalState = this->ui->ratingSlider->blockSignals( true );
+    this->ui->ratingSlider->setValue( 0 );
+    this->ui->ratingValueLabel->setText( tr( "N/A" ) );
+    this->ui->ratingSlider->blockSignals( oldSignalState );
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderInterviewWidget::updateRating()
 {
   // stop the rating slider's signals until we are done
   bool oldSignalState = this->ui->ratingSlider->blockSignals( true );
 
   int ratingValue = 0;
+  int derivedRating = 0;
   Alder::Application *app = Alder::Application::GetInstance();
 
   // make sure we have an active image
   Alder::User *user = app->GetActiveUser();
   Alder::Image *image = app->GetActiveImage();
-  
+  vtkVariant userId;
+  vtkVariant imageId;
+
   if( user && image )
   {
     std::map< std::string, std::string > map;
-    map["UserId"] = user->Get( "Id" ).ToString();
-    map["ImageId"] = image->Get( "Id" ).ToString();
+    userId = user->Get( "Id" );
+    imageId = image->Get( "Id" );
+    map["UserId"] = userId.ToString();
+    map["ImageId"] = imageId.ToString();
     vtkNew< Alder::Rating > rating;
     if( rating->Load( map ) )
     {
       vtkVariant v = rating->Get( "Rating" );
       if( v.IsValid() ) ratingValue = v.ToInt();
+      v = rating->Get( "DerivedRating" );
+      if( v.IsValid() ) derivedRating = v.ToInt();
     }
+    std::vector< vtkSmartPointer< Alder::Code > > codeList;
+    vtkSmartPointer< Alder::QueryModifier > modifier = vtkSmartPointer< Alder::QueryModifier >::New();
+    modifier->Where( "UserId", "=" , userId );
+    modifier->Where( "ImageId", "=" , imageId );
+    Alder::Code::GetAll( &codeList, modifier );
+    std::vector<std::string> codeString;
+    QStringList qlist;
+    for( auto it = codeList.begin(); it != codeList.end(); ++it )
+    {
+      vtkSmartPointer< Alder::CodeType > codeType;
+      if( (*it)->GetRecord(codeType) )
+        qlist << codeType->Get("Code").ToString().c_str();
+    }
+    qlist.removeDuplicates();
+
+    for( int row = 0; row < this->ui->codeTableWidget->rowCount(); ++row )
+      for( int col = 0; col < this->ui->codeTableWidget->columnCount(); ++col )
+      {
+        QCheckBox* box = qobject_cast<QCheckBox*>(this->ui->codeTableWidget->cellWidget( row, col ));
+        if( box && -1 != qlist.indexOf(box->text()) )
+        {
+          box->blockSignals( true );
+          box->setChecked( true );
+          box->blockSignals( false );
+        }
+      }
   }
 
   this->ui->ratingSlider->setValue( ratingValue );
-  this->ui->ratingValueLabel->setText( 0 == ratingValue ? 
-    tr( "N/A" ) : 
+  this->ui->ratingValueLabel->setText( 0 == ratingValue ?
+    tr( "N/A" ) :
     QString::number( ratingValue ) );
+  this->ui->derivedRatingLabel->setText( "Derived Rating " +
+    ( 0 == derivedRating ? tr( "N/A" ) : QString::number( derivedRating ) ) );
+
+  this->ui->useDerivedCheckBox->setChecked(
+    ( derivedRating == ratingValue ? true : false ) );
 
   // re-enable the rating slider's signals
   this->ui->ratingSlider->blockSignals( oldSignalState );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderInterviewWidget::slotDerivedRatingToggle()
+{
+  bool useDerived = this->ui->useDerivedCheckBox->isChecked();
+  if( useDerived )
+  {
+    Alder::Application *app = Alder::Application::GetInstance();
+
+    // make sure we have an active image
+    Alder::User *user = app->GetActiveUser();
+    Alder::Image *image = app->GetActiveImage();
+    if( user && image )
+    {
+      std::map< std::string, std::string > map;
+      map["UserId"] = user->Get("Id").ToString();
+      map["ImageId"] = image->Get("Id").ToString();
+      vtkNew< Alder::Rating > rating;
+      int ratingValue;
+      int derivedRating;
+      if( rating->Load( map ) )
+      {
+        vtkVariant v = rating->Get( "Rating" );
+        if( v.IsValid() ) ratingValue = v.ToInt();
+        v = rating->Get( "DerivedRating" );
+        if( v.IsValid() ) derivedRating = v.ToInt();
+        if( derivedRating != ratingValue )
+        {
+          this->ui->ratingSlider->setEnabled( true );
+          this->ui->ratingSlider->setValue( v.ToInt() );
+        }
+      }
+    }
+  }
+  this->ui->ratingSlider->setEnabled( !useDerived );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -557,6 +832,9 @@ void QAlderInterviewWidget::updateEnabled()
   this->ui->nextPushButton->setEnabled( interview );
   this->ui->examTreeWidget->setEnabled( interview );
 
-  this->ui->ratingSlider->setEnabled( image );
+  this->ui->useDerivedCheckBox->setEnabled( image );
+  this->ui->resetRatingPushButton->setEnabled( image );
+  this->ui->codeTableWidget->setEnabled( image );
+  this->ui->ratingSlider->setEnabled( image && !this->ui->useDerivedCheckBox->isChecked() );
   this->ui->noteTextEdit->setEnabled( image );
 }

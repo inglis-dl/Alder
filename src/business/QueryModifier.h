@@ -12,12 +12,12 @@
 /**
  * @class QueryModifier
  * @namespace Alder
- * 
+ *
  * @author Patrick Emond <emondpd AT mcmaster DOT ca>
  * @author Dean Inglis <inglisd AT mcmaster DOT ca>
- * 
+ *
  * @brief A class used to modifier a database query.
- * 
+ *
  * QueryModifier provides a way to modify a database query including where, limit and offset keywords.
  * This object can be passed to the ActiveRecord class when querying records.
  */
@@ -48,6 +48,14 @@ namespace Alder
       CLOSE
     };
 
+    enum JoinType {
+      PLAIN,
+      LEFT,
+      RIGHT,
+      CROSS,
+      INNER
+    };
+
     struct WhereParameter
     {
       WhereParameter() : format( true ), logicalOr( false ), bracket( QueryModifier::NONE ) {}
@@ -59,14 +67,28 @@ namespace Alder
       BracketType bracket;
     };
 
+    struct JoinParameter
+    {
+      JoinParameter() : type( QueryModifier::PLAIN ) {}
+      std::string table;
+      std::string on_left;
+      std::string on_right;
+      JoinType type;
+    };
+
   public:
     static QueryModifier *New();
     vtkTypeMacro( QueryModifier, ModelObject );
 
     /**
+     *  Convenience method to reset the modifier.     *
+     */
+    virtual void Reset();
+
+    /**
      * Add a where statement to the modifier.
      * This method appends where clauses onto the end of already existing where clauses.
-     */    
+     */
     virtual void Where(
       const std::string column, const std::string oper, const vtkVariant value,
       const bool format = true, const bool logicalOr = false );
@@ -115,29 +137,36 @@ namespace Alder
     virtual std::string GetSql( const bool appending = false ) const;
 
     /**
+     * Returns an SQL join statement.
+     * This method should only be called by a record class and only after all modifications
+     * have been set.
+     */
+    virtual std::string GetJoin() const;
+
+    /**
      * Returns an SQL where statement.
-     * This method should only be called by an record class and only after all modifications
+     * This method should only be called by a record class and only after all modifications
      * have been set.
      */
     virtual std::string GetWhere( const bool appending = false ) const;
-    
+
     /**
      * Returns an SQL group statement.
-     * This method should only be called by an record class and only after all modifications
+     * This method should only be called by a record class and only after all modifications
      * have been set.
      */
     virtual std::string GetGroup() const;
-    
+
     /**
      * Returns an SQL order statement.
-     * This method should only be called by an record class and only after all modifications
+     * This method should only be called by a record class and only after all modifications
      * have been set.
      */
     virtual std::string GetOrder() const;
-    
+
     /**
      * Returns an SQL limit statement.
-     * This method should only be called by an record class and only after all modifications
+     * This method should only be called by a record class and only after all modifications
      * have been set.
      */
     virtual std::string GetLimit() const;
@@ -147,11 +176,21 @@ namespace Alder
      */
     virtual void Merge( QueryModifier *modifier );
 
+    /**
+     * Add a join statement to the modifier.
+     * This method prepends join clauses onto already existing join clauses.
+     */
+    virtual void Join( const std::string table,
+                       const std::string on_left,
+                       const std::string on_right,
+                       const JoinType type = QueryModifier::PLAIN );
+
   protected:
     QueryModifier();
     ~QueryModifier() {}
 
     std::vector<WhereParameter> WhereList;
+    std::vector<JoinParameter> JoinList;
     std::map<std::string,bool> OrderList;
     std::vector<std::string> GroupList;
     int LimitCount;

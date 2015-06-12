@@ -12,12 +12,12 @@
 /**
  * @class ActiveRecord
  * @namespace Alder
- * 
+ *
  * @author Patrick Emond <emondpd AT mcmaster DOT ca>
  * @author Dean Inglis <inglisd AT mcmaster DOT ca>
- * 
+ *
  * @brief Abstract base class for all active record classes
- * 
+ *
  * ActiveRecord provides a programming interface to the database.  All classes
  * which correspond directly to a table (and named exactly the same way) must
  * extend this class.
@@ -91,12 +91,12 @@ namespace Alder
      * @throws runtime_error
      */
     virtual void Remove();
-    
+
     /**
      * Get the id of the last inserted record.
      */
     int GetLastInsertId() const;
-    
+
     /**
      * Provides a list of all records which exist in a table.
      * @param list vector An existing vector to put all records into.
@@ -249,7 +249,7 @@ namespace Alder
       query->NextRow();
       return 0 < query->DataValue( 0 ).ToInt();
     }
-    
+
     /**
      * This method should only be used by records which have a many to many relationship
      * with another record type.  It adds another record to this one.
@@ -276,10 +276,10 @@ namespace Alder
       query->SetQuery( sql.str().c_str() );
       query->Execute();
     }
-    
+
     /**
      * This method should only be used by records which have a many to many relationship
-     * with another record type.  It adds another record to this one.
+     * with another record type.  It removes the record related to this one.
      * @throws runtime_error
      */
     template <class T> void RemoveRecord( vtkSmartPointer< T > &record )
@@ -292,7 +292,7 @@ namespace Alder
 
       // first make sure we have the correct relationship with the given record
       if( ActiveRecord::ManyToMany != this->GetRelationship( type ) )
-        throw std::runtime_error( "Cannot add record without many-to-many relationship." );
+        throw std::runtime_error( "Cannot remove record without many-to-many relationship." );
 
       sql << "DELETE FROM " << this->GetName() << "Has" << type << " "
           << "WHERE " << this->GetName() << "Id = " << this->Get( "Id" ).ToInt() << " "

@@ -17,6 +17,7 @@
 #include <Interview.h>
 #include <Modality.h>
 #include <Rating.h>
+#include <ScanType.h>
 #include <User.h>
 
 #include <vtkEventQtSlotConnect.h>
@@ -32,7 +33,7 @@ QAlderAtlasWidget::QAlderAtlasWidget( QWidget* parent )
   : QWidget( parent )
 {
   Alder::Application *app = Alder::Application::GetInstance();
-  
+
   this->ui = new Ui_QAlderAtlasWidget;
   this->ui->setupUi( this );
 
@@ -55,7 +56,7 @@ QAlderAtlasWidget::QAlderAtlasWidget( QWidget* parent )
     this, SLOT( updateViewer() ) );
   this->Connections->Connect( app,
     Alder::Application::ActiveAtlasImageEvent,
-    this, SLOT( updateEnabled() ) );    
+    this, SLOT( updateEnabled() ) );
 
   this->Viewer = vtkSmartPointer<vtkMedicalImageViewer>::New();
   vtkRenderWindow* renwin = this->ui->imageWidget->GetRenderWindow();
@@ -94,7 +95,7 @@ void QAlderAtlasWidget::hideEvent( QHideEvent* event )
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 vtkMedicalImageViewer* QAlderAtlasWidget::GetViewer()
-{ 
+{
   return static_cast<vtkMedicalImageViewer*>(this->Viewer.GetPointer());
 }
 
@@ -102,7 +103,7 @@ vtkMedicalImageViewer* QAlderAtlasWidget::GetViewer()
 void QAlderAtlasWidget::updateAtlasImage()
 {
   if( ! this->isVisible() ) return;
-  
+
   Alder::Application *app = Alder::Application::GetInstance();
   Alder::Image *atlasImage = app->GetActiveAtlasImage();
   Alder::Image *image = app->GetActiveImage();
@@ -120,7 +121,7 @@ void QAlderAtlasWidget::updateAtlasImage()
     {
       vtkSmartPointer< Alder::Exam > atlasExam;
       atlasImage->GetRecord( atlasExam );
-      if( exam->Get( "Type" ) != atlasExam->Get( "Type" ) ) getNewAtlasImage = true;
+      if( exam->GetScanType() != atlasExam->GetScanType() ) getNewAtlasImage = true;
     }
 
     if( getNewAtlasImage )
@@ -137,7 +138,7 @@ void QAlderAtlasWidget::slotPrevious()
 {
   Alder::Application *app = Alder::Application::GetInstance();
   Alder::Image *image = app->GetActiveAtlasImage();
-  
+
   if( NULL != image )
   {
     vtkSmartPointer< Alder::Image > previousImage =
@@ -151,7 +152,7 @@ void QAlderAtlasWidget::slotNext()
 {
   Alder::Application *app = Alder::Application::GetInstance();
   Alder::Image *image = app->GetActiveAtlasImage();
-  
+
   if( NULL != image )
   {
     vtkSmartPointer< Alder::Image > nextImage =
@@ -204,8 +205,10 @@ void QAlderAtlasWidget::updateInfo()
       uidString = interview->Get( "UId" ).ToString().c_str();
       codeString = image->GetCode().c_str();
 
+      vtkSmartPointer< Alder::ScanType > scanType;
+      exam->GetRecord( scanType );
       vtkSmartPointer< Alder::Modality > modality;
-      exam->GetRecord( modality );
+      scanType->GetRecord( modality );
       helpString = modality->Get( "Help" ).ToString();
     }
   }

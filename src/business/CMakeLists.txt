@@ -3,6 +3,9 @@ PROJECT( AlderBusiness )
 SET( AlderBusiness_SRCS
   ActiveRecord.cxx
   Application.cxx
+  Code.cxx
+  CodeGroup.cxx
+  CodeType.cxx
   Configuration.cxx
   Database.cxx
   Exam.cxx
@@ -14,6 +17,7 @@ SET( AlderBusiness_SRCS
   ProgressProxy.cxx
   QueryModifier.cxx
   Rating.cxx
+  ScanType.cxx
   User.cxx
 )
 
@@ -34,12 +38,12 @@ INCLUDE_DIRECTORIES(
 
 ADD_LIBRARY( AlderBusiness ${AlderBusiness_SRCS} )
 
-TARGET_LINK_LIBRARIES( AlderBusiness 
+TARGET_LINK_LIBRARIES( AlderBusiness
   AlderVTK
   ${CURL_LIBRARY}
   ${JSONCPP_LIBRARIES}
-)  
-  
-INSTALL( TARGETS AlderBusiness 
+)
+
+INSTALL( TARGETS AlderBusiness
  DESTINATION lib
 )

@@ -26,6 +26,7 @@ class Interview;
 class vtkEventQtSlotConnect;
 class vtkMedicalImageViewer;
 class Ui_QAlderInterviewWidget;
+class QTableWidgetItem;
 class QTreeWidgetItem;
 
 class QAlderInterviewWidget : public QWidget
@@ -43,13 +44,18 @@ public slots:
   virtual void slotNext();
   virtual void slotTreeSelectionChanged();
   virtual void slotRatingChanged( int );
+  virtual void slotResetRating();
   virtual void slotNoteChanged();
+  virtual void slotCodeChanged(QTableWidgetItem*);
+  virtual void slotCodeSelected();
+  virtual void slotDerivedRatingToggle();
   virtual void slotHideControls( bool );
   virtual void updateInfo();
   virtual void updateExamTreeWidget();
   virtual void updateRating();
   virtual void updateViewer();
   virtual void updateEnabled();
+  virtual void updateCodeList();
   virtual void saveImage( const QString& fileName );
 
 protected:

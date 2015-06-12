@@ -12,7 +12,6 @@
 #include <Configuration.h>
 #include <Exam.h>
 #include <Interview.h>
-#include <Modality.h>
 #include <User.h>
 
 #include <vtkNew.h>
@@ -118,13 +117,11 @@ int main( int argc, char** argv )
       for( auto examIt = examList.begin(); examIt != examList.end(); ++examIt )
       {
         Alder::Exam *exam = examIt->GetPointer();
-        vtkSmartPointer< Alder::Modality > modality;
-        exam->GetRecord( modality );
-        std::string modStr = modality->Get( "Name" ).ToString();
+        std::string modStr = exam->GetModalityName();
 
         if( modStr != "Dexa" ) continue;
 
-        std::string typeStr = exam->Get( "Type" ).ToString();
+        std::string typeStr = exam->GetScanType();
         std::string latStr = exam->Get( "Laterality" ).ToString();
 
         std::vector< vtkSmartPointer< Alder::Image > > imageList;

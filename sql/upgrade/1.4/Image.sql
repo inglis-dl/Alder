@@ -1,31 +1,32 @@
 UPDATE Image
 JOIN Exam ON Exam.Id=Image.ExamId
+JOIN ScanType ON ScanType.Id=Exam.ScanTypeId
+JOIN Modality ON Modality.Id=ScanType.ModalityId
 SET Dimensionality=2
 WHERE Dimensionality IS NULL
-AND ModalityId IN
-(
-  SELECT Id FROM Modality
-  WHERE Name IN ('Retinal','Dexa')
-);
+AND Modality.Name IN ('Retinal','Dexa');
 
 UPDATE Image
 JOIN Exam ON Exam.Id=Image.ExamId
+JOIN ScanType ON ScanType.Id=Exam.ScanTypeId
 SET Dimensionality=3
 WHERE Dimensionality IS NULL
-AND Type IN ('CarotidIntima','Plaque')
+AND ScanType.Type IN ('CarotidIntima','Plaque')
 AND ParentImageId IS NULL;
 
 UPDATE Image
 JOIN Exam ON Exam.Id=Image.ExamId
+JOIN ScanType ON ScanType.Id=Exam.ScanTypeId
 SET Dimensionality=2
 WHERE Dimensionality IS NULL
-AND Type='CarotidIntima'
+AND ScanType.Type='CarotidIntima'
 AND ParentImageId IS NOT NULL;
 
 UPDATE Image
 JOIN Rating ON Image.Id=Rating.ImageId
 JOIN Exam ON Exam.Id=Image.ExamId
-JOIN Modality ON Exam.ModalityId=Modality.Id
+JOIN ScanType ON ScanType.Id=Exam.ScanTypeId
+JOIN Modality ON Modality.Id=ScanType.ModalityId
 SET Note = CONCAT_WS(', ',Note, 'ZE')
 WHERE Rating.Rating = 1
 AND Modality.Name='Ultrasound'
@@ -39,7 +40,8 @@ AND (
 UPDATE Image
 JOIN Rating ON Image.Id=Rating.ImageId
 JOIN Exam ON Exam.Id=Image.ExamId
-JOIN Modality ON Exam.ModalityId=Modality.Id
+JOIN ScanType ON ScanType.Id=Exam.ScanTypeId
+JOIN Modality ON Modality.Id=ScanType.ModalityId
 SET Note = CONCAT_WS(', ',Note, 'ZE')
 WHERE Rating.Rating = 1
 AND Modality.Name='Ultrasound'
@@ -61,7 +63,8 @@ AND (
 UPDATE Image
 JOIN Rating ON Image.Id=Rating.ImageId
 JOIN Exam ON Exam.Id=Image.ExamId
-JOIN Modality ON Exam.ModalityId=Modality.Id
+JOIN ScanType ON ScanType.Id=Exam.ScanTypeId
+JOIN Modality ON Modality.Id=ScanType.ModalityId
 SET Note = CONCAT_WS(', ',Note, 'ZE')
 WHERE Rating.Rating = 1
 AND Modality.Name='Ultrasound'

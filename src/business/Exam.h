@@ -12,10 +12,10 @@
 /**
  * @class Exam
  * @namespace Alder
- * 
+ *
  * @author Patrick Emond <emondpd AT mcmaster DOT ca>
  * @author Dean Inglis <inglisd AT mcmaster DOT ca>
- * 
+ *
  * @brief An active record for the Exam table
  */
 
@@ -61,19 +61,37 @@ namespace Alder
      */
     bool IsRatedBy( User* user );
 
-    /** 
-     *  Is this a dicom image?
+    /**
+     * Is this a dicom image?
      * @return bool Whether this is a dicom image
      */
     bool IsDICOM();
 
+    /**
+     * Convenience method to get the Exam type from the ScanType
+     * @return string
+     */
+    std::string GetScanType();
+
+    /**
+     * Convenience method to get the Exam modality from the ScanType
+     * @return string
+     */
+    std::string GetModalityName();
+
+    /**
+     * Convenience method to get the CodeType Id's and Codes.
+     * @return map
+     */
+    std::map<int,std::string> GetCodeTypeData();
+
   protected:
     Exam() {}
     ~Exam() {}
-    
+
     /**
      * Retrieves an image from Opal.
-     * @throws exception 
+     * @throws exception
      */
     bool RetrieveImage(
       const std::string type,

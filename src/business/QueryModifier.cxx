@@ -33,6 +33,59 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void QueryModifier::Reset()
+  {
+    this->LimitCount = 0;
+    this->LimitOffset = 0;
+    this->WhereList.clear();
+    this->GroupList.clear();
+    this->OrderList.clear();
+    this->JoinList.clear();
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void QueryModifier::Join( const std::string table, const std::string on_left,
+    const std::string on_right, const JoinType type )
+  {
+    JoinParameter p;
+    p.type = type;
+    p.table = table;
+    p.on_left = on_left;
+    p.on_right = on_right;
+    this->JoinList.push_back(p);
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  std::string QueryModifier::GetJoin() const
+  {
+    std::string statement;
+    std::stringstream stream;
+    // loop through each join parameter
+    for( auto it = this->JoinList.cbegin(); it != this->JoinList.cend(); ++it )
+    {
+      statement = "";
+      switch( it->type )
+      {
+        case QueryModifier::LEFT:  statement = "LEFT "; break;
+        case QueryModifier::RIGHT: statement = "RIGHT "; break;
+        case QueryModifier::INNER: statement = "INNER "; break;
+        case QueryModifier::CROSS: statement = "CROSS "; break;
+      }
+      statement += "JOIN ";
+      statement += it->table;
+      statement += " ON ";
+      statement += it->on_left;
+      statement += "=";
+      statement += it->on_right;
+      statement += " ";
+
+      stream << statement;
+    }
+
+    return stream.str();
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void QueryModifier::Where(
     std::string column, std::string oper, vtkVariant value, bool format, bool logicalOr )
   {
@@ -77,9 +130,14 @@ namespace Alder
   std::string QueryModifier::GetSql( bool appending ) const
   {
     std::string retVal;
-    retVal  = this->GetWhere( appending );
+    retVal += appending ? "" : this->GetJoin();
+    if(!retVal.empty() && !isspace(*retVal.rbegin())) retVal += " ";
+    retVal += this->GetWhere( appending );
+    if(!retVal.empty() && !isspace(*retVal.rbegin())) retVal += " ";
     retVal += this->GetGroup();
+    if(!retVal.empty() && !isspace(*retVal.rbegin())) retVal += " ";
     retVal += this->GetOrder();
+    if(!retVal.empty() && !isspace(*retVal.rbegin())) retVal += " ";
     retVal += this->GetLimit();
     return retVal;
   }
@@ -187,6 +245,7 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void QueryModifier::Merge( QueryModifier *modifier )
   {
+    this->JoinList.insert( this->JoinList.end(), modifier->JoinList.begin(), modifier->JoinList.end() );
     this->WhereList.insert( this->WhereList.end(), modifier->WhereList.begin(), modifier->WhereList.end() );
     this->GroupList.insert( this->GroupList.end(), modifier->GroupList.begin(), modifier->GroupList.end() );
     this->OrderList.insert( modifier->OrderList.begin(), modifier->OrderList.end() );

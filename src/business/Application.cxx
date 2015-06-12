@@ -11,6 +11,9 @@
 
 #include <Application.h>
 
+#include <Code.h>
+#include <CodeType.h>
+#include <CodeGroup.h>
 #include <Configuration.h>
 #include <Database.h>
 #include <Exam.h>
@@ -19,6 +22,7 @@
 #include <Modality.h>
 #include <OpalService.h>
 #include <Rating.h>
+#include <ScanType.h>
 #include <User.h>
 
 #include <vtkDirectory.h>
@@ -59,6 +63,14 @@ namespace Alder
     this->ClassNameRegistry["Rating"] = typeid(Rating).name();
     this->ConstructorRegistry["User"] = &createInstance<User>;
     this->ClassNameRegistry["User"] = typeid(User).name();
+    this->ConstructorRegistry["Code"] = &createInstance<Code>;
+    this->ClassNameRegistry["Code"] = typeid(Code).name();
+    this->ConstructorRegistry["CodeType"] = &createInstance<CodeType>;
+    this->ClassNameRegistry["CodeType"] = typeid(CodeType).name();
+    this->ConstructorRegistry["CodeGroup"] = &createInstance<CodeGroup>;
+    this->ClassNameRegistry["CodeGroup"] = typeid(CodeGroup).name();
+    this->ConstructorRegistry["ScanType"] = &createInstance<ScanType>;
+    this->ClassNameRegistry["ScanType"] = typeid(ScanType).name();
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -162,9 +174,9 @@ namespace Alder
     Dl_info dlinfo;
     void *trace[ALDER_STACK_DEPTH];
     int trace_size = backtrace( trace, ALDER_STACK_DEPTH );
-    
+
     for( int i = 0; i < trace_size; ++i )
-    {  
+    {
       if( !dladdr( trace[i], &dlinfo ) ) continue;
 
       const char* symname = dlinfo.dli_sname;
@@ -173,19 +185,19 @@ namespace Alder
       this->LogStream << dlinfo.dli_fname << "::" << symname << std::endl;
 
       if (demangled) free( demangled );
-    }  
+    }
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::string Application::GetUnmangledClassName( const std::string mangledName ) const
   {
     for( auto it = this->ClassNameRegistry.begin(); it != this->ClassNameRegistry.end(); ++it )
-      if( it->second == mangledName ) return it->first;
-    
+      if( mangledName == it->second ) return it->first;
+
     throw std::runtime_error( "Tried to unmangle class name which isn't registered." );
     return ""; // this will never happen because of the throw
   }
-  
+
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Application::ReadConfiguration( std::string filename )
   {
@@ -212,7 +224,7 @@ namespace Alder
       return false;
     }
 
-    // defaint host and port
+    // default host and port
     if( 0 == host.size() ) host = "localhost";
     if( 0 == port.size() ) port = "3306";
 
@@ -256,7 +268,7 @@ namespace Alder
     {
       if( this->ActiveUser ) this->ActiveUser->UnRegister( this );
       this->ActiveUser = user;
-      if( this->ActiveUser ) 
+      if( this->ActiveUser )
       {
         this->ActiveUser->Register( this );
 
@@ -297,7 +309,7 @@ namespace Alder
         else
         {
           this->SetActiveImage( NULL );
-        }  
+        }
         this->SetActiveAtlasImage( NULL );
       }
 
@@ -326,7 +338,7 @@ namespace Alder
     vtkSetObjectBodyMacro( ActiveAtlasImage, Image, image);
     this->InvokeEvent( Application::ActiveAtlasImageEvent );
   }
-  
+
 /*
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -336,8 +348,8 @@ namespace Alder
     {
       this->ActiveInterview->UpdateImageData();
       this->InvokeEvent( Application::ActiveInterviewUpdateImageDataEvent );
-    }  
+    }
   }
 
-*/  
+*/
 }

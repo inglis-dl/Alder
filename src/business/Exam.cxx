@@ -11,10 +11,12 @@
 #include <Exam.h>
 
 #include <Application.h>
+#include <CodeType.h>
 #include <Image.h>
 #include <Interview.h>
 #include <Modality.h>
 #include <OpalService.h>
+#include <ScanType.h>
 #include <Utilities.h>
 
 #include <vtkNew.h>
@@ -52,6 +54,33 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  std::string Exam::GetScanType()
+  {
+    vtkSmartPointer< ScanType > scanType;
+    std::string type;
+
+    if( this->GetRecord( scanType ) )
+      type = scanType->Get( "Type" ).ToString();
+
+    return type;
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  std::string Exam::GetModalityName()
+  {
+    std::string modalityName;
+    vtkSmartPointer< ScanType > scanType;
+    if( this->GetRecord( scanType ) )
+    {
+      vtkSmartPointer< Modality > modality;
+      if( scanType->GetRecord( modality ) )
+        modalityName = modality->Get( "Name" ).ToString();
+    }
+
+    return modalityName;
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Exam::UpdateImageData()
   {
     if( this->HasImageData() ) return;
@@ -68,7 +97,7 @@ namespace Alder
     bool clean = true;
 
     // determine which Opal table to fetch from based on exam modality
-    std::string type = this->Get( "Type" ).ToString();
+    std::string type = this->GetScanType();
     std::map< std::string, vtkVariant > settings;
     settings[ "ExamId" ] = this->Get( "Id" );
     settings[ "Acquisition" ] = 1;
@@ -83,14 +112,14 @@ namespace Alder
       std::string sideVariable = "Measure.SIDE";
       int acquisition = 0;
       bool repeatable = true;
-        
+
       for( int i = 1; i <= 3; ++i )
       {
         std::string variable = "Measure.CINELOOP_";
         variable += vtkVariant( i ).ToString();
         settings[ "Acquisition" ] = i;
-        
-        bool success = this->RetrieveImage( 
+
+        bool success = this->RetrieveImage(
           type, variable, UId, settings, suffix, repeatable, sideVariable );
         resultAll &= success;
 
@@ -108,7 +137,7 @@ namespace Alder
 
         settings[ "Acquisition" ] = ++acquisition;
         std::string variable = "Measure.STILL_IMAGE";
-        bool success = this->RetrieveImage( 
+        bool success = this->RetrieveImage(
           type, variable, UId, settings, suffix, repeatable, sideVariable );
         resultAll &= success;
 
@@ -118,7 +147,7 @@ namespace Alder
 
           std::vector< vtkSmartPointer< Alder::Image > > imageList;
           this->GetList( &imageList );
-          if( imageList.empty() ) 
+          if( imageList.empty() )
             throw std::runtime_error( "Failed list load during cIMT parenting" );
 
           // map the AcquisitionDateTimes from the dicom file headers to the images
@@ -144,8 +173,8 @@ namespace Alder
           for( auto mapIt = acqDateTimes.cbegin(); mapIt != acqDateTimes.cend(); ++mapIt )
           {
             if( mapIt->first == stillId ) continue;
-            
-            if( mapIt->second == stillAcqDateTime ) 
+
+            if( mapIt->second == stillAcqDateTime )
             {
               parentId = mapIt->first;
               break;
@@ -159,7 +188,7 @@ namespace Alder
 
           if( parentId == -1 )
             throw std::runtime_error( "Failed to parent cIMT still" );
-          
+
           still->Load( "Id", vtkVariant( stillId ).ToString() );
           still->Set( "ParentImageId", parentId );
           still->Save();
@@ -170,11 +199,11 @@ namespace Alder
     {
       std::string variable = "Measure.CINELOOP_1";
       std::string sideVariable = "Measure.SIDE";
-      std::string suffix = ".dcm.gz";        
+      std::string suffix = ".dcm.gz";
       bool repeatable = true;
       resultAll &= this->RetrieveImage( type, variable, UId, settings, suffix, repeatable,
         sideVariable );
-      resultAny = resultAll;  
+      resultAny = resultAll;
     }
     else if( "DualHipBoneDensity" == type )
     {
@@ -184,7 +213,7 @@ namespace Alder
       bool repeatable = true;
       resultAll &= this->RetrieveImage( type, variable, UId, settings, suffix, repeatable,
         sideVariable );
-      resultAny = resultAll;  
+      resultAny = resultAll;
     }
     else if( "ForearmBoneDensity" == type )
     {
@@ -194,14 +223,14 @@ namespace Alder
       bool repeatable = false;
       resultAll &= this->RetrieveImage( type, variable, UId, settings, suffix, repeatable,
         sideVariable );
-      resultAny = resultAll;  
+      resultAny = resultAll;
     }
     else if( "LateralBoneDensity" == type )
     {
       std::string variable = "RES_SEL_DICOM_MEASURE";
       std::string suffix = ".dcm";
       resultAll &= this->RetrieveImage( type, variable, UId, settings, suffix );
-      resultAny = resultAll;  
+      resultAny = resultAll;
     }
     else if( "WholeBodyBoneDensity" == type )
     {
@@ -225,11 +254,11 @@ namespace Alder
         // re-parent this image to the first one
         int lastId = image->GetLastInsertId();
         if( success && parentId != lastId )
-        {  
+        {
           image->Load( "Id", vtkVariant( lastId ).ToString() );
           image->Set( "ParentImageId", parentId );
           image->Save();
-        }  
+        }
       }
     }
     else if( "RetinalScan" == type )
@@ -240,14 +269,14 @@ namespace Alder
       bool repeatable = true;
       resultAll &= this->RetrieveImage( type, variable, UId, settings, suffix, repeatable,
         sideVariable );
-      resultAny = resultAll;  
-      clean = false;  
+      resultAny = resultAll;
+      clean = false;
     }
     else
     {
       std::string errStr = "Cannot retrieve images for unknown exam type: " + type;
       throw std::runtime_error( errStr );
-    }  
+    }
 
     // now set that we have downloaded at least one of the images
     if( resultAny )
@@ -282,7 +311,7 @@ namespace Alder
       if( repeatable )
       {
         sideList = opal->GetValues( "clsa-dcs-images", type, UId, sideVariable );
-      }  
+      }
       else
       {
         std::string side = opal->GetValue( "clsa-dcs-images", type, UId, sideVariable );
@@ -290,17 +319,17 @@ namespace Alder
       }
 
       int numSides = sideList.empty() ? 0 : sideList.size();
-      
+
       if( numSides > 1 )
       {
-        // sort into right, left 
+        // sort into right, left
         std::sort( sideList.begin(), sideList.end(), std::greater< std::string >());
-      
+
         // enforce unique strings
         sideList.erase( std::unique( sideList.begin(), sideList.end() ), sideList.end() );
 
         // remove empty strings
-        sideList.erase( 
+        sideList.erase(
           std::remove_if( sideList.begin(), sideList.end(), mem_fun_ref(&std::string::empty) ),
           sideList.end() );
 
@@ -316,7 +345,7 @@ namespace Alder
             sideList.insert( sideList.begin(), "right" );
           }
         }
-      }  
+      }
 
       bool found = false;
 
@@ -388,7 +417,7 @@ namespace Alder
       {
         image->SetLateralityFromDICOM();
         image->CleanHologicDICOM();
-      }  
+      }
       else image->AnonymizeDICOM();
     }
   }
@@ -396,13 +425,8 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Exam::IsDICOM()
   {
-    vtkSmartPointer< Modality > modality;
-    if( this->GetRecord( modality ) )
-    {
-      std::string modStr = modality->Get( "Name" ).ToString();
-      return ( modStr == "Dexa" || modStr == "Ultrasound" );
-    }
-    return false;
+    std::string modalityName = this->GetModalityName();
+    return ( "Dexa" == modalityName || "Ultrasound" == modalityName );
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -424,5 +448,23 @@ namespace Alder
 
     // only return true if there was at least one image rated
     return 0 < imageList.size();
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  std::map<int,std::string> Exam::GetCodeTypeData()
+  {
+    std::map<int,std::string> data;
+    vtkSmartPointer< ScanType > scanType;
+    this->GetRecord( scanType );
+    std::vector< vtkSmartPointer< Alder::CodeType > > codeTypeList;
+    scanType->GetList( &codeTypeList );
+    for( auto it = codeTypeList.cbegin(); it != codeTypeList.cend(); ++it )
+    {
+      vtkVariant code = (*it)->Get("Code");
+      vtkVariant id = (*it)->Get("Id");
+      if( code.IsValid() && id.IsValid() )
+        data[id.ToInt()] = code.ToString();
+    }
+    return data;
   }
 }

@@ -47,7 +47,7 @@ QUserListDialog::QUserListDialog( QWidget* parent )
   this->columnIndex["LastLogin"] = index++;
   this->ui->userTableWidget->horizontalHeader()->setResizeMode(
     this->columnIndex["LastLogin"], QHeaderView::Stretch );
-  
+
   labels << "Expert";
   this->columnIndex["Expert"] = index++;
   this->ui->userTableWidget->horizontalHeader()->setResizeMode(

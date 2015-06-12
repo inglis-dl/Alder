@@ -14,6 +14,7 @@
 #include <Exam.h>
 #include <Modality.h>
 #include <OpalService.h>
+#include <ScanType.h>
 #include <User.h>
 #include <Utilities.h>
 
@@ -53,7 +54,8 @@ namespace Alder
              <<   "FROM User "
              <<   "CROSS JOIN Interview "
              <<   "LEFT JOIN Exam ON Interview.Id = Exam.InterviewId "
-             <<   "LEFT JOIN UserHasModality ON Exam.ModalityId = UserHasModality.ModalityId "
+             <<   "LEFT JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
+             <<   "LEFT JOIN UserHasModality ON ScanType.ModalityId = UserHasModality.ModalityId "
              <<   "AND UserHasModality.UserId = User.Id "
              <<   "LEFT JOIN Image ON Exam.Id = Image.ExamId "
              <<   "LEFT JOIN Rating ON Image.Id = Rating.ImageId "
@@ -68,7 +70,8 @@ namespace Alder
              <<     "FROM User "
              <<     "CROSS JOIN Interview "
              <<     "JOIN Exam ON Interview.Id = Exam.InterviewId "
-             <<     "JOIN UserHasModality ON Exam.ModalityId = UserHasModality.ModalityId "
+             <<     "JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
+             <<     "JOIN UserHasModality ON ScanType.ModalityId = UserHasModality.ModalityId "
              <<     "AND UserHasModality.UserId = User.Id "
              <<     "JOIN Image ON Exam.Id = Image.ExamId "
              <<     "JOIN Rating ON Image.Id = Rating.ImageId "
@@ -87,7 +90,8 @@ namespace Alder
              <<   "FROM User "
              <<   "CROSS JOIN Interview "
              <<   "JOIN Exam ON Interview.Id = Exam.InterviewId "
-             <<   "JOIN UserHasModality ON Exam.ModalityId = UserHasModality.ModalityId "
+             <<   "JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
+             <<   "JOIN UserHasModality ON ScanType.ModalityId = UserHasModality.ModalityId "
              <<   "AND UserHasModality.UserId = User.Id "
              <<   "WHERE User.Id = " << userId << " "
              <<   "AND Stage = 'Completed' "
@@ -100,8 +104,9 @@ namespace Alder
              <<     "FROM User "
              <<     "CROSS JOIN Interview "
              <<     "JOIN Exam ON Interview.Id = Exam.InterviewId "
-             <<   "JOIN UserHasModality ON Exam.ModalityId = UserHasModality.ModalityId "
-             <<   "AND UserHasModality.UserId = User.Id "
+             <<     "JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
+             <<     "JOIN UserHasModality ON ScanType.ModalityId = UserHasModality.ModalityId "
+             <<     "AND UserHasModality.UserId = User.Id "
              <<     "WHERE User.Id = " << userId << " "
              <<     "AND Stage = 'Completed' "
              <<     "GROUP BY Interview.Id, Downloaded "
@@ -117,7 +122,8 @@ namespace Alder
              <<   "FROM User "
              <<   "CROSS JOIN Interview "
              <<   "JOIN Exam ON Interview.Id = Exam.InterviewId "
-             <<   "JOIN UserHasModality ON Exam.ModalityId = UserHasModality.ModalityId "
+             <<   "JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
+             <<   "JOIN UserHasModality ON ScanType.ModalityId = UserHasModality.ModalityId "
              <<   "AND UserHasModality.UserId = User.Id "
              <<   "JOIN Image ON Exam.Id = Image.ExamId "
              <<   "LEFT JOIN Rating ON Image.Id = Rating.ImageId "
@@ -134,8 +140,9 @@ namespace Alder
              <<     "FROM User "
              <<     "CROSS JOIN Interview "
              <<     "JOIN Exam ON Interview.Id = Exam.InterviewId "
-             <<   "JOIN UserHasModality ON Exam.ModalityId = UserHasModality.ModalityId "
-             <<   "AND UserHasModality.UserId = User.Id "
+             <<     "JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
+             <<     "JOIN UserHasModality ON ScanType.ModalityId = UserHasModality.ModalityId "
+             <<     "AND UserHasModality.UserId = User.Id "
              <<     "JOIN Image ON Exam.Id = Image.ExamId "
              <<     "JOIN Rating ON Image.Id = Rating.ImageId "
              <<     "AND User.Id = Rating.UserId "
@@ -150,8 +157,9 @@ namespace Alder
              <<     "FROM User "
              <<     "CROSS JOIN Interview "
              <<     "JOIN Exam ON Interview.Id = Exam.InterviewId "
-             <<   "JOIN UserHasModality ON Exam.ModalityId = UserHasModality.ModalityId "
-             <<   "AND UserHasModality.UserId = User.Id "
+             <<     "JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
+             <<     "JOIN UserHasModality ON ScanType.ModalityId = UserHasModality.ModalityId "
+             <<     "AND UserHasModality.UserId = User.Id "
              <<     "WHERE User.Id = " << userId << " "
              <<     "AND Stage = 'Completed' "
              <<     "GROUP BY Interview.Id, Downloaded "
@@ -329,12 +337,22 @@ namespace Alder
       for( auto vecIt = mapIt->second.cbegin(); vecIt != mapIt->second.cend(); ++vecIt )
       {
         bool create = true;
+
+        vtkSmartPointer< Alder::ScanType > scanType = vtkSmartPointer< Alder::ScanType >::New();
+        std::map< std::string, std::string > scanTypeMap;
+        scanTypeMap.insert(
+          std::pair<std::string, std::string>( "ModalityId", vtkVariant( modalityId ).ToString() ) );
+        scanTypeMap.insert(
+          std::pair<std::string, std::string>( "Type", vtkVariant( vecIt->first ).ToString() ) );
+        scanType->Load( scanTypeMap );
+
+        vtkVariant scanTypeId = scanType->Get( "Id" );
+
         if( updateMetaData )
         {
           vtkSmartPointer< Alder::QueryModifier > modifier =
             vtkSmartPointer< Alder::QueryModifier >::New();
-          modifier->Where( "ModalityId", "=", vtkVariant( modalityId ) );
-          modifier->Where( "Type", "=", vtkVariant( vecIt->first ) );
+          modifier->Where( "ScanTypeId", "=", scanTypeId );
           modifier->Where( "Laterality", "=", vtkVariant( vecIt->second ) );
 
           std::vector< vtkSmartPointer< Exam > > examList;
@@ -375,8 +393,7 @@ namespace Alder
         {
           vtkNew<Exam> exam;
           exam->Set( "InterviewId", interviewId );
-          exam->Set( "ModalityId", modalityId );
-          exam->Set( "Type", vecIt->first );
+          exam->Set( "ScanTypeId", scanTypeId );
           exam->Set( "Laterality", vecIt->second );
           exam->Set( "Stage", examData[ vecIt->first + ".Stage" ] );
           exam->Set( "Interviewer", examData[ vecIt->first + ".Interviewer"] );
@@ -399,7 +416,8 @@ namespace Alder
 
       stream << "SELECT Exam.* FROM Exam "
              << "JOIN Interview ON Interview.Id=Exam.InterviewId "
-             << "WHERE Exam.ModalityId IN ( "
+             << "JOIN ScanType ON Exam.ScanTypeId=Exam.ScanTypeId "
+             << "WHERE ScanType.ModalityId IN ( "
              << "SELECT Modality.Id FROM Modality "
              << "JOIN UserHasModality ON UserHasModality.ModalityId=Modality.Id "
              << "JOIN User on User.Id=UserHasModality.UserId "
@@ -545,7 +563,6 @@ namespace Alder
     {
       double progress = index / size;
       proxy.UpdateProgress( progress );
-      std::cout << "outer progress: " << (int)(100*progress) << std::endl;
       if( proxy.GetAbortStatus() ) break;
 
       Interview *interview = *it;
@@ -607,8 +624,8 @@ namespace Alder
     stream << "SELECT Image.Id "
            << "FROM Image "
            << "JOIN Exam ON Image.ExamId = Exam.Id "
-           << "JOIN Exam AS simExam ON Exam.ModalityId = simExam.ModalityId "
-           << "AND Exam.Type = simExam.Type "
+           << "JOIN Exam AS simExam ON Exam.ScanTypeId = simExam.ScanTypeId "
+           << "AND Exam.ScanTypeId = simExam.ScanTypeId "
            << "AND Exam.Laterality = simExam.Laterality "
            << "AND Exam.Stage = simExam.Stage "
            << "JOIN Image AS simImage ON simImage.ExamId = simExam.Id "

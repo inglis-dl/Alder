@@ -1,7 +1,7 @@
 /*=========================================================================
 
   Program:  Alder (CLSA Medical Image Quality Assessment Tool)
-  Module:   Modality.h
+  Module:   Code.h
   Language: C++
 
   Author: Patrick Emond <emondpd AT mcmaster DOT ca>
@@ -10,17 +10,17 @@
 =========================================================================*/
 
 /**
- * @class Modality
+ * @class Code
  * @namespace Alder
  *
  * @author Patrick Emond <emondpd AT mcmaster DOT ca>
  * @author Dean Inglis <inglisd AT mcmaster DOT ca>
  *
- * @brief An active record for the Modality table
+ * @brief An active record for the Code table
  */
 
-#ifndef __Modality_h
-#define __Modality_h
+#ifndef __Code_h
+#define __Code_h
 
 #include <ActiveRecord.h>
 
@@ -31,20 +31,20 @@
 
 namespace Alder
 {
-  class Modality : public ActiveRecord
+  class Code : public ActiveRecord
   {
   public:
-    static Modality *New();
-    vtkTypeMacro( Modality, ActiveRecord );
-    std::string GetName() const { return "Modality"; }
+    static Code *New();
+    vtkTypeMacro( Code, ActiveRecord );
+    std::string GetName() const { return "Code"; }
 
   protected:
-    Modality() {}
-    ~Modality() {}
+    Code() {}
+    ~Code() {}
 
   private:
-    Modality( const Modality& ); // Not implemented
-    void operator=( const Modality& ); // Not implemented
+    Code( const Code& ); // Not implemented
+    void operator=( const Code& ); // Not implemented
   };
 }
 

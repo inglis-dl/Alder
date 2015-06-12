@@ -60,7 +60,7 @@ namespace Alder
     Application *app = Application::GetInstance();
     vtkSmartPointer<vtkAlderMySQLQuery> query = this->GetQuery();
 
-    std::stringstream stream; 
+    std::stringstream stream;
     // the following query's first column MUST be table_name (index 0) and second column
     // MUST be table_column (index 1)
     stream << "SELECT table_name, column_name, column_type, data_type, column_default, is_nullable "
@@ -77,7 +77,7 @@ namespace Alder
       app->Log( query->GetLastErrorText() );
       throw std::runtime_error( "There was an error while trying to query the database." );
     }
-    
+
     std::string tableName = "";
     std::map< std::string,std::map< std::string, vtkVariant > > tableMap;
     while( query->NextRow() )
@@ -176,7 +176,7 @@ namespace Alder
   bool Database::IsColumnNullable( const std::string table, const std::string column ) const
   {
     auto tablePair = this->Columns.find( table );
-    if( this->Columns.cend() == tablePair )
+    if( tablePair == this->Columns.cend() )
     {
       std::stringstream error;
       error << "Tried to get column nullable from table \"" << table << "\" which doesn't exist";
@@ -184,7 +184,7 @@ namespace Alder
     }
 
     auto columnPair = tablePair->second.find( column );
-    if( tablePair->second.cend() == columnPair )
+    if( columnPair == tablePair->second.cend() )
     {
       std::stringstream error;
       error << "Tried to get column nullable for \""
@@ -200,7 +200,7 @@ namespace Alder
   bool Database::IsColumnForeignKey( const std::string table, const std::string column ) const
   {
     auto tablePair = this->Columns.find( table );
-    if( this->Columns.cend() == tablePair )
+    if( tablePair == this->Columns.cend() )
     {
       std::stringstream error;
       error << "Tried to get column foreign key from table \"" << table << "\" which doesn't exist";
@@ -208,7 +208,7 @@ namespace Alder
     }
 
     auto columnPair = tablePair->second.find( column );
-    if( tablePair->second.cend() == columnPair )
+    if( columnPair == tablePair->second.cend() )
     {
       std::stringstream error;
       error << "Tried to get column foreign key for \""
