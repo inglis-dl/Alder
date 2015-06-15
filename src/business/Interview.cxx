@@ -416,7 +416,7 @@ namespace Alder
 
       stream << "SELECT Exam.* FROM Exam "
              << "JOIN Interview ON Interview.Id=Exam.InterviewId "
-             << "JOIN ScanType ON Exam.ScanTypeId=Exam.ScanTypeId "
+             << "JOIN ScanType ON Exam.ScanTypeId=ScanType.Id "
              << "WHERE ScanType.ModalityId IN ( "
              << "SELECT Modality.Id FROM Modality "
              << "JOIN UserHasModality ON UserHasModality.ModalityId=Modality.Id "
