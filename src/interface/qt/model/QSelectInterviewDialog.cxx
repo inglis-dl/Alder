@@ -297,7 +297,7 @@ void QSelectInterviewDialog::updateRow( const int row, Alder::Interview *intervi
     // those exams out for now since we don't know for sure whether they are always valid
 
     // the modalities and hence exams permitted to this user has already been determined
-    if( updateItemText.find(modalityName) == updateItemText.end() ) continue;
+    if( updateItemText.end() == updateItemText.find(modalityName) ) continue;
 
     updateItemText[modalityName] = true;
     if( "Completed" == exam->Get( "Stage" ).ToString() ) examCount[modalityName]++;

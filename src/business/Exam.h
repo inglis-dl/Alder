@@ -58,32 +58,32 @@ namespace Alder
     /**
      * Returns whether a user has rated all images associated with the exam.
      * If the exam has no images this method returns true.
+     * @param user a User object to check against
      */
     bool IsRatedBy( User* user );
 
     /**
      * Is this a dicom image?
-     * @return bool Whether this is a dicom image
      */
     bool IsDICOM();
 
     /**
-     * Convenience method to get the Exam type from the ScanType
-     * @return string
+     * Convenience method to get the Exam type from the ScanType table.
+     * @return the exam's scan type
      */
     std::string GetScanType();
 
     /**
-     * Convenience method to get the Exam modality from the ScanType
-     * @return string
+     * Convenience method to get the Exam modality from the ScanType table.
+     * @return the exam's modality
      */
     std::string GetModalityName();
 
     /**
      * Convenience method to get the CodeType Id's and Codes.
-     * @return map
+     * @return map of Codes with their table Ids
      */
-    std::map<int,std::string> GetCodeTypeData();
+    std::map<int, std::string> GetCodeTypeData();
 
   protected:
     Exam() {}
@@ -91,7 +91,15 @@ namespace Alder
 
     /**
      * Retrieves an image from Opal.
-     * @throws exception
+     * @param type          the type of exam
+     * @param variable      the Opal name of the image data variable
+     * @param UId           the participant UId associated with the Interview
+     * @param settings      map of settings
+     * @param suffix        the file suffix to attach to the requested binary data
+     * @param repeatable    whether the image is a repeatable Opal data entity
+     * @param sideVariable  the Opal name of the side variable
+     * @return              success or fail to retrieve an image
+     * @throws              exception
      */
     bool RetrieveImage(
       const std::string type,
@@ -104,7 +112,7 @@ namespace Alder
 
     /**
      * Fixes laterality and anonymization issues with dicom images.
-     * @param type The type of exam
+     * @param type the type of exam
      */
     void CleanImages( std::string const &type );
 

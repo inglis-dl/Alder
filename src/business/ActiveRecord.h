@@ -56,7 +56,8 @@ namespace Alder
     void PrintSelf( ostream& os, vtkIndent indent );
 
     /**
-     * Returns whether this record has a particular column
+     * Returns whether this record has a particular column.
+     * @param column the name of the column
      */
     bool ColumnNameExists( const std::string column );
 
@@ -64,7 +65,9 @@ namespace Alder
     /**
      * Loads a specific record from the database.  Input parameters must include the values
      * of a primary or unique key in the corresponding table.
-     * @throws runtime_error
+     * @param key   a primary or unique key
+     * @param value the value associated with the key
+     * @throws      runtime_error
      */
     bool Load( const std::string key, const std::string value )
     {
@@ -82,7 +85,7 @@ namespace Alder
     /**
      * Saves the record's current values to the database.  If the record was not loaded
      * then a new record will be inserted into the database.
-     * @param replace bool Whether to replace an existing record
+     * @param replace whether to replace an existing record
      */
     virtual void Save( const bool replace = false );
 
@@ -94,12 +97,14 @@ namespace Alder
 
     /**
      * Get the id of the last inserted record.
+     * @return id of the last inserted record
      */
     int GetLastInsertId() const;
 
     /**
      * Provides a list of all records which exist in a table.
-     * @param list vector An existing vector to put all records into.
+     * @param list     an existing vector to put all records into
+     * @param modifier QueryModifier
      */
     template< class T > static void GetAll(
       std::vector< vtkSmartPointer< T > > *list, QueryModifier *modifier = NULL )
@@ -131,12 +136,13 @@ namespace Alder
       }
     }
 
+    //@{
     /**
      * Provides a list of all records which are related to this record by foreign key or
      * has a joining N-to-N relationship with another table.
-     * @param list vector An existing vector to put all records into.
-     * @param modifier QueryModifier
-     * @throws runtime_error
+     * @param list     an existing vector to put all records into
+     * @param modifier a QueryModifier to refine selection of the list elements
+     * @throws         runtime_error
      */
     template< class T > void GetList(
       std::vector< vtkSmartPointer< T > > *list, QueryModifier *modifier = NULL )
@@ -199,11 +205,14 @@ namespace Alder
         list->push_back( record );
       }
     }
+    //@}
 
     /**
      * Returns whether a record has a relationship with another record.  This can either be
      * due to a joining table (N-to-N relationship) or a foreign key column (1-to-N relationship)
-     * @throws runtime_error
+     * @param record   the record to test for a relationship with
+     * @param override an alternate joining table name
+     * @throws         runtime_error
      */
     template <class T> bool Has( vtkSmartPointer< T > &record, const std::string override = "" )
     {
@@ -253,7 +262,8 @@ namespace Alder
     /**
      * This method should only be used by records which have a many to many relationship
      * with another record type.  It adds another record to this one.
-     * @throws runtime_error
+     * @param record a related record to add to this one
+     * @throws       runtime_error
      */
     template <class T> void AddRecord( vtkSmartPointer< T > &record )
     {
@@ -280,7 +290,8 @@ namespace Alder
     /**
      * This method should only be used by records which have a many to many relationship
      * with another record type.  It removes the record related to this one.
-     * @throws runtime_error
+     * @param record a related record to remove from this one
+     * @throws       runtime_error
      */
     template <class T> void RemoveRecord( vtkSmartPointer< T > &record )
     {
@@ -306,21 +317,24 @@ namespace Alder
 
     /**
      * Returns the number of records which are related to this record by foreign key.
-     * @param std::string recordType The associated table name.
+     * @param recordType the associated table name
      */
     int GetCount( const std::string recordType );
 
     /**
      * Get the value of any column in the record.
-     * @throws runtime_error
+     * @param column the name of the column
+     * @return       the value of the column as a vtkVariant
+     * @throws       runtime_error
      */
     virtual vtkVariant Get( const std::string column );
 
     /**
      * Get the record which has a foreign key in this table.
-     * @param std::string column An alternate column name to use instead of the default <table>Id
-     * @return True if the record is found, false if not
-     * @throws runtime_error
+     * @param record  a releated record to this one
+     * @param column  an alternate column name to use instead of the default <table>Id
+     * @return        success or fail if the record is found
+     * @throws        runtime_error
      */
     template <class T> bool GetRecord( vtkSmartPointer< T > &record, std::string column = "" )
     {
@@ -348,11 +362,13 @@ namespace Alder
       return v.IsValid();
     }
 
+    //@{
     /**
      * Set the value of any column in the record.
      * Note: this will only affect the active record in memory, to update the database
-     * Save() needs to be called.
-     * If you wish to set the value to NULL then use the SetNull() method instead of Set()
+     * Save() needs to be called. If you wish to set the value to NULL then use the
+     * SetNull() method instead of Set().
+     * @param map a collection of column names and native values
      */
     template <class T> void Set( const std::map< std::string, T > map )
     {
@@ -363,15 +379,18 @@ namespace Alder
     { this->SetVariant( column, vtkVariant( value ) ); }
     void SetNull( const std::string column )
     { this->SetVariant( column, vtkVariant() ); }
+    //@}
 
     /**
      * Must be extended by every child class.
-     * Its value is always the name of the class (identical case)
+     * Its value is always the name of the class (identical case).
+     * @return the name of this class
      */
     virtual std::string GetName() const = 0;
 
     /**
-     * Loads values into the record from a query's current row
+     * Loads values into the record from a query's current row.
+     * @param query a mysql query object
      */
     void LoadFromQuery( vtkAlderMySQLQuery *query );
 
@@ -380,12 +399,12 @@ namespace Alder
     ~ActiveRecord() {}
 
     /**
-     * Sets up the record with default values for all table columns
+     * Sets up the record with default values for all table columns.
      */
     void Initialize();
 
     /**
-     * Runs a check to make sure the record exists in the database
+     * Runs a check to make sure the record exists in the database.
      * @throws runtime_error
      */
     inline void AssertPrimaryId() const
@@ -400,8 +419,10 @@ namespace Alder
     }
 
     /**
-     * Internal method used by Set()
-     * @throws runtime_error
+     * Internal method used by Set().
+     * @param column  the column to set a value to
+     * @param value   the value to set as a vtkVariant
+     * @throws        runtime_error
      */
     virtual void SetVariant( const std::string column, const vtkVariant value );
 
@@ -414,7 +435,9 @@ namespace Alder
     };
 
     /**
-     * Determines the relationship between this record and another
+     * Determines the relationship between this record and another.
+     * @param table
+     * @param override
      */
     int GetRelationship( const std::string table, const std::string override = "" ) const;
 

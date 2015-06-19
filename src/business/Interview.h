@@ -41,22 +41,33 @@ namespace Alder
     std::string GetName() const { return "Interview"; }
 
     /**
-     * Updates the Interview table with all existing interviews in Opal
+     * Updates the Interview table with all existing interviews in Opal.
+     * @param proxy a progress proxy object
      */
     static void UpdateInterviewData( ProgressProxy& proxy );
 
     /**
-     * Returns whether this interview's exam and image data has been downloaded
-     * @return bool
+     * Returns whether this interview's exam data has been downloaded.
      */
     bool HasExamData();
+
+    /**
+     * Returns whether this interview's image data has been downloaded.
+     */
     bool HasImageData();
 
     /**
-     * Updates all exam and image data associated with the interview from Opal
-     * Note: exam data must be downloaded before image data
+     * Updates all exam data associated with the interview from Opal.
+     * Note: exam data must be downloaded before image data.
+     * @param updateMetaData whether to update exam data
      */
     void UpdateExamData( const bool& updateMetaData = false );
+
+    /**
+     * Updates all exam and image data associated with the interview from Opal.
+     * Note: exam data must be downloaded before image data.
+     * @param proxy a progress proxy object
+     */
     void UpdateImageData( ProgressProxy& proxy );
 
     /**
@@ -66,20 +77,27 @@ namespace Alder
      * 1) the administrator must update the interview data in the database first
      *    to ensure the requested UIDs can be retrieved
      * 2) only the images the user is permitted to review are downloaded
-     * @return int The number of UIDs loaded
+     * @param uidList a list of interview UIds
+     * @param proxy   a progress proxy object
+     * @return        the number of UIDs loaded
      */
     static int LoadFromUIDList( std::vector< std::string > const &uidList, ProgressProxy& proxy );
 
     /**
-     * Given an image Id, find an image in this record having the same
-     * characteristics and return its Id
-     * @return std::string Id of a similar image or empty string on fail
+     * Given an image Id, find an image in this interview having the same
+     * characteristics and return its Id.
+     * @param imageId the Id of an image record
+     * @return        the Id of a similar image or empty string on fail
      */
     std::string GetSimilarImage( std::string const &imageId );
 
+    //@{
     /**
-     * Get the neighbouring interview in UId/VisitDate order
-     * @return vtkSmartPointer<Alder::Interview> The neighbouring interview in UId/VisidDate order
+     * Methods to get the neighbouring interview in UId/VisitDate order.
+     * @param forward the direction of search
+     * @param loaded  whether the requested neighbour has to have images already downloaded
+     * @param unRated whether the requested neighbour has to have unrated images only
+     * @return        the neighbouring interview in UId/VisidDate order
      */
     vtkSmartPointer<Interview> GetNeighbour( const bool forward, const bool loaded, const bool unRated );
     vtkSmartPointer<Interview> GetNext( const bool loaded, const bool unRated )
@@ -94,17 +112,19 @@ namespace Alder
     { return this->GetNeighbour( false, true, unRated ); }
     vtkSmartPointer<Interview> GetPreviousUnLoaded( const bool unRated )
     { return this->GetNeighbour( false, false, unRated ); }
+    //@}
 
     /**
-     * Convenience method to determine how many images this interview has
-     * @return int Number of images this interview has
+     * Convenience method to determine how many images this interview has.
+     * @return number of images this interview has
      */
     int GetImageCount();
 
     /**
      * Returns whether a user has rated all images associated with the interview.
-     * If the interview has no images this method returns true
-     * @return bool Whether all images in this interview are rated by the User
+     * If the interview has no images this method returns true.
+     * @param user a User object
+     * @return     whether all images in this interview are rated by the User
      */
     bool IsRatedBy( User* user );
 
@@ -113,7 +133,8 @@ namespace Alder
     ~Interview() {}
 
     /**
-     * Returns a vector of all UId/VisitDate pairs ordered by UId then VisitDate
+     * Returns a vector of all UId/VisitDate pairs ordered by UId then VisitDate.
+     * @return vector of interview UId, VisitDate data
      */
     static std::vector<std::pair<std::string, std::string>> GetUIdVisitDateList();
 

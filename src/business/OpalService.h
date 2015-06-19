@@ -76,78 +76,85 @@ namespace Alder
      * meter or a busy meter, based on whether the expected size of the data
      * to be downloaded is non-zero.  For file type data, this should be called
      * with false, since we expect (image) files to have significant size.
+     * @param state set progress checking off or on
      */
     static void SetCurlProgress( const bool state = true );
 
     /**
-     * Returns a list of all identifiers in a particular data source and table
-     * @param dataSource string
-     * @param table string
+     * Returns a list of all identifiers in a particular data source and table.
+     * @param dataSource name of an Opal data source
+     * @param table      name of a table within the data source
+     * @return           vector of identifiers
      */
     std::vector< std::string > GetIdentifiers( const std::string dataSource, const std::string table ) const;
 
     /**
-     * Returns all variables for all identifiers limited by the offset and limit parameters
-     * @param dataSource string
-     * @param table string
-     * @param offset int The offset to begin the list at.
-     * @param limit int The limit of how many key/value pairs to return
+     * Returns all variables for all identifiers limited by the offset and limit parameters.
+     * @param dataSource name of an Opal data source
+     * @param table      name of a table within the data source
+     * @param offset     the offset to begin the list at
+     * @param limit      the number of key/value pairs to return
+     * @return           map of identifier keys to mapped data set values
      */
     std::map< std::string, std::map< std::string, std::string > > GetRows(
       const std::string dataSource, const std::string table,
       const int offset = 0, const int limit = 100 ) const;
 
     /**
-     * Returns all variables for a given identifier
-     * @param dataSource string
-     * @param table string
-     * @param identifier string
+     * Returns all variables for a given identifier.
+     * @param dataSource name of an Opal data source
+     * @param table      name of a table within the data source
+     * @param identifier a UId
+     * @return           map of variable names to values
      */
     std::map< std::string, std::string > GetRow(
       const std::string dataSource, const std::string table, const std::string identifier ) const;
 
     /**
-     * Returns all values for a particular variable limited by the offset and limit parameters
-     * @param dataSource string
-     * @param table string
-     * @param variable string
-     * @param offset int The offset to begin the list at.
-     * @param limit int The limit of how many key/value pairs to return
+     * Returns all values for a particular variable limited by the offset and limit parameters.
+     * @param dataSource name of an Opal data source
+     * @param table      name of a table within the data source
+     * @param variable   name of a table variable
+     * @param offset     the offset to begin the list at
+     * @param limit      the number of key/value pairs to return
+     * @return           map of identifiers to variable values
      */
     std::map< std::string, std::string > GetColumn(
       const std::string dataSource, const std::string table, const std::string variable,
       const int offset = 0, const int limit = 100 );
 
     /**
-     * Returns a particular variable for a given identifier
-     * @param dataSource string
-     * @param table string
-     * @param identifier string
-     * @param variable string
+     * Returns a particular variable for a given identifier.
+     * @param dataSource name of an Opal data source
+     * @param table      name of a table within the data source
+     * @param identifier a UId
+     * @param variable   name of a table variable
+     * @return           the value of a variable
      */
     std::string GetValue(
       const std::string dataSource, const std::string table,
       const std::string identifier, const std::string variable ) const;
 
     /**
-     * Returns an array variable for a given identifier
-     * @param dataSource string
-     * @param table string
-     * @param identifier string
-     * @param variable string
+     * Returns an array of variables for a given identifier.
+     * @param dataSource name of an Opal data source
+     * @param table      name of a table within the data source
+     * @param identifier a UId
+     * @param variable   name of a table variable
+     * @return           the values of a variable
      */
     std::vector< std::string > GetValues(
       const std::string dataSource, const std::string table,
       const std::string identifier, const std::string variable ) const;
 
     /**
-     * Returns a particular variable for a given identifier
-     * @param dataSource string
-     * @param fileName string
-     * @param table string
-     * @param identifier string
-     * @param variable string
-     * @param integer position
+     * Save a binary blob Opal variable (i.e., an image) as a file.
+     * @param fileName name of a file to save data to
+     * @param dataSource name of an Opal data source
+     * @param table      name of a table within the data source
+     * @param identifier a UId
+     * @param variable   name of a table variable
+     * @param position if the data is repeatable, specify its cardinality
      */
     void SaveFile(
       const std::string fileName,
@@ -164,10 +171,11 @@ namespace Alder
     /**
      * Returns the response provided by Opal for a given service path, or if fileName is not
      * empty then writes the response to the given filename (returning an empty json value).
-     * @param servicePath string
-     * @param fileName string
-     * @param progress bool
-     * @throws runtime_error
+     * @param servicePath a path to the requested data in Opal
+     * @param fileName    name of a file to save the data to
+     * @param progress    whether to show curl progress
+     * @throws            runtime_error
+     * @return            jason formatted data
      */
     virtual Json::Value Read(
       const std::string servicePath, const std::string fileName = "", const bool progress = true ) const;
@@ -186,7 +194,7 @@ namespace Alder
 
     static int curlProgressCallback( void* , const double, const double, const double, const double );
 
-  public:  
+  public:
     static bool curlProgress;
   };
 }

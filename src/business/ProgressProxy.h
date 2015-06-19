@@ -42,8 +42,9 @@ namespace Alder
     /**
      * Update the progress as a decimal percent [0.0,1.0].  Typically
      * call this method during a loop iteration.
+     * @param percent the progress value
      */
-    void UpdateProgress( const double& percent );
+    void UpdateProgress( const double &percent );
 
     /**
      * Configure progress elements at the UI layer.
@@ -62,6 +63,7 @@ namespace Alder
 
     /**
      * Get the application's abort status.
+     * @return application global abort status
      */
     int GetAbortStatus() {
       return this->application->GetAbortFlag();
@@ -83,6 +85,7 @@ namespace Alder
 
     /**
      * Set the use of curl progress monitoring during OpalService Read calls.
+     * @param state turn curl progress monitoring on or off
      */
     void SetCurlProgress( const bool& state ) {
       this->curlProgress = state;
@@ -105,6 +108,7 @@ namespace Alder
     /**
      * Set the progress expressed at the UI layer as a busy signal rather than
      * an incremental percentage.
+     * @param state turn expression of progress as a busy signal on or off
      */
     void SetBusyProgress( const bool& state ) {
       this->busyProgress = state;
@@ -146,6 +150,7 @@ namespace Alder
      * Set the progress type to either global (eg., outer loop) or local (eg., inner loop or
      * fine grained progress measurement of progress).  The local progress is typically
      * used by the OpalService during a Read to report on curl progress of data download.
+     * @param type local or global progress expression
      */
     void SetProgressType( const int& type ) {
       this->progressType =
@@ -161,7 +166,7 @@ namespace Alder
 
   protected:
     /**
-     *  The application singleton
+     *  The application singleton.
      */
     Application* application;
 

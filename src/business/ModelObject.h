@@ -12,10 +12,10 @@
 /**
  * @class ModelObject
  * @namespace Alder
- * 
+ *
  * @author Patrick Emond <emondpd AT mcmaster DOT ca>
  * @author Dean Inglis <inglisd AT mcmaster DOT ca>
- * 
+ *
  * @brief Base class for all model classes
  */
 

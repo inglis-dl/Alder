@@ -44,14 +44,14 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void QueryModifier::Join( const std::string table, const std::string on_left,
-    const std::string on_right, const JoinType type )
+  void QueryModifier::Join( const std::string table, const std::string onLeft,
+    const std::string onRight, const JoinType type )
   {
     JoinParameter p;
     p.type = type;
     p.table = table;
-    p.on_left = on_left;
-    p.on_right = on_right;
+    p.onLeft = onLeft;
+    p.onRight = onRight;
     this->JoinList.push_back(p);
   }
 
@@ -74,9 +74,9 @@ namespace Alder
       statement += "JOIN ";
       statement += it->table;
       statement += " ON ";
-      statement += it->on_left;
+      statement += it->onLeft;
       statement += "=";
-      statement += it->on_right;
+      statement += it->onRight;
       statement += " ";
 
       stream << statement;
@@ -87,7 +87,8 @@ namespace Alder
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void QueryModifier::Where(
-    std::string column, std::string oper, vtkVariant value, bool format, bool logicalOr )
+    const std::string column, const std::string oper,
+    const vtkVariant value, const bool format, const bool logicalOr )
   {
     WhereParameter p;
     p.column = column;
@@ -99,7 +100,7 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void QueryModifier::WhereBracket( bool open, bool logicalOr )
+  void QueryModifier::WhereBracket( const bool open, const bool logicalOr )
   {
     WhereParameter p;
     p.bracket = open ? QueryModifier::OPEN : QueryModifier::CLOSE;
@@ -108,26 +109,26 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void QueryModifier::Group( std::string column )
+  void QueryModifier::Group( const std::string column )
   {
     this->GroupList.push_back( column );
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void QueryModifier::Order( std::string column, bool desc )
+  void QueryModifier::Order( const std::string column, const bool desc )
   {
     this->OrderList[column] = desc;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void QueryModifier::Limit( int count, int offset )
+  void QueryModifier::Limit( const int count, const int offset )
   {
     this->LimitCount = count;
     this->LimitOffset = offset;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  std::string QueryModifier::GetSql( bool appending ) const
+  std::string QueryModifier::GetSql( const bool appending ) const
   {
     std::string retVal;
     retVal += appending ? "" : this->GetJoin();
@@ -143,8 +144,10 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  std::string QueryModifier::GetWhere( bool appending ) const
+  std::string QueryModifier::GetWhere( const bool appending ) const
   {
+    if( this->WhereList.empty() ) return "";
+
     bool firstItem = true, lastOpenBracket = false;
     std::string statement;
     std::stringstream stream;

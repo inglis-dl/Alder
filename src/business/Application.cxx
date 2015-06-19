@@ -199,12 +199,12 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool Application::ReadConfiguration( std::string filename )
+  bool Application::ReadConfiguration( const std::string fileName )
   {
     // make sure the file exists
-    ifstream ifile( filename.c_str() );
+    ifstream ifile( fileName.c_str() );
     if( !ifile ) return false;
-    return this->Config->Read( filename );
+    return this->Config->Read( fileName );
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -338,18 +338,4 @@ namespace Alder
     vtkSetObjectBodyMacro( ActiveAtlasImage, Image, image);
     this->InvokeEvent( Application::ActiveAtlasImageEvent );
   }
-
-/*
-
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Application::UpdateActiveInterviewImageData()
-  {
-    if( this->ActiveInterview )
-    {
-      this->ActiveInterview->UpdateImageData();
-      this->InvokeEvent( Application::ActiveInterviewUpdateImageDataEvent );
-    }
-  }
-
-*/
 }
