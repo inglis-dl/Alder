@@ -58,6 +58,14 @@ prompt "Opal timeout?" opal_timeout "10"
 prompt "Opal verbose?" opal_verbose "0"
 prompt "Log file path?" log_path "/var/local/alder/log"
 prompt "Image data path?" imagedata_path "/var/local/alder/data"
+prompt "Primary smtp hostname?" smtp1_host
+prompt "Primary smtp name?" smtp1_name
+prompt "Primary smtp port?" smtp1_port
+prompt "Primary smtp use authorization?" smtp1_ssl
+prompt "Alternate smtp hostname?" smtp2_host
+prompt "Alternate smtp name?" smtp2_name
+prompt "Alternate smtp port?" smtp2_port
+prompt "Alternate smtp use authorization?" smtp2_ssl
 
 echo "Writing config file to $config_filename..."
 sed -e "s;%DB_HOST%;$db_host;" \
@@ -73,7 +81,15 @@ sed -e "s;%DB_HOST%;$db_host;" \
     -e "s;%OPAL_VERBOSE%;$opal_verbose;" \
     -e "s;%LOG_PATH%;$log_path;" \
     -e "s;%LOG_PATH%;$log_path;" \
-    -e "s;%IMAGEDATA_PATH%;$imagedata_path;" $DIR/config.xml > $config_filename
+    -e "s;%IMAGEDATA_PATH%;$imagedata_path;" \
+    -e "s;%SMTP1_HOST%;$smtp1_host;" \
+    -e "s;%SMTP1_NAME%;$smtp1_name;" \
+    -e "s;%SMTP1_PORT%;$smtp1_port;" \
+    -e "s;%SMTP1_SSL%;$smtp1_ssl;" \
+    -e "s;%SMTP2_HOST%;$smtp2_host;" \
+    -e "s;%SMTP2_NAME%;$smtp2_name;" \
+    -e "s;%SMTP2_PORT%;$smtp2_port;" \
+    -e "s;%SMTP2_SSL%;$smtp2_ssl;" $DIR/config.xml > $config_filename
 echo
 
 # see if we need to rebuild the database

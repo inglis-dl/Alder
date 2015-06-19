@@ -197,6 +197,7 @@
     </property>
     <addaction name="actionUserManagement"/>
     <addaction name="actionUpdateDatabase"/>
+    <addaction name="actionReports"/>
    </widget>
    <addaction name="menuActions"/>
    <addaction name="menuAdministration"/>
@@ -312,6 +313,11 @@
   <action name="actionLoadUIDs">
    <property name="text">
     <string>Load UIDs</string>
+   </property>
+  </action>
+  <action name="actionReports">
+   <property name="text">
+    <string>Reports</string>
    </property>
   </action>
  </widget>

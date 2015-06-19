@@ -18,4 +18,16 @@
     <Log>%LOG_PATH%</Log>
     <ImageData>%IMAGEDATA_PATH%</ImageData>
   </Path>
+  <SmtpServer1>
+    <Host>%SMTP1_HOST%</Host>
+    <Name>%SMTP1_NAME%</Name>
+    <Port>%SMPT1_PORT%</Port>
+    <SSL>%SMTP1_SSL%</SSL>
+  </SmtpServer1>
+  <SmtpServer2>
+    <Host>%SMTP2_HOST%</Host>
+    <Name>%SMTP2_NAME%</Name>
+    <Port>%SMPT2_PORT%</Port>
+    <SSL>%SMTP2_SSL%</SSL>
+  </SmtpServer2>
 </Configuration>

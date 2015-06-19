@@ -5,8 +5,10 @@ SET( AlderQtModelLib_SRC
   QAlderInterviewWidget.cxx
   QLoginDialog.cxx
   QChangePasswordDialog.cxx
+  QReportDialog.cxx
   QSelectInterviewDialog.cxx
   QUserListDialog.cxx
+  QMailSender.cxx
   QVTKProgressDialog.cxx
 )
 
@@ -15,6 +17,7 @@ SET( AlderQtModel_Uis
   QAlderInterviewWidget.ui
   QChangePasswordDialog.ui
   QLoginDialog.ui
+  QReportDialog.ui
   QSelectInterviewDialog.ui
   QUserListDialog.ui
   QVTKProgressDialog.ui
@@ -25,8 +28,10 @@ SET( AlderQtModel_MocHeaders
   QAlderInterviewWidget.h
   QChangePasswordDialog.h
   QLoginDialog.h
+  QReportDialog.h
   QSelectInterviewDialog.h
   QUserListDialog.h
+  QMailSender.h
   QVTKProgressDialog.h
 )
 
@@ -56,6 +61,7 @@ ADD_LIBRARY( AlderQtModel
 TARGET_LINK_LIBRARIES( AlderQtModel
   AlderVTK
   QVTK
+  Qt4::QtNetwork
 )
 
 INSTALL( TARGETS AlderQtModel

@@ -45,9 +45,27 @@ namespace Alder
      * Compute and update the DerivedRating from any Codes that
      * are common to the user and image associated with this rating.
      * The Rating can be set from the computed DerivedRating.
-     * bool setRatingFromDerived
+     * @param derive set the rating from the derived rating
      */
-    void UpdateDerivedRating( bool setRatingFromDerived = false );
+    void UpdateDerivedRating( const bool derive = false );
+
+    /**
+     * Get the number of ratings by modality that the User has access to.
+     * @param user a User object
+     * @return     map of modality names to rating counts for the specified user
+     * @throws     runtime_error
+     */
+    static std::map<std::string,int> GetNumberOfRatings( User* user );
+
+    /**
+     * Get rating data created by the User and other meta data to build a rating report.
+     * @param user     a User object
+     * @param modality optional modality restriction
+     * @return         vector of maps containing key value pairs containing the data
+     * @throws         runtime_error
+     */
+    static std::vector<std::map<std::string,std::string>> GetRatingReportData(
+      User* user, const std::string modality = "" );
 
   protected:
     Rating() {}

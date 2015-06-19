@@ -23,6 +23,7 @@
 #include <QAlderDicomTagWidget.h>
 #include <QChangePasswordDialog.h>
 #include <QLoginDialog.h>
+#include <QReportDialog.h>
 #include <QSelectInterviewDialog.h>
 #include <QUserListDialog.h>
 #include <QVTKProgressDialog.h>
@@ -65,6 +66,9 @@ QMainAlderWindow::QMainAlderWindow( QWidget* parent )
   QObject::connect(
     this->ui->actionUpdateDatabase, SIGNAL( triggered() ),
     this, SLOT( slotUpdateDatabase() ) );
+  QObject::connect(
+    this->ui->actionReports, SIGNAL( triggered() ),
+    this, SLOT( slotReports() ) );
   QObject::connect(
     this->ui->actionLoadUIDs, SIGNAL( triggered() ),
     this, SLOT( slotLoadUIDs() ) );
@@ -245,6 +249,12 @@ void QMainAlderWindow::slotUpdateDatabase()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindow::slotReports()
+{
+  this->adminLoginDo( &QMainAlderWindow::adminReports );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QMainAlderWindow::adminLoginDo( void (QMainAlderWindow::*fn)() )
 {
   int attempt = 1;
@@ -274,6 +284,16 @@ void QMainAlderWindow::adminLoginDo( void (QMainAlderWindow::*fn)() )
     }
     attempt++;
   }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindow::adminReports()
+{
+  // load the reports dialog
+  QReportDialog reportDialog( this );
+  reportDialog.setModal( true );
+  reportDialog.setWindowTitle( tr( "Rating Reports" ) );
+  reportDialog.exec();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

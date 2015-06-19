@@ -39,6 +39,7 @@ public slots:
   virtual void slotLoadUIDs();
   virtual void slotUserManagement();
   virtual void slotUpdateDatabase();
+  virtual void slotReports();
   virtual void slotSaveImage();
 
   // help event functions
@@ -70,6 +71,7 @@ private:
   void adminLoadUIDs();
   void adminUserManagement();
   void adminUpdateDatabase();
+  void adminReports();
   void adminLoginDo( void (QMainAlderWindow::*fn)() );
 
   vtkSmartPointer<vtkEventQtSlotConnect> Connections;
