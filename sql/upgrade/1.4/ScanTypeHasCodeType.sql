@@ -39,8 +39,14 @@ CREATE PROCEDURE patch_ScanTypeHasCodeType()
     INSERT IGNORE INTO ScanTypeHasCodeType (ScanTypeId, CodeTypeId)
     SELECT @HipTypeId AS ScanTypeId, CodeType.Id AS CodeTypeId
     FROM CodeType
-    WHERE CodeType.Code IN ("PL","PM","PS","PI","Fad","Fab","AM","AL","AI","CA","MS")
+    WHERE CodeType.Code IN ("PL","PM","PS","PI","Fad","Fab","AM","AL","AI","CA","MS","MET")
     AND CodeType.Value=-1;
+
+    INSERT IGNORE INTO ScanTypeHasCodeType (ScanTypeId, CodeTypeId)
+    SELECT @HipTypeId AS ScanTypeId, CodeType.Id AS CodeTypeId
+    FROM CodeType
+    WHERE CodeType.Code IN ("ART","NU")
+    AND CodeType.Value=-5;
 
     INSERT IGNORE INTO ScanTypeHasCodeType (ScanTypeId, CodeTypeId)
     SELECT @HipTypeId AS ScanTypeId, CodeType.Id AS CodeTypeId
@@ -54,24 +60,42 @@ CREATE PROCEDURE patch_ScanTypeHasCodeType()
     INSERT IGNORE INTO ScanTypeHasCodeType (ScanTypeId, CodeTypeId)
     SELECT @ForearmTypeId AS ScanTypeId, CodeType.Id AS CodeTypeId
     FROM CodeType
-    WHERE CodeType.Code IN ("FS","FC","CB","FY","FB","FI")
+    WHERE CodeType.Code IN ("FS","FC","CB","FY","FB","FI","MS","MET")
     AND CodeType.Value=-1;
+
+    INSERT IGNORE INTO ScanTypeHasCodeType (ScanTypeId, CodeTypeId)
+    SELECT @ForearmTypeId AS ScanTypeId, CodeType.Id AS CodeTypeId
+    FROM CodeType
+    WHERE CodeType.Code IN ("ART","NU")
+    AND CodeType.Value=-5;
 
     SET @LateralTypeId=(SELECT Id FROM ScanType WHERE Type="LateralBoneDensity");
 
     INSERT IGNORE INTO ScanTypeHasCodeType (ScanTypeId, CodeTypeId)
     SELECT @LateralTypeId AS ScanTypeId, CodeType.Id AS CodeTypeId
     FROM CodeType
-    WHERE CodeType.Code IN ("LI","LS","L4","MS")
+    WHERE CodeType.Code IN ("LI","LS","L4","MS","MET")
     AND CodeType.Value=-1;
+
+    INSERT IGNORE INTO ScanTypeHasCodeType (ScanTypeId, CodeTypeId)
+    SELECT @LateralTypeId AS ScanTypeId, CodeType.Id AS CodeTypeId
+    FROM CodeType
+    WHERE CodeType.Code IN ("ART","NU")
+    AND CodeType.Value=-5;
 
     SET @WholeBodyTypeId=(SELECT Id FROM ScanType WHERE Type="WholeBodyBoneDensity");
 
     INSERT IGNORE INTO ScanTypeHasCodeType (ScanTypeId, CodeTypeId)
     SELECT @WholeBodyTypeId AS ScanTypeId, CodeType.Id AS CodeTypeId
     FROM CodeType
-    WHERE CodeType.Code IN ("WS","WC","Wha","WH","WN","WT","Wsh","WP","WL","JW","MS")
+    WHERE CodeType.Code IN ("WS","WC","Wha","WH","WN","WT","Wsh","WFH","WP","WL","MS","MET")
     AND CodeType.Value=-1;
+
+    INSERT IGNORE INTO ScanTypeHasCodeType (ScanTypeId, CodeTypeId)
+    SELECT @WholeBodyTypeId AS ScanTypeId, CodeType.Id AS CodeTypeId
+    FROM CodeType
+    WHERE CodeType.Code IN ("ART","NU")
+    AND CodeType.Value=-5;
 
     SET @CarotidIntimaTypeId=(SELECT Id FROM ScanType WHERE Type="CarotidIntima");
 
