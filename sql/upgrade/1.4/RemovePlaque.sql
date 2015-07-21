@@ -8,7 +8,12 @@ LINES TERMINATED BY '\n';
 
 DELETE Image.* FROM Image
 JOIN Exam ON Exam.Id=Image.ExamId
-WHERE Exam.Type='Plaque';
+JOIN ScanType ON ScanType.Id=Exam.ScanTypeId
+WHERE ScanType.Type='Plaque';
 
 DELETE Exam.* FROM Exam
-WHERE Type='Plaque';
+JOIN ScanType ON ScanType.Id=Exam.ScanTypeId
+WHERE ScanType.Type='Plaque';
+
+DELETE ScanType.* FROM ScanType
+WHERE ScanType.Type='Plaque';
