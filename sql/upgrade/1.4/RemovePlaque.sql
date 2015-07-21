@@ -1,8 +1,9 @@
 SELECT CONCAT('/data/alder/', Interview.Id, '/', Exam.Id, '/', Image.Id) AS path
 FROM Image 
 JOIN Exam ON Exam.Id=Image.ExamId 
+JOIN ScanType ON ScanType.Id=Exam.ScanTypeId
 JOIN Interview ON Interview.Id=Exam.InterviewId 
-WHERE Exam.Type = 'Plaque' 
+WHERE ScanType.Type = 'Plaque' 
 INTO OUTFILE '/tmp/plaque_remove.csv'
 LINES TERMINATED BY '\n';
 
