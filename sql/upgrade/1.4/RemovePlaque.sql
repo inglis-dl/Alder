@@ -7,6 +7,19 @@ WHERE ScanType.Type = 'Plaque'
 INTO OUTFILE '/tmp/plaque_remove.csv'
 LINES TERMINATED BY '\n';
 
+CREATE TEMPORARY TABLE tmp AS
+SELECT Image.Id AS Id FROM Image 
+JOIN Exam ON Exam.Id=Image.ExamId 
+JOIN ScanType ON ScanType.Id=Exam.ScanTypeId  
+WHERE ScanType.Type='Plaque';
+
+DELETE Image.* FROM Image
+WHERE ParentImageId IN (
+  SELECT Id FROM tmp
+);
+
+DROP TABLE tmp;
+
 DELETE Image.* FROM Image
 JOIN Exam ON Exam.Id=Image.ExamId
 JOIN ScanType ON ScanType.Id=Exam.ScanTypeId
