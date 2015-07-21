@@ -26,10 +26,11 @@ CREATE PROCEDURE patch_CodeGroup()
     END IF;
 
     INSERT IGNORE INTO CodeGroup (Value, Name) VALUES
-    (-1,"Position"),
+    (-1,"PositionGroup1"),
+    (-1,"PositionGroup2"),
     (-1,"Angulation"),
-    (-1,"AnalysisRegion1"),
-    (-1,"AnalysisRegion2");
+    (-1,"AnalysisGroup1"),
+    (-1,"AnalysisGroup2");
 
   END //
 DELIMITER ;

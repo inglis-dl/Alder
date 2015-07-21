@@ -11,5 +11,6 @@ SOURCE CodeGroup.sql
 SOURCE CodeType.sql
 SOURCE ScanTypeHasCodeType.sql
 SOURCE Code.sql
+SOURCE RemovePlaque.sql
 
 COMMIT;

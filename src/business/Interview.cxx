@@ -310,9 +310,7 @@ namespace Alder
 
      modalityMap["Ultrasound"] = {
        {"CarotidIntima","left"},
-       {"CarotidIntima","right"},
-       {"Plaque","left"},
-       {"Plaque","right"}
+       {"CarotidIntima","right"}
      };
      modalityMap["Dexa"] = {
        {"DualHipBoneDensity","left"},

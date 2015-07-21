@@ -195,16 +195,6 @@ namespace Alder
         }
       }
     }
-    else if( "Plaque" == type )
-    {
-      std::string variable = "Measure.CINELOOP_1";
-      std::string sideVariable = "Measure.SIDE";
-      std::string suffix = ".dcm.gz";
-      bool repeatable = true;
-      resultAll &= this->RetrieveImage( type, variable, UId, settings, suffix, repeatable,
-        sideVariable );
-      resultAny = resultAll;
-    }
     else if( "DualHipBoneDensity" == type )
     {
       std::string variable = "Measure.RES_HIP_DICOM";
@@ -407,7 +397,7 @@ namespace Alder
 
     if( !this->IsDICOM() ) return;
 
-    bool isHologic = type != "Plaque" && type != "CarotidIntima";
+    bool isHologic = "CarotidIntima" != type;
     std::vector< vtkSmartPointer< Image > > imageList;
     this->GetList( &imageList );
     for( auto it = imageList.begin(); it != imageList.end(); ++it )
