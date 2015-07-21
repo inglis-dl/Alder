@@ -284,8 +284,9 @@ CREATE PROCEDURE patch_Code()
     0 AS Wshcode,
     0 AS WPcode,
     0 AS WLcode,
-    0 AS JWcode,
-    0 AS MScode
+    0 AS MScode,
+    0 AS WFHCode,
+    0 AS METCode
     FROM (
       SELECT
       TRIM(REPLACE(REPLACE(Note,'\n',','),',,',',')) AS Note,
@@ -298,13 +299,13 @@ CREATE PROCEDURE patch_Code()
       JOIN Rating ON Rating.ImageId=Image.Id
       JOIN Exam ON Exam.Id=Image.ExamId
       JOIN ScanType ON ScanType.Id=Exam.ScanTypeId
-      WHERE Note REGEXP '(WS)|(WC)|(Wha)|(WH)|(WN)|(WT)|(Wsh)|(WP)|(WL)|(JW)|(MS)'
+      WHERE Note REGEXP '(WS)|(WC)|(Wha)|(WH)|(WN)|(WT)|(Wsh)|(WP)|(WL)|(JW)|(MS)|(WFH)|(MET)'
       AND Type='WholeBodyBoneDensity'
     ) x;
 
     UPDATE tmp
     SET DerivedRating=(DerivedRating-1)
-    WHERE Note REGEXP '(WS,)|(WC,)|(Wha,)|(WH,)';
+    WHERE Note REGEXP '(WS,)|(WC,)|(WFH,)|(Wha,)|(WH,)';
 
     UPDATE tmp
     SET WScode=1
@@ -313,6 +314,10 @@ CREATE PROCEDURE patch_Code()
     UPDATE tmp
     SET WCcode=1
     WHERE Note REGEXP 'WC,';
+
+    UPDATE tmp
+    SET WFHcode=1
+    WHERE Note REGEXP 'WFH,';
 
     UPDATE tmp
     SET Whacode=1
@@ -347,8 +352,12 @@ CREATE PROCEDURE patch_Code()
     WHERE Note REGEXP 'WL,';
 
     UPDATE tmp
-    SET DerivedRating=(DerivedRating-1), JWcode=1
-    WHERE Note REGEXP 'JW,';
+    SET DerivedRating=(DerivedRating-1)
+    WHERE Note REGEXP '(JW,)|(MET,)';
+
+    UPDATE tmp
+    SET METcode=1
+    WHERE Note REGEXP '(JW,)|(MET,)';
 
     UPDATE tmp
     SET DerivedRating=(DerivedRating-1), MScode=1
@@ -426,7 +435,7 @@ CREATE PROCEDURE patch_Code()
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='MET' AND Value=-1 AND CodeGroupId IS NULL)
     FROM tmp
-    WHERE JWcode=1;
+    WHERE METcode=1;
 
     INSERT INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
