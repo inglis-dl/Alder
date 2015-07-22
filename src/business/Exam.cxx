@@ -295,7 +295,7 @@ namespace Alder
     std::stringstream log;
     std::string laterality = this->Get( "Laterality" ).ToString();
 
-    if( laterality != "none" )
+    if( "none" != laterality )
     {
       std::vector< std::string > sideList;
       if( repeatable )
@@ -341,7 +341,7 @@ namespace Alder
 
       for( auto sideListIt = sideList.cbegin(); sideListIt != sideList.cend(); ++sideListIt )
       {
-        if( laterality == Utilities::toLower( *sideListIt ) )
+        if( Utilities::toLower( *sideListIt ) == laterality )
         {
           found = true;
           break;
@@ -358,7 +358,14 @@ namespace Alder
     // add a new entry in the image table (or replace it)
     vtkNew< Alder::Image > image;
     for( auto it = settings.cbegin(); it != settings.cend(); ++it ) image->Set( it->first, it->second );
-    image->Save( true );
+
+    try{
+      image->Save( true );
+    }
+    catch( std::runtime_error& e )
+    {
+      app->Log( e.what() );
+    }
 
     // now write the file and validate it
     std::string fileName = image->CreateFile( suffix );
@@ -384,7 +391,13 @@ namespace Alder
         for( auto it = dims.begin(); it != dims.end(); ++it ) if( *it > 1 ) dimensionality++;
       }
       image->Set( "Dimensionality", dimensionality );
-      image->Save();
+      try {
+        image->Save();
+      }
+      catch( std::runtime_error& e )
+      {
+        app->Log( e.what() );
+      }
     }
 
     return result;
@@ -400,12 +413,14 @@ namespace Alder
     bool isHologic = "CarotidIntima" != type;
     std::vector< vtkSmartPointer< Image > > imageList;
     this->GetList( &imageList );
+
     for( auto it = imageList.begin(); it != imageList.end(); ++it )
     {
       Image* image = *it;
       if( isHologic )
       {
-        image->SetLateralityFromDICOM();
+        // TODO: disable until a workaround can be found for unique index issue
+        // image->SetLateralityFromDICOM();
         image->CleanHologicDICOM();
       }
       else image->AnonymizeDICOM();
