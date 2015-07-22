@@ -62,11 +62,11 @@ namespace Alder
      * @param port int
      */
     bool Connect(
-      const std::string name,
-      const std::string user,
-      const std::string pass,
-      const std::string host,
-      const int port );
+      const std::string &name,
+      const std::string &user,
+      const std::string &pass,
+      const std::string &host,
+      const int &port );
 
     /**
      * Returns a vtkAlderMySQLQuery object for performing queries.
@@ -79,20 +79,20 @@ namespace Alder
      * @param table the name of a table to retrieve column names
      * @throws      runtime_error
      */
-    std::vector<std::string> GetColumnNames( const std::string table ) const;
+    std::vector<std::string> GetColumnNames( const std::string &table ) const;
 
     /**
      * Returns whether a table exists in the database.
      * @param table the name of a table
      */
-    bool TableExists( const std::string table ) const;
+    bool TableExists( const std::string &table ) const;
 
     /**
      * Returns whether a table column exists.
      * @param table  the name of a table
      * @param column the name of a column within the table
      */
-    bool ColumnExists( const std::string table, const std::string column ) const;
+    bool ColumnExists( const std::string &table, const std::string &column ) const;
 
     /**
      * Returns the default value for a table's column.
@@ -101,7 +101,7 @@ namespace Alder
      * @return       the default value of the column as a vtkVariant
      * @throws       runtime_error
      */
-    vtkVariant GetColumnDefault( const std::string table, const std::string column ) const;
+    vtkVariant GetColumnDefault( const std::string &table, const std::string &column ) const;
 
     /**
      * Returns whether a table's column value may be null.
@@ -109,7 +109,7 @@ namespace Alder
      * @param column the name of a column within the table
      * @throws       runtime_error
      */
-    bool IsColumnNullable( const std::string table, const std::string column ) const;
+    bool IsColumnNullable( const std::string &table, const std::string &column ) const;
 
     /**
      * Returns whether a table's column is a foreign key.
@@ -119,7 +119,7 @@ namespace Alder
      * @param column the name of a column within the table
      * @throws       runtime_error
      */
-    bool IsColumnForeignKey( const std::string table, const std::string column ) const;
+    bool IsColumnForeignKey( const std::string &table, const std::string &column ) const;
 
   protected:
     Database();
