@@ -1,4 +1,4 @@
-SELECT CONCAT('/data/alder/', Interview.Id, '/', Exam.Id, '/', Image.Id) AS path
+SELECT CONCAT('/data/alder/', Interview.Id, '/', Exam.Id, '/', Image.Id, '.dcm') AS path
 FROM Image 
 JOIN Exam ON Exam.Id=Image.ExamId 
 JOIN ScanType ON ScanType.Id=Exam.ScanTypeId
