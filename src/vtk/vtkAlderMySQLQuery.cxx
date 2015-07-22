@@ -575,7 +575,7 @@ vtkAlderMySQLQuery::Execute()
         this->Active = false;
         this->SetLastErrorText(mysql_error(db));
         vtkErrorMacro(<<"Query returned an error: "
-                      << this->GetLastErrorText());
+                      << this->GetLastErrorText() << " ; " << this->Query );
         return false;
         }
       }
@@ -584,7 +584,7 @@ vtkAlderMySQLQuery::Execute()
       // result != 0; the query failed
       this->Active = false;
       this->SetLastErrorText(mysql_error(db));
-      vtkErrorMacro(<<"Query returned an error: " << this->GetLastErrorText());
+      vtkErrorMacro(<<"Query returned an error: " << this->GetLastErrorText() << " ; " << this->Query);
       return false;
       }
     }
@@ -614,7 +614,7 @@ vtkAlderMySQLQuery::Execute()
       this->Active = false;
       this->SetLastErrorText(mysql_stmt_error(this->Internals->Statement));
       vtkErrorMacro(<<"Query returned an error: "
-                    << this->GetLastErrorText());
+                    << this->GetLastErrorText() << " ; " << this->Query);
       return false;
       }
     }
