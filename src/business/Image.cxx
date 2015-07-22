@@ -284,16 +284,16 @@ namespace Alder
     if( this->GetRecord( exam ) )
     {
       std::string latStr = exam->Get( "Laterality" ).ToString();
-      if( latStr != "none" )
+      if( "none" != latStr )
       {
         try{
           std::string tagStr = this->GetDICOMTag( "Laterality" );
-          if( tagStr.size() > 0 )
+          if( 0 < tagStr.size() )
           {
             tagStr = Utilities::toLower( tagStr );
-            if( tagStr.compare(0, 1, latStr, 0, 1) != 0 )
+            if( 0 != tagStr.compare(0, 1, latStr, 0, 1) )
             {
-              latStr = tagStr.compare(0, 1, "l", 0, 1) == 0 ? "left" : "right";
+              latStr = 0 == tagStr.compare(0, 1, "l", 0, 1) ? "left" : "right";
               exam->Set( "Laterality", latStr );
               exam->Save();
             }
