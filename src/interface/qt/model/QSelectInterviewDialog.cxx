@@ -137,7 +137,6 @@ void QSelectInterviewDialog::slotAccepted()
    // for multi selection, the first loaded interview will be set to the active
    // interview
 
-
   if( !ranges.empty() )
   {
     Alder::Application *app = Alder::Application::GetInstance();
@@ -148,9 +147,16 @@ void QSelectInterviewDialog::slotAccepted()
     vtkSmartPointer< Alder::Interview > interview =
       vtkSmartPointer< Alder::Interview >::New();
 
-    bool doProgress = ranges.size() > 1 || ranges.at(0).rowCount() > 1;
-    std::vector< std::string> uidList;
+    std::vector< std::string > uidList;
     std::map< std::string, std::string > map;
+    std::vector< std::map< std::string, std::string > > uidDateList;
+
+    Alder::User *user = app->GetActiveUser();
+
+    // only worry about the modalities the user is allowed to access
+    vtkSmartPointer< Alder::QueryModifier > modifier =
+      vtkSmartPointer< Alder::QueryModifier >::New();
+    user->InitializeExamModifier( modifier );
 
     for( QList< QTableWidgetSelectionRange >::const_iterator it =
          ranges.constBegin(); it != ranges.constEnd(); ++it )
@@ -165,8 +171,11 @@ void QSelectInterviewDialog::slotAccepted()
         map["UId"] = uid;
         map["VisitDate"] = visitDate;
         interview->Load( map );
-        if( !interview->HasImageData() )
+        if( !interview->HasImageData( modifier ) )
+        {
           uidList.push_back( uid );
+          uidDateList.push_back( map );
+         }
         else
         {
           if( first )
@@ -178,7 +187,7 @@ void QSelectInterviewDialog::slotAccepted()
       }
     }
 
-    if( !uidList.empty() && doProgress )
+    if( !uidList.empty() )
     {
       QVTKProgressDialog dialog( this->parentWidget() );
       Alder::ListInterviewProgressFunc func( uidList );
@@ -187,6 +196,18 @@ void QSelectInterviewDialog::slotAccepted()
         "Downloading Images",
         "Please wait while the images are downloaded.",
         func );
+      if( first )
+      {
+        for( auto it = uidDateList.begin(); it != uidDateList.end(); ++it )
+        {
+          interview->Load( *it );
+          if( interview->HasImageData( modifier ) )
+          {
+            app->SetActiveInterview( interview );
+            break;
+          }
+        }
+      }
     }
   }
 

@@ -47,8 +47,10 @@ namespace Alder
     // Alder does not download images from incomplete or contra-indicated exams.
     // NOTE: it is possible that an exam with state "Ready" has valid data, but we are leaving
     // those exams out for now since we don't know for sure whether they are always valid
-    bool downLoaded = this->Get( "Downloaded" ).ToInt() == 1;
+
+    bool downLoaded = 1 == this->Get( "Downloaded" ).ToInt();
     std::string stageStatus = this->Get( "Stage" ).ToString();
+
     return ( ( downLoaded && stageStatus == "Completed" ) ||
              ( !downLoaded && stageStatus == "NotApplicable" ) );
   }

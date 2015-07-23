@@ -53,8 +53,9 @@ namespace Alder
 
     /**
      * Returns whether this interview's image data has been downloaded.
+     * @param modifier QueryModifier to constrain to user allowed modalities
      */
-    bool HasImageData();
+    bool HasImageData( QueryModifier *modifier = NULL );
 
     /**
      * Updates all exam data associated with the interview from Opal.
@@ -99,18 +100,18 @@ namespace Alder
      * @param unRated whether the requested neighbour has to have unrated images only
      * @return        the neighbouring interview in UId/VisidDate order
      */
-    vtkSmartPointer<Interview> GetNeighbour( const bool forward, const bool loaded, const bool unRated );
-    vtkSmartPointer<Interview> GetNext( const bool loaded, const bool unRated )
+    vtkSmartPointer<Interview> GetNeighbour( const bool &forward, const bool &loaded, const bool &unRated );
+    vtkSmartPointer<Interview> GetNext( const bool &loaded, const bool &unRated )
     { return this->GetNeighbour( true, loaded, unRated ); }
-    vtkSmartPointer<Interview> GetNextLoaded( const bool unRated )
+    vtkSmartPointer<Interview> GetNextLoaded( const bool &unRated )
     { return this->GetNeighbour( true, true, unRated ); }
-    vtkSmartPointer<Interview> GetNextUnLoaded( const bool unRated )
+    vtkSmartPointer<Interview> GetNextUnLoaded( const bool &unRated )
     { return this->GetNeighbour( true, false, unRated ); }
-    vtkSmartPointer<Interview> GetPrevious( const bool loaded, const bool unRated )
+    vtkSmartPointer<Interview> GetPrevious( const bool &loaded, const bool &unRated )
     { return this->GetNeighbour( false, loaded, unRated ); }
-    vtkSmartPointer<Interview> GetPreviousLoaded( const bool unRated )
+    vtkSmartPointer<Interview> GetPreviousLoaded( const bool &unRated )
     { return this->GetNeighbour( false, true, unRated ); }
-    vtkSmartPointer<Interview> GetPreviousUnLoaded( const bool unRated )
+    vtkSmartPointer<Interview> GetPreviousUnLoaded( const bool &unRated )
     { return this->GetNeighbour( false, false, unRated ); }
     //@}
 

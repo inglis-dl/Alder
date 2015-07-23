@@ -32,7 +32,7 @@ namespace Alder
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   vtkSmartPointer<Interview> Interview::GetNeighbour(
-    const bool forward, const bool loaded, const bool unrated )
+    const bool &forward, const bool &loaded, const bool &unrated )
   {
     this->AssertPrimaryId();
 
@@ -173,7 +173,7 @@ namespace Alder
     stream << "ORDER BY UId ";
     if( !forward ) stream << "DESC ";
 
-    app->Log( "Querying Database: " + stream.str() );
+    app->Log( "Querying Database (Interview::GetNeighbour): " + stream.str() );
     vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery( stream.str().c_str() );
     query->Execute();
@@ -278,17 +278,24 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool Interview::HasImageData()
+  bool Interview::HasImageData( QueryModifier *modifier )
   {
     this->AssertPrimaryId();
+    Application *app = Application::GetInstance();
 
     std::vector< vtkSmartPointer< Exam > > examList;
-    this->GetList( &examList );
-    for( auto it = examList.cbegin(); it != examList.cend(); ++it )
+    this->GetList( &examList, modifier );
+    if( examList.empty() )
     {
-      if( !(*it)->HasImageData() ) return false;
+      throw std::runtime_error( "No exams attributed to the interview" );
     }
-
+    for( auto examIt = examList.cbegin(); examIt != examList.cend(); ++examIt )
+    {
+      if( !(*examIt)->HasImageData() )
+      {
+        return false;
+      }
+    }
     return true;
   }
 
@@ -542,10 +549,7 @@ namespace Alder
     std::vector< vtkSmartPointer< Interview > > interviewList;
     Interview::GetAll( &interviewList, modifier );
 
-    if( interviewList.empty() )
-    {
-      return 0;
-    }
+    if( interviewList.empty() ) return 0;
 
     Application *app = Application::GetInstance();
     double size = (double) interviewList.size();
@@ -556,6 +560,11 @@ namespace Alder
     innerProxy.SetCurlProgressOff();
 
     proxy.StartProgress();
+
+    Alder::User *user = app->GetActiveUser();
+    if( !user ) return 0;
+
+    user->InitializeExamModifier( modifier );
 
     for( auto it = interviewList.begin(); it != interviewList.end(); ++it, ++index )
     {
@@ -580,7 +589,7 @@ namespace Alder
           continue;
         }
       }
-      if( !interview->HasImageData() )
+      if( !interview->HasImageData( modifier ) )
       {
         try
         {

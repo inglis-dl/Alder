@@ -133,18 +133,22 @@ void QMainAlderWindow::closeEvent( QCloseEvent *event )
 void QMainAlderWindow::slotOpenInterview()
 {
   Alder::Application *app = Alder::Application::GetInstance();
-  bool loggedIn = NULL != app->GetActiveUser();
+  Alder::User* user = app->GetActiveUser();
 
-  if( loggedIn )
+  if( user )
   {
     QSelectInterviewDialog dialog( this );
     dialog.setModal( true );
     dialog.setWindowTitle( tr( "Select Interview" ) );
     dialog.exec();
 
-    // update the interview's exams
+    vtkSmartPointer< Alder::QueryModifier > modifier =
+      vtkSmartPointer< Alder::QueryModifier >::New();
+    user->InitializeExamModifier( modifier );
+
+    // update the interview's exams and images
     Alder::Interview *activeInterview = app->GetActiveInterview();
-    if( activeInterview && !activeInterview->HasImageData() )
+    if( activeInterview && !activeInterview->HasImageData( modifier ) )
     {
       // create a progress dialog to observe the progress of the update
       QVTKProgressDialog dialog( this );

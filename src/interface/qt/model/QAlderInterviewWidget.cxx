@@ -162,7 +162,6 @@ void QAlderInterviewWidget::slotNext()
     interview = activeInterview->GetNext(
       this->ui->loadedCheckBox->isChecked(),
       this->ui->unratedCheckBox->isChecked() );
-
     this->updateActiveInterview( interview );
   }
 }
@@ -172,6 +171,7 @@ void QAlderInterviewWidget::updateActiveInterview( Alder::Interview* interview )
 {
   if( !interview ) return;
 
+  Alder::Application *app = Alder::Application::GetInstance();
   // warn user if the neighbouring interview is an empty record (ie: no neighbour found)
   vtkVariant vId = interview->Get( "Id" );
   if( !vId.IsValid() || 0 == vId.ToInt() )
@@ -189,7 +189,12 @@ void QAlderInterviewWidget::updateActiveInterview( Alder::Interview* interview )
     {
       interview->UpdateExamData();
     }
-    if( !interview->HasImageData() )
+    Alder::User *user = app->GetActiveUser();
+    vtkSmartPointer< Alder::QueryModifier > modifier =
+      vtkSmartPointer< Alder::QueryModifier >::New();
+    user->InitializeExamModifier( modifier );
+
+    if( !interview->HasImageData( modifier ) )
     {
       // create a progress dialog to observe the progress of the update
       QVTKProgressDialog dialog( this );
@@ -199,7 +204,8 @@ void QAlderInterviewWidget::updateActiveInterview( Alder::Interview* interview )
        "Please wait while the interview's images are downloaded.",
        func );
     }
-    Alder::Application::GetInstance()->SetActiveInterview( interview );
+
+    app->SetActiveInterview( interview );
   }
 }
 
