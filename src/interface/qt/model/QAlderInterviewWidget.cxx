@@ -351,7 +351,7 @@ void QAlderInterviewWidget::updateCodeList()
   std::map<int,std::string> codeMap = exam->GetCodeTypeData();
 
   int colCount = 4;
-  int imax = codeMap.size()-1;
+  int imax = codeMap.size();
   if( colCount > imax ) colCount = imax;
   int rowCount = 0;
   for( int i = 0; i < imax; i += colCount ) rowCount++;
