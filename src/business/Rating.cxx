@@ -147,7 +147,7 @@ namespace Alder
            << "JOIN User ON User.Id=Rating.UserId "
            << "LEFT JOIN ( "
            << "  SELECT "
-           << "  GROUP_CONCAT( Code SEPARATOR ',' ) AS Code, "
+           << "  GROUP_CONCAT( DISTINCT Code SEPARATOR ',' ) AS Code, "
            << "  ImageId "
            << "  FROM Code "
            << "  JOIN CodeType ON CodeType.Id=Code.CodeTypeId "
