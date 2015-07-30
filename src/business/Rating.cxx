@@ -147,11 +147,14 @@ namespace Alder
            << "JOIN User ON User.Id=Rating.UserId "
            << "LEFT JOIN ( "
            << "  SELECT "
-           << "  GROUP_CONCAT( DISTINCT Code SEPARATOR ',' ) AS Code, "
+           << "  GROUP_CONCAT( DISTINCT Code ORDER BY Code SEPARATOR ',' ) AS Code, "
            << "  ImageId "
            << "  FROM Code "
            << "  JOIN CodeType ON CodeType.Id=Code.CodeTypeId "
+           << "  JOIN Image ON Image.Id=Code.ImageId "
+           << "  JOIN User ON User.Id=Code.UserId "
            << "  WHERE Code.UserId=" << user->Get("Id").ToString() << " "
+           << "  GROUP BY Image.Id "
            << "  ) x ON x.ImageId=Rating.ImageId "
            << "WHERE User.Id=" << user->Get("Id").ToString() << " ";
 
