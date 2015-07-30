@@ -393,6 +393,7 @@ void QReportDialog::updateInterface()
   std::vector< vtkSmartPointer< Alder::User > > userList;
   vtkSmartPointer<Alder::QueryModifier> modifier = vtkSmartPointer< Alder::QueryModifier >::New();
   modifier->Join( "Rating", "Rating.UserId", "User.Id" );
+  modifier->Group( "User.Id" );
 
   Alder::User::GetAll( &userList, modifier );
   for( auto it = userList.begin(); it != userList.end(); ++it )
