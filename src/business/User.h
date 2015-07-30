@@ -72,7 +72,7 @@ namespace Alder
      * @param column name of a column in the User table
      * @param value  the value to set the column to
      */
-    virtual void SetVariant( const std::string &column, vtkVariant value );
+    virtual void SetVariant( const std::string column, vtkVariant value );
 
   private:
     User( const User& ); // Not implemented
