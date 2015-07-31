@@ -181,12 +181,13 @@ namespace Alder
       {1,"RATING"},
       {2,"DERIVED"},
       {3,"CODE"},
-      {4,"TYPE"},
-      {5,"SIDE"},
-      {6,"UID"},
-      {7,"VISITDATE"},
-      {8,"SITE"},
-      {9,"INTERVIEWER"}
+      {4,"CODEID"},
+      {5,"TYPE"},
+      {6,"SIDE"},
+      {7,"UID"},
+      {8,"VISITDATE"},
+      {9,"SITE"},
+      {10,"INTERVIEWER"}
     };
 
     while( query->NextRow() )
