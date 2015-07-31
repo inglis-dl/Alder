@@ -287,7 +287,12 @@ namespace Alder
     this->GetList( &examList, modifier );
     if( examList.empty() )
     {
-      throw std::runtime_error( "No exams attributed to the interview" );
+      std::string err = "No exams attributed to interview ";
+      err += this->Get("Id").ToString();
+      err += " for UID ";
+      err += this->Get("UId").ToString();
+      app->Log( err.c_str() );
+      return false;
     }
     for( auto examIt = examList.cbegin(); examIt != examList.cend(); ++examIt )
     {
