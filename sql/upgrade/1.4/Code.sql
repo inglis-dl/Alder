@@ -168,97 +168,103 @@ CREATE PROCEDURE patch_Code()
     JOIN tmp ON tmp.RatingId=Rating.Id
     SET Rating.DerivedRating=tmp.DerivedRating;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='AR' AND Value=0 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE ARcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='AS' AND Value=-1 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE AScode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='NA' AND Value=-5 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE NAcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='NO' AND Value=-5 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE NOcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='PI' AND Value=0 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE PIcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='AN' AND Value=-1 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE ANcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='CE' AND Value=0 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE CEcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='CS' AND Value=-1 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE CScode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='PC' AND Value=-1 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE PCcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='NI' AND Value=-5 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE NIcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='SB' AND Value=-4 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE SBcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
+    SELECT
+    UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='SK' AND Value=-1 AND CodeGroupId IS NULL)
+    FROM tmp
+    WHERE SKcode=1;
+
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='GB' AND Value=0 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE GBcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='LO' AND Value=-1 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE LOcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='AM' AND Value=0 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE AMcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='ME' AND Value=-4 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE MEcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='ZE' AND Value=-5 AND CodeGroupId IS NULL)
     FROM tmp
@@ -377,67 +383,67 @@ CREATE PROCEDURE patch_Code()
     SET @Analysis_Group1_Id=(SELECT Id FROM CodeGroup WHERE NAME='AnalysisGroup1');
     SET @Analysis_Group2_Id=(SELECT Id FROM CodeGroup WHERE NAME='AnalysisGroup2');
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='WS' AND Value=-1 AND CodeGroupId=@Position_Group1_Id)
     FROM tmp
     WHERE WScode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='WC' AND Value=-1 AND CodeGroupId=@Position_Group1_Id)
     FROM tmp
     WHERE WCcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='Wha' AND Value=-1 AND CodeGroupId=@Position_Group2_Id)
     FROM tmp
     WHERE Whacode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='WH' AND Value=-1 AND CodeGroupId=@Position_Group2_Id)
     FROM tmp
     WHERE WHcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='WN' AND Value=-1 AND CodeGroupId=@Analysis_Group1_Id)
     FROM tmp
     WHERE WNcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='WT' AND Value=-1 AND CodeGroupId=@Analysis_Group1_Id)
     FROM tmp
     WHERE WTcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='Wsh' AND Value=-1 AND CodeGroupId=@Analysis_Group1_Id)
     FROM tmp
     WHERE Wshcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='WP' AND Value=-1 AND CodeGroupId=@Analysis_Group2_Id)
     FROM tmp
     WHERE WPcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='WL' AND Value=-1 AND CodeGroupId=@Analysis_Group2_Id)
     FROM tmp
     WHERE WLcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='MET' AND Value=-1 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE METcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='MS' AND Value=-1 AND CodeGroupId IS NULL)
     FROM tmp
@@ -516,37 +522,37 @@ CREATE PROCEDURE patch_Code()
     JOIN tmp ON tmp.RatingId=Rating.Id
     SET Rating.DerivedRating=tmp.DerivedRating;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='FS' AND Value=-1 AND CodeGroupId=@Position_Group1_Id)
     FROM tmp
     WHERE FScode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='FC' AND Value=-1 AND CodeGroupId=@Position_Group1_Id)
     FROM tmp
     WHERE FCcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='CB' AND Value=-1 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE CBcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='FB' AND Value=-1 AND CodeGroupId=@Analysis_Group1_Id)
     FROM tmp
     WHERE FBcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='FY' AND Value=-1 AND CodeGroupId=@Analysis_Group1_Id)
     FROM tmp
     WHERE FYcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='FI' AND Value=-1 AND CodeGroupId=@Analysis_Group1_Id)
     FROM tmp
@@ -611,25 +617,25 @@ CREATE PROCEDURE patch_Code()
     JOIN tmp ON tmp.RatingId=Rating.Id
     SET Rating.DerivedRating=tmp.DerivedRating;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='LI' AND Value=-1 AND CodeGroupId=@Position_Group1_Id)
     FROM tmp
     WHERE LIcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='LS' AND Value=-1 AND CodeGroupId=@Position_Group1_Id)
     FROM tmp
     WHERE LScode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='L4' AND Value=-1 AND CodeGroupId IS NULL)
     FROM tmp
     WHERE L4code=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='MS' AND Value=-1 AND CodeGroupId IS NULL)
     FROM tmp
@@ -751,79 +757,79 @@ CREATE PROCEDURE patch_Code()
     JOIN tmp ON tmp.RatingId=Rating.Id
     SET Rating.DerivedRating=tmp.DerivedRating;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='PL' AND Value=-1 AND CodeGroupId=@Position_Group1_Id)
     FROM tmp
     WHERE PLcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='PM' AND Value=-1 AND CodeGroupId=@Position_Group1_Id)
     FROM tmp
     WHERE PMcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='PS' AND Value=-1 AND CodeGroupId=@Position_Group1_Id)
     FROM tmp
     WHERE PScode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='PI' AND Value=-1 AND CodeGroupId=@Position_Group1_Id)
     FROM tmp
     WHERE PIcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='AL' AND Value=-1 AND CodeGroupId=@Analysis_Group1_Id)
     FROM tmp
     WHERE ALcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='AM' AND Value=-1 AND CodeGroupId=@Analysis_Group1_Id)
     FROM tmp
     WHERE AMcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='AS' AND Value=-1 AND CodeGroupId=@Analysis_Group1_Id)
     FROM tmp
     WHERE AScode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='AI' AND Value=-1 AND CodeGroupId=@Analysis_Group1_Id)
     FROM tmp
     WHERE AIcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='Fad' AND Value=-1 AND CodeGroupId=@AngulationId)
     FROM tmp
     WHERE Fadcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='Fab' AND Value=-1 AND CodeGroupId=@AngulationId)
     FROM tmp
     WHERE Fabcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='CA' AND Value=-1 AND CodeGroupId=@Analysis_Group2_Id)
     FROM tmp
     WHERE CAcode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='CS' AND Value=-1 AND CodeGroupId=@Analysis_Group2_Id)
     FROM tmp
     WHERE CScode=1;
 
-    INSERT INTO Code (UserId,ImageId,CodeTypeId)
+    INSERT IGNORE INTO Code (UserId,ImageId,CodeTypeId)
     SELECT
     UserId,ImageId,(SELECT Id FROM CodeType WHERE Code='MS' AND Value=-1 AND CodeGroupId IS NULL)
     FROM tmp
