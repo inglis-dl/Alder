@@ -3,6 +3,7 @@ PROJECT( AlderQtModel )
 SET( AlderQtModelLib_SRC
   QAlderAtlasWidget.cxx
   QAlderInterviewWidget.cxx
+  QCodeDialog.cxx
   QLoginDialog.cxx
   QChangePasswordDialog.cxx
   QReportDialog.cxx
@@ -15,6 +16,7 @@ SET( AlderQtModelLib_SRC
 SET( AlderQtModel_Uis
   QAlderAtlasWidget.ui
   QAlderInterviewWidget.ui
+  QCodeDialog.ui
   QChangePasswordDialog.ui
   QLoginDialog.ui
   QReportDialog.ui
@@ -27,6 +29,7 @@ SET( AlderQtModel_MocHeaders
   QAlderAtlasWidget.h
   QAlderInterviewWidget.h
   QChangePasswordDialog.h
+  QCodeDialog.h
   QLoginDialog.h
   QReportDialog.h
   QSelectInterviewDialog.h

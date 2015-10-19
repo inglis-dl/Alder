@@ -38,6 +38,17 @@ namespace Alder
     vtkTypeMacro( CodeType, ActiveRecord );
     std::string GetName() const { return "CodeType"; }
 
+    /**
+     * Get the number of times a CodeType has been used in the Rating table.
+     * @return number of times used
+     */
+    int GetUsage();
+
+    /**
+     * Get the number of times each CodeType has been used in the Rating table.
+     */
+    static void GetUsageById( std::map<int,int>& );
+
   protected:
     CodeType() {}
     ~CodeType() {}

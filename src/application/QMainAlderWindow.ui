@@ -198,6 +198,7 @@
     <addaction name="actionUserManagement"/>
     <addaction name="actionUpdateDatabase"/>
     <addaction name="actionReports"/>
+    <addaction name="actionRatingCodes"/>
    </widget>
    <addaction name="menuActions"/>
    <addaction name="menuAdministration"/>
@@ -318,6 +319,11 @@
   <action name="actionReports">
    <property name="text">
     <string>Reports</string>
+   </property>
+  </action>
+  <action name="actionRatingCodes">
+   <property name="text">
+    <string>Rating Codes</string>
    </property>
   </action>
  </widget>

@@ -38,6 +38,12 @@ namespace Alder
     vtkTypeMacro( CodeGroup, ActiveRecord );
     std::string GetName() const { return "CodeGroup"; }
 
+    /** 
+     * Get the number of times a CodeGroup has been used in the CodeType table.
+     * @return number of times used
+     */
+    int GetUsage();
+
   protected:
     CodeGroup() {}
     ~CodeGroup() {}
