@@ -138,7 +138,9 @@ namespace Alder
            << "Interview.UId AS UID, "
            << "Interview.VisitDate AS VISITDATE, "
            << "Interview.Site AS SITE, "
-           << "Exam.Interviewer AS INTERVIEWER "
+           << "Exam.Interviewer AS INTERVIEWER, "
+           << "Rating.CreateTimestamp AS RATING_CREATE_DATETIME, "
+           << "Rating.UpdateTimestamp AS RATING_UPDATE_DATETIME "
            << "FROM Rating "
            << "JOIN Image ON Image.Id=Rating.ImageId "
            << "JOIN Exam ON Exam.Id=Image.ExamId "
@@ -187,7 +189,9 @@ namespace Alder
       {7,"UID"},
       {8,"VISITDATE"},
       {9,"SITE"},
-      {10,"INTERVIEWER"}
+      {10,"INTERVIEWER"},
+      {11,"RATING_CREATE_DATETIME"},
+      {12,"RATING_UPDATE_DATETIME"}
     };
 
     while( query->NextRow() )
