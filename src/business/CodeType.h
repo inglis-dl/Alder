@@ -49,6 +49,11 @@ namespace Alder
      */
     static void GetUsageById( std::map<int,int>& );
 
+    /**
+     * Check if a CodeType with the code, value and group Id exists.
+     */
+    static bool IsUnique( const std::string& code, const int& value, const int& groupId );
+
   protected:
     CodeType() {}
     ~CodeType() {}

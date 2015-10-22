@@ -44,6 +44,12 @@ namespace Alder
      */
     int GetUsage();
 
+
+    /**
+     * Check if a CodeGroup with the code and value exists.
+     */
+    static bool IsUnique( const std::string& code, const int& value );
+
   protected:
     CodeGroup() {}
     ~CodeGroup() {}

@@ -76,4 +76,29 @@ namespace Alder
       codeIdUsageMap[query->DataValue(0).ToInt()] = query->DataValue(1).ToInt();
     }
   }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  bool CodeType::IsUnique( const std::string& code, const int& value, const int& groupId )
+  {
+    Application *app = Application::GetInstance();
+    std::stringstream stream;
+    stream << "SELECT COUNT(*) "
+           << "FROM CodeType "
+           << "WHERE Code='" << code << "' "
+           << "AND Value=" << vtkVariant(value).ToString() << " " 
+           << "AND GroupId=" << vtkVariant(groupId).ToString();
+
+    app->Log( "Querying Database: " + stream.str() );
+    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    query->SetQuery( stream.str().c_str() );
+    query->Execute();
+    if( query->HasError() )
+    {   
+      app->Log( query->GetLastErrorText() );
+      throw std::runtime_error( "There was an error while trying to query the database." );
+    }   
+    // only has one row
+    query->NextRow();
+    return (0 == query->DataValue( 0 ).ToInt());
+  }
 }
