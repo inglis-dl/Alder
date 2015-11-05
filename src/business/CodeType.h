@@ -54,6 +54,12 @@ namespace Alder
      */
     static bool IsUnique( const std::string& code, const int& value, const int& groupId );
 
+    /**
+     * Update all Rating and DerivedRating values in the Rating table.
+     * This method must be called whenever the Value of this record changes.
+     */
+    void UpdateRatings();
+
   protected:
     CodeType() {}
     ~CodeType() {}

@@ -38,7 +38,7 @@ namespace Alder
     vtkTypeMacro( CodeGroup, ActiveRecord );
     std::string GetName() const { return "CodeGroup"; }
 
-    /** 
+    /**
      * Get the number of times a CodeGroup has been used in the CodeType table.
      * @return number of times used
      */
@@ -49,6 +49,12 @@ namespace Alder
      * Check if a CodeGroup with the code and value exists.
      */
     static bool IsUnique( const std::string& code, const int& value );
+
+    /**
+     * Update all Rating and DerivedRating values in the Rating table.
+     * This method must be called whenever the Value of this record changes.
+     */
+    void UpdateRatings();
 
   protected:
     CodeGroup() {}
