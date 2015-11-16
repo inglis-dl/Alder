@@ -31,11 +31,24 @@ public:
 signals:
 
 public slots:
+
+  void slotClose();
+
   void slotHeaderClicked(int index);
-  void slotSelectionChanged();
   void slotTableDoubleClicked();
   void slotTabChanged();
+
+  void slotGroupSelectionChanged();
   void slotGroupAdd();
+  void slotGroupEdit();
+  void slotGroupRemove();
+  void slotGroupApply();
+
+  void slotCodeSelectionChanged();
+  void slotCodeAdd();
+  void slotCodeEdit();
+  void slotCodeRemove();
+  void slotCodeApply();
 
 protected:
   void updateInterface();
@@ -47,12 +60,9 @@ protected slots:
 private:
   // Designer form
   Ui_QCodeDialog *ui;
-  std::map<std::string,int> codeTableColumnIndex;
-  std::map<int,Qt::SortOrder> codeTableSortColumnOrder;
-  std::map<std::string,int> groupTableColumnIndex;
-  std::map<int,Qt::SortOrder> groupTableSortColumnOrder;
 
-  QTableWidgetItem* lastSelectedGroup;
+  std::map< std::string, std::map< std::string, int > > columnIndex;
+  std::map< std::string, std::map< int, Qt::SortOrder > > sortOrder;
 };
 
 #endif

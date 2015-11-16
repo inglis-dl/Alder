@@ -52,7 +52,7 @@ namespace Alder
     /**
      * Check if a CodeType with the code, value and group Id exists.
      */
-    static bool IsUnique( const std::string& code, const int& value, const int& groupId );
+    static bool IsUnique( const std::string& code, const int& value, const int& groupId = -1 );
 
     /**
      * Update all Rating and DerivedRating values in the Rating table.

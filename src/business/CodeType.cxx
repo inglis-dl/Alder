@@ -85,8 +85,12 @@ namespace Alder
     stream << "SELECT COUNT(*) "
            << "FROM CodeType "
            << "WHERE Code='" << code << "' "
-           << "AND Value=" << vtkVariant(value).ToString() << " "
-           << "AND GroupId=" << vtkVariant(groupId).ToString();
+           << "AND Value=" << vtkVariant(value).ToString() << " ";
+
+    if( -1 == groupId )
+      stream << "AND CodeGroupId IS NULL";
+    else
+      stream << "AND CodeGroupId=" << vtkVariant(groupId).ToString();
 
     app->Log( "Querying Database: " + stream.str() );
     vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();

@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="codeTab">
       <attribute name="title">
@@ -348,6 +348,11 @@
            <string>Usage</string>
           </property>
          </column>
+         <column>
+          <property name="text">
+           <string/>
+          </property>
+         </column>
         </widget>
        </item>
        <item>
@@ -433,7 +438,7 @@
     </widget>
    </item>
    <item alignment="Qt::AlignRight">
-    <widget class="QPushButton" name="okPushButton">
+    <widget class="QPushButton" name="closePushButton">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -442,7 +447,7 @@
      </property>
      <property name="minimumSize">
       <size>
-       <width>60</width>
+       <width>80</width>
        <height>0</height>
       </size>
      </property>
@@ -456,7 +461,7 @@
       <enum>Qt::LeftToRight</enum>
      </property>
      <property name="text">
-      <string>OK</string>
+      <string>Close</string>
      </property>
     </widget>
    </item>

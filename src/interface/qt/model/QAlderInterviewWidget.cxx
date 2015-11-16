@@ -412,7 +412,7 @@ void QAlderInterviewWidget::slotCodeSelected()
   {
     int column = box->property("column").toInt();
     int row = box->property("row").toInt();
-    std::string codeTypeId = box->property("codeTypeId").toString().toStdString();
+    int codeTypeId = box->property("codeTypeId").toInt();
     bool codeSelected = box->isChecked();
     std::string codeStr = box->text().toStdString();
     // update the rating, the string of codes, and the slider

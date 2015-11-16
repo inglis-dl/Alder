@@ -69,6 +69,10 @@ namespace Alder
      * @param value the value associated with the key
      * @throws      runtime_error
      */
+    bool Load( const std::string key, const int value )
+    {
+      return this->Load( key, vtkVariant(value).ToString() );
+    }
     bool Load( const std::string key, const std::string value )
     {
       return this->Load( std::pair< std::string, std::string >( key, value ) );

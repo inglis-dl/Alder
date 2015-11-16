@@ -191,7 +191,7 @@ namespace Alder
           if( parentId == -1 )
             throw std::runtime_error( "Failed to parent cIMT still" );
 
-          still->Load( "Id", vtkVariant( stillId ).ToString() );
+          still->Load( "Id", stillId );
           still->Set( "ParentImageId", parentId );
           still->Save();
         }
@@ -247,7 +247,7 @@ namespace Alder
         int lastId = image->GetLastInsertId();
         if( success && parentId != lastId )
         {
-          image->Load( "Id", vtkVariant( lastId ).ToString() );
+          image->Load( "Id", lastId );
           image->Set( "ParentImageId", parentId );
           image->Save();
         }
