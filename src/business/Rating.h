@@ -38,8 +38,8 @@ namespace Alder
     vtkTypeMacro( Rating, ActiveRecord );
     std::string GetName() const { return "Rating"; }
 
-    const static int MaximumRating;
-    const static int MinimumRating;
+    const static int MaximumRating = 5;
+    const static int MinimumRating = 1;
 
     /**
      * Compute and update the DerivedRating from any Codes that
@@ -66,6 +66,11 @@ namespace Alder
      */
     static std::vector<std::map<std::string,std::string>> GetRatingReportData(
       User* user, const std::string modality = "" );
+
+    /**
+     * Update all computed DerivedRating and Rating values.
+     */
+    static void UpdateRatings();  
 
   protected:
     Rating() {}

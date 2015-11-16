@@ -37,20 +37,22 @@ QUserListDialog::QUserListDialog( QWidget* parent )
   this->ui = new Ui_QUserListDialog;
   this->ui->setupUi( this );
   QStringList labels;
+  QHeaderView* header = this->ui->userTableWidget->horizontalHeader();
+  header->setStretchLastSection( true );
 
   labels << "Name";
   this->columnIndex["Name"] = index++;
-  this->ui->userTableWidget->horizontalHeader()->setResizeMode(
+  header->setResizeMode(
     this->columnIndex["Name"], QHeaderView::Stretch );
 
   labels << "Last Login";
   this->columnIndex["LastLogin"] = index++;
-  this->ui->userTableWidget->horizontalHeader()->setResizeMode(
+  header->setResizeMode(
     this->columnIndex["LastLogin"], QHeaderView::Stretch );
 
   labels << "Expert";
   this->columnIndex["Expert"] = index++;
-  this->ui->userTableWidget->horizontalHeader()->setResizeMode(
+  header->setResizeMode(
     this->columnIndex["Expert"], QHeaderView::ResizeToContents );
 
   // list all modalities (to see if user rates them)
@@ -60,10 +62,10 @@ QUserListDialog::QUserListDialog( QWidget* parent )
   this->ui->userTableWidget->setColumnCount( index + modalityList.size() );
   for( auto modalityListIt = modalityList.begin(); modalityListIt != modalityList.end(); ++modalityListIt )
   {
-    std::string name = (*modalityListIt)->Get( "Name" ).ToString();
-    labels << name.c_str();
-    this->ui->userTableWidget->horizontalHeader()->setResizeMode( index, QHeaderView::ResizeToContents );
-    this->columnIndex[name] = index++;
+    std::string modalityName = (*modalityListIt)->Get( "Name" ).ToString();
+    labels << modalityName.c_str();
+    header->setResizeMode( index, QHeaderView::ResizeToContents );
+    this->columnIndex[modalityName] = index++;
   }
 
   this->ui->userTableWidget->setHorizontalHeaderLabels( labels );
@@ -78,21 +80,27 @@ QUserListDialog::QUserListDialog( QWidget* parent )
   QObject::connect(
     this->ui->addPushButton, SIGNAL( clicked( bool ) ),
     this, SLOT( slotAdd() ) );
+
   QObject::connect(
     this->ui->removePushButton, SIGNAL( clicked( bool ) ),
     this, SLOT( slotRemove() ) );
+
   QObject::connect(
     this->ui->resetPasswordPushButton, SIGNAL( clicked( bool ) ),
     this, SLOT( slotResetPassword() ) );
+
   QObject::connect(
     this->ui->closePushButton, SIGNAL( clicked( bool ) ),
     this, SLOT( slotClose() ) );
+
   QObject::connect(
     this->ui->userTableWidget, SIGNAL( itemSelectionChanged() ),
     this, SLOT( slotSelectionChanged() ) );
+
   QObject::connect(
     this->ui->userTableWidget->horizontalHeader(), SIGNAL( sectionClicked( int ) ),
     this, SLOT( slotHeaderClicked( int ) ) );
+
   QObject::connect(
     this->ui->userTableWidget, SIGNAL( itemChanged( QTableWidgetItem* ) ),
     this, SLOT( slotItemChanged( QTableWidgetItem* ) ) );
@@ -140,47 +148,36 @@ void QUserListDialog::slotAdd()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QUserListDialog::slotRemove()
 {
-  QTableWidgetItem* item;
-  QList<QTableWidgetItem *> list = this->ui->userTableWidget->selectedItems();
-  if( 0 == list.size() ) return;
-  for( int i = 0; i < list.size(); ++i )
-  {
-    item = list.at( i );
-    if( this->columnIndex["Name"] == item->column() )
-    {
-      vtkNew< Alder::User > user;
-      user->Load( "Name", item->text().toStdString() );
+  QList< QTableWidgetItem* > items = this->ui->userTableWidget->selectedItems();
+  if( items.empty() ) return;
 
-      // show a warning to the user before continuing
-      std::stringstream stream;
-      stream << "Are you sure you wish to remove user \"" << user->Get( "Name" ).ToString() << "\"?  "
-             << "All of this user's ratings will also be permanantely removed.  "
-             << "This operation cannot be undone.";
-      if( QMessageBox::question( this, "Remove User", stream.str().c_str(),
-                                 QMessageBox::Yes | QMessageBox::No ) == QMessageBox::Yes ) user->Remove();
-    }
+  vtkNew< Alder::User > user;
+  user->Load( "Id", items.at( this->columnIndex["Name"] )->data( Qt::UserRole ).toInt() );
+
+  // show a warning to the user before continuing
+  std::stringstream stream;
+  stream << "Are you sure you wish to remove user \"" << user->Get( "Name" ).ToString() << "\"?  "
+         << "All of this user's ratings will also be permanantely removed.  "
+         << "This operation cannot be undone.";
+  if( QMessageBox::Yes == QMessageBox::question(
+     this, "Remove User", stream.str().c_str(), QMessageBox::Yes | QMessageBox::No ) )
+  {
+    user->Remove();
+    this->updateInterface();
   }
-  this->updateInterface();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QUserListDialog::slotResetPassword()
 {
-  QTableWidgetItem* item;
-  QList<QTableWidgetItem *> list = this->ui->userTableWidget->selectedItems();
-  if( 0 == list.size() ) return;
+  QList< QTableWidgetItem* > items = this->ui->userTableWidget->selectedItems();
+  if( items.empty() ) return;
 
-  for( int i = 0; i < list.size(); ++i )
-  {
-    item = list.at( i );
-    if( this->columnIndex["Name"] == item->column() )
-    {
-      vtkNew< Alder::User > user;
-      user->Load( "Name", item->text().toStdString() );
-      user->ResetPassword();
-      user->Save();
-    }
-  }
+  int id = items.at( this->columnIndex["Name"] )->data( Qt::UserRole ).toInt();
+  vtkNew< Alder::User > user;
+  user->Load( "Id", id );
+  user->ResetPassword();
+  user->Save();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -192,15 +189,16 @@ void QUserListDialog::slotClose()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QUserListDialog::slotSelectionChanged()
 {
-  QList<QTableWidgetItem *> list = this->ui->userTableWidget->selectedItems();
-  this->ui->removePushButton->setEnabled( 0 != list.size() );
-  this->ui->resetPasswordPushButton->setEnabled( 0 != list.size() );
+  QList< QTableWidgetItem* > items = this->ui->userTableWidget->selectedItems();
+  bool selected = !items.empty();
+  this->ui->removePushButton->setEnabled( selected );
+  this->ui->resetPasswordPushButton->setEnabled( selected );
 
   // do not allow resetting the password to the admin account
-  if( 0 != list.size() )
+  if( selected )
   {
-    QTableWidgetItem *item = list.at( this->columnIndex["Name"] );
-    if( 0 == item->column() && "administrator" == item->text() )
+    QTableWidgetItem* item = items.at( this->columnIndex["Name"] );
+    if( "administrator" == item->text() )
       this->ui->resetPasswordPushButton->setEnabled( false );
   }
 }
@@ -211,9 +209,11 @@ void QUserListDialog::slotHeaderClicked( int index )
   // NOTE: currently the columns with checkboxes cannot be sorted.  In order to do this we would need
   // to either override QSortFilterProxyModel::lessThan() or QAbstractTableModel::sort()
   // For now we'll just ignore requests to sort by these columns
+
   if( this->columnIndex["Name"] == index ||
       this->columnIndex["LastLogin"] == index )
   {
+
     // reverse order if already sorted
     if( this->sortColumn == index )
       this->sortOrder = Qt::AscendingOrder == this->sortOrder ? Qt::DescendingOrder : Qt::AscendingOrder;
@@ -225,32 +225,46 @@ void QUserListDialog::slotHeaderClicked( int index )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QUserListDialog::slotItemChanged( QTableWidgetItem *item )
 {
+  int row = item->row();
+  int column = item->column();
+  Qt::CheckState state = item->checkState();
+
   // get the user
   vtkNew< Alder::User > user;
-  user->Load( "Name",
-    this->ui->userTableWidget->item( item->row(), this->columnIndex["Name"] )->text().toStdString() );
+  user->Load( "Id",
+    this->ui->userTableWidget->item( row, this->columnIndex["Name"] )->data( Qt::UserRole ).toInt() );
 
   // update the user's settings
-  if( this->columnIndex["Expert"] == item->column() )
-    user->Set( "Expert", Qt::Checked == item->checkState() ? 1 : 0 );
+  bool modified = false;
+  if( this->columnIndex["Expert"] == column )
+  {
+    user->Set( "Expert", Qt::Checked == state ? 1 : 0 );
+    modified = true;
+  }
   else
   {
     std::vector< vtkSmartPointer< Alder::Modality > > modalityList;
     Alder::Modality::GetAll( &modalityList );
-    for( auto modalityListIt = modalityList.begin(); modalityListIt != modalityList.end(); ++modalityListIt )
+    for( auto it = modalityList.begin(); it != modalityList.end(); ++it )
     {
-      std::string name = (*modalityListIt)->Get( "Name" ).ToString();
-      if( this->columnIndex[name] == item->column() )
+      std::string modalityName = (*it)->Get( "Name" ).ToString();
+      if( this->columnIndex[ modalityName ] == column )
       {
-        if( Qt::Checked == item->checkState() ) user->AddRecord( *modalityListIt );
-        else user->RemoveRecord( *modalityListIt );
+        if( Qt::Checked == state )
+          user->AddRecord( *it );
+        else
+          user->RemoveRecord( *it );
+
+        modified = true;
         break;
       }
     }
   }
-
-  user->Save();
-  emit this->userModalityChanged();
+  if( modified )
+  {
+    user->Save();
+    emit this->userModalityChanged();
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -272,6 +286,7 @@ void QUserListDialog::updateInterface()
     item = new QTableWidgetItem;
     item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
     item->setText( QString( user->Get( "Name" ).ToString().c_str() ) );
+    item->setData( Qt::UserRole, user->Get( "Id" ).ToInt() );
     this->ui->userTableWidget->setItem( 0, this->columnIndex["Name"], item );
 
     // add last login to row
@@ -281,9 +296,10 @@ void QUserListDialog::updateInterface()
     this->ui->userTableWidget->setItem( 0, this->columnIndex["LastLogin"], item );
 
     // add the expert row
+    Qt::CheckState check =  0 < user->Get( "Expert" ).ToInt() ? Qt::Checked : Qt::Unchecked;
     item = new QTableWidgetItem;
     item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable );
-    item->setCheckState( 0 < user->Get( "Expert" ).ToInt() ? Qt::Checked : Qt::Unchecked );
+    item->setCheckState( check );
     this->ui->userTableWidget->setItem( 0, this->columnIndex["Expert"], item );
 
     // add all modalities (one per column)
@@ -291,15 +307,14 @@ void QUserListDialog::updateInterface()
     Alder::Modality::GetAll( &modalityList );
     for( auto modalityListIt = modalityList.begin(); modalityListIt != modalityList.end(); ++modalityListIt )
     {
-      std::string name = (*modalityListIt)->Get( "Name" ).ToString();
+      std::string modalityName = (*modalityListIt)->Get( "Name" ).ToString();
       item = new QTableWidgetItem;
       item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable );
       item->setCheckState( 0 < user->Has( *modalityListIt ) ? Qt::Checked : Qt::Unchecked );
-      this->ui->userTableWidget->setItem( 0, this->columnIndex[name], item );
+      this->ui->userTableWidget->setItem( 0, this->columnIndex[modalityName], item );
     }
   }
 
   this->ui->userTableWidget->sortItems( this->sortColumn, this->sortOrder );
-
   this->ui->userTableWidget->blockSignals( false );
 }
