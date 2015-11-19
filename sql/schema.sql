@@ -7,6 +7,37 @@ CREATE SCHEMA IF NOT EXISTS `Alder` DEFAULT CHARACTER SET latin1 ;
 USE `Alder` ;
 
 -- -----------------------------------------------------
+-- Table `Alder`.`Wave`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `Alder`.`Wave` ;
+
+CREATE TABLE IF NOT EXISTS `Alder`.`Wave` (
+  `Id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `UpdateTimestamp` TIMESTAMP NOT NULL,
+  `CreateTimestamp` TIMESTAMP NOT NULL,
+  `Name` VARCHAR(45) NOT NULL,
+  `Rank` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE INDEX `uqNameRank` (`Name` ASC, `Rank` ASC))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Alder`.`Site`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `Alder`.`Site` ;
+
+CREATE TABLE IF NOT EXISTS `Alder`.`Site` (
+  `Id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `UpdateTimestamp` TIMESTAMP NOT NULL,
+  `CreateTimestamp` TIMESTAMP NOT NULL,
+  `Name` VARCHAR(45) NOT NULL,
+  `Alias` VARCHAR(45) NULL DEFAULT NULL,
+  PRIMARY KEY (`Id`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
 -- Table `Alder`.`Interview`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `Alder`.`Interview` ;
@@ -15,11 +46,24 @@ CREATE TABLE IF NOT EXISTS `Alder`.`Interview` (
   `Id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `UpdateTimestamp` TIMESTAMP NOT NULL,
   `CreateTimestamp` TIMESTAMP NOT NULL,
+  `WaveId` INT UNSIGNED NOT NULL,
+  `SiteId` INT UNSIGNED NOT NULL,
   `UId` VARCHAR(45) NOT NULL,
   `VisitDate` DATE NOT NULL,
-  `Site` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`Id`),
-  UNIQUE INDEX `uqUIdVisitDate` (`UId` ASC, `VisitDate` ASC))
+  UNIQUE INDEX `uqUIdWaveIdVisitDate` (`UId` ASC, `WaveId` ASC, `VisitDate` ASC),
+  INDEX `fkWaveId` (`WaveId` ASC),
+  INDEX `fkSiteId` (`SiteId` ASC),
+  CONSTRAINT `fkInterviewWaveId`
+    FOREIGN KEY (`WaveId`)
+    REFERENCES `Alder`.`Wave` (`Id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fkInterviewSiteId`
+    FOREIGN KEY (`SiteId`)
+    REFERENCES `Alder`.`Site` (`Id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
@@ -106,9 +150,8 @@ CREATE TABLE IF NOT EXISTS `Alder`.`Image` (
   `CreateTimestamp` TIMESTAMP NOT NULL,
   `ExamId` INT UNSIGNED NOT NULL,
   `Acquisition` INT NOT NULL,
-  `ParentImageId` INT UNSIGNED NULL,
+  `ParentImageId` INT UNSIGNED NULL DEFAULT NULL,
   `Dimensionality` INT NULL DEFAULT NULL,
-  `Note` TEXT NULL,
   PRIMARY KEY (`Id`),
   INDEX `fkImageExamId` (`ExamId` ASC),
   UNIQUE INDEX `uqExamIdAcquisition` (`ExamId` ASC, `Acquisition` ASC),
@@ -307,6 +350,34 @@ CREATE TABLE IF NOT EXISTS `Alder`.`ScanTypeHasCodeType` (
   CONSTRAINT `fkScanTypeHasCodeTypeCodeTypeId`
     FOREIGN KEY (`CodeTypeId`)
     REFERENCES `Alder`.`CodeType` (`Id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Alder`.`ImageNote`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `Alder`.`ImageNote` ;
+
+CREATE TABLE IF NOT EXISTS `Alder`.`ImageNote` (
+  `Id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `UpdateTimestamp` TIMESTAMP NOT NULL,
+  `CreateTimestamp` TIMESTAMP NOT NULL,
+  `ImageId` INT UNSIGNED NOT NULL,
+  `UserId` INT UNSIGNED NOT NULL,
+  `Note` TEXT NOT NULL,
+  PRIMARY KEY (`Id`),
+  INDEX `fkUserId` (`UserId` ASC),
+  INDEX `fkImageId` (`ImageId` ASC),
+  CONSTRAINT `fkNoteUserId`
+    FOREIGN KEY (`UserId`)
+    REFERENCES `Alder`.`User` (`Id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fkNoteImageId`
+    FOREIGN KEY (`ImageId`)
+    REFERENCES `Alder`.`Image` (`Id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
