@@ -19,7 +19,7 @@ CREATE PROCEDURE patch_Wave()
         Name VARCHAR(45) NOT NULL,
         Rank INT UNSIGNED NOT NULL,
         PRIMARY KEY (Id),
-        UNIQUE INDEX uqNameRank (Name ASC, Rank ASC),
+        UNIQUE INDEX uqNameRank (Name ASC, Rank ASC))
       ENGINE = InnoDB;
 
       INSERT INTO Wave ( Name, Rank )

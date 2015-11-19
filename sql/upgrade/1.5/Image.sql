@@ -3,22 +3,22 @@ DELIMITER //
 CREATE PROCEDURE patch_Image()
   BEGIN
 
-    SELECT "Rmoving Note column from Image table" AS "";
+    SELECT "Removing Note column from Image table" AS "";
 
     SET @test = (
       SELECT COUNT(*)
-      FROM information_schema.TABLES
+      FROM information_schema.COLUMNS
       WHERE TABLE_SCHEMA = DATABASE()
       AND TABLE_NAME = "Image"
       AND COLUMN_NAME = "Note");
 
     IF @test = 1 THEN
 
-    SET @test_2 = (
-      SELECT COUNT(*)
-      FROM information_schema.TABLES
-      WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = "ImageNote") ;
+      SET @test_2 = (
+        SELECT COUNT(*)
+        FROM information_schema.TABLES
+        WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = "ImageNote");
 
       IF @test_2 THEN
 

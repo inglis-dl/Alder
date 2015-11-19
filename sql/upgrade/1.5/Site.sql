@@ -18,7 +18,7 @@ CREATE PROCEDURE patch_Site()
         CreateTimestamp TIMESTAMP NOT NULL,
         Name VARCHAR(45) NOT NULL,
         Alias VARCHAR(45) NULL DEFAULT NULL,
-        PRIMARY KEY (Id),
+        PRIMARY KEY (Id))
       ENGINE = InnoDB;
 
       INSERT INTO Site ( Name, Alias )
@@ -26,7 +26,7 @@ CREATE PROCEDURE patch_Site()
       ("Memorial",NULL),
       ("Victoria",NULL),
       ("Calgary",NULL),
-      ("Sherbrooke",NULL);
+      ("Sherbrooke",NULL),
       ("Hamilton","McMaster"),
       ("Simon Fraser",NULL),
       ("Ottawa",NULL),

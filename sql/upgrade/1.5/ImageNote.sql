@@ -23,13 +23,13 @@ CREATE PROCEDURE patch_ImageNote()
         INDEX fkUserId (UserId ASC),
         INDEX fkImageId (ImageId ASC),
         CONSTRAINT fkNoteUserId
-        FOREIGN KEY (UserId`)
-        REFERENCES Alder.User (Id)
+        FOREIGN KEY (UserId)
+        REFERENCES User (Id)
         ON DELETE NO ACTION
         ON UPDATE NO ACTION,
         CONSTRAINT fkNoteImageId
         FOREIGN KEY (ImageId)
-        REFERENCES Alder.Image (Id)
+        REFERENCES Image (Id)
         ON DELETE NO ACTION
         ON UPDATE NO ACTION)
       ENGINE = InnoDB;
