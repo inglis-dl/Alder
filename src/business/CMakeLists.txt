@@ -10,6 +10,7 @@ SET( AlderBusiness_SRCS
   Database.cxx
   Exam.cxx
   Image.cxx
+  ImageNote.cxx
   Interview.cxx
   Modality.cxx
   ModelObject.cxx
@@ -18,7 +19,9 @@ SET( AlderBusiness_SRCS
   QueryModifier.cxx
   Rating.cxx
   ScanType.cxx
+  Site.cxx
   User.cxx
+  Wave.cxx
 )
 
 SET_SOURCE_FILES_PROPERTIES(

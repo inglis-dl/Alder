@@ -18,12 +18,15 @@
 #include <Database.h>
 #include <Exam.h>
 #include <Image.h>
+#include <ImageNote.h>
 #include <Interview.h>
 #include <Modality.h>
 #include <OpalService.h>
 #include <Rating.h>
 #include <ScanType.h>
+#include <Site.h>
 #include <User.h>
+#include <Wave.h>
 
 #include <vtkDirectory.h>
 #include <vtkObjectFactory.h>
@@ -71,6 +74,12 @@ namespace Alder
     this->ClassNameRegistry["CodeGroup"] = typeid(CodeGroup).name();
     this->ConstructorRegistry["ScanType"] = &createInstance<ScanType>;
     this->ClassNameRegistry["ScanType"] = typeid(ScanType).name();
+    this->ConstructorRegistry["Site"] = &createInstance<Site>;
+    this->ClassNameRegistry["Site"] = typeid(Site).name();
+    this->ConstructorRegistry["Wave"] = &createInstance<Wave>;
+    this->ClassNameRegistry["Wave"] = typeid(Wave).name();
+    this->ConstructorRegistry["ImageNote"] = &createInstance<ImageNote>;
+    this->ClassNameRegistry["ImageNote"] = typeid(ImageNote).name();
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -299,7 +308,7 @@ namespace Alder
 
         std::string lastId;
         if( this->ActiveImage ) lastId = this->ActiveImage->Get( "Id" ).ToString();
-        std::string similar = interview->GetSimilarImage( lastId );
+        std::string similar = interview->GetSimilarImageId( lastId );
         if( !similar.empty() )
         {
           vtkSmartPointer<Image> image = vtkSmartPointer<Image>::New();
