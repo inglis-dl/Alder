@@ -14,6 +14,7 @@
 #include <Application.h>
 #include <Exam.h>
 #include <Image.h>
+#include <ImageNote.h>
 #include <Interview.h>
 #include <Modality.h>
 #include <Rating.h>
@@ -184,7 +185,7 @@ void QAlderAtlasWidget::slotRatingChanged( int value )
 void QAlderAtlasWidget::updateInfo()
 {
   QString helpString = "";
-  QString noteString = "";
+  QStringList noteString;
   QString interviewerString = tr( "N/A" );
   QString siteString = tr( "N/A" );
   QString dateString = tr( "N/A" );
@@ -198,7 +199,15 @@ void QAlderAtlasWidget::updateInfo()
     vtkSmartPointer< Alder::Interview > interview;
     if( image->GetRecord( exam ) && exam->GetRecord( interview ) )
     {
-      noteString = image->Get( "Note" ).ToString().c_str();
+      std::vector< vtkSmartPointer< Alder::ImageNote > > noteList;
+      image->GetList( &noteList );
+      if( !noteList.empty() )
+      {
+        for( auto it = noteList.begin(); it != noteList.end(); ++it )
+        {
+          noteString << (*it)->Get( "Note" ).ToString().c_str();
+        }
+      }
       interviewerString = exam->Get( "Interviewer" ).ToString().c_str();
       siteString = interview->Get( "Site" ).ToString().c_str();
       dateString = exam->Get( "DatetimeAcquired" ).ToString().c_str();
@@ -214,7 +223,11 @@ void QAlderAtlasWidget::updateInfo()
   }
 
   this->ui->helpTextEdit->setPlainText( helpString );
-  this->ui->noteTextEdit->setPlainText( noteString );
+  for( int i = 0; i < noteString.size(); ++i )
+  {
+    this->ui->noteTextEdit->insertPlainText( noteString.at(i) );
+    this->ui->noteTextEdit->moveCursor( QTextCursor::End );
+  }
   this->ui->infoInterviewerValueLabel->setText( interviewerString );
   this->ui->infoSiteValueLabel->setText( siteString );
   this->ui->infoDateValueLabel->setText( dateString );

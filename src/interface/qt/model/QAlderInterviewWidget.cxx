@@ -16,6 +16,7 @@
 #include <CodeType.h>
 #include <Exam.h>
 #include <Image.h>
+#include <ImageNote.h>
 #include <Interview.h>
 #include <Modality.h>
 #include <QueryModifier.h>
@@ -294,10 +295,33 @@ void QAlderInterviewWidget::slotNoteChanged()
   // make sure we have an active user and image
   Alder::User *user = app->GetActiveUser();
   Alder::Image *image = app->GetActiveImage();
+  std::string noteStr = this->ui->noteTextEdit->toPlainText().toStdString();
   if( user && image )
   {
-    image->Set( "Note", this->ui->noteTextEdit->toPlainText().toStdString() );
-    image->Save();
+    vtkNew< Alder::ImageNote > note;
+    std::map< std::string, std::string > map;
+    map[ "UserId" ] = user->Get( "Id" ).ToString();
+    map[ "ImageId" ] = image->Get( "Id" ).ToString();
+    if( note->Load( map ) )
+    {
+      if( noteStr.empty() )
+      {
+        note->Remove();
+      }
+      else
+      {
+        note->Set( "Note", noteStr );
+        note->Save();
+      }
+    }
+    else
+    {
+      if( !noteStr.empty() )
+      {
+        map[ "Note" ] = noteStr;
+        note->Save();
+      }
+    }
   }
 }
 
@@ -315,13 +339,22 @@ void QAlderInterviewWidget::updateInfo()
 
   Alder::Interview *interview = app->GetActiveInterview();
   Alder::Image *image = app->GetActiveImage();
+  Alder::User *user = app->GetActiveUser();
   if( interview && image )
   {
     // get exam from active image
     vtkSmartPointer< Alder::Exam > exam;
     if( image->GetRecord( exam ) )
     {
-      noteString = image->Get( "Note" ).ToString().c_str();
+      if( user )
+      {
+        vtkNew< Alder::ImageNote > note;
+        std::map< std::string, std::string > map;
+        map[ "UserId" ] = user->Get( "Id" ).ToString();
+        map[ "ImageId" ] = image->Get( "Id" ).ToString();
+        if( note->Load( map ) )
+          noteString = note->Get( "Note" ).ToString();
+      }
       interviewerString = exam->Get( "Interviewer" ).ToString().c_str();
       siteString = interview->Get( "Site" ).ToString().c_str();
       dateString = exam->Get( "DatetimeAcquired" ).ToString().c_str();
