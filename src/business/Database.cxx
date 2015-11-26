@@ -13,7 +13,6 @@
 
 #include <Configuration.h>
 #include <User.h>
-#include <Utilities.h>
 
 #include <vtkAlderMySQLDatabase.h>
 #include <vtkObjectFactory.h>

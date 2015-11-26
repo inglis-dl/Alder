@@ -15,7 +15,6 @@
 #include <Interview.h>
 #include <Rating.h>
 #include <User.h>
-#include <Utilities.h>
 
 #include <vtkDirectory.h>
 #include <vtkImageData.h>

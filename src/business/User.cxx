@@ -12,7 +12,6 @@
 
 #include <Modality.h>
 #include <QueryModifier.h>
-#include <Utilities.h>
 
 #include <vtkObjectFactory.h>
 

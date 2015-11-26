@@ -17,7 +17,6 @@
 #include <Modality.h>
 #include <OpalService.h>
 #include <ScanType.h>
-#include <Utilities.h>
 
 #include <vtkNew.h>
 #include <vtkObjectFactory.h>

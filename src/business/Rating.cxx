@@ -14,7 +14,6 @@
 #include <CodeType.h>
 #include <CodeGroup.h>
 #include <User.h>
-#include <Utilities.h>
 
 #include <vtkObjectFactory.h>
 

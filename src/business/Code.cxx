@@ -10,8 +10,6 @@
 =========================================================================*/
 #include <Code.h>
 
-#include <Utilities.h>
-
 #include <vtkObjectFactory.h>
 
 namespace Alder
