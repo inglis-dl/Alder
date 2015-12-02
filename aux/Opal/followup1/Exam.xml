@@ -1,0 +1,183 @@
+<org.obiba.magma.views.View>
+  <name>Exam</name>
+  <from class="org.obiba.magma.views.JoinTable">
+    <list>
+      <table class="org.obiba.magma.support.ValueTableReference">
+        <reference>clsa-dcs-images-f1.CarotidIntima</reference>
+      </table>
+      <table class="org.obiba.magma.support.ValueTableReference">
+        <reference>clsa-dcs-images-f1.DualHipBoneDensity</reference>
+      </table>
+      <table class="org.obiba.magma.support.ValueTableReference">
+        <reference>clsa-dcs-images-f1.ForearmBoneDensity</reference>
+      </table>
+      <table class="org.obiba.magma.support.ValueTableReference">
+        <reference>clsa-dcs-images-f1.LateralBoneDensity</reference>
+      </table>
+      <table class="org.obiba.magma.support.ValueTableReference">
+        <reference>clsa-dcs-images-f1.RetinalScanLeft</reference>
+      </table>
+      <table class="org.obiba.magma.support.ValueTableReference">
+        <reference>clsa-dcs-images-f1.RetinalScanRight</reference>
+      </table>
+      <table class="org.obiba.magma.support.ValueTableReference">
+        <reference>clsa-dcs-images-f1.WholeBodyBoneDensity</reference>
+      </table>
+      <table class="org.obiba.magma.support.ValueTableReference">
+        <reference>clsa-dcs-f1.Participants</reference>
+      </table>
+    </list>
+  </from>
+  <select class="org.obiba.magma.views.support.NoneClause"/>
+  <where class="org.obiba.magma.views.support.AllClause"/>
+  <variables class="org.obiba.magma.js.views.VariablesClause">
+    <variables class="linked-hash-set">
+      <variable name="CarotidIntima.Stage" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$group(&apos;clsa-dcs-f1.Participants:Admin.StageInstance.stage&apos;, &apos;CarotidIntima&apos;, &apos;Admin.StageInstance.lastState&apos;).asSequence().last();</attribute>
+        </attributes>
+      </variable>
+      <variable name="CarotidIntima.Interviewer" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.CarotidIntima:InstrumentRun.user&apos;);</attribute>
+        </attributes>
+      </variable>
+      <variable name="CarotidIntima.DatetimeAcquired" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.CarotidIntima:InstrumentRun.timeStart&apos;);</attribute>
+        </attributes>
+      </variable>
+      <variable name="DualHipBoneDensity.Stage" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$group(&apos;clsa-dcs-f1.Participants:Admin.StageInstance.stage&apos;, &apos;DualHipBoneDensity&apos;, &apos;Admin.StageInstance.lastState&apos;).asSequence().last();</attribute>
+        </attributes>
+      </variable>
+      <variable name="DualHipBoneDensity.Interviewer" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.DualHipBoneDensity:InstrumentRun.user&apos;);</attribute>
+        </attributes>
+      </variable>
+      <variable name="DualHipBoneDensity.DatetimeAcquired" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.DualHipBoneDensity:InstrumentRun.timeStart&apos;);</attribute>
+        </attributes>
+      </variable>
+      <variable name="ForearmBoneDensity.Stage" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$group(&apos;clsa-dcs-f1.Participants:Admin.StageInstance.stage&apos;, &apos;ForearmBoneDensity&apos;, &apos;Admin.StageInstance.lastState&apos;).asSequence().last();</attribute>
+        </attributes>
+      </variable>
+      <variable name="ForearmBoneDensity.Interviewer" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.ForearmBoneDensity:InstrumentRun.user&apos;);</attribute>
+        </attributes>
+      </variable>
+      <variable name="ForearmBoneDensity.DatetimeAcquired" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.ForearmBoneDensity:InstrumentRun.timeStart&apos;);</attribute>
+        </attributes>
+      </variable>
+      <variable name="LateralBoneDensity.Stage" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$group(&apos;clsa-dcs-f1.Participants:Admin.StageInstance.stage&apos;, &apos;LateralBoneDensity&apos;, &apos;Admin.StageInstance.lastState&apos;).asSequence().last();</attribute>
+        </attributes>
+      </variable>
+      <variable name="LateralBoneDensity.Interviewer" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.LateralBoneDensity:InstrumentRun.user&apos;);</attribute>
+        </attributes>
+      </variable>
+      <variable name="LateralBoneDensity.DatetimeAcquired" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.LateralBoneDensity:InstrumentRun.timeStart&apos;);</attribute>
+        </attributes>
+      </variable>
+      <variable name="RetinalScanRight.Stage" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$group(&apos;clsa-dcs-f1.Participants:Admin.StageInstance.stage&apos;, &apos;RetinalScanRight&apos;, &apos;Admin.StageInstance.lastState&apos;).asSequence().last();</attribute>
+        </attributes>
+      </variable>
+      <variable name="RetinalScanRight.Interviewer" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.RetinalScanRight:InstrumentRun.user&apos;);</attribute>
+        </attributes>
+      </variable>
+      <variable name="RetinalScanRight.DatetimeAcquired" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.RetinalScanRight:InstrumentRun.timeStart&apos;);</attribute>
+        </attributes>
+      </variable>
+      <variable name="RetinalScanLeft.Stage" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$group(&apos;clsa-dcs-f1.Participants:Admin.StageInstance.stage&apos;, &apos;RetinalScanLeft&apos;, &apos;Admin.StageInstance.lastState&apos;).asSequence().last();</attribute>
+        </attributes>
+      </variable>
+      <variable name="RetinalScanLeft.Interviewer" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.RetinalScanLeft:InstrumentRun.user&apos;);</attribute>
+        </attributes>
+      </variable>
+      <variable name="RetinalScanLeft.DatetimeAcquired" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.RetinalScanLeft:InstrumentRun.timeStart&apos;);</attribute>
+        </attributes>
+      </variable>
+      <variable name="WholeBodyBoneDensity.Stage" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$group(&apos;clsa-dcs-f1.Participants:Admin.StageInstance.stage&apos;, &apos;WholeBodyBoneDensity&apos;, &apos;Admin.StageInstance.lastState&apos;).asSequence().last();</attribute>
+        </attributes>
+      </variable>
+      <variable name="WholeBodyBoneDensity.Interviewer" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.WholeBodyBoneDensity:InstrumentRun.user&apos;);</attribute>
+        </attributes>
+      </variable>
+      <variable name="WholeBodyBoneDensity.DatetimeAcquired" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.WholeBodyBoneDensity:InstrumentRun.timeStart&apos;);</attribute>
+        </attributes>
+      </variable>
+      <variable name="CarotidIntima.Laterality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0" repeatable="true" occurrenceGroup="Measure">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;Measure.SIDE&apos;).lowerCase()</attribute>
+        </attributes>
+      </variable>
+      <variable name="DualHipBoneDensity.Laterality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0" repeatable="true" occurrenceGroup="Measure">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;Measure.OUTPUT_HIP_SIDE&apos;).lowerCase()</attribute>
+        </attributes>
+      </variable>
+      <variable name="ForearmBoneDensity.Laterality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;OUTPUT_FA_SIDE&apos;).lowerCase()</attribute>
+        </attributes>
+      </variable>
+      <variable name="LateralBoneDensity.Laterality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">&apos;none&apos;</attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/LateralBoneDensity.Laterality</attribute>
+        </attributes>
+      </variable>
+      <variable name="RetinalScanLeft.Laterality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;SIDE&apos;).lowerCase()</attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/RetinalScanLeft.Laterality</attribute>
+        </attributes>
+      </variable>
+      <variable name="RetinalScanRight.Laterality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;SIDE&apos;).lowerCase()</attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/RetinalScanRight.Laterality</attribute>
+        </attributes>
+      </variable>
+      <variable name="WholeBodyBoneDensity.Laterality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">&apos;none&apos;</attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/WholeBodyBoneDensity.Laterality</attribute>
+        </attributes>
+      </variable>
+    </variables>
+  </variables>
+  <created valueType="datetime">2015-09-25T11:31:24.482-0400</created>
+  <updated valueType="datetime">2015-11-26T15:36:12.287-0500</updated>
+</org.obiba.magma.views.View>
