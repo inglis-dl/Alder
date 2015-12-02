@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS `Alder`.`Wave` (
   `CreateTimestamp` TIMESTAMP NOT NULL,
   `Name` VARCHAR(45) NOT NULL,
   `Rank` INT UNSIGNED NOT NULL,
+  `MetaDataSource` VARCHAR(45) NOT NULL,
+  `ImageDataSource` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`Id`),
   UNIQUE INDEX `uqNameRank` (`Name` ASC, `Rank` ASC))
 ENGINE = InnoDB;
@@ -58,12 +60,12 @@ CREATE TABLE IF NOT EXISTS `Alder`.`Interview` (
     FOREIGN KEY (`WaveId`)
     REFERENCES `Alder`.`Wave` (`Id`)
     ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+    ON UPDATE CASCADE,
   CONSTRAINT `fkInterviewSiteId`
     FOREIGN KEY (`SiteId`)
     REFERENCES `Alder`.`Site` (`Id`)
     ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
@@ -101,7 +103,7 @@ CREATE TABLE IF NOT EXISTS `Alder`.`ScanType` (
     FOREIGN KEY (`ModalityId`)
     REFERENCES `Alder`.`Modality` (`Id`)
     ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
@@ -129,13 +131,13 @@ CREATE TABLE IF NOT EXISTS `Alder`.`Exam` (
   CONSTRAINT `fkExamInterviewId`
     FOREIGN KEY (`InterviewId`)
     REFERENCES `Alder`.`Interview` (`Id`)
-    ON DELETE CASCADE
+    ON DELETE NO ACTION
     ON UPDATE CASCADE,
   CONSTRAINT `fkExamScanTypeId`
     FOREIGN KEY (`ScanTypeId`)
     REFERENCES `Alder`.`ScanType` (`Id`)
     ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
@@ -159,13 +161,13 @@ CREATE TABLE IF NOT EXISTS `Alder`.`Image` (
   CONSTRAINT `fkImageExamId`
     FOREIGN KEY (`ExamId`)
     REFERENCES `Alder`.`Exam` (`Id`)
-    ON DELETE CASCADE
+    ON DELETE NO ACTION
     ON UPDATE CASCADE,
   CONSTRAINT `fkImageParentImageId`
     FOREIGN KEY (`ParentImageId`)
     REFERENCES `Alder`.`Image` (`Id`)
     ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
@@ -191,7 +193,7 @@ CREATE TABLE IF NOT EXISTS `Alder`.`User` (
     FOREIGN KEY (`InterviewId`)
     REFERENCES `Alder`.`Interview` (`Id`)
     ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
@@ -216,12 +218,12 @@ CREATE TABLE IF NOT EXISTS `Alder`.`Rating` (
   CONSTRAINT `fkRatingImageId`
     FOREIGN KEY (`ImageId`)
     REFERENCES `Alder`.`Image` (`Id`)
-    ON DELETE CASCADE
+    ON DELETE NO ACTION
     ON UPDATE CASCADE,
   CONSTRAINT `fkRatingUserId`
     FOREIGN KEY (`UserId`)
     REFERENCES `Alder`.`User` (`Id`)
-    ON DELETE CASCADE
+    ON DELETE NO ACTION
     ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
@@ -239,7 +241,6 @@ CREATE TABLE IF NOT EXISTS `Alder`.`UserHasModality` (
   PRIMARY KEY (`UserId`, `ModalityId`),
   INDEX `fkModalityId` (`ModalityId` ASC),
   INDEX `fkUserId` (`UserId` ASC),
-  UNIQUE INDEX `uqUserIdModalityId` (`UserId` ASC, `ModalityId` ASC),
   CONSTRAINT `fkUserHasModalityUserId`
     FOREIGN KEY (`UserId`)
     REFERENCES `Alder`.`User` (`Id`)
@@ -289,7 +290,7 @@ CREATE TABLE IF NOT EXISTS `Alder`.`CodeType` (
     FOREIGN KEY (`CodeGroupId`)
     REFERENCES `Alder`.`CodeGroup` (`Id`)
     ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
@@ -313,18 +314,18 @@ CREATE TABLE IF NOT EXISTS `Alder`.`Code` (
   CONSTRAINT `fkCodeImageId`
     FOREIGN KEY (`ImageId`)
     REFERENCES `Alder`.`Image` (`Id`)
-    ON DELETE CASCADE
+    ON DELETE NO ACTION
     ON UPDATE CASCADE,
   CONSTRAINT `fkCodeUserId`
     FOREIGN KEY (`UserId`)
     REFERENCES `Alder`.`User` (`Id`)
-    ON DELETE CASCADE
+    ON DELETE NO ACTION
     ON UPDATE CASCADE,
   CONSTRAINT `fkCodeCodeTypeId`
     FOREIGN KEY (`CodeTypeId`)
     REFERENCES `Alder`.`CodeType` (`Id`)
     ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
@@ -341,17 +342,16 @@ CREATE TABLE IF NOT EXISTS `Alder`.`ScanTypeHasCodeType` (
   PRIMARY KEY (`ScanTypeId`, `CodeTypeId`),
   INDEX `fkCodeTypeId` (`CodeTypeId` ASC),
   INDEX `fkScanTypeId` (`ScanTypeId` ASC),
-  UNIQUE INDEX `uqCodeTypeIdScanTypeId` (`CodeTypeId` ASC, `ScanTypeId` ASC),
   CONSTRAINT `fkScanTypeHasCodeTypeScanTypeId`
     FOREIGN KEY (`ScanTypeId`)
     REFERENCES `Alder`.`ScanType` (`Id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
   CONSTRAINT `fkScanTypeHasCodeTypeCodeTypeId`
     FOREIGN KEY (`CodeTypeId`)
     REFERENCES `Alder`.`CodeType` (`Id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
@@ -374,12 +374,38 @@ CREATE TABLE IF NOT EXISTS `Alder`.`ImageNote` (
     FOREIGN KEY (`UserId`)
     REFERENCES `Alder`.`User` (`Id`)
     ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+    ON UPDATE CASCADE,
   CONSTRAINT `fkNoteImageId`
     FOREIGN KEY (`ImageId`)
     REFERENCES `Alder`.`Image` (`Id`)
     ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Alder`.`WaveHasScanType`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `Alder`.`WaveHasScanType` ;
+
+CREATE TABLE IF NOT EXISTS `Alder`.`WaveHasScanType` (
+  `WaveId` INT UNSIGNED NOT NULL,
+  `ScanTypeId` INT UNSIGNED NOT NULL,
+  `UpdateTimestamp` TIMESTAMP NOT NULL,
+  `CreateTimestamp` TIMESTAMP NOT NULL,
+  PRIMARY KEY (`WaveId`, `ScanTypeId`),
+  INDEX `fkScanTypeId` (`ScanTypeId` ASC),
+  INDEX `fkWaveId` (`WaveId` ASC),
+  CONSTRAINT `fkWaveHasScanTypeWaveId`
+    FOREIGN KEY (`WaveId`)
+    REFERENCES `Alder`.`Wave` (`Id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fkWaveHasScanTypeScanTypeId`
+    FOREIGN KEY (`ScanTypeId`)
+    REFERENCES `Alder`.`ScanType` (`Id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 

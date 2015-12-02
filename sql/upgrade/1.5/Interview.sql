@@ -3,8 +3,6 @@ DELIMITER //
 CREATE PROCEDURE patch_Interview()
   BEGIN
 
-    SELECT "Updating Interview table with new columns" AS "";
-
     SET @test = (
       SELECT COUNT(*)
       FROM information_schema.TABLE_CONSTRAINTS
@@ -13,6 +11,7 @@ CREATE PROCEDURE patch_Interview()
       AND CONSTRAINT_NAME IN ("fkInterviewWaveId","fkInterviewSiteId"));
 
     IF @test = 0 THEN
+      SELECT "Updating Interview table with new columns" AS "";
 
       SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
       SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
@@ -20,15 +19,17 @@ CREATE PROCEDURE patch_Interview()
       ALTER TABLE Interview
       ADD COLUMN WaveId INT UNSIGNED NOT NULL AFTER CreateTimestamp;
 
-      UPDATE Interview
-      SET WaveId = ( SELECT Id FROM Wave WHERE Name="Baseline" AND RANK=1 );
+      ALTER TABLE Interview
+      ADD INDEX fkWaveId ( WaveId ASC );
 
       ALTER TABLE Interview
-      ADD INDEX fkWaveId ( WaveId ASC ),
       ADD CONSTRAINT fkInterviewWaveId
       FOREIGN KEY ( WaveId ) REFERENCES Wave (Id)
       ON DELETE NO ACTION
-      ON UPDATE NO ACTION;
+      ON UPDATE CASCADE;
+
+      UPDATE Interview
+      SET WaveId = ( SELECT Id FROM Wave WHERE RANK=1 );
 
       ALTER TABLE Interview
       ADD COLUMN SiteId INT UNSIGNED NOT NULL AFTER WaveId;
@@ -37,17 +38,22 @@ CREATE PROCEDURE patch_Interview()
       JOIN Site ON Site.Name=Interview.Site
       SET Interview.SiteId=Site.Id;
 
-      ALTER TABLE Interview DROP COLUMN Site;
+      ALTER TABLE Interview
+      ADD INDEX fkSiteId ( SiteId ASC );
 
       ALTER TABLE Interview
-      ADD INDEX fkSiteId ( SiteId ASC ),
       ADD CONSTRAINT fkInterviewSiteId
       FOREIGN KEY ( SiteId ) REFERENCES Site (Id)
       ON DELETE NO ACTION
-      ON UPDATE NO ACTION;
+      ON UPDATE CASCADE;
 
-      ALTER TABLE Interview
-      DROP INDEX uqUIdVisitDate;
+      UPDATE Interview
+      JOIN Site ON Site.Name=Interview.Site
+      SET Interview.SiteId=Site.Id;
+
+      ALTER TABLE Interview DROP COLUMN Site;
+
+      ALTER TABLE Interview DROP INDEX uqUIdVisitDate;
 
       ALTER TABLE Interview
       ADD UNIQUE INDEX

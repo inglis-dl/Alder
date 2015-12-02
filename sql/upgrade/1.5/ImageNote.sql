@@ -3,8 +3,6 @@ DELIMITER //
 CREATE PROCEDURE patch_ImageNote()
   BEGIN
 
-    SELECT "Creating new ImageNote table" AS "";
-
     SET @test = (
       SELECT COUNT(*)
       FROM information_schema.TABLES
@@ -12,6 +10,8 @@ CREATE PROCEDURE patch_ImageNote()
       AND TABLE_NAME = "ImageNote" );
 
     IF @test = 0 THEN
+      SELECT "Creating new ImageNote table" AS "";
+
       CREATE TABLE IF NOT EXISTS ImageNote (
         Id INT UNSIGNED NOT NULL AUTO_INCREMENT,
         UpdateTimestamp TIMESTAMP NOT NULL,
@@ -26,12 +26,12 @@ CREATE PROCEDURE patch_ImageNote()
         FOREIGN KEY (UserId)
         REFERENCES User (Id)
         ON DELETE NO ACTION
-        ON UPDATE NO ACTION,
+        ON UPDATE CASCADE,
         CONSTRAINT fkNoteImageId
         FOREIGN KEY (ImageId)
         REFERENCES Image (Id)
         ON DELETE NO ACTION
-        ON UPDATE NO ACTION)
+        ON UPDATE CASCADE)
       ENGINE = InnoDB;
 
       CREATE TEMPORARY TABLE tmp AS
