@@ -117,12 +117,6 @@ namespace Alder
       this->ActiveInterview = NULL;
     }
 
-    if( NULL != this->ActiveInterview )
-    {
-      this->ActiveInterview->Delete();
-      this->ActiveInterview = NULL;
-    }
-
     if( NULL != this->ActiveImage )
     {
       this->ActiveImage->Delete();
@@ -171,7 +165,7 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Application::Log( const std::string message )
+  void Application::Log( const std::string &message )
   {
     this->LogStream << "[" << Utilities::getTime( "%y-%m-%d %T" ) << "] " << message << std::endl;
   }
@@ -193,12 +187,12 @@ namespace Alder
       if( 0 == status && NULL != demangled ) symname = demangled;
       this->LogStream << dlinfo.dli_fname << "::" << symname << std::endl;
 
-      if (demangled) free( demangled );
+      if( demangled ) free( demangled );
     }
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  std::string Application::GetUnmangledClassName( const std::string mangledName ) const
+  std::string Application::GetUnmangledClassName( const std::string &mangledName ) const
   {
     for( auto it = this->ClassNameRegistry.begin(); it != this->ClassNameRegistry.end(); ++it )
       if( mangledName == it->second ) return it->first;
@@ -208,7 +202,7 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool Application::ReadConfiguration( const std::string fileName )
+  bool Application::ReadConfiguration( const std::string &fileName )
   {
     // make sure the file exists
     ifstream ifile( fileName.c_str() );
@@ -275,7 +269,10 @@ namespace Alder
   {
     if( user != this->ActiveUser )
     {
-      if( this->ActiveUser ) this->ActiveUser->UnRegister( this );
+      if( this->ActiveUser )
+      {
+        this->ActiveUser->UnRegister( this );
+      }
       this->ActiveUser = user;
       if( this->ActiveUser )
       {
@@ -283,7 +280,10 @@ namespace Alder
 
         // get the user's last active interview
         vtkSmartPointer< Interview > interview;
-        if( this->ActiveUser->GetRecord( interview ) ) this->SetActiveInterview( interview );
+        if( this->ActiveUser->GetRecord( interview ) )
+        {
+          this->SetActiveInterview( interview );
+        }
       }
       this->Modified();
       this->InvokeEvent( Application::ActiveUserEvent );
@@ -307,7 +307,10 @@ namespace Alder
         this->ActiveInterview->Register( this );
 
         std::string lastId;
-        if( this->ActiveImage ) lastId = this->ActiveImage->Get( "Id" ).ToString();
+        if( this->ActiveImage )
+        {
+          lastId = this->ActiveImage->Get( "Id" ).ToString();
+        }
         std::string similar = interview->GetSimilarImageId( lastId );
         if( !similar.empty() )
         {
@@ -325,8 +328,14 @@ namespace Alder
       // if there is an active user, save the active interview
       if( this->ActiveUser )
       {
-        if( interview ) this->ActiveUser->Set( "InterviewId", interview->Get( "Id" ).ToInt() );
-        else this->ActiveUser->SetNull( "InterviewId" );
+        if( interview )
+        {
+          this->ActiveUser->Set( "InterviewId", interview->Get( "Id" ).ToInt() );
+        }
+        else
+        {
+          this->ActiveUser->SetNull( "InterviewId" );
+        }
         this->ActiveUser->Save();
       }
       this->Modified();
