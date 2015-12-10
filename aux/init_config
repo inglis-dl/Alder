@@ -56,6 +56,7 @@ prompt "Opal username?" opal_username "administrator"
 prompt "Opal password? " opal_password
 prompt "Opal timeout?" opal_timeout "10"
 prompt "Opal verbose?" opal_verbose "0"
+prompt "Opal wave datasource?" opal_wavesource "alder_config"
 prompt "Log file path?" log_path "/var/local/alder/log"
 prompt "Image data path?" imagedata_path "/var/local/alder/data"
 prompt "Primary smtp hostname?" smtp1_host
@@ -79,6 +80,7 @@ sed -e "s;%DB_HOST%;$db_host;" \
     -e "s;%OPAL_PASSWORD%;$opal_password;" \
     -e "s;%OPAL_TIMEOUT%;$opal_timeout;" \
     -e "s;%OPAL_VERBOSE%;$opal_verbose;" \
+    -e "s;%OPAL_WAVESOURCE%;$opal_wavesource;" \
     -e "s;%LOG_PATH%;$log_path;" \
     -e "s;%LOG_PATH%;$log_path;" \
     -e "s;%IMAGEDATA_PATH%;$imagedata_path;" \

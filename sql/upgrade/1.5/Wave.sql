@@ -21,7 +21,8 @@ CREATE PROCEDURE patch_Wave()
         MetaDataSource VARCHAR(45) NOT NULL,
         ImageDataSource VARCHAR(45) NOT NULL,
         PRIMARY KEY (Id),
-        UNIQUE INDEX uqNameRank (Name ASC, Rank ASC))
+        UNIQUE INDEX uqName (Name ASC),
+        UNIQUE INDEX uqRank (Rank ASC))
       ENGINE = InnoDB;
 
       INSERT INTO Wave ( Name, Rank, MetaDataSource, ImageDataSource )

@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS `Alder`.`Wave` (
   `MetaDataSource` VARCHAR(45) NOT NULL,
   `ImageDataSource` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`Id`),
-  UNIQUE INDEX `uqNameRank` (`Name` ASC, `Rank` ASC))
+  UNIQUE INDEX `uqName` (`Name` ASC),
+  UNIQUE INDEX `uqRank` (`Rank` ASC))
 ENGINE = InnoDB;
 
 
