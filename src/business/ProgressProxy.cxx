@@ -27,8 +27,7 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void ProgressProxy::ConfigureProgress()
   {
-    if( this->curlProgress )
-      OpalService::SetCurlProgress( true );
+    OpalService::SetCurlProgress( this->curlProgress );
     this->configurationData = std::pair<int, bool>( this->progressType, this->busyProgress );
     this->application->InvokeEvent( vtkCommand::ConfigureEvent, static_cast<void *>( &this->configurationData ) );
   }
