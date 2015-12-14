@@ -254,6 +254,20 @@ namespace Alder
     }
 
     /**
+     * Concatenates a vector of strings by the provided separator, returning the results as string
+     */
+    inline static std::string implode( std::vector<std::string> vec, std::string separator )
+    {
+      std::string result;
+      for( std::vector<std::string>::const_iterator it=vec.begin(); it != vec.end(); ++it )
+      {
+        result += *it;
+        if( 1 + it != vec.end() ) result += separator;
+      }
+      return result;
+    }
+
+    /**
      * Removes all space characters (as defined by std::isspace) from the left side of a string
      */
     inline static std::string &ltrim( std::string &s )
