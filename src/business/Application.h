@@ -71,7 +71,7 @@ namespace Alder
      * Logging functions.
      */
     bool OpenLogFile();
-    void Log( const std::string message );
+    void Log( const std::string &message );
     void LogBacktrace();
     //@}
 
@@ -79,7 +79,7 @@ namespace Alder
      * Reads configuration variables from a given file.
      * @param filename the file to read the configuration from.
      */
-    bool ReadConfiguration( const std::string fileName );
+    bool ReadConfiguration( const std::string &fileName );
 
     /**
      * Uses database values in the configuration to connect to a database.
@@ -95,6 +95,11 @@ namespace Alder
      * Uses opal values in the configuration to set up a connection to Opal.
      */
     void SetupOpalService();
+
+    /**
+     * Uses an opal datasource to update alder db tables.
+     */
+    void UpdateDatabase();
 
     /**
      * Resets the state of the application to its initial state.
@@ -141,7 +146,7 @@ namespace Alder
      * @return           a model object
      * @throws           runtime_error
      */
-    ModelObject* Create( const std::string className ) const
+    ModelObject* Create( const std::string &className ) const
     {
       // make sure the constructor registry has the class name being asked for
       auto pair = this->ConstructorRegistry.find( className );
@@ -163,7 +168,7 @@ namespace Alder
      * @return             the unmangled class name
      * @throws             runtime_error
      */
-    std::string GetUnmangledClassName( const std::string mangledName ) const;
+    std::string GetUnmangledClassName( const std::string &mangledName ) const;
 
     vtkSetMacro( AbortFlag, bool );
     vtkGetMacro( AbortFlag, bool );

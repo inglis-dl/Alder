@@ -256,6 +256,13 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void Application::UpdateDatabase()
+  {
+    std::string waveSource = this->Config->GetValue( "Opal", "WaveSource" );
+    Alder::Wave::UpdateWaveData( waveSource );
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Application::ResetApplication()
   {
     this->SetActiveUser( NULL );

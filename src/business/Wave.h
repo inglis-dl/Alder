@@ -38,6 +38,24 @@ namespace Alder
     vtkTypeMacro( Wave, ActiveRecord );
     std::string GetName() const { return "Wave"; }
 
+    /**
+     * Updates the Wave db table with Opal information.
+     * @param aSource Opal project containing wave configuration data.
+     */
+    static void UpdateWaveData( const std::string &aSource );
+
+    /**
+     * Updates the Modality db table with Opal information
+     * from the this Wave record.
+     */
+    void UpdateModalityData();
+
+    /**
+     * Updates the ScanType and WaveHasScanType db tables with Opal information
+     * from the this Wave record.
+     */
+    void UpdateScanTypeData();
+
   protected:
     Wave() {}
     ~Wave() {}

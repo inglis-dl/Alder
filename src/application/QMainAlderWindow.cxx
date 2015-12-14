@@ -26,6 +26,7 @@
 #include <QCodeDialog.h>
 #include <QReportDialog.h>
 #include <QSelectInterviewDialog.h>
+#include <QSelectWaveDialog.h>
 #include <QUserListDialog.h>
 #include <QVTKProgressDialog.h>
 
@@ -146,6 +147,8 @@ void QMainAlderWindow::slotOpenInterview()
     dialog.setWindowTitle( tr( "Select Interview" ) );
     dialog.exec();
 
+    /*
+    // THE DIALOG SHOULD HANDLE THE SELECTION AND UPDATING
     vtkSmartPointer< Alder::QueryModifier > modifier =
       vtkSmartPointer< Alder::QueryModifier >::New();
     user->InitializeExamModifier( modifier );
@@ -163,6 +166,7 @@ void QMainAlderWindow::slotOpenInterview()
         func );
       app->InvokeEvent( Alder::Application::ActiveInterviewUpdateImageDataEvent );
     }
+    */
   }
 }
 
@@ -303,7 +307,7 @@ void QMainAlderWindow::adminLoginDo( void (QMainAlderWindow::*fn)() )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QMainAlderWindow::adminRatingCodes()
 {
-  // load the reports dialog
+  // load the code dialog
   QCodeDialog codeDialog( this );
   codeDialog.setModal( true );
   codeDialog.setWindowTitle( tr( "Rating Codes" ) );
@@ -339,26 +343,36 @@ void QMainAlderWindow::slotLoadUIDs()
   }
   else
   {
-    std::vector< std::string > uidList;
-
-    QTextStream in(&file);
-    while( !in.atEnd() )
+    // csv file must contain UId and Wave rank
+    std::vector< std::pair< std::string, std::string > > list;
+    QTextStream qstream( &file );
+    std::string sep = "\",\"";
+    while( !file.atEnd() )
     {
-      QString line = in.readLine();
+      QString line = qstream.readLine();
       std::string str = line.toStdString();
       str = Alder::Utilities::trim( str );
       str = Alder::Utilities::removeLeadingTrailing( str, '"' );
-      uidList.push_back( str );
+      std::vector< std::string > parts = Alder::Utilities::explode( str, sep );
+      if( 2 == parts.size() )
+      {
+        list.push_back(
+          std::make_pair( 
+            Alder::Utilities::trim( parts[0] ),
+            Alder::Utilities::trim( parts[1] ) ) );
+      }      
     }
     file.close();
-    if( uidList.empty() )
+    if( list.empty() )
     {
       error = true;
-      errorMsg = "Failed to parse UIDs from csv file";
+      errorMsg  = "Failed to parse identifiers from csv file: ";
+      errorMsg += "expecting UId / wave rank pairs";
     }
     else
     {
       // create a progress dialog to observe the progress of the update
+      /*
       QVTKProgressDialog dialog( this );
       Alder::ListInterviewProgressFunc func( uidList );
       dialog.Run(
@@ -367,16 +381,19 @@ void QMainAlderWindow::slotLoadUIDs()
         func );
 
       int numLoadedUIDs = func.GetNumLoaded();
+      */
+      int numLoaded = Alder::Interview::LoadFromList( list ); 
+
       Alder::Application *app = Alder::Application::GetInstance();
       std::stringstream log;
       log << "Loaded "
-          << numLoadedUIDs
+          << numLoaded
           << " of "
-          << uidList.size()
-          << " requested UIDs from file "
+          << list.size()
+          << " requested identifiers from file "
           << fileName.toStdString();
       app->Log( log.str() );
-      if(numLoadedUIDs != uidList.size())
+      if( numLoaded != list.size() )
       {
         error = true;
         errorMsg = log.str().c_str();
@@ -397,13 +414,23 @@ void QMainAlderWindow::slotLoadUIDs()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QMainAlderWindow::adminUpdateDatabase()
 {
+  QSelectWaveDialog waveDialog( this );
+  waveDialog.setModal( true );
+  waveDialog.exec();
+  std::vector< int > waveIdList = waveDialog.getSelection();
+  if( !waveIdList.empty() )
+  {
+    Alder::Interview::UpdateInterviewData( waveIdList );
+  }  
   // create a progress dialog to observe the progress of the update
+  /*
   QVTKProgressDialog dialog( this );
   Alder::MultiInterviewProgressFunc func;
   dialog.Run(
     "Updating Database",
     "Please wait while the database is updated.",
     func );
+  */  
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -449,7 +476,7 @@ void QMainAlderWindow::changeActiveUserPassword( QString password )
   Alder::User* user;
   if(  NULL != ( user = app->GetActiveUser() ) )
   {
-    user->Set( "Password", password.toStdString() );
+    user->Set( "Password", vtkVariant( password.toStdString() ) );
     user->Save();
   }
 }

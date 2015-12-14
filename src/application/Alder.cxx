@@ -68,14 +68,17 @@ int main( int argc, char** argv )
       Application::DeleteInstance();
       return status;
     }
+
     app->SetupOpalService();
+
+    app->UpdateDatabase();
 
     // now create the user interface
     QAlderApplication qapp( argc, argv );
     QMainAlderWindow mainWindow;
 
     // check to see if an admin user exists, create if not
-    vtkNew< User > user; 
+    vtkNew< User > user;
     if( !user->Load( "Name", "administrator" ) )
     {
       QString text = QInputDialog::getText(

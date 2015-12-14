@@ -8,6 +8,7 @@ SET( AlderQtModelLib_SRC
   QChangePasswordDialog.cxx
   QReportDialog.cxx
   QSelectInterviewDialog.cxx
+  QSelectWaveDialog.cxx
   QUserListDialog.cxx
   QMailSender.cxx
   QVTKProgressDialog.cxx
@@ -21,6 +22,7 @@ SET( AlderQtModel_Uis
   QLoginDialog.ui
   QReportDialog.ui
   QSelectInterviewDialog.ui
+  QSelectWaveDialog.ui
   QUserListDialog.ui
   QVTKProgressDialog.ui
 )
@@ -33,6 +35,7 @@ SET( AlderQtModel_MocHeaders
   QLoginDialog.h
   QReportDialog.h
   QSelectInterviewDialog.h
+  QSelectWaveDialog.h
   QUserListDialog.h
   QMailSender.h
   QVTKProgressDialog.h
