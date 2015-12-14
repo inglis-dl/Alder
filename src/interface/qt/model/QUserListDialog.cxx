@@ -18,13 +18,11 @@
 #include <vtkSmartPointer.h>
 
 #include <QErrorMessage>
-#include <QFile>
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QList>
 #include <QTableWidget>
 #include <QTableWidgetItem>
-#include <QTextStream>
 
 #include <stdexcept>
 #include <vector>
@@ -213,7 +211,6 @@ void QUserListDialog::slotHeaderClicked( int index )
   if( this->columnIndex["Name"] == index ||
       this->columnIndex["LastLogin"] == index )
   {
-
     // reverse order if already sorted
     if( this->sortColumn == index )
       this->sortOrder = Qt::AscendingOrder == this->sortOrder ? Qt::DescendingOrder : Qt::AscendingOrder;
@@ -271,7 +268,6 @@ void QUserListDialog::slotItemChanged( QTableWidgetItem *item )
 void QUserListDialog::updateInterface()
 {
   this->ui->userTableWidget->blockSignals( true );
-
   this->ui->userTableWidget->setRowCount( 0 );
   QTableWidgetItem *item;
 
