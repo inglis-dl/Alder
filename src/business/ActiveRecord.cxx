@@ -29,7 +29,7 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool ActiveRecord::ColumnNameExists( const std::string column )
+  bool ActiveRecord::ColumnNameExists( const std::string &column )
   {
     // make sure the record is initialized
     if( !this->Initialized ) this->Initialize();
@@ -44,7 +44,8 @@ namespace Alder
     this->ColumnValues.clear();
 
     Database *db = Application::GetInstance()->GetDB();
-    std::vector<std::string> columns = db->GetColumnNames( this->GetName() );
+    std::string table = this->GetName();
+    std::vector<std::string> columns = db->GetColumnNames( table );
 
     // When first creating an active record we want the ColumnValues ivar to have an empty
     // value for every column in the active record's table.  We use mysql's information_schema
@@ -52,7 +53,7 @@ namespace Alder
     for( auto it = columns.cbegin(); it != columns.cend(); ++it )
     {
       const std::string column = *it;
-      vtkVariant columnDefault = db->GetColumnDefault( this->GetName(), column );
+      vtkVariant columnDefault = db->GetColumnDefault( table, column );
       this->ColumnValues.insert( std::pair< std::string, vtkVariant >( column, columnDefault ) );
     }
 
@@ -63,17 +64,17 @@ namespace Alder
   void ActiveRecord::LoadFromQuery( vtkAlderMySQLQuery *query )
   {
     for( int c = 0; c < query->GetNumberOfFields(); ++c )
-    {   
+    {
       std::string column = query->GetFieldName( c );
       if( "CreateTimestamp" != column && "UpdateTimestamp" != column )
         this->ColumnValues.insert(
           std::pair< std::string, vtkVariant >( column, query->DataValue( c ) ) );
-    }   
+    }
     this->Initialized = true;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool ActiveRecord::Load( const std::map< std::string, std::string > map )
+  bool ActiveRecord::Load( const std::map< std::string, std::string > &map )
   {
     Application *app = Application::GetInstance();
     vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
@@ -85,7 +86,7 @@ namespace Alder
     for( auto it = map.cbegin(); it != map.cend(); ++it )
       stream << ( map.cbegin() == it ? " WHERE " : " AND " )
              << it->first << " = " << query->EscapeString( it->second );
-    
+
     app->Log( "Querying Database: " + stream.str() );
     query->SetQuery( stream.str().c_str() );
     query->Execute();
@@ -116,7 +117,7 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void ActiveRecord::Save( const bool replace )
+  void ActiveRecord::Save( const bool &replace )
   {
     Application *app = Application::GetInstance();
     vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
@@ -169,16 +170,17 @@ namespace Alder
       this->Set( "Id", this->GetLastInsertId() );
     }
   }
-  
+
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   int ActiveRecord::GetLastInsertId() const
   {
     Application *app = Application::GetInstance();
     vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
     std::stringstream stream;
-    stream << "SELECT Max( Id ) FROM " << this->GetName();
-    
-    app->Log( "Getting last insert id for table: " + this->GetName() );
+    std::string table = this->GetName();
+    stream << "SELECT Max( Id ) FROM " << table;
+
+    app->Log( "Getting last insert id for table: " + table );
     query->SetQuery( stream.str().c_str() );
     query->Execute();
 
@@ -215,7 +217,7 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  int ActiveRecord::GetCount( const std::string recordType )
+  int ActiveRecord::GetCount( const std::string &recordType )
   {
     Application *app = Application::GetInstance();
     vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
@@ -232,14 +234,14 @@ namespace Alder
       app->Log( query->GetLastErrorText() );
       throw std::runtime_error( "There was an error while trying to query the database." );
     }
-    
+
     // only has one row
     query->NextRow();
     return query->DataValue( 0 ).ToInt();
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  vtkVariant ActiveRecord::Get( const std::string column )
+  vtkVariant ActiveRecord::Get( const std::string &column )
   {
     // make sure the column exists
     if( !this->ColumnNameExists( column ) )
@@ -267,12 +269,12 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  int ActiveRecord::GetRelationship( const std::string table, const std::string override ) const
+  int ActiveRecord::GetRelationship( const std::string &table, const std::string &override ) const
   {
     Database *db = Application::GetInstance()->GetDB();
 
     // if no override is provided, figure out necessary table/column names
-    std::string joiningTable = override.empty() ? this->GetName() + "Has" + table : override;
+    std::string joiningTable = override.empty() ? table + "Has" + this->GetName() : override;
     std::string column = override.empty() ? this->GetName() + "Id" : override;
 
     if( db->TableExists( joiningTable ) )
@@ -283,7 +285,7 @@ namespace Alder
     {
       return ActiveRecord::OneToMany;
     }
-    
+
     return ActiveRecord::None;
   }
 
