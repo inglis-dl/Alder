@@ -48,8 +48,9 @@ public:
 
   void setMessage( QString message );
 
-  void Run( const std::string& title, const std::string& message, 
-    Alder::BaseInterviewProgressFunc& func );
+  void Run( const std::string& title, const std::string& message
+    /* , 
+    Alder::BaseInterviewProgressFunc& func */ );
   
 public slots:
   virtual void slotCancel();

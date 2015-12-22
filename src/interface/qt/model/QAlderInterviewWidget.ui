@@ -324,7 +324,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Site</string>
+          <string>Site/Wave</string>
          </property>
         </widget>
        </item>

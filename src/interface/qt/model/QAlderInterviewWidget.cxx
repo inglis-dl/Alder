@@ -21,7 +21,9 @@
 #include <Modality.h>
 #include <QueryModifier.h>
 #include <Rating.h>
+#include <Site.h>
 #include <User.h>
+#include <Wave.h>
 
 #include <vtkEventQtSlotConnect.h>
 #include <vtkMedicalImageViewer.h>
@@ -197,13 +199,14 @@ void QAlderInterviewWidget::updateActiveInterview( Alder::Interview* interview )
 
     if( !interview->HasImageData( modifier ) )
     {
+      interview->UpdateImageData();
       // create a progress dialog to observe the progress of the update
-      QVTKProgressDialog dialog( this );
-      Alder::SingleInterviewProgressFunc func( interview );
-      dialog.Run(
-       "Downloading Exam Images",
-       "Please wait while the interview's images are downloaded.",
-       func );
+      // QVTKProgressDialog dialog( this );
+      //Alder::SingleInterviewProgressFunc func( interview );
+      //dialog.Run(
+      // "Downloading Exam Images",
+      // "Please wait while the interview's images are downloaded.",
+      // func );
     }
 
     app->SetActiveInterview( interview );
@@ -356,7 +359,13 @@ void QAlderInterviewWidget::updateInfo()
           noteString = note->Get( "Note" ).ToString();
       }
       interviewerString = exam->Get( "Interviewer" ).ToString().c_str();
-      siteString = interview->Get( "Site" ).ToString().c_str();
+      vtkSmartPointer< Alder::Site > site = vtkSmartPointer< Alder::Site >::New();
+      interview->GetRecord( site );
+      vtkSmartPointer< Alder::Wave > wave = vtkSmartPointer< Alder::Wave >::New();
+      interview->GetRecord( wave );
+      siteString = site->Get( "Name" ).ToString().c_str();
+      siteString += "/";
+      siteString += wave->Get( "Name" ).ToString().c_str();
       dateString = exam->Get( "DatetimeAcquired" ).ToString().c_str();
       codeString = image->GetCode().c_str();
     }
@@ -636,7 +645,7 @@ void QAlderInterviewWidget::updateExamTreeWidget()
         this->treeModelMap[imageItem] = *imageIt;
         imageItem->setText( 0, name );
 
-        if( image->Get( "Dimensionality" ).ToInt() == 3 )
+        if( 3 == image->Get( "Dimensionality" ).ToInt() )
         {
           imageItem->setIcon(0, QIcon(":/icons/movie-icon" ) );
         }

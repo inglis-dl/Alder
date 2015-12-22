@@ -25,6 +25,7 @@
 #include <ActiveRecord.h>
 #include <ProgressProxy.h>
 #include <Image.h>
+#include <Wave.h>
 
 /**
  * @addtogroup Alder
@@ -42,14 +43,18 @@ namespace Alder
 
     /**
      * Updates the Interview table with all existing interviews in Opal.
-     * @param proxy a progress proxy object
      */
-    static void UpdateInterviewData( ProgressProxy& proxy );
+    static void UpdateInterviewData( const std::vector<int> &list );
 
     /**
      * Returns whether this interview's exam data has been downloaded.
      */
     bool HasExamData();
+
+    /**
+     * Returns the number of Exam records that need to be created for this interview.
+     */
+    int GetExamCreateCount();
 
     /**
      * Returns whether this interview's image data has been downloaded.
@@ -58,31 +63,31 @@ namespace Alder
     bool HasImageData( QueryModifier *modifier = NULL );
 
     /**
-     * Updates all exam data associated with the interview from Opal.
-     * Note: exam data must be downloaded before image data.
-     * @param updateMetaData whether to update exam data
+     * Updates and/or creates all Exam data associated with the Interview from Opal.
+     * Note: Exam data must be downloaded before Image data.
+     * @param aWave         Wave that this interview belongs to
+     * @param aSource       Opal data source containing an Exam view
      */
-    void UpdateExamData( const bool& updateMetaData = false );
-
+    void UpdateExamData(
+     Alder::Wave *aWave = NULL, const std::string &aSource = "" );
+    
     /**
      * Updates all exam and image data associated with the interview from Opal.
      * Note: exam data must be downloaded before image data.
-     * @param proxy a progress proxy object
      */
-    void UpdateImageData( ProgressProxy& proxy );
+    void UpdateImageData();
 
     /**
      * Loads exam and image data associated with interviews from Opal
-     * from a list of participant identifiers (UIDs).
+     * from a list of identifiers (UId wave rank pairs).
      * Caveats:
      * 1) the administrator must update the interview data in the database first
-     *    to ensure the requested UIDs can be retrieved
+     *    to ensure the requested interviews can be retrieved
      * 2) only the images the user is permitted to review are downloaded
-     * @param uidList a list of interview UIds
-     * @param proxy   a progress proxy object
-     * @return        the number of UIDs loaded
+     * @param list  vector of interview UId wave rank pairs
+     * @return      the number of Interviews loaded
      */
-    static int LoadFromUIDList( std::vector< std::string > const &uidList, ProgressProxy& proxy );
+    static int LoadFromList( const std::vector< std::pair < std::string, std::string > > &list );
 
     /**
      * Given an image Id, find an image in this interview having the same
@@ -90,7 +95,7 @@ namespace Alder
      * @param imageId the Id of an image record
      * @return        the Id of a similar image or empty string on fail
      */
-    std::string GetSimilarImage( std::string const &imageId );
+    std::string GetSimilarImageId( const std::string &imageId );
 
     //@{
     /**
@@ -137,72 +142,11 @@ namespace Alder
      * Returns a vector of all UId/VisitDate pairs ordered by UId then VisitDate.
      * @return vector of interview UId, VisitDate data
      */
-    static std::vector<std::pair<std::string, std::string>> GetUIdVisitDateList();
+    // static std::vector<std::pair<std::string, std::string>> GetUIdVisitDateList();
 
   private:
     Interview( const Interview& ); // Not implemented
     void operator=( const Interview& ); // Not implemented
-  };
-
-  class BaseInterviewProgressFunc {
-    public:
-      virtual void progressFunc() = 0;
-      virtual ~BaseInterviewProgressFunc() = 0;
-  };
-
-  inline BaseInterviewProgressFunc::~BaseInterviewProgressFunc(){}
-
-  class SingleInterviewProgressFunc : public BaseInterviewProgressFunc {
-    public:
-      SingleInterviewProgressFunc( Interview* v, const bool p = true ) : interview(v), curlProgress(p) {}
-
-      virtual void progressFunc()
-      {
-        if( NULL == this->interview ) return;
-        ProgressProxy proxy;
-        proxy.SetCurlProgress( this->curlProgress );
-        if( !this->curlProgress )
-        {
-          proxy.SetProgressTypeLocal();
-        }
-        proxy.ConfigureProgress();
-        this->interview->UpdateImageData( proxy );
-      }
-
-      ~SingleInterviewProgressFunc() { this->interview = NULL; };
-
-    private:
-      Interview* interview;
-      bool curlProgress;
-  };
-
-  class MultiInterviewProgressFunc : public BaseInterviewProgressFunc {
-    public:
-      virtual void progressFunc()
-      {
-        ProgressProxy proxy;
-        proxy.SetCurlProgressOn();
-        proxy.ConfigureProgress();
-        Interview::UpdateInterviewData( proxy );
-      }
-  };
-
-  class ListInterviewProgressFunc : public BaseInterviewProgressFunc {
-    public:
-      ListInterviewProgressFunc( const std::vector<std::string>& v ) : uidVector(v), numLoaded(0) {}
-      virtual void progressFunc()
-      {
-        ProgressProxy proxy;
-        proxy.SetCurlProgressOff();
-        proxy.ConfigureProgress();
-        this->numLoaded = Interview::LoadFromUIDList( this->uidVector, proxy );
-      }
-
-      int GetNumLoaded() const { return this->numLoaded; }
-
-    private:
-      std::vector<std::string> uidVector;
-      int numLoaded;
   };
 }
 

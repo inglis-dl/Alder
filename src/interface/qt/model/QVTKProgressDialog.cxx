@@ -112,13 +112,14 @@ void QVTKProgressDialog::Command::Execute(
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QVTKProgressDialog::Run( const std::string& title, const std::string& message,
-  Alder::BaseInterviewProgressFunc& func )
+void QVTKProgressDialog::Run( const std::string& title, const std::string& message
+  /*,
+  Alder::BaseInterviewProgressFunc& func*/ )
 {
   this->setWindowTitle( tr( title.c_str() ) );
   this->setMessage( tr( message.c_str() ) );
   this->setModal(true);
   this->show();
-  func.progressFunc();
+  //func.progressFunc();
   this->accept();
 }
