@@ -21,6 +21,9 @@
         <reference>clsa-dcs-images-f1.RetinalScanRight</reference>
       </table>
       <table class="org.obiba.magma.support.ValueTableReference">
+        <reference>clsa-dcs-images-f1.SpineBoneDensity</reference>
+      </table>
+      <table class="org.obiba.magma.support.ValueTableReference">
         <reference>clsa-dcs-images-f1.WholeBodyBoneDensity</reference>
       </table>
       <table class="org.obiba.magma.support.ValueTableReference">
@@ -132,36 +135,58 @@
           <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.WholeBodyBoneDensity:InstrumentRun.timeStart&apos;);</attribute>
         </attributes>
       </variable>
-      <variable name="ForearmBoneDensity.Laterality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+      <variable name="DualHipBoneDensity.Stage" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$group(&apos;clsa-dcs-f1.Participants:Admin.StageInstance.stage&apos;, &apos;DualHipBoneDensity&apos;, &apos;Admin.StageInstance.lastState&apos;).asSequence().last();</attribute>
+        </attributes>
+      </variable>
+      <variable name="SpineBoneDensity.Stage" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/SpineBoneDensity.Stage</attribute>
+          <attribute name="script" valueType="text">$group(&apos;clsa-dcs-f1.Participants:Admin.StageInstance.stage&apos;, &apos;SpineBoneDensity&apos;, &apos;Admin.StageInstance.lastState&apos;).asSequence().last();</attribute>
+        </attributes>
+      </variable>
+      <variable name="SpineBoneDensity.Interviewer" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.SpineBoneDensity:InstrumentRun.user&apos;);</attribute>
+        </attributes>
+      </variable>
+      <variable name="SpineBoneDensity.DatetimeAcquired" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/SpineBoneDensity.DatetimeAcquired</attribute>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.SpineBoneDensity:InstrumentRun.timeStart&apos;);</attribute>
+        </attributes>
+      </variable>
+      <variable name="ForearmBoneDensity.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
           <attribute name="script" valueType="text">$(&apos;OUTPUT_FA_SIDE&apos;).lowerCase()</attribute>
         </attributes>
       </variable>
-      <variable name="LateralBoneDensity.Laterality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+      <variable name="LateralBoneDensity.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
           <attribute name="script" valueType="text">&apos;none&apos;</attribute>
           <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/LateralBoneDensity.Laterality</attribute>
         </attributes>
       </variable>
-      <variable name="RetinalScanLeft.Laterality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+      <variable name="RetinalScanLeft.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
           <attribute name="script" valueType="text">$(&apos;SIDE&apos;).lowerCase()</attribute>
           <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/RetinalScanLeft.Laterality</attribute>
         </attributes>
       </variable>
-      <variable name="RetinalScanRight.Laterality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+      <variable name="RetinalScanRight.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
           <attribute name="script" valueType="text">$(&apos;SIDE&apos;).lowerCase()</attribute>
           <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/RetinalScanRight.Laterality</attribute>
         </attributes>
       </variable>
-      <variable name="WholeBodyBoneDensity.Laterality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+      <variable name="WholeBodyBoneDensity.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
           <attribute name="script" valueType="text">&apos;none&apos;</attribute>
           <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/WholeBodyBoneDensity.Laterality</attribute>
         </attributes>
       </variable>
-      <variable name="CarotidIntima.Laterality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+      <variable name="CarotidIntima.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
           <attribute name="stage" valueType="text">CarotidIntima</attribute>
           <attribute name="captureMethod" valueType="text">AUTOMATIC</attribute>
@@ -183,7 +208,7 @@ if (sides.isNull().not().value()) {
 }</attribute>
         </attributes>
       </variable>
-      <variable name="DualHipBoneDensity.Laterality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+      <variable name="DualHipBoneDensity.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
           <attribute name="stage" valueType="text">DualHipBoneDensity</attribute>
           <attribute name="captureMethod" valueType="text">AUTOMATIC</attribute>
@@ -205,55 +230,14 @@ if (sides.isNull().not().value()) {
 }</attribute>
         </attributes>
       </variable>
-      <variable name="DualHipBoneDensity.Stage" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+      <variable name="SpineBoneDensity.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
-          <attribute name="script" valueType="text">$group(&apos;clsa-dcs-f1.Participants:Admin.StageInstance.stage&apos;, &apos;DualHipBoneDensity&apos;, &apos;Admin.StageInstance.lastState&apos;).asSequence().last();</attribute>
-        </attributes>
-      </variable>
-      <variable name="CarotidIntima.Modality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
-        <attributes>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/CarotidIntima.Modality</attribute>
-          <attribute name="script" valueType="text">&apos;Ultrasound&apos;</attribute>
-        </attributes>
-      </variable>
-      <variable name="DualHipBoneDensity.Modality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
-        <attributes>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/DualHipBoneDensity.Modality</attribute>
-          <attribute name="script" valueType="text">&apos;Dexa&apos;</attribute>
-        </attributes>
-      </variable>
-      <variable name="ForearmBoneDensity.Modality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
-        <attributes>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/ForearmBoneDensity.Modality</attribute>
-          <attribute name="script" valueType="text">&apos;Dexa&apos;</attribute>
-        </attributes>
-      </variable>
-      <variable name="LateralBoneDensity.Modality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
-        <attributes>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/LateralBoneDensity.Modality</attribute>
-          <attribute name="script" valueType="text">&apos;Dexa&apos;</attribute>
-        </attributes>
-      </variable>
-      <variable name="WholeBodyBoneDensity.Modality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
-        <attributes>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/WholeBodyBoneDensity.Modality</attribute>
-          <attribute name="script" valueType="text">&apos;Dexa&apos;</attribute>
-        </attributes>
-      </variable>
-      <variable name="RetinalScanRight.Modality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
-        <attributes>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/RetinalScanRight.Modality</attribute>
-          <attribute name="script" valueType="text">&apos;Retinal&apos;</attribute>
-        </attributes>
-      </variable>
-      <variable name="RetinalScanLeft.Modality" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
-        <attributes>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/RetinalScanLeft.Modality</attribute>
-          <attribute name="script" valueType="text">&apos;Retinal&apos;</attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/SpineBoneDensity.Laterality</attribute>
+          <attribute name="script" valueType="text">&apos;none&apos;</attribute>
         </attributes>
       </variable>
     </variables>
   </variables>
   <created valueType="datetime">2015-12-09T08:59:26.234-0500</created>
-  <updated valueType="datetime">2015-12-10T14:13:50.516-0500</updated>
+  <updated valueType="datetime">2015-12-22T12:04:28.819-0500</updated>
 </org.obiba.magma.views.View>

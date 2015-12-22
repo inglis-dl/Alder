@@ -23,15 +23,21 @@ CREATE PROCEDURE patch_ScanType()
 
       SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
       SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
-
-      INSERT IGNORE INTO ScanType (ModalityId, Type)
-        VALUES ((SELECT Id FROM Modality WHERE Name="Dexa"),"SpineBoneDensity");
-      INSERT IGNORE INTO ScanType (ModalityId, Type)
-        VALUES ((SELECT Id FROM Modality WHERE Name="Retinal"),"RetinalScanLeft");
-      INSERT IGNORE INTO ScanType (ModalityId, Type)
-        VALUES ((SELECT Id FROM Modality WHERE Name="Retinal"),"RetinalScanRight");
     END IF;
 
+    SET @test = (
+      SELECT COUNT(*)
+      FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = "ScanType"
+      AND COLUMN_NAME IN ("SideCount","Parenting"));
+
+    IF @test=0 THEN
+      SELECT "Adding SideCount and Parenting columns to ScanType table" AS "";
+
+      ALTER TABLE ScanType ADD COLUMN SideCount TINYINT NOT NULL DEFAULT 0;
+      ALTER TABLE ScanType ADD COLUMN Parenting TINYINT NOT NULL DEFAULT 0;
+    END IF;
   END //
 DELIMITER ;
 
