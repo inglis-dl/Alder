@@ -607,10 +607,10 @@ void QAlderInterviewWidget::updateExamTreeWidget()
       if( item->isDisabled() ) continue;
 
       name = tr( "Exam" ) + ": ";
-      std::string laterality = exam->Get( "Laterality" ).ToString();
-      if( "none" != laterality )
+      std::string sideStr = exam->Get( "Side" ).ToString();
+      if( "none" != sideStr )
       {
-        name += tr( laterality.c_str() );
+        name += tr( sideStr.c_str() );
         name += " ";
       }
 

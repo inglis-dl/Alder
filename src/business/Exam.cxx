@@ -294,9 +294,9 @@ namespace Alder
     bool result = true;
     int sideIndex = 0;
     std::stringstream log;
-    std::string laterality = this->Get( "Laterality" ).ToString();
+    std::string sideStr = this->Get( "Side" ).ToString();
 
-    if( "none" != laterality )
+    if( "none" != sideStr )
     {
       std::vector< std::string > sideList;
       if( repeatable )
@@ -342,7 +342,7 @@ namespace Alder
 
       for( auto sideListIt = sideList.cbegin(); sideListIt != sideList.cend(); ++sideListIt )
       {
-        if( Utilities::toLower( *sideListIt ) == laterality )
+        if( Utilities::toLower( *sideListIt ) == sideStr )
         {
           found = true;
           break;
@@ -421,7 +421,7 @@ namespace Alder
       if( isHologic )
       {
         // TODO: disable until a workaround can be found for unique index issue
-        // image->SetLateralityFromDICOM();
+        // image->SetExamSideFromDICOM();
         image->CleanHologicDICOM();
       }
       else image->AnonymizeDICOM();

@@ -122,13 +122,17 @@ int main( int argc, char** argv )
         if( modStr != "Dexa" ) continue;
 
         std::string typeStr = exam->GetScanType();
-        std::string latStr = exam->Get( "Laterality" ).ToString();
 
         std::vector< vtkSmartPointer< Alder::Image > > imageList;
         exam->GetList( &imageList );
         for( auto imageIt = imageList.begin(); imageIt != imageList.end(); ++imageIt )
         {
           Alder::Image *image = imageIt->GetPointer();
+
+          //check and set the laterality correctly from the dicom tag
+          image->SetExamSideFromDICOM();
+          std::string sideStr = exam->Get( "Side" ).ToString();
+
           std::string fileName = image->GetFileName();
           std::cout << "-------------- PROCESSING IMAGE --------------" << std::endl
            << "Path: "        << fileName << std::endl
@@ -137,11 +141,8 @@ int main( int argc, char** argv )
            << "Datetime: "    << exam->Get( "DatetimeAcquired" ).ToString() << std::endl
            << "Modality: "    << modStr << std::endl
            << "Type: "        << typeStr << std::endl
-           << "Laterality: "  << latStr << std::endl
+           << "Side: "        << sideStr << std::endl
            << "Downloaded: "  << exam->Get( "Downloaded" ).ToInt() << std::endl;
-
-          //check and set the laterality correctly from the dicom tag
-          image->SetLateralityFromDICOM();
 
           //check the dicom tag for a patient name
           std::string nameStr = image->GetDICOMTag( "PatientsName" );

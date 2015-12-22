@@ -417,8 +417,8 @@ namespace Alder
       loader["InterviewId"] = interviewId;
       for( auto vit = vecLat.cbegin(); vit != vecLat.cend(); ++vit )
       {
-        std::string latStr = *vit;
-        loader["Laterality"] = latStr;
+        std::string sideStr = *vit;
+        loader["Side"] = sideStr;
         if( exam->Load( loader ) )
         {
           // check and update data as required
@@ -454,7 +454,7 @@ namespace Alder
           vtkNew<Exam> exam;
           exam->Set( "InterviewId", interviewId );
           exam->Set( "ScanTypeId", columns["ScanTypeId"] );
-          exam->Set( "Laterality", latStr );
+          exam->Set( "Side", sideStr );
           exam->Set( "Stage", columns["Stage"] );
           exam->Set( "Interviewer", columns["Interviewer"] );
           exam->Set( "DatetimeAcquired", columns["DatetimeAcquired"] );
@@ -843,7 +843,7 @@ namespace Alder
            << "JOIN Exam ON Image.ExamId = Exam.Id "
            << "JOIN Exam AS simExam ON Exam.ScanTypeId = simExam.ScanTypeId "
            << "AND Exam.ScanTypeId = simExam.ScanTypeId "
-           << "AND Exam.Laterality = simExam.Laterality "
+           << "AND Exam.Side = simExam.Side "
            << "AND Exam.Stage = simExam.Stage "
            << "JOIN Image AS simImage ON simImage.ExamId = simExam.Id "
            << "WHERE Exam.InterviewId = " << this->Get( "Id" ).ToString() << " "

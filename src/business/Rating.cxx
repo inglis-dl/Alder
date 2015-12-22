@@ -194,7 +194,7 @@ namespace Alder
            << "IFNULL(x.Code,'NONE') AS CODE, "
            << "IFNULL(x.CodeID,'NONE') AS CODEID, "
            << "ScanType.Type AS TYPE, "
-           << "Exam.Laterality AS SIDE, "
+           << "Exam.Side AS SIDE, "
            << "Interview.UId AS UID, "
            << "Interview.VisitDate AS VISITDATE, "
            << "Interview.Site AS SITE, "

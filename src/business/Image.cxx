@@ -275,14 +275,14 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Image::SetLateralityFromDICOM()
+  void Image::SetExamSideFromDICOM()
   {
     this->AssertPrimaryId();
 
     vtkSmartPointer< Exam > exam;
     if( this->GetRecord( exam ) )
     {
-      std::string latStr = exam->Get( "Laterality" ).ToString();
+      std::string latStr = exam->Get( "Side" ).ToString();
       if( "none" != latStr )
       {
         try{
@@ -293,7 +293,7 @@ namespace Alder
             if( 0 != tagStr.compare(0, 1, latStr, 0, 1) )
             {
               latStr = 0 == tagStr.compare(0, 1, "l", 0, 1) ? "left" : "right";
-              exam->Set( "Laterality", latStr );
+              exam->Set( "Side", latStr );
               exam->Save();
             }
           }
@@ -441,7 +441,7 @@ namespace Alder
     if( !this->GetRecord( exam ) )
       throw std::runtime_error( "ERROR: no exam record for this image." );
 
-    std::string latStr = exam->Get( "Laterality" ).ToString();
+    std::string latStr = exam->Get( "Side" ).ToString();
     std::string typeStr = exam->GetScanType();
     int examType = -1;
 
