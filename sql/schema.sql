@@ -96,15 +96,23 @@ CREATE TABLE IF NOT EXISTS `Alder`.`ScanType` (
   `UpdateTimestamp` TIMESTAMP NOT NULL,
   `CreateTimestamp` TIMESTAMP NOT NULL,
   `ModalityId` INT UNSIGNED NOT NULL,
+  `WaveId` INT UNSIGNED NOT NULL,
   `Type` VARCHAR(255) NOT NULL,
   `SideCount` TINYINT NOT NULL DEFAULT 0,
-  `Parenting` TINYINT NOT NULL DEFAULT 0,
+  `AcquisitionCount` TINYINT NOT NULL DEFAULT 1,
+  `ChildCount` TINYINT NOT NULL DEFAULT 0,
   PRIMARY KEY (`Id`),
-  UNIQUE INDEX `uqModalityIdType` (`ModalityId` ASC, `Type` ASC),
   INDEX `fkModalityId` (`ModalityId` ASC),
+  INDEX `fkWaveId` (`WaveId` ASC),
+  INDEX `uqTypeModalityIdWaveId` (`Type` ASC, `ModalityId` ASC, `WaveId` ASC),
   CONSTRAINT `fkScanTypeModalityId`
     FOREIGN KEY (`ModalityId`)
     REFERENCES `Alder`.`Modality` (`Id`)
+    ON DELETE NO ACTION
+    ON UPDATE CASCADE,
+  CONSTRAINT `fkScanTypeWaveId`
+    FOREIGN KEY (`WaveId`)
+    REFERENCES `Alder`.`Wave` (`Id`)
     ON DELETE NO ACTION
     ON UPDATE CASCADE)
 ENGINE = InnoDB;
@@ -382,32 +390,6 @@ CREATE TABLE IF NOT EXISTS `Alder`.`ImageNote` (
     FOREIGN KEY (`ImageId`)
     REFERENCES `Alder`.`Image` (`Id`)
     ON DELETE NO ACTION
-    ON UPDATE CASCADE)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `Alder`.`WaveHasScanType`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `Alder`.`WaveHasScanType` ;
-
-CREATE TABLE IF NOT EXISTS `Alder`.`WaveHasScanType` (
-  `WaveId` INT UNSIGNED NOT NULL,
-  `ScanTypeId` INT UNSIGNED NOT NULL,
-  `UpdateTimestamp` TIMESTAMP NOT NULL,
-  `CreateTimestamp` TIMESTAMP NOT NULL,
-  PRIMARY KEY (`WaveId`, `ScanTypeId`),
-  INDEX `fkScanTypeId` (`ScanTypeId` ASC),
-  INDEX `fkWaveId` (`WaveId` ASC),
-  CONSTRAINT `fkWaveHasScanTypeWaveId`
-    FOREIGN KEY (`WaveId`)
-    REFERENCES `Alder`.`Wave` (`Id`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-  CONSTRAINT `fkWaveHasScanTypeScanTypeId`
-    FOREIGN KEY (`ScanTypeId`)
-    REFERENCES `Alder`.`ScanType` (`Id`)
-    ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB;
 

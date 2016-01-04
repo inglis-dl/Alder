@@ -30,13 +30,32 @@ CREATE PROCEDURE patch_ScanType()
       FROM information_schema.COLUMNS
       WHERE TABLE_SCHEMA = DATABASE()
       AND TABLE_NAME = "ScanType"
-      AND COLUMN_NAME IN ("SideCount","Parenting"));
+      AND COLUMN_NAME IN ("SideCount","AcquisitionCount","ChildCount","WaveId"));
 
     IF @test=0 THEN
-      SELECT "Adding SideCount and Parenting columns to ScanType table" AS "";
+      SELECT "Adding WaveId, SideCount, AcquisitionCount and ChildCount columns to ScanType table" AS "";
+
+      SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+      SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 
       ALTER TABLE ScanType ADD COLUMN SideCount TINYINT NOT NULL DEFAULT 0;
-      ALTER TABLE ScanType ADD COLUMN Parenting TINYINT NOT NULL DEFAULT 0;
+      ALTER TABLE ScanType ADD COLUMN AcquisitionCount TINYINT NOT NULL DEFAULT 1;
+      ALTER TABLE ScanType ADD COLUMN ChildCount TINYINT NOT NULL DEFAULT 0;
+
+      ALTER TABLE ScanType ADD COLUMN WaveId INT UNSIGNED NOT NULL AFTER ModalityId;
+      ALTER TABLE ScanType ADD INDEX fkWaveId ( WaveId ASC );
+      ALTER TABLE ScanType ADD CONSTRAINT fkScanTypeWaveId
+      FOREIGN KEY ( WaveId ) REFERENCES Wave (Id)
+      ON DELETE NO ACTION ON UPDATE CASCADE;
+
+      ALTER TABLE ScanType DROP INDEX uqModalityIdType;
+      ALTER TABLE ScanType ADD INDEX uqTypeModalityIdWaveId (`Type` ASC, ModalityId ASC, WaveId ASC);
+
+      UPDATE ScanType
+      SET WaveId = ( SELECT Id FROM Wave WHERE RANK=1 );
+
+      SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+      SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
     END IF;
   END //
 DELIMITER ;

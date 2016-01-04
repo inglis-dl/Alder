@@ -15,6 +15,5 @@ SOURCE Code.sql
 SOURCE CodeType.sql
 SOURCE Rating.sql
 SOURCE Exam.sql
-SOURCE WaveHasScanType.sql
 
 COMMIT;

@@ -45,14 +45,8 @@ namespace Alder
     static void UpdateWaveData( const std::string &aSource );
 
     /**
-     * Updates the Modality db table with Opal information
-     * from the this Wave record.
-     */
-    void UpdateModalityData();
-
-    /**
-     * Updates the ScanType and WaveHasScanType db tables with Opal information
-     * from the this Wave record.
+     * Updates the ScanType, Modality and WaveHasScanType db tables with Opal information
+     * from this Wave record.
      */
     void UpdateScanTypeData();
 
