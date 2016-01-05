@@ -156,16 +156,19 @@
           <attribute name="isManualCaptureAllowed" valueType="text">false</attribute>
           <attribute name="vendorName" valueType="text">SIDE</attribute>
           <attribute name="occurrenceCount" valueType="text">Data[INTEGER:2]</attribute>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/clsa-dcs-images/table/CarotidIntima/variable/Measure.SIDE</attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder/table/Exam/variable/CarotidIntima.Side</attribute>
           <attribute name="script" valueType="text">var sides=$(&apos;Measure.SIDE&apos;).lowerCase();
 if (sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;);
   var res=newValue(&apos;&apos;);
   for(var i=0;i&lt;sides.size();i++) {
-    res=res.concat(sides.valueAt(i).value(),delim);
+    var side = sides.valueAt(i).value();
+    if( false==res.matches(RegExp(side)) ) {
+      res=res.concat(side,delim);
+    }
   }
   var tmp=String(res.value());
-  res=newValue(tmp.slice(0,tmp.length-1));  
+  res=newValue(tmp.slice(0,tmp.length-1));
 } else {
   null;
 }</attribute>
@@ -178,36 +181,17 @@ if (sides.isNull().not().value()) {
           <attribute name="isManualCaptureAllowed" valueType="text">false</attribute>
           <attribute name="vendorName" valueType="text">SIDE</attribute>
           <attribute name="occurrenceCount" valueType="text">Data[INTEGER:2]</attribute>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/clsa-dcs-images/table/Plaque/variable/Measure.SIDE</attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder/table/Exam/variable/Plaque.Side</attribute>
           <attribute name="script" valueType="text">var sides=$(&apos;Measure.SIDE&apos;).lowerCase();
 if (sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;);
   var res=newValue(&apos;&apos;);
   for(var i=0;i&lt;sides.size();i++) {
-    res=res.concat(sides.valueAt(i).value(),delim);
-  }  
-  var tmp=String(res.value());
-  res=newValue(tmp.slice(0,tmp.length-1));
-} else {
-  null;
-}</attribute>
-        </attributes>
-      </variable>
-      <variable name="ForearmBoneDensity.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="11">
-        <attributes>
-          <attribute name="stage" valueType="text">RetinalScan</attribute>
-          <attribute name="captureMethod" valueType="text">AUTOMATIC</attribute>
-          <attribute name="isManualCaptureAllowed" valueType="text">false</attribute>
-          <attribute name="vendorName" valueType="text">EYE_SIDE_VENDOR</attribute>
-          <attribute name="occurrenceCount" valueType="text">Data[INTEGER:2]</attribute>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/clsa-dcs-images/table/RetinalScan/variable/Measure.SIDE</attribute>
-          <attribute name="script" valueType="text">var sides=$(&apos;Measure.SIDE&apos;).lowerCase();
-if (sides.isNull().not().value()) {
-  var delim=newValue(&apos;,&apos;);
-  var res=newValue(&apos;&apos;);
-  for(var i=0;i&lt;sides.size();i++) {
-    res=res.concat(sides.valueAt(i).value(),delim);
-  }  
+    var side = sides.valueAt(i).value();
+    if( false==res.matches(RegExp(side)) ) {
+      res=res.concat(side,delim);
+    }
+  }
   var tmp=String(res.value());
   res=newValue(tmp.slice(0,tmp.length-1));
 } else {
@@ -222,8 +206,11 @@ if (sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;);
   var res=newValue(&apos;&apos;);
   for(var i=0;i&lt;sides.size();i++) {
-    res=res.concat(sides.valueAt(i).value(),delim);
-  }  
+    var side = sides.valueAt(i).value();
+    if( false==res.matches(RegExp(side)) ) {
+      res=res.concat(side,delim);
+    }
+  }
   var tmp=String(res.value());
   res=newValue(tmp.slice(0,tmp.length-1));
 } else {
@@ -234,7 +221,7 @@ if (sides.isNull().not().value()) {
           <attribute name="isManualCaptureAllowed" valueType="text">false</attribute>
           <attribute name="vendorName" valueType="text">EYE_SIDE_VENDOR</attribute>
           <attribute name="occurrenceCount" valueType="text">Data[INTEGER:2]</attribute>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder/table/Exam/variable/RetinalScan.Laterality</attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder/table/Exam/variable/RetinalScan.Side</attribute>
         </attributes>
       </variable>
       <variable name="DualHipBoneDensity.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="12">
@@ -244,23 +231,37 @@ if (sides.isNull().not().value()) {
           <attribute name="isManualCaptureAllowed" valueType="text">true</attribute>
           <attribute name="vendorName" valueType="text">HIP_SIDE</attribute>
           <attribute name="occurrenceCount" valueType="text">$(&apos;QuestionnaireBoneDensity:NB_HIP_SCAN&apos;)</attribute>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/clsa-dcs-images/table/DualHipBoneDensity/variable/Measure.OUTPUT_HIP_SIDE</attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder/table/Exam/variable/DualHipBoneDensity.Side</attribute>
           <attribute name="script" valueType="text">var sides=$(&apos;Measure.OUTPUT_HIP_SIDE&apos;).lowerCase();
 if (sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;);
   var res=newValue(&apos;&apos;);
   for(var i=0;i&lt;sides.size();i++) {
-    res=res.concat(sides.valueAt(i).value(),delim);
-  }  
+    var side=sides.valueAt(i).value();
+    if( false==res.matches(RegExp(side)) ) {
+      res=res.concat(side,delim);
+    }
+  }
   var tmp=String(res.value());
   res=newValue(tmp.slice(0,tmp.length-1));
 } else {
   null;
-}</attribute>
+}
+</attribute>
+        </attributes>
+      </variable>
+      <variable name="ForearmBoneDensity.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="9">
+        <attributes>
+          <attribute name="stage" valueType="text">ForearmBoneDensity</attribute>
+          <attribute name="captureMethod" valueType="text">AUTOMATIC</attribute>
+          <attribute name="isManualCaptureAllowed" valueType="text">true</attribute>
+          <attribute name="vendorName" valueType="text">FA_SIDE</attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder/table/Exam/variable/ForearmBoneDensity.Side</attribute>
+          <attribute name="script" valueType="text">$(&apos;OUTPUT_FA_SIDE&apos;).lowerCase()</attribute>
         </attributes>
       </variable>
     </variables>
   </variables>
   <created valueType="datetime">2014-10-08T12:47:24.415-0400</created>
-  <updated valueType="datetime">2015-12-22T11:27:47.446-0500</updated>
+  <updated valueType="datetime">2016-01-05T09:19:25.285-0500</updated>
 </org.obiba.magma.views.View>
