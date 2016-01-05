@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>329</width>
+    <width>407</width>
     <height>245</height>
    </rect>
   </property>
@@ -57,17 +57,22 @@
        </attribute>
        <column>
         <property name="text">
-         <string>New Column</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
          <string>Name</string>
         </property>
        </column>
        <column>
         <property name="text">
+         <string>Rank</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
          <string>Selected</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Update</string>
         </property>
        </column>
       </widget>

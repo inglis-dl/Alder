@@ -42,19 +42,17 @@ namespace Alder
     std::string GetName() const { return "Interview"; }
 
     /**
-     * Updates the Interview table with all existing interviews in Opal.
+     * Updates the Interview table with all existing interviews in Opal
+     * by Wave Id and whether to restrict the update all Interviews, or those
+     *
+     * @param waveList std::pair vector of Wave Id, full update flag
      */
-    static void UpdateInterviewData( const std::vector<int> &list );
+    static void UpdateInterviewData( const std::vector< std::pair< int, bool > > &waveList );
 
     /**
      * Returns whether this interview's exam data has been downloaded.
      */
     bool HasExamData();
-
-    /**
-     * Returns the number of Exam records that need to be created for this interview.
-     */
-    int GetExamCreateCount();
 
     /**
      * Returns whether this interview's image data has been downloaded.
@@ -70,7 +68,7 @@ namespace Alder
      */
     void UpdateExamData(
      Alder::Wave *aWave = NULL, const std::string &aSource = "" );
-    
+
     /**
      * Updates all exam and image data associated with the interview from Opal.
      * Note: exam data must be downloaded before image data.

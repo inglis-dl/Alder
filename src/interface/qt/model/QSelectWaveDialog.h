@@ -13,6 +13,7 @@
 #define __QSelectWaveDialog_h
 
 #include <QDialog>
+#include <QTableWidgetItem>
 #include <map>
 #include <vector>
 
@@ -28,11 +29,13 @@ public:
   //destructor
   ~QSelectWaveDialog();
 
-  std::vector< int > getSelection() { return this->selection; };
+  std::vector< std::pair< int, bool > > getSelection() { return this->selection; };
 
 public slots:
   virtual void slotAccepted();
   virtual void slotHeaderClicked( int index );
+  virtual void slotItemPressed( QTableWidgetItem * );
+  virtual void slotItemClicked( QTableWidgetItem * );
 
 protected:
   int sortColumn;
@@ -45,7 +48,8 @@ private:
   // Designer form
   Ui_QSelectWaveDialog *ui;
 
-  std::vector< int > selection;
+  std::vector< std::pair< int, bool > > selection;
+  Qt::CheckState lastItemPressedState;
 };
 
 #endif

@@ -50,6 +50,11 @@ namespace Alder
      */
     void UpdateScanTypeData();
 
+    /**
+     * Get the maximum number of Exams that an Interview in this Wave can have.
+     */
+    int GetMaximumExamCount();
+
   protected:
     Wave() {}
     ~Wave() {}

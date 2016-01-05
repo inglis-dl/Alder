@@ -220,15 +220,29 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   int Interview::GetImageCount()
   {
-    // loop through all exams and sum the image count
-    std::vector< vtkSmartPointer< Exam > > examList;
-    this->GetList( &examList );
-    int total = 0;
-    for( auto it = examList.cbegin(); it != examList.cend(); ++it )
+    this->AssertPrimaryId();
+
+    std::string interviewId = this->Get( "Id" ).ToString();
+    std::stringstream stream;
+    stream << "SELECT COUNT(*) FROM Image "
+           << "JOIN Exam ON Exam.Id=Image.ExamId "
+           << "JOIN Interview ON Interview.Id=Exam.InterviewId "
+           << "WHERE Interview.Id=" << interviewId;
+
+    Application *app = Application::GetInstance();
+    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    query->SetQuery( stream.str().c_str() );
+    query->Execute();
+
+    if( query->HasError() )
     {
-      total += (*it)->GetCount( "Image" );
+      app->Log( query->GetLastErrorText() );
+      throw std::runtime_error( "There was an error while trying to query the database." );
     }
-    return total;
+
+    // only one row
+    query->NextRow();
+    return query->DataValue(0).ToInt();
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -253,40 +267,7 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Interview::HasExamData()
   {
-    //return 0 < this->GetCount( "Exam" );
-    return 0 == this->GetExamCreateCount();
-  }
-
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  int Interview::GetExamCreateCount()
-  {
-    std::stringstream stream;
-    stream << "SELECT COUNT(*) FROM Interview "
-           << "JOIN Wave ON Wave.Id=Interview.WaveId "
-           << "JOIN WaveHasScanType ON WaveHasScanType.WaveId=Wave.Id "
-           << "JOIN ScanType ON ScanType.Id=WaveHasScanType.ScanTypeId "
-           << "LEFT JOIN Exam ON Exam.ScanTypeId=ScanType.Id "
-           << "WHERE Exam.Id IS NULL "
-           << "AND Wave.Id=" << this->Get( "WaveId" ).ToString() << " "
-           << "AND Interview.Id=" << this->Get( "Id" ).ToString();
-
-    Application *app = Application::GetInstance();
-    Database *db = app->GetDB();
-    vtkSmartPointer<vtkAlderMySQLQuery> query = db->GetQuery();
-
-    app->Log( "Querying Database: " + stream.str() );
-    query->SetQuery( stream.str().c_str() );
-    query->Execute();
-
-    if( query->HasError() )
-    {
-      app->Log( query->GetLastErrorText() );
-      throw std::runtime_error( "There was an error while trying to query the database." );
-    }
-
-    // only one row
-    query->NextRow();
-    return query->DataValue(0).ToInt();
+    return 0 < this->GetCount( "Exam" );
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -395,27 +376,19 @@ namespace Alder
       std::string type = it->first;
       std::map<std::string, std::string> columns = it->second;
 
-      if( columns.find("Laterality") == columns.end() ||
+      if( columns.find("Side") == columns.end() ||
           columns.find("ScanTypeId") == columns.end() )
         continue;
 
-      if( columns["Laterality"].empty() )
+      if( columns["Side"].empty() )
         continue;
 
-      std::vector< std::string > vecCol = Alder::Utilities::explode( columns["Laterality"], "," );
-      std::vector< std::string > vecLat;
-      for( auto vit = vecCol.cbegin(); vit != vecCol.cend(); ++vit )
-      {
-        if( std::find( vecLat.begin(), vecLat.end(), *vit ) == vecLat.end() )
-        {
-          vecLat.push_back( *vit );
-        }
-      }
-      if( vecLat.empty() ) continue;
+      std::vector< std::string > vecSide = Alder::Utilities::explode( columns["Side"], "," );
+      if( vecSide.empty() ) continue;
 
       loader["ScanTypeId"] = columns["ScanTypeId"];
       loader["InterviewId"] = interviewId;
-      for( auto vit = vecLat.cbegin(); vit != vecLat.cend(); ++vit )
+      for( auto vit = vecSide.cbegin(); vit != vecSide.cend(); ++vit )
       {
         std::string sideStr = *vit;
         loader["Side"] = sideStr;
@@ -530,7 +503,7 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Interview::UpdateInterviewData( const std::vector< int > &waveIdList )
+  void Interview::UpdateInterviewData( const std::vector< std::pair< int ,bool > > &waveList )
   {
     Application *app = Application::GetInstance();
     OpalService *opal = app->GetOpal();
@@ -552,9 +525,10 @@ namespace Alder
     std::map< std::string,           // key Wave.Id
       std::vector< std::string > >   // value vector of Interview.UId
         mapWave;
-    for( auto it = waveIdList.cbegin(); it != waveIdList.cend(); ++it )
+    for( auto it = waveList.cbegin(); it != waveList.cend(); ++it )
     {
-      std::string waveId = vtkVariant( (*it) ).ToString();
+      std::string waveId = vtkVariant( it->first ).ToString();
+      bool fullUpdate = it->second; 
       vtkNew< Wave > wave;
       if( !wave->Load( "Id", waveId ) ) continue;
 
@@ -564,47 +538,45 @@ namespace Alder
 
       if( vecOpal.empty() ) continue;
       std::sort( vecOpal.begin(), vecOpal.end() );
-
-      int maxExam = wave->GetCountExplicit( "ScanType" );
-
-      // get the list of UId's existing in Alder Interviews along with
-      // any exams that need to be created
-      std::stringstream stream;
-      stream << "SELECT UId, IF(COUNT(*)=" << maxExam << ",1,0) AS ExamCount FROM Interview "
-             << "JOIN Wave ON Wave.Id=Interview.WaveId "
-             << "JOIN WaveHasScanType ON WaveHasScanType.WaveId=Wave.Id "
-             << "JOIN ScanType ON ScanType.Id=WaveHasScanType.ScanTypeId "
-             << "JOIN Exam ON Exam.ScanTypeId=ScanType.Id "
-             << "AND Wave.Id=" << waveId << " "
-             << "GROUP BY UId "
-             << "ORDER BY UId ";
-      app->Log( "Querying Database: " + stream.str() );
-      vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
-      query->SetQuery( stream.str().c_str() );
-      query->Execute();
-
-      if( query->HasError() )
-      {
-        app->Log( query->GetLastErrorText() );
-        throw std::runtime_error( "There was an error while trying to query the database." );
-      }
-
       std::vector< std::string > vecUId;
-      while( query->NextRow() )
-      {
-        std::string uidStr  = query->DataValue( 0 ).ToString();
-        vecUId.push_back( uidStr );
+
+      if( !fullUpdate )
+      { 
+        // get the list of UIds to exclude from the update
+        int maxExam = wave->GetMaximumExamCount();
+        std::stringstream stream;
+        stream << "SELECT UId, COUNT(*) FROM Interview "
+               << "JOIN Exam ON Exam.InterviewId=Interview.Id "
+               << "WHERE WaveId=" << waveId << " "
+               << "GROUP BY UId "
+               << "HAVING COUNT(*)=" << maxExam << " "
+               << "ORDER BY UId ";
+      
+        app->Log( "Querying Database: " + stream.str() );
+        vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+        query->SetQuery( stream.str().c_str() );
+        query->Execute();      
+
+        if( query->HasError() )
+        {
+          app->Log( query->GetLastErrorText() );
+          throw std::runtime_error( "There was an error while trying to query the database." );
+        }
+
+        while( query->NextRow() )
+        {
+          std::string uidStr  = query->DataValue( 0 ).ToString();
+          vecUId.push_back( uidStr );
+        }
       }
 
       if( vecUId.empty() )
       {
-        std::cout << "no interviews already exist for wave " << waveId << std::endl;
+        std::cout << "downloading all opal interview data for wave " << waveId << std::endl;
         mapWave[ waveId ] = vecOpal;
       }
       else
       {
-
-        
         std::vector< std::string > vecWave( vecOpal.size() );
         std::vector< std::string >::iterator vit =
          std::set_difference( vecOpal.begin(), vecOpal.end(), vecUId.begin(), vecUId.end(), vecWave.begin() );
@@ -612,7 +584,7 @@ namespace Alder
 
         mapWave[ waveId ] = vecWave;
 
-        std::cout << "interviews already exist for wave " << waveId << 
+        std::cout << "downloading partial opal interview data for wave " << waveId << 
                   vecOpal.size() << " ids in opal with " << vecWave.size() << " remaining to pull" << std::endl;
       }
 
@@ -642,6 +614,7 @@ namespace Alder
         mapSite[ alias ] = siteId;
     }
 
+    // determine number of identifiers to pull per Opal curl call
     int limit = static_cast<int>(0.1 * size);
     limit = limit > 500 ? 500 : ( limit < 1 ? 1 : limit );
     int index = 0;
@@ -652,12 +625,9 @@ namespace Alder
       std::string waveId = it->first;
       wave->Load( "Id", waveId );
       std::string source = wave->Get( "MetaDataSource" ).ToString();
-
       std::vector< std::string > vecUId = it->second;
-
       std::vector< std::string >::iterator ibegin = vecUId.begin();
       std::vector< std::string >::iterator iend = vecUId.end();
-
       std::map< std::string, std::map< std::string, std::string > > mapOpal;
       bool done = false;
       int localIndex = 0;
@@ -740,10 +710,10 @@ namespace Alder
       if( wave->Load( "Rank", rankStr ) )
       {
         vtkSmartPointer< Interview > interview = vtkSmartPointer< Interview >::New();
-        std::map< std::string, std::string > map;
-        map[ "UId" ] = uidStr;
-        map[ "WaveId" ] = wave->Get( "Id" ).ToString();
-        if( interview->Load( map ) )
+        std::map< std::string, std::string > loader;
+        loader[ "UId" ] = uidStr;
+        loader[ "WaveId" ] = wave->Get( "Id" ).ToString();
+        if( interview->Load( loader ) )
         {
           interviewList.push_back( interview );
         }
@@ -753,20 +723,19 @@ namespace Alder
     if( interviewList.empty() ) return 0;
 
     Application *app = Application::GetInstance();
-    double size = (double) interviewList.size();
-    int index = 0;
-
     OpalService *opal = app->GetOpal();
     bool sustain = opal->GetSustainConnection();
-    try
+    if( !sustain )
     {
-      if( !sustain )
+      try
+      {
         opal->SustainConnectionOn();
-    }
-    catch( std::runtime_error& e )
-    {
-      app->Log( e.what() );
-      return 0;
+      }
+      catch( std::runtime_error& e )
+      {
+        app->Log( e.what() );
+        return 0;
+      }
     }
 
     Alder::User *user = app->GetActiveUser();
@@ -776,10 +745,11 @@ namespace Alder
       vtkSmartPointer< Alder::QueryModifier >::New();
     user->InitializeExamModifier( modifier );
 
+    double size = (double)interviewList.size();
+    int index = 0;
     for( auto it = interviewList.cbegin(); it != interviewList.cend(); ++it, ++index )
     {
       double progress = index / size;
-
       Interview *interview = *it;
       if( !interview->HasExamData() )
       {

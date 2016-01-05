@@ -357,10 +357,10 @@ void QMainAlderWindow::slotLoadUIDs()
       if( 2 == parts.size() )
       {
         list.push_back(
-          std::make_pair( 
+          std::make_pair(
             Alder::Utilities::trim( parts[0] ),
             Alder::Utilities::trim( parts[1] ) ) );
-      }      
+      }
     }
     file.close();
     if( list.empty() )
@@ -382,7 +382,7 @@ void QMainAlderWindow::slotLoadUIDs()
 
       int numLoadedUIDs = func.GetNumLoaded();
       */
-      int numLoaded = Alder::Interview::LoadFromList( list ); 
+      int numLoaded = Alder::Interview::LoadFromList( list );
 
       Alder::Application *app = Alder::Application::GetInstance();
       std::stringstream log;
@@ -417,11 +417,11 @@ void QMainAlderWindow::adminUpdateDatabase()
   QSelectWaveDialog waveDialog( this );
   waveDialog.setModal( true );
   waveDialog.exec();
-  std::vector< int > waveIdList = waveDialog.getSelection();
-  if( !waveIdList.empty() )
+  std::vector< std::pair< int, bool > > waveVec = waveDialog.getSelection();
+  if( !waveVec.empty() )
   {
-    Alder::Interview::UpdateInterviewData( waveIdList );
-  }  
+    Alder::Interview::UpdateInterviewData( waveVec );
+  }
   // create a progress dialog to observe the progress of the update
   /*
   QVTKProgressDialog dialog( this );
@@ -430,7 +430,7 @@ void QMainAlderWindow::adminUpdateDatabase()
     "Updating Database",
     "Please wait while the database is updated.",
     func );
-  */  
+  */
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
