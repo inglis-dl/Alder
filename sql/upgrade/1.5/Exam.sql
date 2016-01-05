@@ -29,6 +29,34 @@ CREATE PROCEDURE patch_Exam()
 
       SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
       SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+
+      SELECT "Enforcing singular ForearmBoneDensity exams" AS "";
+
+      DELETE Exam FROM Exam
+      JOIN (
+        SELECT Exam.Id FROM Exam
+        JOIN Interview ON Interview.Id=Exam.InterviewId
+        JOIN ScanType ON ScanType.Id=Exam.ScanTypeId
+        WHERE Stage="NotApplicable"
+        AND Type="ForearmBoneDensity"
+        GROUP BY InterviewId
+      ) AS x ON x.Id=Exam.Id;
+
+      DELETE Exam FROM Exam
+      JOIN (
+        SELECT Exam.Id FROM Exam
+        JOIN ScanType ON ScanType.Id=Exam.ScanTypeId
+        JOIN (
+          SELECT Exam.InterviewId FROM Exam
+          JOIN Interview ON Interview.Id=Exam.InterviewId
+          JOIN ScanType ON ScanType.Id=Exam.ScanTypeId
+          AND Type="ForearmBoneDensity"
+          GROUP BY InterviewId
+          HAVING COUNT(*)>1
+        ) AS y ON y.InterviewId=Exam.InterviewId
+        WHERE Type="ForearmBoneDensity"
+        AND Downloaded=0
+      )  AS x ON x.Id=Exam.Id;
     END IF;
 
     SET @test = (
@@ -54,6 +82,7 @@ CREATE PROCEDURE patch_Exam()
       SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
       SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
     END IF;
+
   END //
 DELIMITER ;
 
