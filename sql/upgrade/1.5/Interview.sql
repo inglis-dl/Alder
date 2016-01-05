@@ -57,7 +57,7 @@ CREATE PROCEDURE patch_Interview()
 
       ALTER TABLE Interview
       ADD UNIQUE INDEX
-      uqUIdWaveIdVisitDate ( UID ASC, WaveId ASC, VisitDate ASC );
+      uqUIdWaveId ( UID ASC, WaveId ASC );
 
       SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
       SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;

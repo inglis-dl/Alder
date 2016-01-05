@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS `Alder`.`Interview` (
   `UId` VARCHAR(45) NOT NULL,
   `VisitDate` DATE NOT NULL,
   PRIMARY KEY (`Id`),
-  UNIQUE INDEX `uqUIdWaveIdVisitDate` (`UId` ASC, `WaveId` ASC, `VisitDate` ASC),
+  UNIQUE INDEX `uqUIdWaveId` (`UId` ASC, `WaveId` ASC),
   INDEX `fkWaveId` (`WaveId` ASC),
   INDEX `fkSiteId` (`SiteId` ASC),
   CONSTRAINT `fkInterviewWaveId`
