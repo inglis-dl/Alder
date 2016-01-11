@@ -101,6 +101,8 @@ CREATE TABLE IF NOT EXISTS `Alder`.`ScanType` (
   `SideCount` TINYINT NOT NULL DEFAULT 0,
   `AcquisitionCount` TINYINT NOT NULL DEFAULT 1,
   `ChildCount` TINYINT NOT NULL DEFAULT 0,
+  `AcquisitionNameFormat` VARCHAR(255) NOT NULL,
+  `ChildNameFormat` VARCHAR(255) NULL DEFAULT NULL,
   PRIMARY KEY (`Id`),
   INDEX `fkModalityId` (`ModalityId` ASC),
   INDEX `fkWaveId` (`WaveId` ASC),
