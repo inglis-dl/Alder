@@ -73,5 +73,5 @@ namespace Alder
     modifier->Join( "ScanType", "ScanType.Id", "Exam.ScanTypeId" );
     modifier->Join( "Modality", "Modality.Id", "ScanType.ModalityId" );
     modifier->Where( "Modality.Name", "IN", vtkVariant( modalityListStr ) );
- }
+  }
 }
