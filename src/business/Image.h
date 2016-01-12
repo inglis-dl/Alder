@@ -40,6 +40,11 @@ namespace Alder
     std::string GetName() const { return "Image"; }
 
     /**
+     * Override parent class method.
+     */
+    void Remove();
+
+    /**
      * Returns the image's code (used to determine the image's path in the image data directory).
      * @return the InterviewId/ExamId/ImageId code
      * @throw  runtime_error
@@ -69,6 +74,11 @@ namespace Alder
      * @return whether the file exists on disk
      */
     bool ValidateFile();
+
+    /**
+     * Set the dimensionality from dicom tag data.
+     */
+    void SetDimensionalityFromDICOM();
 
     /**
      * Get the file name that this record represents (including path).

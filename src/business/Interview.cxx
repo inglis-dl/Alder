@@ -34,8 +34,6 @@ namespace Alder
   vtkSmartPointer<Interview> Interview::GetNeighbour(
     const bool &forward, const bool &loaded, const bool &unrated )
   {
-    this->AssertPrimaryId();
-
     Application *app = Application::GetInstance();
     std::string interviewId = this->Get( "Id" ).ToString();
     std::string uId = this->Get( "UId" ).ToString();
@@ -220,8 +218,6 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   int Interview::GetImageCount()
   {
-    this->AssertPrimaryId();
-
     std::string interviewId = this->Get( "Id" ).ToString();
     std::stringstream stream;
     stream << "SELECT COUNT(*) FROM Image "
@@ -248,8 +244,6 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Interview::IsRatedBy( User* user )
   {
-    this->AssertPrimaryId();
-
     // make sure the user is not null
     if( !user ) throw std::runtime_error( "Tried to get rating for null user" );
 
@@ -268,14 +262,15 @@ namespace Alder
   bool Interview::HasExamData()
   {
     vtkSmartPointer< Wave > wave;
-    this->GetRecord( wave );
+    if( !this->GetRecord( wave ) )
+      throw std::runtime_error( "Interview has no parent wave" );
+
     return wave->GetMaximumExamCount() == this->GetCount( "Exam" );
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Interview::HasImageData( QueryModifier *modifier )
   {
-    this->AssertPrimaryId();
     Application *app = Application::GetInstance();
 
     std::vector< vtkSmartPointer< Exam > > examList;
@@ -469,7 +464,7 @@ namespace Alder
           {
             exam->Set( "Side", sideStr );
             if( 1 < sideCount )
-              exam->Set( "SideIndex", sideStr );
+              exam->Set( "SideIndex", indexStr );
           }
           exam->Set( "Stage", columns[ "Stage" ] );
           exam->Set( "Interviewer", columns[ "Interviewer" ] );

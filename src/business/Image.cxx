@@ -81,12 +81,47 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void Image::Remove()
+  {
+    // get the exam and set its downloaded status to false
+    vtkSmartPointer< Alder::Exam > exam;
+    if( this->GetRecord( exam ) )
+    {
+      // see if there are any child images and remove them
+      vtkNew< Image > child;
+      std::map< std::string, std::string > loader;
+      loader[ "ExamId" ] = exam->Get( "Id" ).ToString();
+      loader[ "ParentImageId" ] = this->Get( "Id" ).ToString();
+      if( child->Load( loader ) )
+      {
+        try
+        {
+          child->Remove();
+        }
+        catch( std::runtime_error &e )
+        {
+          throw( e );
+        }
+      }
+
+      if( 1 == exam->Get( "Downloaded" ).ToInt() )
+      {
+        exam->Set( "Downloaded", 0 );
+        exam->Save();
+      }
+    }
+
+    this->Superclass::Remove();
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Image::ValidateFile()
   {
     Application *app = Application::GetInstance();
     bool valid = false;
     std::string fileName;
-    try{
+    try
+    {
       fileName = this->GetFileName();
     }
     catch( std::runtime_error& e )
@@ -165,16 +200,14 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Image::IsRatedBy( User* user )
   {
-    this->AssertPrimaryId();
-
     // make sure the user is not null
     if( !user ) throw std::runtime_error( "Tried to get rating for null user" );
 
-    std::map< std::string, std::string > map;
-    map["UserId"] = user->Get( "Id" ).ToString();
-    map["ImageId"] = this->Get( "Id" ).ToString();
+    std::map< std::string, std::string > loader;
+    loader[ "UserId" ] = user->Get( "Id" ).ToString();
+    loader[ "ImageId" ] = this->Get( "Id" ).ToString();
     vtkNew< Alder::Rating > rating;
-    if( !rating->Load( map ) ) return false;
+    if( !rating->Load( loader ) ) return false;
 
     // we have found a rating, make sure it is not null
     return rating->Get( "Rating" ).IsValid();
@@ -183,8 +216,6 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::string Image::GetDICOMTag( std::string const &tagName )
   {
-    this->AssertPrimaryId();
-
     // get the name of the unzipped file
     std::string fileName = this->GetFileName();
     if( ".gz" == fileName.substr( fileName.size() - 3, 3 ) )
@@ -220,56 +251,75 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  std::vector<int> Image::GetDICOMDimensions()
+  std::vector< int > Image::GetDICOMDimensions()
   {
-    this->AssertPrimaryId();
-
     // get the name of the unzipped file
     std::string fileName = this->GetFileName();
     if( ".gz" == fileName.substr( fileName.size() - 3, 3 ) )
       fileName = fileName.substr( 0, fileName.size() - 3 );
 
+    std::vector< int > dims;
     gdcm::ImageReader reader;
     reader.SetFileName( fileName.c_str() );
-    if( !reader.Read() )
+    if( reader.Read() )
     {
-      throw std::runtime_error( "Unable to read file as DICOM." );
+      gdcm::Image &image = reader.GetImage();
+      for( int i = 0; i < 3; ++i )
+        dims.push_back( image.GetDimension( i ) );
     }
-    gdcm::Image &image = reader.GetImage();
-
-    std::vector<int> dims;
-    for( int i = 0; i < 3; ++i )
-      dims.push_back( image.GetDimension(i) );
-
+    else
+    {
+      Application *app = Application::GetInstance();
+      app->Log( "ERROR: failed read during get dicom dimensions" );
+    }
     return dims;
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void Image::SetDimensionalityFromDICOM()
+  {
+    std::vector< int > dims = this->GetDICOMDimensions();
+    int dimensionality = 0;
+    for( auto it = dims.begin(); it != dims.end(); ++it )
+    {
+      if( *it > 1 ) dimensionality++;
+    }
+    if( 1 < dimensionality )
+    {
+      this->Set( "Dimensionality", dimensionality );
+      this->Save();
+    }
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Image::AnonymizeDICOM()
   {
-    this->AssertPrimaryId();
-
     if( !this->GetDICOMTag( "PatientsName" ).empty() )
     {
+      Application *app = Application::GetInstance();
       gdcm::Reader gdcmRead;
       std::string fileName = this->GetFileName();
       gdcmRead.SetFileName( fileName.c_str() );
-      if( !gdcmRead.Read() )
+      if( gdcmRead.Read() )
       {
-        throw std::runtime_error( "Failed to anonymize dicom data during read" );
-      }
-      gdcm::Anonymizer gdcmAnon;
-      gdcmAnon.SetFile( gdcmRead.GetFile() );
-      gdcmAnon.Empty( gdcm::Tag(0x10, 0x10) );
+        gdcm::Anonymizer gdcmAnon;
+        gdcmAnon.SetFile( gdcmRead.GetFile() );
+        gdcmAnon.Empty( gdcm::Tag( 0x10, 0x10 ) );
 
-      gdcm::Writer gdcmWriter;
-      gdcmWriter.SetFile( gdcmAnon.GetFile() );
-      gdcmWriter.SetFileName( fileName.c_str() );
-      if( !gdcmWriter.Write() )
-      {
-        throw std::runtime_error("Failed to anonymize dicom data during write" );
+        gdcm::Writer gdcmWriter;
+        gdcmWriter.SetFile( gdcmAnon.GetFile() );
+        gdcmWriter.SetFileName( fileName.c_str() );
+        if( gdcmWriter.Write() )
+        {
+          return true;
+        }
+        else
+         app->Log("ERROR: failed write during anonymize dicom file");
       }
-      return true;
+      else
+      {
+        app->Log("ERROR: failed read during anonymize dicom file");
+      }
     }
     return false;
   }
@@ -277,8 +327,6 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Image::SetExamSideFromDICOM()
   {
-    this->AssertPrimaryId();
-
     vtkSmartPointer< Exam > exam;
     if( this->GetRecord( exam ) )
     {
@@ -387,7 +435,7 @@ namespace Alder
       if( !found ) throw std::runtime_error( "Cannot find current atlas image in database." );
     }
 
-    vtkSmartPointer<Image> image = vtkSmartPointer<Image>::New();
+    vtkSmartPointer< Image > image = vtkSmartPointer< Image >::New();
     if( neighbourId.IsValid() ) image->Load( "Id", neighbourId.ToString() );
     return image;
   }
@@ -396,9 +444,9 @@ namespace Alder
   vtkSmartPointer<Image> Image::GetAtlasImage( int const &rating )
   {
     Application *app = Application::GetInstance();
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer< vtkAlderMySQLQuery > query = app->GetDB()->GetQuery();
 
-    vtkSmartPointer<Exam> exam;
+    vtkSmartPointer< Exam > exam;
     this->GetRecord( exam );
     bool hasParent = this->Get( "ParentImageId" ).IsValid();
 
