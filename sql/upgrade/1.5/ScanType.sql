@@ -30,10 +30,11 @@ CREATE PROCEDURE patch_ScanType()
       FROM information_schema.COLUMNS
       WHERE TABLE_SCHEMA = DATABASE()
       AND TABLE_NAME = "ScanType"
-      AND COLUMN_NAME IN ("SideCount","AcquisitionCount","ChildCount","WaveId"));
+      AND COLUMN_NAME IN ("SideCount","AcquisitionCount","ChildCount",
+      "WaveId","AcquisitionNameFormat","ChildNameFormat","FileSuffix"));
 
     IF @test=0 THEN
-      SELECT "Adding WaveId, SideCount, AcquisitionCount and ChildCount columns to ScanType table" AS "";
+      SELECT "Adding new columns to ScanType table" AS "";
 
       SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
       SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
@@ -43,6 +44,7 @@ CREATE PROCEDURE patch_ScanType()
       ALTER TABLE ScanType ADD COLUMN ChildCount TINYINT NOT NULL DEFAULT 0;
       ALTER TABLE ScanType ADD COLUMN AcquisitionNameFormat VARCHAR(255) NOT NULL;
       ALTER TABLE ScanType ADD COLUMN ChildNameFormat VARCHAR(255) NULL DEFAULT NULL;
+      ALTER TABLE ScanType ADD COLUMN FileSuffix VARCHAR(45) NULL DEFAULT NULL;
 
       ALTER TABLE ScanType ADD COLUMN WaveId INT UNSIGNED NOT NULL AFTER ModalityId;
       ALTER TABLE ScanType ADD INDEX fkWaveId ( WaveId ASC );

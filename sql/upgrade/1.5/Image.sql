@@ -26,7 +26,7 @@ CREATE PROCEDURE patch_Image()
 
     END IF;
 
-    SELECT "Modifying Image table referential actions" AS "";
+    SELECT "Modifying Image table referential actions and modifying Dimensionality column" AS "";
 
     SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
     SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
@@ -46,6 +46,7 @@ CREATE PROCEDURE patch_Image()
     SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
     SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 
+    ALTER TABLE Image MODIFY COLUMN Dimensionality INT NOT NULL DEFAULT 2;
   END //
 DELIMITER ;
 

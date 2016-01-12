@@ -83,6 +83,18 @@ CREATE PROCEDURE patch_Exam()
       SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
     END IF;
 
+    SET @test = (
+      SELECT IF(COUNT(*)=1,0,1)
+      FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = "Exam"
+      AND COLUMN_NAME = "ScanIndex");
+
+    IF @test=0 THEN
+      SELECT "Adding ScanIndex column to Exam table" AS "";
+
+      ALTER TABLE Exam ADD COLUMN SideIndex TINYINT NULL DEFAULT NULL;
+    END IF;  
   END //
 DELIMITER ;
 

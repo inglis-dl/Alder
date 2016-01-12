@@ -157,12 +157,6 @@
           <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.SpineBoneDensity:InstrumentRun.timeStart&apos;);</attribute>
         </attributes>
       </variable>
-      <variable name="LateralBoneDensity.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
-        <attributes>
-          <attribute name="script" valueType="text">&apos;none&apos;</attribute>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/LateralBoneDensity.Laterality</attribute>
-        </attributes>
-      </variable>
       <variable name="RetinalScanLeft.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
           <attribute name="script" valueType="text">$(&apos;SIDE&apos;).lowerCase()</attribute>
@@ -173,12 +167,6 @@
         <attributes>
           <attribute name="script" valueType="text">$(&apos;SIDE&apos;).lowerCase()</attribute>
           <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/RetinalScanRight.Laterality</attribute>
-        </attributes>
-      </variable>
-      <variable name="WholeBodyBoneDensity.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
-        <attributes>
-          <attribute name="script" valueType="text">&apos;none&apos;</attribute>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/WholeBodyBoneDensity.Laterality</attribute>
         </attributes>
       </variable>
       <variable name="CarotidIntima.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
@@ -194,9 +182,11 @@ if (sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;);
   var res=newValue(&apos;&apos;);
   for(var i=0;i&lt;sides.size();i++) {
-    var side = sides.valueAt(i).value();
-    if( false==res.matches(RegExp(side)) ) {
-      res=res.concat(side,delim);
+    if(false==sides.valueAt(i).isNull()) {
+      var side=sides.valueAt(i).value();
+      if(false==res.matches(RegExp(side))) {
+        res=res.concat(side,delim);
+      }
     }
   }
   var tmp=String(res.value());
@@ -219,9 +209,11 @@ if (sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;);
   var res=newValue(&apos;&apos;);
   for(var i=0;i&lt;sides.size();i++) {
-    var side = sides.valueAt(i).value();
-    if( false==res.matches(RegExp(side)) ) {
-      res=res.concat(side,delim);
+    if(false==sides.valueAt(i).isNull()) {
+      var side=sides.valueAt(i).value();
+      if( false==res.matches(RegExp(side)) ) {
+        res=res.concat(side,delim);
+      }
     }
   }
   var tmp=String(res.value());
@@ -229,12 +221,6 @@ if (sides.isNull().not().value()) {
 } else {
   null;
 }</attribute>
-        </attributes>
-      </variable>
-      <variable name="SpineBoneDensity.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
-        <attributes>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/SpineBoneDensity.Laterality</attribute>
-          <attribute name="script" valueType="text">&apos;none&apos;</attribute>
         </attributes>
       </variable>
       <variable name="ForearmBoneDensity.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
@@ -247,8 +233,66 @@ if (sides.isNull().not().value()) {
           <attribute name="script" valueType="text">$(&apos;OUTPUT_FA_SIDE&apos;).lowerCase()</attribute>
         </attributes>
       </variable>
+      <variable name="CarotidIntima.SideIndex" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="stage" valueType="text">CarotidIntima</attribute>
+          <attribute name="captureMethod" valueType="text">AUTOMATIC</attribute>
+          <attribute name="isManualCaptureAllowed" valueType="text">false</attribute>
+          <attribute name="vendorName" valueType="text">SIDE</attribute>
+          <attribute name="occurrenceCount" valueType="text">Data[INTEGER:2]</attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/CarotidIntima.SideIndex</attribute>
+          <attribute name="script" valueType="text">var sides=$(&apos;Measure.SIDE&apos;).lowerCase();
+if (sides.isNull().not().value()) {
+  var delim=newValue(&apos;,&apos;);
+  var res=newValue(&apos;&apos;);
+  var index=newValue(&apos;&apos;);
+  for(var i=0;i&lt;sides.size();i++) {
+    if(false==sides.valueAt(i).isNull()) {
+      var side=sides.valueAt(i).value();
+      if(false==res.matches(RegExp(side))) {
+        res=res.concat(side,delim);
+        index=index.concat(String(i),delim);
+      }
+    }
+  }
+  var tmp=String(index.value());
+  newValue(tmp.slice(0,tmp.length-1));
+} else {
+  null;
+}</attribute>
+        </attributes>
+      </variable>
+      <variable name="DualHipBoneDensity.SideIndex" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="stage" valueType="text">DualHipBoneDensity</attribute>
+          <attribute name="captureMethod" valueType="text">AUTOMATIC</attribute>
+          <attribute name="isManualCaptureAllowed" valueType="text">true</attribute>
+          <attribute name="vendorName" valueType="text">HIP_SIDE</attribute>
+          <attribute name="occurrenceCount" valueType="text">$(&apos;QuestionnaireBoneDensity:NB_HIP_SCAN&apos;)</attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/DualHipBoneDensity.SideIndex</attribute>
+          <attribute name="script" valueType="text">var sides=$(&apos;Measure.OUTPUT_HIP_SIDE&apos;).lowerCase();
+if (sides.isNull().not().value()) {
+  var delim=newValue(&apos;,&apos;);
+  var res=newValue(&apos;&apos;);
+  var index=newValue(&apos;&apos;);
+  for(var i=0;i&lt;sides.size();i++) {
+    if(false==sides.valueAt(i).isNull()) {
+      var side=sides.valueAt(i).value();
+      if(false==res.matches(RegExp(side))) {
+        res=res.concat(side,delim);
+        index=index.concat(String(i),delim);
+      }
+    }
+  }
+  var tmp=String(index.value());
+  newValue(tmp.slice(0,tmp.length-1));
+} else {
+  null;
+}</attribute>
+        </attributes>
+      </variable>
     </variables>
   </variables>
   <created valueType="datetime">2015-12-09T08:59:26.234-0500</created>
-  <updated valueType="datetime">2016-01-05T09:26:19.318-0500</updated>
+  <updated valueType="datetime">2016-01-11T14:10:36.098-0500</updated>
 </org.obiba.magma.views.View>
