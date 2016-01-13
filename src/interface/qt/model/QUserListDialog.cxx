@@ -54,16 +54,16 @@ QUserListDialog::QUserListDialog( QWidget* parent )
     this->columnIndex["Expert"], QHeaderView::ResizeToContents );
 
   // list all modalities (to see if user rates them)
-  std::vector< vtkSmartPointer< Alder::Modality > > modalityList;
-  Alder::Modality::GetAll( &modalityList );
+  std::vector< vtkSmartPointer< Alder::Modality > > vecModality;
+  Alder::Modality::GetAll( &vecModality );
 
-  this->ui->userTableWidget->setColumnCount( index + modalityList.size() );
-  for( auto modalityListIt = modalityList.begin(); modalityListIt != modalityList.end(); ++modalityListIt )
+  this->ui->userTableWidget->setColumnCount( index + vecModality.size() );
+  for( auto it = vecModality.cbegin(); it != vecModality.cend(); ++it )
   {
-    std::string modalityName = (*modalityListIt)->Get( "Name" ).ToString();
-    labels << modalityName.c_str();
+    std::string name = (*it)->Get( "Name" ).ToString();
+    labels << name.c_str();
     header->setResizeMode( index, QHeaderView::ResizeToContents );
-    this->columnIndex[modalityName] = index++;
+    this->columnIndex[name] = index++;
   }
 
   this->ui->userTableWidget->setHorizontalHeaderLabels( labels );
@@ -240,12 +240,12 @@ void QUserListDialog::slotItemChanged( QTableWidgetItem *item )
   }
   else
   {
-    std::vector< vtkSmartPointer< Alder::Modality > > modalityList;
-    Alder::Modality::GetAll( &modalityList );
-    for( auto it = modalityList.begin(); it != modalityList.end(); ++it )
+    std::vector< vtkSmartPointer< Alder::Modality > > vecModality;
+    Alder::Modality::GetAll( &vecModality );
+    for( auto it = vecModality.begin(); it != vecModality.end(); ++it )
     {
-      std::string modalityName = (*it)->Get( "Name" ).ToString();
-      if( this->columnIndex[ modalityName ] == column )
+      std::string name = (*it)->Get( "Name" ).ToString();
+      if( this->columnIndex[ name ] == column )
       {
         if( Qt::Checked == state )
           user->AddRecord( *it );
@@ -269,13 +269,13 @@ void QUserListDialog::updateInterface()
 {
   this->ui->userTableWidget->blockSignals( true );
   this->ui->userTableWidget->setRowCount( 0 );
-  QTableWidgetItem *item;
 
-  std::vector< vtkSmartPointer< Alder::User > > userList;
-  Alder::User::GetAll( &userList );
-  for( auto it = userList.begin(); it != userList.end(); ++it )
+  QTableWidgetItem *item;
+  std::vector< vtkSmartPointer< Alder::User > > vecUser;
+  Alder::User::GetAll( &vecUser );
+  for( auto it = vecUser.cbegin(); it != vecUser.cend(); ++it )
   { // for every user, add a new row
-    Alder::User *user = (*it);
+    Alder::User *user = *it;
     this->ui->userTableWidget->insertRow( 0 );
 
     // add name to row
@@ -299,15 +299,15 @@ void QUserListDialog::updateInterface()
     this->ui->userTableWidget->setItem( 0, this->columnIndex["Expert"], item );
 
     // add all modalities (one per column)
-    std::vector< vtkSmartPointer< Alder::Modality > > modalityList;
-    Alder::Modality::GetAll( &modalityList );
-    for( auto modalityListIt = modalityList.begin(); modalityListIt != modalityList.end(); ++modalityListIt )
+    std::vector< vtkSmartPointer< Alder::Modality > > vecModality;
+    Alder::Modality::GetAll( &vecModality );
+    for( auto vit = vecModality.begin(); vit != vecModality.end(); ++vit )
     {
-      std::string modalityName = (*modalityListIt)->Get( "Name" ).ToString();
+      std::string name = (*vit)->Get( "Name" ).ToString();
       item = new QTableWidgetItem;
       item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable );
-      item->setCheckState( 0 < user->Has( *modalityListIt ) ? Qt::Checked : Qt::Unchecked );
-      this->ui->userTableWidget->setItem( 0, this->columnIndex[modalityName], item );
+      item->setCheckState( 0 < user->Has( *vit ) ? Qt::Checked : Qt::Unchecked );
+      this->ui->userTableWidget->setItem( 0, this->columnIndex[name], item );
     }
   }
 
