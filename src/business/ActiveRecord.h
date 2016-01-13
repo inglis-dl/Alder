@@ -216,7 +216,7 @@ namespace Alder
       }
       else if( ActiveRecord::OneToMany == relationship )
       {
-        stream << "SELECT * FROM " << type;
+        stream << "SELECT " << type << ".* FROM " << type;
         mod->Where( column, "=", this->Get( "Id" ).ToString() );
       }
       else // no relationship (we don't support one-to-one relationships)
