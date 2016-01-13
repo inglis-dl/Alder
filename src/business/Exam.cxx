@@ -141,11 +141,9 @@ namespace Alder
     for( int acq = 1; acq <= acqCount; ++acq )
     {
       vtkNew< Alder::Image > image;
-
       std::map< std::string, std::string > loader;
       loader[ "ExamId" ] = examId;
-      loader[ "Acquisition" ] = acqGlobal++;
-
+      loader[ "Acquisition" ] = vtkVariant( acqGlobal++ ).ToString();
       if( !image->Load( loader ) )
       {
         image->Set( loader );
@@ -203,12 +201,10 @@ namespace Alder
       for( int acq = 1; acq <= childCount; ++acq )
       {
         vtkNew< Alder::Image > image;
-
         std::map< std::string, std::string > loader;
         loader[ "ExamId" ] = examId;
-        loader[ "Acquisition" ] = acqGlobal++;
+        loader[ "Acquisition" ] = vtkVariant( acqGlobal++ ).ToString();
         loader[ "ParentImageId" ] = parentId;
-
         if( !image->Load( loader ) )
         {
           image->Set( loader );
@@ -258,7 +254,7 @@ namespace Alder
       }
     }
 
-    this->Set( "Downloaded", downloaded );
+    this->Set( "Downloaded", vtkVariant( downloaded ) );
     this->Save();
 
     if( !sustain ) opal->SustainConnectionOff();
