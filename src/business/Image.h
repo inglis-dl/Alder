@@ -59,6 +59,15 @@ namespace Alder
     std::string GetFilePath();
 
     /**
+     * Get the file name that this record represents (including path).
+     * NOTE: this method depends on the file already existing: if it doesn't already
+     * exist, an exception is thrown.
+     * @return the full path and file name of this image
+     * @throw  runtime_error
+     */
+    std::string GetFileName();
+
+    /**
      * Create the path to the file name that this record represents (including path and provided
      * suffix) and returns the result (with full path, file name and suffix).
      * NOTE: this method does not depend on the file already existing, it simply uses
@@ -81,15 +90,6 @@ namespace Alder
     void SetDimensionalityFromDICOM();
 
     /**
-     * Get the file name that this record represents (including path).
-     * NOTE: this method depends on the file already existing: if it doesn't already
-     * exist, an exception is thrown.
-     * @return the full path and file name of this image
-     * @throw  runtime_error
-     */
-    std::string GetFileName();
-
-    /**
      * Get whether a particular user has rated this image.
      * @param user the User object to check against
      * @return     whether the user has rated this image
@@ -104,12 +104,16 @@ namespace Alder
      */
     bool IsDICOM();
 
+    // TODO: add method to deal with color palette compression schemes
+    // used in GE dicom images
+
     /**
      * Get a DICOM tag value. Accepted tag names are:
      *   AcquisitionDateTime - 0x0008, 0x002a
-     *   SeriesNumber        - 0x0020,0x0011
+     *   SeriesNumber        - 0x0020, 0x0011
      *   PatientsName        - 0x0010, 0x0010
      *   Laterality          - 0x0020, 0x0060
+     *   Manufacturer        - 0x0008, 0x0070
      * No checking is done to ensure this is a dicom image: use
      * IsDICOM() method to check first.
      * @param tagName the name of the dicom tag
@@ -133,7 +137,7 @@ namespace Alder
      * @return vector of dimensions in x, y, z: x, y only if 2D
      * @throw  runtime_error
      */
-    std::vector<int> GetDICOMDimensions();
+    std::vector< int > GetDICOMDimensions();
 
     /**
      * Set the side of the image's parent exam from its dicom tag (laterality) if available.
@@ -184,7 +188,7 @@ namespace Alder
      * @return       an atlas image matching this image
      * @throw        runtime_error
      */
-    vtkSmartPointer<Image> GetAtlasImage( int const &rating );
+    vtkSmartPointer< Image > GetAtlasImage( int const &rating );
 
   protected:
     Image() {}

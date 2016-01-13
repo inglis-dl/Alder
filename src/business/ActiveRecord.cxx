@@ -32,7 +32,8 @@ namespace Alder
   bool ActiveRecord::ColumnNameExists( const std::string &column )
   {
     // make sure the record is initialized
-    if( !this->Initialized ) this->Initialize();
+    if( !this->Initialized )
+      this->Initialize();
 
     auto pair = this->ColumnValues.find( column );
     return this->ColumnValues.cend() != pair;

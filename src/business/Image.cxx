@@ -50,6 +50,7 @@ namespace Alder
 
     std::stringstream stream;
     stream << exam->GetCode() << "/" << this->Get( "Id" ).ToString();
+
     return stream.str();
   }
 
@@ -75,7 +76,8 @@ namespace Alder
   {
     // first get the path and create it if it doesn't exist
     std::string path = this->GetFilePath();
-    if( !Utilities::fileExists( path ) ) vtkDirectory::MakeDirectory( path.c_str() );
+    if( !Utilities::fileExists( path ) )
+      vtkDirectory::MakeDirectory( path.c_str() );
 
     return path + "/" + this->Get( "Id" ).ToString() + suffix;
   }
@@ -224,9 +226,8 @@ namespace Alder
     gdcm::ImageReader reader;
     reader.SetFileName( fileName.c_str() );
     if( !reader.Read() )
-    {
       throw std::runtime_error( "Unable to read file as DICOM." );
-    }
+
     const gdcm::File &file = reader.GetFile();
     const gdcm::DataSet &ds = file.GetDataSet();
 
@@ -236,6 +237,7 @@ namespace Alder
     else if( "SeriesNumber" == tagName )   tag = gdcm::Tag( 0x0020, 0x0011 );
     else if( "PatientsName" == tagName )   tag = gdcm::Tag( 0x0010, 0x0010 );
     else if( "Laterality" == tagName )     tag = gdcm::Tag( 0x0020, 0x0060 );
+    else if( "Manufacturer" == tagName )   tag = gdcm::Tag( 0x0008, 0x0070 );
     else throw std::runtime_error( "Unknown DICOM tag name." );
 
     if( !ds.FindDataElement( tag ) )
@@ -247,6 +249,7 @@ namespace Alder
     std::string value =
       gdcm::DirectoryHelper::GetStringValueFromTag( tag, ds );
     gdcm::Trace::SetWarning( warn );
+
     return value;
   }
 
@@ -441,7 +444,7 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  vtkSmartPointer<Image> Image::GetAtlasImage( int const &rating )
+  vtkSmartPointer< Image > Image::GetAtlasImage( int const &rating )
   {
     Application *app = Application::GetInstance();
     vtkSmartPointer< vtkAlderMySQLQuery > query = app->GetDB()->GetQuery();
@@ -475,8 +478,9 @@ namespace Alder
       throw std::runtime_error( "There was an error while trying to query the database." );
     }
 
-    vtkSmartPointer<Image> image = vtkSmartPointer<Image>::New();
-    if( query->NextRow() ) image->Load( "Id", query->DataValue( 0 ).ToString() );
+    vtkSmartPointer< Image > image = vtkSmartPointer< Image >::New();
+    if( query->NextRow() )
+      image->Load( "Id", query->DataValue( 0 ).ToString() );
     return image;
   }
 
@@ -485,7 +489,11 @@ namespace Alder
   {
     this->AssertPrimaryId();
 
-    vtkSmartPointer<Exam> exam = vtkSmartPointer<Exam>::New();
+    std::string manufacturer = this->GetDICOMTag( "Manufacturer" );
+    if( "hologic" != Alder::Utilities::toLower( manufacturer ) )
+      return false;
+
+    vtkSmartPointer< Exam > exam = vtkSmartPointer<Exam>::New();
     if( !this->GetRecord( exam ) )
       throw std::runtime_error( "ERROR: no exam record for this image." );
 
@@ -493,6 +501,7 @@ namespace Alder
     std::string typeStr = exam->GetScanType();
     int examType = -1;
 
+    // TODO add SpineBoneDensity type
     if( "DualHipBoneDensity" == typeStr )
     {
       examType = "left" == latStr ? 0 : 1;
@@ -517,7 +526,7 @@ namespace Alder
     if( -1 == examType ) return false;
 
     std::string fileName = this->GetFileName();
-    vtkNew<vtkImageDataReader> reader;
+    vtkNew< vtkImageDataReader > reader;
     reader->SetFileName( fileName.c_str() );
     vtkImageData* image = reader->GetOutput();
 
@@ -555,7 +564,7 @@ namespace Alder
       return false;
     }
 
-    vtkNew<vtkImageCanvasSource2D> canvas;
+    vtkNew< vtkImageCanvasSource2D > canvas;
     // copy the image onto the canvas
     canvas->SetNumberOfScalarComponents( image->GetNumberOfScalarComponents() );
     canvas->SetScalarType( image->GetScalarType() );

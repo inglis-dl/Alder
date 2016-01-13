@@ -431,12 +431,13 @@ namespace Alder
      * @return        success or fail if the record is found
      * @throws        runtime_error
      */
-    template <class T> bool GetRecord( vtkSmartPointer< T > &record, std::string column = "" )
+    template <class T> bool GetRecord( vtkSmartPointer< T > &record, const std::string &aColumn = "" )
     {
       Application *app = Application::GetInstance();
       std::string table = app->GetUnmangledClassName( typeid(T).name() );
 
       // if no column name was provided, use the default (table name followed by Id)
+      std::string column = aColumn;
       if( column.empty() ) column = table + "Id";
 
       // test to see if correct foreign key exists
