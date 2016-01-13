@@ -202,8 +202,9 @@ namespace Alder
       if( NULL != modifier ) mod->Merge( modifier );
 
       // if no override is provided, figure out necessary table/column names
-      std::string joiningTable = override.empty() ? this->GetName() + "Has" + type : override;
-      std::string column = override.empty() ? this->GetName() + "Id" : override;
+      std::string name = this->GetName();
+      std::string joiningTable = override.empty() ? name + "Has" + type : override;
+      std::string column = override.empty() ? name + "Id" : override;
 
       int relationship = this->GetRelationship( type, override );
       if( ActiveRecord::ManyToMany == relationship )
@@ -211,7 +212,7 @@ namespace Alder
         stream << "SELECT " << type << ".* "
                << "FROM " << joiningTable << " "
                << "JOIN " << type << " ON " << joiningTable << "." << type << "Id = " << type << ".Id";
-        mod->Where( this->GetName() + "Id", "=", this->Get( "Id" ).ToString() );
+        mod->Where( name + "Id", "=", this->Get( "Id" ).ToString() );
       }
       else if( ActiveRecord::OneToMany == relationship )
       {
@@ -221,7 +222,7 @@ namespace Alder
       else // no relationship (we don't support one-to-one relationships)
       {
         std::stringstream stream;
-        stream << "Cannot determine relationship between " << this->GetName() << " and " << type;
+        stream << "Cannot determine relationship between " << name << " and " << type;
         throw std::runtime_error( stream.str() );
       }
 
@@ -262,25 +263,26 @@ namespace Alder
       vtkSmartPointer<vtkAlderMySQLQuery> query = db->GetQuery();
 
       // if no override is provided, figure out necessary table/column names
-      std::string table = this->GetName();
+      std::string name = this->GetName();
       int relationship = this->GetRelationship( type, override );
       if( ActiveRecord::ManyToMany == relationship )
       {
-        std::string joiningTable = override.empty() ? table + "Has" + type : override;
+        std::string joiningTable = override.empty() ? name + "Has" + type : override;
         sql << "SELECT COUNT(*) FROM " << joiningTable << " "
-            << "WHERE " << table << "Id = " << this->Get( "Id" ).ToString() << " "
+            << "WHERE " << name << "Id = " << this->Get( "Id" ).ToString() << " "
             << "AND " << type << "Id = " << record->Get( "Id" ).ToString();
       }
       else if( ActiveRecord::OneToMany == relationship )
       {
-        std::string column = override.empty() ? table + "Id" : override;
+        std::string column = override.empty() ? name + "Id" : override;
         sql << "SELECT COUNT(*) FROM " << type << " "
             << "WHERE " << column << " = " << this->Get( "Id" ).ToString();
       }
       else // no relationship (we don't support one-to-one relationships)
       {
+        std::cout << "error in Has" << std::endl;
         std::stringstream stream;
-        stream << "Cannot determine relationship between " << table << " and " << type;
+        stream << "Cannot determine relationship between " << name << " and " << type;
         throw std::runtime_error( stream.str() );
       }
 
@@ -318,17 +320,17 @@ namespace Alder
       vtkSmartPointer<vtkAlderMySQLQuery> query = db->GetQuery();
 
       // figure out necessary table/column names
-      std::string table = this->GetName();
-      std::string column = table + "Id";
+      std::string name = this->GetName();
+      std::string column = name + "Id";
 
       int relationship = this->GetRelationship( recordType );
       if( ActiveRecord::ManyToMany == relationship )
       {
-        std::string joiningTable = table + "Has" + recordType;
-        sql << "SELECT COUNT(*) FROM " << table
-            << "JOIN "  << joiningTable << " ON " << column << " = " << table << ".Id "
+        std::string joiningTable = name + "Has" + recordType;
+        sql << "SELECT COUNT(*) FROM " << name
+            << "JOIN "  << joiningTable << " ON " << column << " = " << name << ".Id "
             << "JOIN "  << recordType   << " ON " << recordType << ".Id = " << recordType << "Id"
-            << "WHERE " << table << ".Id = " << this->Get( "Id" ).ToString();
+            << "WHERE " << name << ".Id = " << this->Get( "Id" ).ToString();
       }
       else if( ActiveRecord::OneToMany == relationship )
       {
@@ -338,7 +340,7 @@ namespace Alder
       else // no relationship (we don't support one-to-one relationships)
       {
         std::stringstream stream;
-        stream << "Cannot determine relationship between " << table << " and " << recordType;
+        stream << "Cannot determine relationship between " << name << " and " << recordType;
         throw std::runtime_error( stream.str() );
       }
 
@@ -374,8 +376,9 @@ namespace Alder
       if( ActiveRecord::ManyToMany != this->GetRelationship( type ) )
         throw std::runtime_error( "Cannot add record without many-to-many relationship." );
 
-      sql << "REPLACE INTO " << this->GetName() << "Has" << type << " ("
-          << this->GetName() << "Id, " << type << "Id) "
+      std::string name = this->GetName();
+      sql << "REPLACE INTO " << name << "Has" << type << " ("
+          << name << "Id, " << type << "Id) "
           << "VALUES (" << this->Get( "Id" ).ToInt() << ", " << record->Get( "Id" ).ToInt() << ")";
 
       // execute the query, check for errors, put results in the list
@@ -402,8 +405,9 @@ namespace Alder
       if( ActiveRecord::ManyToMany != this->GetRelationship( type ) )
         throw std::runtime_error( "Cannot remove record without many-to-many relationship." );
 
-      sql << "DELETE FROM " << this->GetName() << "Has" << type << " "
-          << "WHERE " << this->GetName() << "Id = " << this->Get( "Id" ).ToInt() << " "
+      std::string name = this->GetName();
+      sql << "DELETE FROM " << name << "Has" << type << " "
+          << "WHERE " << name << "Id = " << this->Get( "Id" ).ToInt() << " "
           << "AND " << type << "Id = " << record->Get( "Id" ).ToInt();
 
       // execute the query, check for errors, put results in the list

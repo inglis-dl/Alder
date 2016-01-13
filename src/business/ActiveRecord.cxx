@@ -44,8 +44,8 @@ namespace Alder
     this->ColumnValues.clear();
 
     Database *db = Application::GetInstance()->GetDB();
-    std::string table = this->GetName();
-    std::vector<std::string> columns = db->GetColumnNames( table );
+    std::string name = this->GetName();
+    std::vector<std::string> columns = db->GetColumnNames( name );
 
     // When first creating an active record we want the ColumnValues ivar to have an empty
     // value for every column in the active record's table.  We use mysql's information_schema
@@ -53,7 +53,7 @@ namespace Alder
     for( auto it = columns.cbegin(); it != columns.cend(); ++it )
     {
       const std::string column = *it;
-      vtkVariant columnDefault = db->GetColumnDefault( table, column );
+      vtkVariant columnDefault = db->GetColumnDefault( name, column );
       this->ColumnValues.insert( std::pair< std::string, vtkVariant >( column, columnDefault ) );
     }
 
@@ -81,8 +81,9 @@ namespace Alder
     this->ColumnValues.clear();
 
     // create an sql statement using the provided map
+    std::string name = this->GetName();
     std::stringstream stream;
-    stream << "SELECT * FROM " << this->GetName();
+    stream << "SELECT * FROM " << name;
     for( auto it = map.cbegin(); it != map.cend(); ++it )
       stream << ( map.cbegin() == it ? " WHERE " : " AND " )
              << it->first << " = " << query->EscapeString( it->second );
@@ -104,7 +105,7 @@ namespace Alder
       if( !first )
       {
         std::stringstream error;
-        error << "Loading " << this->GetName() << " record resulted in multiple rows";
+        error << "Loading " << name << " record resulted in multiple rows";
         throw std::runtime_error( error.str() );
       }
 
@@ -121,8 +122,8 @@ namespace Alder
   {
     Application *app = Application::GetInstance();
     vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    std::string name = this->GetName();
     std::stringstream stream;
-
     bool first = true;
     for( auto it = this->ColumnValues.cbegin(); it != this->ColumnValues.cend(); ++it )
     {
@@ -143,14 +144,14 @@ namespace Alder
       // add a new record
       std::string s = stream.str();
       stream.str( "" );
-      stream << ( replace ? "REPLACE" : "INSERT" ) << " INTO " << this->GetName() << " SET " << s;
+      stream << ( replace ? "REPLACE" : "INSERT" ) << " INTO " << name << " SET " << s;
     }
     else
     {
       // update the existing record
       std::string s = stream.str();
       stream.str( "" );
-      stream << "UPDATE " << this->GetName() << " SET " << s
+      stream << "UPDATE " << name << " SET " << s
              << " WHERE Id = " << query->EscapeString( this->Get( "Id" ).ToString() );
     }
 
@@ -177,10 +178,10 @@ namespace Alder
     Application *app = Application::GetInstance();
     vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
     std::stringstream stream;
-    std::string table = this->GetName();
-    stream << "SELECT Max( Id ) FROM " << table;
+    std::string name = this->GetName();
+    stream << "SELECT Max( Id ) FROM " << name;
 
-    app->Log( "Getting last insert id for table: " + table );
+    app->Log( "Getting last insert id for table: " + name );
     query->SetQuery( stream.str().c_str() );
     query->Execute();
 
@@ -274,8 +275,9 @@ namespace Alder
     Database *db = Application::GetInstance()->GetDB();
 
     // if no override is provided, figure out necessary table/column names
-    std::string joiningTable = override.empty() ? table + "Has" + this->GetName() : override;
-    std::string column = override.empty() ? this->GetName() + "Id" : override;
+    std::string name = this->GetName();
+    std::string joiningTable = override.empty() ? name + "Has" + table : override;
+    std::string column = override.empty() ? name + "Id" : override;
 
     if( db->TableExists( joiningTable ) )
     {
