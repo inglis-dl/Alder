@@ -247,13 +247,10 @@ namespace Alder
     // make sure the user is not null
     if( !user ) throw std::runtime_error( "Tried to get rating for null user" );
 
-    std::vector< vtkSmartPointer< Exam > > examList;
-    this->GetList( &examList );
-    for( auto examIt = examList.cbegin(); examIt != examList.cend(); ++examIt )
-    {
-      Exam *exam = *(examIt);
-      if( !exam->IsRatedBy( user ) ) return false;
-    }
+    std::vector< vtkSmartPointer< Exam > > vecExam;
+    this->GetList( &vecExam );
+    for( auto it = vecExam.cbegin(); it != vecExam.cend(); ++it )
+      if( !(*it)->IsRatedBy( user ) ) return false;
 
     return true;
   }
@@ -273,9 +270,9 @@ namespace Alder
   {
     Application *app = Application::GetInstance();
 
-    std::vector< vtkSmartPointer< Exam > > examList;
-    this->GetList( &examList, modifier );
-    if( examList.empty() )
+    std::vector< vtkSmartPointer< Exam > > vecExam;
+    this->GetList( &vecExam, modifier );
+    if( vecExam.empty() )
     {
       std::string err = "No exams attributed to interview ";
       err += this->Get("Id").ToString();
@@ -284,7 +281,7 @@ namespace Alder
       app->Log( err.c_str() );
       return false;
     }
-    for( auto it = examList.cbegin(); it != examList.cend(); ++it )
+    for( auto it = vecExam.cbegin(); it != vecExam.cend(); ++it )
     {
       if( !(*it)->HasImageData() )
         return false;
@@ -364,8 +361,6 @@ namespace Alder
       examData[type][var] = opalVal;
     }
 
-    std::map< std::string, std::string > loader;
-    vtkSmartPointer< Exam > exam = vtkSmartPointer< Exam >::New();
     for( auto it = examData.cbegin(); it != examData.cend(); ++it )
     {
       std::string type = it->first;
@@ -408,7 +403,7 @@ namespace Alder
         }
       }
 
-      loader.clear();
+      std::map< std::string, std::string > loader;
       loader[ "ScanTypeId" ] = columns[ "ScanTypeId" ];
       loader[ "InterviewId" ] = interviewId;
       for( auto mit = mapSide.cbegin(); mit != mapSide.cend(); ++mit )
@@ -419,6 +414,7 @@ namespace Alder
         else if( "left" != sideStr && "right" != sideStr ) continue;
 
         loader[ "Side" ] = sideStr;
+        vtkNew< Exam > exam;
         if( exam->Load( loader ) )
         {
           // check and update data as required
@@ -457,7 +453,6 @@ namespace Alder
         }
         else
         {
-          vtkNew<Exam> exam;
           exam->Set( "InterviewId", interviewId );
           exam->Set( "ScanTypeId", columns[ "ScanTypeId" ] );
           if( 0 < sideCount )
@@ -480,7 +475,7 @@ namespace Alder
   {
     Application *app = Application::GetInstance();
     User* user = app->GetActiveUser();
-    std::vector< vtkSmartPointer< Exam > > examList;
+    std::vector< vtkSmartPointer< Exam > > vecExam;
     if( user )
     {
       std::stringstream stream;
@@ -511,37 +506,38 @@ namespace Alder
       {
         vtkSmartPointer<Exam> exam = vtkSmartPointer<Exam>::New();
         exam->LoadFromQuery( query );
-        examList.push_back( exam );
+        vecExam.push_back( exam );
       }
     }
     else
     {
-      this->GetList( &examList );
+      this->GetList( &vecExam );
     }
 
-    if( !examList.empty() )
+    if( !vecExam.empty() )
     {
       // only update image data for exams which have not been downloaded
-      std::vector< vtkSmartPointer< Exam > > revisedList;
-      for( auto examIt = examList.cbegin(); examIt != examList.cend(); ++examIt )
+      std::vector< vtkSmartPointer< Exam > > vecRevised;
+      for( auto it = vecExam.cbegin(); it != vecExam.cend(); ++it )
       {
-        if( !(*examIt)->HasImageData() )
-          revisedList.push_back( *examIt );
+        if( !(*it)->HasImageData() )
+          vecRevised.push_back( *it );
       }
-      examList.clear();
-      if( revisedList.empty() ) return;
+      if( vecRevised.empty() ) return;
 
-      double index = 0;
-      double size = revisedList.size();
-      for( auto examIt = revisedList.cbegin(); examIt != revisedList.cend(); ++examIt, ++index )
+      // TODO: implement progress
+      int index = 0;
+      double size = vecRevised.size();
+      for( auto it = vecRevised.cbegin(); it != vecRevised.cend(); ++it, ++index )
       {
-        ( *examIt )->UpdateImageData();
+        (*it)->UpdateImageData();
       }
     }
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Interview::UpdateInterviewData( const std::vector< std::pair< int ,bool > > &waveList )
+  void Interview::UpdateInterviewData(
+    const std::vector< std::pair< int, bool > > &waveList )
   {
     Application *app = Application::GetInstance();
     OpalService *opal = app->GetOpal();
@@ -581,15 +577,21 @@ namespace Alder
       if( !fullUpdate )
       {
         // get the list of UIds to exclude from the update
-        int maxExam = wave->GetMaximumExamCount();
+        //int maxExam = wave->GetMaximumExamCount();
         std::stringstream stream;
+        stream << "SELECT UId FROM Interview "
+               << "JOIN Exam ON Exam.InterviewId=Interview.Id "
+               << "WHERE WaveId=" << waveId << " "
+               << "GROUP BY UId "
+               << "ORDER BY UId ";
+/*
         stream << "SELECT UId, COUNT(*) FROM Interview "
                << "JOIN Exam ON Exam.InterviewId=Interview.Id "
                << "WHERE WaveId=" << waveId << " "
                << "GROUP BY UId "
                << "HAVING COUNT(*)=" << maxExam << " "
                << "ORDER BY UId ";
-
+*/
         app->Log( "Querying Database: " + stream.str() );
         vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
         query->SetQuery( stream.str().c_str() );
@@ -655,6 +657,7 @@ namespace Alder
     // determine number of identifiers to pull per Opal curl call
     int limit = static_cast<int>(0.1 * size);
     limit = limit > 500 ? 500 : ( limit < 1 ? 1 : limit );
+    //TODO: implement progress
     int index = 0;
     double progress = 0.;
     vtkSmartPointer< Alder::Wave > wave = vtkSmartPointer< Alder::Wave >::New();
@@ -737,15 +740,16 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  int Interview::LoadFromList( const std::vector< std::pair< std::string, std::string > > &list )
+  int Interview::LoadFromList(
+    const std::vector< std::pair< std::string, std::string > > &list )
   {
     // load images for Interviews already pulled from Opal via the administrator UI
-    std::vector< vtkSmartPointer< Interview > > interviewList;
+    std::vector< vtkSmartPointer< Interview > > vecRevised;
     vtkNew< Alder::Wave > wave;
     for( auto it = list.cbegin(); it != list.cend(); ++it )
     {
-      std::string uidStr = (*it).first;
-      std::string rankStr = (*it).second;
+      std::string uidStr = it->first;
+      std::string rankStr = it->second;
       if( wave->Load( "Rank", rankStr ) )
       {
         vtkSmartPointer< Interview > interview = vtkSmartPointer< Interview >::New();
@@ -753,13 +757,11 @@ namespace Alder
         loader[ "UId" ] = uidStr;
         loader[ "WaveId" ] = wave->Get( "Id" ).ToString();
         if( interview->Load( loader ) )
-        {
-          interviewList.push_back( interview );
-        }
+          vecRevised.push_back( interview );
       }
     }
 
-    if( interviewList.empty() ) return 0;
+    if( vecRevised.empty() ) return 0;
 
     Application *app = Application::GetInstance();
     OpalService *opal = app->GetOpal();
@@ -784,16 +786,19 @@ namespace Alder
       vtkSmartPointer< Alder::QueryModifier >::New();
     user->InitializeExamModifier( modifier );
 
-    double size = (double)interviewList.size();
+    // TODO: implement progress
     int index = 0;
+    double size = (double)vecRevised.size();
     bool pending = true;
-    for( auto it = interviewList.cbegin(); it != interviewList.cend(); ++it, ++index )
+    for( auto it = vecRevised.cbegin(); it != vecRevised.cend(); ++it, ++index )
     {
       double progress = index / size;
       Interview *interview = *it;
+      vtkSmartPointer< Wave > wave;
+      interview->GetRecord( wave );
       try
       {
-        interview->UpdateExamData();
+        interview->UpdateExamData( wave );
       }
       catch( std::runtime_error& e )
       {
@@ -805,11 +810,13 @@ namespace Alder
         continue;
       }
       // get the list of exams this user can retrieve images for
-      std::vector< vtkSmartPointer< Exam > > examList;
-      interview->GetList( &examList, modifier );
-      for( auto eit = examList.cbegin(); eit != examList.cend(); ++eit )
+      std::vector< vtkSmartPointer< Exam > > vecExam;
+      interview->GetList( &vecExam, modifier );
+      std::string source = wave->Get( "ImageDataSource" ).ToString();
+      std::string identifier = interview->Get( "UId" ).ToString();
+      for( auto vit = vecExam.cbegin(); vit != vecExam.cend(); ++vit )
       {
-        (*eit)->UpdateImageData();
+        (*vit)->UpdateImageData( identifier, source );
       }
     }
 
