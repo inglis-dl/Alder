@@ -280,7 +280,6 @@ namespace Alder
       }
       else // no relationship (we don't support one-to-one relationships)
       {
-        std::cout << "error in Has" << std::endl;
         std::stringstream stream;
         stream << "Cannot determine relationship between " << name << " and " << type;
         throw std::runtime_error( stream.str() );
