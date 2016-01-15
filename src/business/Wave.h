@@ -51,6 +51,11 @@ namespace Alder
     void UpdateScanTypeData();
 
     /**
+     * Get the number of Interviews this Wave can have based on the number of Opal identifiers.
+     */
+    int GetIdentifierCount();
+
+    /**
      * Get the maximum number of Exams that an Interview in this Wave can have.
      */
     int GetMaximumExamCount();

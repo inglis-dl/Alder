@@ -35,6 +35,8 @@ QSelectWaveDialog::QSelectWaveDialog( QWidget* parent )
   this->columnIndex[labels.last().toStdString()] = index++;
   labels << "Rank";
   this->columnIndex[labels.last().toStdString()] = index++;
+  labels << "Identifiers";
+  this->columnIndex[labels.last().toStdString()] = index++;
   labels << "Selected";
   this->columnIndex[labels.last().toStdString()] = index++;
   labels << "Update";
@@ -67,6 +69,11 @@ QSelectWaveDialog::QSelectWaveDialog( QWidget* parent )
     Alder::Wave *wave = *it;
     QString rankStr = wave->Get( "Rank" ).ToString().c_str();
     QString nameStr = wave->Get( "Name" ).ToString().c_str();
+    std::string s = vtkVariant( wave->GetCount( "Interview" ) ).ToString();
+    s += "/";
+    s += vtkVariant( wave->GetIdentifierCount() ).ToString();
+    QString identStr = s.c_str();
+
     QVariant vId = wave->Get( "Id" ).ToInt();
     this->ui->waveTableWidget->insertRow( 0 );
 
@@ -81,6 +88,12 @@ QSelectWaveDialog::QSelectWaveDialog( QWidget* parent )
     item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
     item->setText( rankStr );
     this->ui->waveTableWidget->setItem( 0, this->columnIndex["Rank"], item );
+
+    // add identifier counts to row
+    item = new QTableWidgetItem;
+    item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
+    item->setText( identStr );
+    this->ui->waveTableWidget->setItem( 0, this->columnIndex["Identifiers"], item );
 
     // add select checkbox to row
     item = new QTableWidgetItem;

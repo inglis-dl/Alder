@@ -193,6 +193,19 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  int Wave::GetIdentifierCount()
+  {
+    std::string source = this->Get( "MetaDataSource" ).ToString();
+    if( source.empty() )
+      throw std::runtime_error( "MetaDataSource missing for Wave identifier count" );
+
+    Application *app = Application::GetInstance();
+    OpalService *opal = app->GetOpal();
+    std::vector< std::string > vecOpal = opal->GetIdentifiers( source, "Interview" );
+    return vecOpal.size();
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   int Wave::GetMaximumExamCount()
   {
     Application *app = Application::GetInstance();
