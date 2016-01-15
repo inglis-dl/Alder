@@ -340,21 +340,32 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool Exam::IsRatedBy( User* user )
+  bool Exam::IsRatedBy( Alder::User *user )
   {
     if( !user )
       throw std::runtime_error( "Tried to get rating for null user" );
 
-    // loop through all images
-    std::vector< vtkSmartPointer< Image > > vecImage;
-    this->GetList( &vecImage );
-    for( auto it = vecImage.cbegin(); it != vecImage.cend(); ++it )
+    std::stringstream stream;
+    stream << "SELECT COUNT(*) FROM Rating "
+           << "JOIN Image ON Image.Id=Rating.ImageId "
+           << "JOIN User ON User.Id=Rating.UserId "
+           << "WHERE Image.ExamId=" << this->Get( "Id" ).ToString() << " "
+           << "AND User.Id=" << user->Get( "Id" ).ToString();
+
+    Application *app = Application::GetInstance();
+    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    query->SetQuery( stream.str().c_str() );
+    query->Execute();
+
+    if( query->HasError() )
     {
-      if( !(*it)->IsRatedBy( user ) ) return false;
+      app->Log( query->GetLastErrorText() );
+      throw std::runtime_error( "There was an error while trying to query the database." );
     }
 
-    // only return true if there was at least one image rated
-    return 0 < vecImage.size();
+    // only one row
+    query->NextRow();
+    return 0 < query->DataValue(0).ToInt();
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

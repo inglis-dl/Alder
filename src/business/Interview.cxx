@@ -218,12 +218,10 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   int Interview::GetImageCount()
   {
-    std::string interviewId = this->Get( "Id" ).ToString();
     std::stringstream stream;
     stream << "SELECT COUNT(*) FROM Image "
            << "JOIN Exam ON Exam.Id=Image.ExamId "
-           << "JOIN Interview ON Interview.Id=Exam.InterviewId "
-           << "WHERE Interview.Id=" << interviewId;
+           << "WHERE Exam.InterviewId=" << this->Get( "Id" ).ToString();
 
     Application *app = Application::GetInstance();
     vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
@@ -242,48 +240,51 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool Interview::IsRatedBy( User* user )
+  bool Interview::IsRatedBy( Alder::User *user )
   {
-    // make sure the user is not null
-    if( !user ) throw std::runtime_error( "Tried to get rating for null user" );
+   if( !user )
+      throw std::runtime_error( "Tried to get rating for null user" );
 
-    std::vector< vtkSmartPointer< Exam > > vecExam;
-    this->GetList( &vecExam );
-    for( auto it = vecExam.cbegin(); it != vecExam.cend(); ++it )
-      if( !(*it)->IsRatedBy( user ) ) return false;
+    std::stringstream stream;
+    stream << "SELECT COUNT(*) FROM Rating "
+           << "JOIN Image ON Image.Id=Rating.ImageId "
+           << "JOIN User ON User.Id=Rating.UserId "
+           << "JOIN Exam ON Exam.Id=Image.ExamId "
+           << "WHERE Exam.InterviewId=" << this->Get( "Id" ).ToString() << " "
+           << "AND User.Id=" << user->Get( "Id" ).ToString();
 
-    return true;
+    Application *app = Application::GetInstance();
+    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    query->SetQuery( stream.str().c_str() );
+    query->Execute();
+
+    if( query->HasError() )
+    {
+      app->Log( query->GetLastErrorText() );
+      throw std::runtime_error( "There was an error while trying to query the database." );
+    }
+
+    // only one row
+    query->NextRow();
+    return 0 < query->DataValue(0).ToInt();
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Interview::HasExamData()
   {
-    vtkSmartPointer< Wave > wave;
-    if( !this->GetRecord( wave ) )
-      throw std::runtime_error( "Interview has no parent wave" );
-
-    return wave->GetMaximumExamCount() == this->GetCount( "Exam" );
+    return 0 < this->GetCount( "Exam" );
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Interview::HasImageData( QueryModifier *modifier )
   {
-    Application *app = Application::GetInstance();
-
     std::vector< vtkSmartPointer< Exam > > vecExam;
     this->GetList( &vecExam, modifier );
     if( vecExam.empty() )
-    {
-      std::string err = "No exams attributed to interview ";
-      err += this->Get("Id").ToString();
-      err += " for UID ";
-      err += this->Get("UId").ToString();
-      app->Log( err.c_str() );
       return false;
-    }
     for( auto it = vecExam.cbegin(); it != vecExam.cend(); ++it )
     {
-      if( !(*it)->HasImageData() )
+      if( (*it)->HasImageData() && 0 == (*it)->Get( "Downloaded" ).ToInt() )
         return false;
     }
     return true;
@@ -511,7 +512,6 @@ namespace Alder
 
     std::stringstream stream;
     stream << "SELECT Exam.* FROM Exam "
-           << "JOIN Interview ON Interview.Id=Exam.InterviewId "
            << "JOIN ScanType ON Exam.ScanTypeId=ScanType.Id "
            << "JOIN ( "
            << "SELECT Modality.Id FROM Modality "
@@ -519,7 +519,10 @@ namespace Alder
            << "JOIN User ON User.Id=UserHasModality.UserId "
            << "WHERE User.Id=" << user->Get( "Id" ).ToString() << " "
            << ") AS x ON x.Id=ScanType.ModalityId "
-           << "WHERE Interview.Id=" << this->Get( "Id" ).ToString();
+           << "WHERE DatetimeAcquired IS NOT NULL "
+           << "AND Stage='Completed' "
+           << "AND Downloaded=0 "
+           << "AND InterviewId=" << this->Get( "Id" ).ToString();
 
     Database *db = app->GetDB();
     vtkSmartPointer<vtkAlderMySQLQuery> query = db->GetQuery();
@@ -543,15 +546,6 @@ namespace Alder
 
     if( !vecExam.empty() )
     {
-      // only update image data for exams which have not been downloaded
-      std::vector< vtkSmartPointer< Exam > > vecRevised;
-      for( auto it = vecExam.cbegin(); it != vecExam.cend(); ++it )
-      {
-        if( !(*it)->HasImageData() )
-          vecRevised.push_back( *it );
-      }
-      if( vecRevised.empty() ) return;
-
       vtkSmartPointer< Wave > wave;
       this->GetRecord( wave );
 
@@ -562,8 +556,8 @@ namespace Alder
       int index = 0;
       int lastProgress = 0;
       int progress = 0;
-      double size = vecRevised.size();
-      for( auto it = vecRevised.cbegin(); it != vecRevised.cend(); ++it, ++index )
+      double size = vecExam.size();
+      for( auto it = vecExam.cbegin(); it != vecExam.cend(); ++it, ++index )
       {
         progress = (int)(100.*index/size);
         if( lastProgress != progress )

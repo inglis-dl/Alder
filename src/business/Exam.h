@@ -63,7 +63,7 @@ namespace Alder
      * If the exam has no images this method returns true.
      * @param user a User object to check against
      */
-    bool IsRatedBy( User* user );
+    bool IsRatedBy( Alder::User* user );
 
     /**
      * Is this a dicom image?

@@ -25,6 +25,7 @@
 #include <ActiveRecord.h>
 #include <ProgressProxy.h>
 #include <Image.h>
+#include <User.h>
 #include <Wave.h>
 
 /**
@@ -50,12 +51,12 @@ namespace Alder
     static void UpdateInterviewData( const std::vector< std::pair< int, bool > > &waveList );
 
     /**
-     * Returns whether this interview's exam data has been downloaded.
+     * Returns whether any exam data has been downloaded.
      */
     bool HasExamData();
 
     /**
-     * Returns whether this interview's image data has been downloaded.
+     * Returns whether any images remain to be downloaded.
      * @param modifier QueryModifier to constrain to user allowed modalities
      */
     bool HasImageData( QueryModifier *modifier = NULL );
@@ -132,7 +133,7 @@ namespace Alder
      * @param user a User object
      * @return     whether all images in this interview are rated by the User
      */
-    bool IsRatedBy( User* user );
+    bool IsRatedBy( Alder::User *user );
 
   protected:
     Interview() {}
