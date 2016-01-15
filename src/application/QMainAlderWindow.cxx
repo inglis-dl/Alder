@@ -327,16 +327,21 @@ void QMainAlderWindow::adminReports()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QMainAlderWindow::slotLoadUIDs()
 {
-  QString fileName = QFileDialog::getOpenFileName( this,
-    tr("Open File"), QString(), tr("CSV files (*.csv)"));
+  QFileDialog dialog(this, tr("Open File") );
+  dialog.setNameFilter( tr("CSV files (*.csv)") );
+  dialog.setFileMode( QFileDialog::ExistingFile );
+
+  QStringList selectedFiles;
+  if( dialog.exec() )
+    selectedFiles = dialog.selectedFiles();
+  if( selectedFiles.isEmpty() ) return;
+  QString fileName = selectedFiles.front();
 
   bool error = false;
   QString errorMsg;
 
-  if( fileName.isEmpty() ) return;
-
   QFile file(fileName);
-  if( !file.open(QIODevice::ReadOnly | QIODevice::Text) )
+  if( !file.open( QIODevice::ReadOnly|QIODevice::Text ) )
   {
     error = true;
     errorMsg = "Failed to open file";
