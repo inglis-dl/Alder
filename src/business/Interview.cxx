@@ -310,7 +310,7 @@ namespace Alder
     }
 
     // get the Wave associated with this Interview
-    vtkSmartPointer< Alder::Wave > wave;
+    vtkSmartPointer< Wave > wave;
     if( NULL == aWave )
     {
       if( !this->GetRecord( wave ) )
@@ -330,7 +330,11 @@ namespace Alder
     if( !sustain )
       opal->SustainConnectionOff();
 
-    if( opalData.empty() ) return;
+    if( opalData.empty() )
+    {
+      std::cout << "opal exam data missing for UId " << identifier << std::endl;
+      return;
+    }
 
     std::string interviewId = this->Get( "Id" ).ToString();
 
@@ -341,7 +345,7 @@ namespace Alder
     for( auto it = scanTypeList.cbegin(); it != scanTypeList.cend(); ++it )
     {
       std::string typeStr = (*it)->Get( "Type" ).ToString();
-      std::string idStr = (*it)->Get( "Id" ).ToString();
+      std::string idStr   = (*it)->Get( "Id" ).ToString();
       std::string sideStr = (*it)->Get( "SideCount" ).ToString();
       examData[ typeStr ][ "ScanTypeId" ] = idStr;
       examData[ typeStr ][ "SideCount" ] = sideStr;
@@ -353,13 +357,28 @@ namespace Alder
       std::string opalVar = it->first;
       std::string opalVal = it->second;
       std::vector< std::string > tmp = Alder::Utilities::explode( opalVar, "." );
-      if( 2 != tmp.size() ) continue;
+      if( 2 != tmp.size() )
+      {
+        std::cout << "skipping opal variable " << opalVar <<
+        " with value " << opalVal <<
+        " in update exam data" << std::endl;
+        continue;
+      }
       std::string type = tmp.front();
       std::string var  = tmp.back();
 
-      if( examData.find( type ) == examData.end() ) continue;
+      if( examData.find( type ) == examData.end() )
+      {
+        std::cout << "skipping opal variable " << opalVar << " in update exam data: unknown type " <<
+        type << " with variable " << var << std::endl;
+        continue;
+      }
       examData[type][var] = opalVal;
     }
+
+    std::string noneStr = "none";
+    std::string rightStr = "right";
+    std::string leftStr = "left";
 
     for( auto it = examData.cbegin(); it != examData.cend(); ++it )
     {
@@ -369,37 +388,40 @@ namespace Alder
       int sideCount = vtkVariant( columns[ "SideCount" ] ).ToInt();
       if( 0 == sideCount )
       {
-        mapSide[ "none" ] = "0";
+        mapSide[ noneStr ] = "0";
       }
-      else if( 1 == sideCount )
+      else
       {
         if( columns.find( "Side" ) == columns.end() ||
-            columns[ "Side" ].empty() ) continue;
+            columns[ "Side" ].empty() )
+          continue;
 
-        mapSide[ columns["Side"] ] = "0";
-      }
-      else if( 2 == sideCount )
-      {
-        if( columns.find( "Side" ) == columns.end() ||
-            columns[ "Side" ].empty() ) continue;
-
-        if( columns.find( "SideIndex" ) == columns.end() ||
-            columns[ "SideIndex" ].empty() ) continue;
-
-        std::vector< std::string > vecSide =
-          Alder::Utilities::explode( columns[ "Side" ], "," );
-
-        std::vector< std::string > vecSideIndex =
-          Alder::Utilities::explode( columns[ "SideIndex" ], "," );
-
-        if( vecSide.size() != vecSideIndex.size() ) continue;
-
-        auto sit = vecSide.cbegin();
-        auto iit = vecSideIndex.cbegin();
-
-        for( ; sit != vecSide.cend(), iit != vecSideIndex.cend(); ++sit, ++iit )
+        if( 1 == sideCount )
         {
-          mapSide[ *sit ] = *iit;
+          mapSide[ columns["Side"] ] = "0";
+        }
+        else if( 2 == sideCount )
+        {
+          if( columns.find( "SideIndex" ) == columns.end() ||
+              columns[ "SideIndex" ].empty() )
+            continue;
+
+          std::vector< std::string > vecSide =
+            Alder::Utilities::explode( columns[ "Side" ], "," );
+
+          std::vector< std::string > vecSideIndex =
+            Alder::Utilities::explode( columns[ "SideIndex" ], "," );
+
+          if( vecSide.size() != vecSideIndex.size() )
+            continue;
+
+          auto sit = vecSide.cbegin();
+          auto iit = vecSideIndex.cbegin();
+
+          for( ; sit != vecSide.cend(), iit != vecSideIndex.cend(); ++sit, ++iit )
+          {
+            mapSide[ *sit ] = *iit;
+          }
         }
       }
 
@@ -410,8 +432,16 @@ namespace Alder
       {
         std::string sideStr = mit->first;
         std::string indexStr = mit->second;
-        if( 0 == sideCount && "none" != sideStr ) continue;
-        else if( "left" != sideStr && "right" != sideStr ) continue;
+        if( 0 == sideCount )
+        {
+          if( noneStr != sideStr )
+            continue;
+        }
+        else
+        {
+          if( leftStr != sideStr && rightStr != sideStr )
+            continue;
+        }
 
         loader[ "Side" ] = sideStr;
         vtkNew< Exam > exam;
@@ -465,6 +495,7 @@ namespace Alder
           exam->Set( "Interviewer", columns[ "Interviewer" ] );
           exam->Set( "DatetimeAcquired", columns[ "DatetimeAcquired" ] );
           exam->Save();
+          std::cout << identifier << ": new exam of type " << type << std::endl;
         }
       }
     }
@@ -476,42 +507,38 @@ namespace Alder
     Application *app = Application::GetInstance();
     User* user = app->GetActiveUser();
     std::vector< vtkSmartPointer< Exam > > vecExam;
-    if( user )
+    if( !user ) return;
+
+    std::stringstream stream;
+    stream << "SELECT Exam.* FROM Exam "
+           << "JOIN Interview ON Interview.Id=Exam.InterviewId "
+           << "JOIN ScanType ON Exam.ScanTypeId=ScanType.Id "
+           << "JOIN ( "
+           << "SELECT Modality.Id FROM Modality "
+           << "JOIN UserHasModality ON UserHasModality.ModalityId=Modality.Id "
+           << "JOIN User ON User.Id=UserHasModality.UserId "
+           << "WHERE User.Id=" << user->Get( "Id" ).ToString() << " "
+           << ") AS x ON x.Id=ScanType.ModalityId "
+           << "WHERE Interview.Id=" << this->Get( "Id" ).ToString();
+
+    Database *db = app->GetDB();
+    vtkSmartPointer<vtkAlderMySQLQuery> query = db->GetQuery();
+
+    app->Log( "Querying Database: " + stream.str() );
+    query->SetQuery( stream.str().c_str() );
+    query->Execute();
+
+    if( query->HasError() )
     {
-      std::stringstream stream;
-      stream << "SELECT Exam.* FROM Exam "
-             << "JOIN Interview ON Interview.Id=Exam.InterviewId "
-             << "JOIN ScanType ON Exam.ScanTypeId=ScanType.Id "
-             << "WHERE ScanType.ModalityId IN ( "
-             << "SELECT Modality.Id FROM Modality "
-             << "JOIN UserHasModality ON UserHasModality.ModalityId=Modality.Id "
-             << "JOIN User ON User.Id=UserHasModality.UserId "
-             << "WHERE User.Id=" << user->Get( "Id" ).ToString() << " ) "
-             << "AND Interview.Id=" << this->Get( "Id" ).ToString();
-
-      Database *db = app->GetDB();
-      vtkSmartPointer<vtkAlderMySQLQuery> query = db->GetQuery();
-
-      app->Log( "Querying Database: " + stream.str() );
-      query->SetQuery( stream.str().c_str() );
-      query->Execute();
-
-      if( query->HasError() )
-      {
-        app->Log( query->GetLastErrorText() );
-        throw std::runtime_error( "There was an error while trying to query the database." );
-      }
-
-      while( query->NextRow() )
-      {
-        vtkSmartPointer<Exam> exam = vtkSmartPointer<Exam>::New();
-        exam->LoadFromQuery( query );
-        vecExam.push_back( exam );
-      }
+      app->Log( query->GetLastErrorText() );
+      throw std::runtime_error( "There was an error while trying to query the database." );
     }
-    else
+
+    while( query->NextRow() )
     {
-      this->GetList( &vecExam );
+      vtkSmartPointer<Exam> exam = vtkSmartPointer<Exam>::New();
+      exam->LoadFromQuery( query );
+      vecExam.push_back( exam );
     }
 
     if( !vecExam.empty() )
@@ -525,12 +552,25 @@ namespace Alder
       }
       if( vecRevised.empty() ) return;
 
+      vtkSmartPointer< Wave > wave;
+      this->GetRecord( wave );
+
+      std::string source = wave->Get( "ImageDataSource" ).ToString();
+      std::string identifier = this->Get( "UId" ).ToString();
+
       // TODO: implement progress
       int index = 0;
+      int lastProgress = 0;
+      int progress = 0;
       double size = vecRevised.size();
       for( auto it = vecRevised.cbegin(); it != vecRevised.cend(); ++it, ++index )
       {
-        (*it)->UpdateImageData();
+        progress = (int)(100.*index/size);
+        if( lastProgress != progress )
+          std::cout << "progress: " << progress << std::endl;
+        lastProgress = progress;
+
+        (*it)->UpdateImageData( identifier, source );
       }
     }
   }
@@ -576,22 +616,12 @@ namespace Alder
 
       if( !fullUpdate )
       {
-        // get the list of UIds to exclude from the update
-        //int maxExam = wave->GetMaximumExamCount();
         std::stringstream stream;
         stream << "SELECT UId FROM Interview "
                << "JOIN Exam ON Exam.InterviewId=Interview.Id "
                << "WHERE WaveId=" << waveId << " "
                << "GROUP BY UId "
                << "ORDER BY UId ";
-/*
-        stream << "SELECT UId, COUNT(*) FROM Interview "
-               << "JOIN Exam ON Exam.InterviewId=Interview.Id "
-               << "WHERE WaveId=" << waveId << " "
-               << "GROUP BY UId "
-               << "HAVING COUNT(*)=" << maxExam << " "
-               << "ORDER BY UId ";
-*/
         app->Log( "Querying Database: " + stream.str() );
         vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
         query->SetQuery( stream.str().c_str() );
@@ -659,28 +689,33 @@ namespace Alder
     limit = limit > 500 ? 500 : ( limit < 1 ? 1 : limit );
     //TODO: implement progress
     int index = 0;
-    double progress = 0.;
-    vtkSmartPointer< Alder::Wave > wave = vtkSmartPointer< Alder::Wave >::New();
+    int progress = 0;
+    int lastProgress = progress;
+    vtkSmartPointer< Wave > wave = vtkSmartPointer< Wave >::New();
     for( auto it = mapWave.cbegin(); it != mapWave.cend(); ++it )
     {
       std::string waveId = it->first;
       wave->Load( "Id", waveId );
       std::string source = wave->Get( "MetaDataSource" ).ToString();
+
       std::vector< std::string > vecUId = it->second;
       std::vector< std::string >::iterator ibegin = vecUId.begin();
       std::vector< std::string >::iterator iend = vecUId.end();
+
       std::map< std::string, std::map< std::string, std::string > > mapOpal;
       bool done = false;
       int localIndex = 0;
       do
       {
-        progress = index/size;
-        std::cout << "progress " << progress << std::endl;
+        progress = (int)(100.0*index/size);
+        if( lastProgress != progress )
+          std::cout << "progress " << progress << std::endl;
+        lastProgress = progress;
 
         mapOpal = opal->GetRows( source, "Interview", localIndex, limit );
         for( auto mit = mapOpal.cbegin(); mit != mapOpal.cend(); ++mit )
         {
-          // skip identifiers that we already have in the Alder db
+          // skip identifiers that are not in the requested update list
           std::string uidStr = mit->first;
           if( std::find( ibegin, iend, uidStr ) == iend )
             continue;
@@ -725,6 +760,7 @@ namespace Alder
             interview->Set( loader );
             interview->Save();
             interview->Load( loader );
+            std::cout << "created new interview for UId: " << uidStr << std::endl;
           }
 
           interview->UpdateExamData( wave, source );
@@ -788,11 +824,17 @@ namespace Alder
 
     // TODO: implement progress
     int index = 0;
+    int lastProgress = 0;
+    int progress = 0;
     double size = (double)vecRevised.size();
     bool pending = true;
     for( auto it = vecRevised.cbegin(); it != vecRevised.cend(); ++it, ++index )
     {
-      double progress = index / size;
+      progress = (int)(100.*index/size);
+      if( lastProgress != progress )
+        std::cout << "progress: " << progress << std::endl;
+      lastProgress = progress;
+
       Interview *interview = *it;
       vtkSmartPointer< Wave > wave;
       interview->GetRecord( wave );

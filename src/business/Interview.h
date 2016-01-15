@@ -71,7 +71,9 @@ namespace Alder
 
     /**
      * Updates all exam and image data associated with the interview from Opal.
-     * Note: exam data must be downloaded before image data.
+     * Note: exam data must be downloaded before image data.  The
+     * currently active user's modality restrictions apply and will only
+     * permit downloading of images associated with those modalities.
      */
     void UpdateImageData();
 

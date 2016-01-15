@@ -43,9 +43,15 @@ namespace Alder
     // TODO: add a consistency check action in the UI to set Downloaded to 0
     // when no Image record exists for a given Exam
     //
-    std::string dateStr = this->Get( "DatetimeAcquired" ).ToString();
-    std::string stageStr = this->Get( "Stage" ).ToString();
-    return stageStr == "Completed" && !dateStr.empty();
+    std::string dateStr;
+    std::string stageStr;
+    vtkVariant date = this->Get( "DatetimeAcquired" );
+    if( date.IsValid() )
+      dateStr = date.ToString();
+    vtkVariant stage = this->Get( "Stage" );
+    if( stage.IsValid() )
+      stageStr = stage.ToString();
+    return "Completed" == stageStr && !dateStr.empty();
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -137,7 +143,7 @@ namespace Alder
     // loop over the expected number of Acquisitions
     int acqGlobal = 1;
     std::string parentId;
-    bool downloaded = true;
+    int downloaded = 1;
     for( int acq = 1; acq <= acqCount; ++acq )
     {
       vtkNew< Alder::Image > image;
@@ -158,7 +164,7 @@ namespace Alder
         }
 
         std::string opalVar;
-        if( 1 < acqCount )
+        if( 1 < acqCount || std::string::npos != acqNameFormat.find( "%d" ) )
         {
           char buffer[256];
           sprintf( buffer, acqNameFormat.c_str(), acq );
@@ -188,7 +194,7 @@ namespace Alder
         {
           app->Log( e.what() );
         }
-        downloaded = false;
+        downloaded = 0;
         break;
       }
     }
@@ -219,7 +225,7 @@ namespace Alder
           }
 
           std::string opalVar;
-          if( 1 < childCount )
+          if( 1 < childCount || std::string::npos != childNameFormat.find( "%d" ) )
           {
             char buffer[256];
             sprintf( buffer, childNameFormat.c_str(), acq );
@@ -248,13 +254,13 @@ namespace Alder
           {
             app->Log( e.what() );
           }
-          downloaded = false;
+          downloaded = 0;
           break;
         }
       }
     }
 
-    this->Set( "Downloaded", vtkVariant( downloaded ) );
+    this->Set( "Downloaded", vtkVariant( downloaded ).ToString() );
     this->Save();
 
     if( !sustain ) opal->SustainConnectionOff();
@@ -336,16 +342,15 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Exam::IsRatedBy( User* user )
   {
-    // make sure the user is not null
-    if( !user ) throw std::runtime_error( "Tried to get rating for null user" );
+    if( !user )
+      throw std::runtime_error( "Tried to get rating for null user" );
 
     // loop through all images
     std::vector< vtkSmartPointer< Image > > vecImage;
     this->GetList( &vecImage );
     for( auto it = vecImage.cbegin(); it != vecImage.cend(); ++it )
     {
-      Image *image = *it;
-      if( !image->IsRatedBy( user ) ) return false;
+      if( !(*it)->IsRatedBy( user ) ) return false;
     }
 
     // only return true if there was at least one image rated
@@ -358,7 +363,7 @@ namespace Alder
     std::map< int, std::string > data;
     vtkSmartPointer< ScanType > scanType;
     if( !this->GetRecord( scanType ) )
-      return data;
+      throw std::runtime_error( "Exam missing parent ScanType" );
 
     std::vector< vtkSmartPointer< Alder::CodeType > > vecCodeType;
     scanType->GetList( &vecCodeType );

@@ -108,7 +108,7 @@ namespace Alder
 
       if( 1 == exam->Get( "Downloaded" ).ToInt() )
       {
-        exam->Set( "Downloaded", 0 );
+        exam->Set( "Downloaded", "0" );
         exam->Save();
       }
     }
