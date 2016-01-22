@@ -95,21 +95,15 @@ QMainAlderWindow::QMainAlderWindow( QWidget* parent )
   QObject::connect(
     this->ui->atlasWidget, SIGNAL( showing( bool ) ),
     this->ui->interviewWidget, SLOT( slotHideControls( bool ) ) );
-
-  // TODO: need to connect atlasWidget to the frame player as well
-  this->ui->framePlayerWidget->setViewer( this->ui->interviewWidget->GetViewer() );
-
-  this->Connections = vtkSmartPointer<vtkEventQtSlotConnect>::New();
-  this->Connections->Connect( Alder::Application::GetInstance(),
-    Alder::Application::ActiveImageEvent,
-    this->ui->framePlayerWidget, SLOT( updateFromViewer() ) );
-
+  
   this->readSettings();
 
   // toggle visibility of the atlas widget
   this->atlasVisible = true;
   this->slotShowAtlas();
+
   this->DicomTagWidget = new QAlderDicomTagWidget( this );
+  this->Connections = vtkSmartPointer<vtkEventQtSlotConnect>::New();
   this->Connections->Connect( Alder::Application::GetInstance(),
     Alder::Application::ActiveImageEvent,
     this, SLOT( updateDicomTagWidget() ) );
@@ -123,13 +117,13 @@ QMainAlderWindow::QMainAlderWindow( QWidget* parent )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QMainAlderWindow::~QMainAlderWindow()
 {
-  this->ui->framePlayerWidget->play( false );
+  //this->ui->framePlayerWidget->play( false );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QMainAlderWindow::closeEvent( QCloseEvent *event )
 {
-  this->ui->framePlayerWidget->setViewer( 0 );
+  //this->ui->framePlayerWidget->setViewer( 0 );
   this->writeSettings();
   event->accept();
 }
@@ -556,7 +550,7 @@ void QMainAlderWindow::updateInterface()
   this->ui->actionSaveImage->setEnabled( loggedIn );
   this->ui->actionLoadUIDs->setEnabled( loggedIn );
 
-  this->ui->framePlayerWidget->setEnabled( loggedIn );
+  //this->ui->framePlayerWidget->setEnabled( loggedIn );
   this->ui->splitter->setEnabled( loggedIn );
 
   this->ui->interviewWidget->setEnabled( loggedIn );

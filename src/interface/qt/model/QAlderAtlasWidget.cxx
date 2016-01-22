@@ -22,7 +22,7 @@
 #include <User.h>
 
 #include <vtkEventQtSlotConnect.h>
-#include <vtkMedicalImageViewer.h>
+#include <QMedicalImageWidget.h>
 #include <vtkNew.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
@@ -59,16 +59,6 @@ QAlderAtlasWidget::QAlderAtlasWidget( QWidget* parent )
     Alder::Application::ActiveAtlasImageEvent,
     this, SLOT( updateEnabled() ) );
 
-  this->Viewer = vtkSmartPointer<vtkMedicalImageViewer>::New();
-  vtkRenderWindow* renwin = this->ui->imageWidget->GetRenderWindow();
-  vtkRenderer* renderer = this->Viewer->GetRenderer();
-  renderer->GradientBackgroundOn();
-  renderer->SetBackground( 0, 0, 0 );
-  renderer->SetBackground2( 0, 0, 1 );
-  this->Viewer->SetRenderWindow( renwin );
-  this->Viewer->InterpolateOff();
-  this->Viewer->SetImageToSinusoid();
-
   this->updateEnabled();
 };
 
@@ -92,12 +82,6 @@ void QAlderAtlasWidget::hideEvent( QHideEvent* event )
 {
   QWidget::hideEvent( event );
   emit showing( false );
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-vtkMedicalImageViewer* QAlderAtlasWidget::GetViewer()
-{
-  return static_cast<vtkMedicalImageViewer*>(this->Viewer.GetPointer());
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -238,9 +222,11 @@ void QAlderAtlasWidget::updateInfo()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderAtlasWidget::updateViewer()
 {
-  Alder::Image *image = Alder::Application::GetInstance()->GetActiveAtlasImage();
-  if( image ) this->Viewer->Load( image->GetFileName().c_str() );
-  else this->Viewer->SetImageToSinusoid();
+  Alder::Image *image = Alder::Application::GetInstance()->GetActiveImage();
+  if( image )
+    this->ui->imageWidget->loadImage( image->GetFileName().c_str() );
+  else
+    this->ui->imageWidget->resetImage();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

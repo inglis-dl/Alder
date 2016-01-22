@@ -31,8 +31,19 @@ public:
 
   void resetImage();
   void loadImage( QString filename );
+  void saveImage( const QString& fileName );
+  vtkMedicalImageViewer* GetViewer();
 
 public slots:
+
+  void foregroundColor();
+  void backgroundColor();
+  void flipViewVertical();
+  void flipViewHorizontal();
+  void rotateViewClockwise();
+  void rotateViewCounterClockwise();
+  void invertViewWindowLevel();
+  void interpolationToggle();  
 
 protected:
   void updateInterface();

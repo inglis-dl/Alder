@@ -13,7 +13,11 @@
 #include <ui_QMedicalImageWidget.h>
 
 #include <vtkMedicalImageViewer.h>
+#include <vtkRenderer.h>
 
+#include <QColorDialog>
+#include <QPainter>
+#include <QPen>
 #include <QScrollBar>
 
 #include <sstream>
@@ -26,18 +30,61 @@ QMedicalImageWidget::QMedicalImageWidget( QWidget* parent )
   this->ui = new Ui_QMedicalImageWidget;
   this->ui->setupUi( this );
   this->viewer = vtkSmartPointer<vtkMedicalImageViewer>::New();
-  this->viewer->SetRenderWindow( this->ui->vtkWidget->GetRenderWindow() );
+  vtkRenderWindow* renwin = this->ui->vtkWidget->GetRenderWindow();
+  this->viewer->SetRenderWindow( renwin );
+  vtkRenderer* renderer = this->viewer->GetRenderer();
+  renderer->GradientBackgroundOn();
+  renderer->SetBackground( 0, 0, 0 );
+  renderer->SetBackground2( 0, 0, 1 );
+  this->viewer->SetRenderWindow( renwin );
   this->viewer->InterpolateOff();
+  this->ui->interpolationToggleButton->setIcon(QIcon(":/icons/nearesticon"));
   this->resetImage();
 
-  this->ui->framePlayerWidget->setViewer(this->viewer);
+  connect( this->ui->invertButton, SIGNAL( clicked() ), this, SLOT( invertViewWindowLevel() ) );
+  connect( this->ui->flipVerticalButton, SIGNAL( clicked() ), this, SLOT( flipViewVertical() ) );
+  connect( this->ui->flipHorizontalButton, SIGNAL( clicked() ), this, SLOT( flipViewHorizontal() ) );
+  connect( this->ui->rotateCWButton, SIGNAL( clicked() ), this, SLOT( rotateViewClockwise() ) );
+  connect( this->ui->rotateCCWButton, SIGNAL( clicked() ), this, SLOT( rotateViewCounterClockwise() ) );
+  connect( this->ui->interpolationToggleButton, SIGNAL( clicked() ), this, SLOT( interpolationToggle() ) );
+  connect( this->ui->foregroundButton, SIGNAL( clicked() ), this, SLOT( foregroundColor() ) );
+  connect( this->ui->backgroundButton, SIGNAL( clicked() ), this, SLOT( backgroundColor() ) );
+
+  this->ui->framePlayerWidget->setViewer( this->viewer );
+
+  QColor qcolor;
+  double* color = renderer->GetBackground();
+  qcolor.setRgbF( color[0], color[1], color[2] );
+  int iconSize = this->ui->backgroundButton->style()->pixelMetric( QStyle::PM_SmallIconSize );
+  QPixmap pix( iconSize , iconSize );
+  pix.fill( qcolor.isValid() ? this->ui->backgroundButton->palette().button().color() : Qt::transparent);
+  QPainter painter( &pix );
+  painter.setPen( QPen( Qt::gray ) );
+  painter.setBrush( qcolor.isValid() ? qcolor : QBrush( Qt::NoBrush ) );
+  painter.drawRect( 2, 2, pix.width() - 2, pix.height() - 2 ); 
+
+  this->ui->backgroundButton->setIcon( QIcon( pix ) );
+
+  color = renderer->GetBackground2();
+  qcolor.setRgbF( color[0], color[1], color[2] );
+  pix.fill( qcolor.isValid() ? this->ui->foregroundButton->palette().button().color() : Qt::transparent);
+  painter.setBrush( qcolor.isValid() ? qcolor : QBrush( Qt::NoBrush ) );
+  painter.drawRect( 2, 2, pix.width() - 2, pix.height() - 2 ); 
+
+  this->ui->foregroundButton->setIcon( QIcon( pix ) );
+
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QMedicalImageWidget::~QMedicalImageWidget()
 {
-  //TODO this may have to be place in the closeEvent of the parent UI object
-  this->ui->framePlayerWidget->setViewer(0);
+  this->ui->framePlayerWidget->setViewer( 0 );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+vtkMedicalImageViewer* QMedicalImageWidget::GetViewer()
+{
+  return static_cast<vtkMedicalImageViewer*>( this->viewer.GetPointer() );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -66,3 +113,110 @@ void QMedicalImageWidget::updateInterface()
   this->ui->framePlayerWidget->updateFromViewer();
 }
 
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMedicalImageWidget::saveImage( const QString& fileName )
+{
+  this->viewer->WriteSlice( fileName.toStdString().c_str() );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMedicalImageWidget::flipViewVertical()
+{
+  this->viewer->FlipCameraVertical();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMedicalImageWidget::flipViewHorizontal()
+{
+  this->viewer->FlipCameraHorizontal();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMedicalImageWidget::rotateViewClockwise()
+{
+  this->viewer->RotateCamera( -90.0 );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMedicalImageWidget::rotateViewCounterClockwise()
+{
+  this->viewer->RotateCamera( 90.0 );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMedicalImageWidget::interpolationToggle()
+{
+  int interpolate = this->viewer->GetInterpolate();
+  if( interpolate )
+  {
+    this->ui->interpolationToggleButton->setIcon(QIcon(":/icons/nearesticon"));
+    this->viewer->InterpolateOff();
+  }
+  else
+  {
+    this->ui->interpolationToggleButton->setIcon(QIcon(":/icons/linearicon"));
+    this->viewer->InterpolateOn();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMedicalImageWidget::invertViewWindowLevel()
+{
+  this->viewer->InvertWindowLevel();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMedicalImageWidget::foregroundColor()
+{
+  QColorDialog dialog( this );
+  if( dialog.exec() )
+  {
+    QColor qcolor = dialog.selectedColor();
+    int iconSize = this->ui->foregroundButton->style()->pixelMetric( QStyle::PM_SmallIconSize );
+    QPixmap pix( iconSize , iconSize );
+    pix.fill( qcolor.isValid() ? this->ui->foregroundButton->palette().button().color() : Qt::transparent);
+    QPainter painter( &pix );
+    painter.setPen( QPen( Qt::gray ) );
+    painter.setBrush( qcolor.isValid() ? qcolor : QBrush( Qt::NoBrush ) );
+    painter.drawRect( 2, 2, pix.width() - 2, pix.height() - 2 ); 
+
+    this->ui->foregroundButton->setIcon( QIcon( pix ) );
+
+    double color[3];
+    color[0] = qcolor.redF();
+    color[1] = qcolor.greenF();
+    color[2] = qcolor.blueF();
+
+    vtkRenderer* renderer = this->viewer->GetRenderer();
+    renderer->GradientBackgroundOn();
+    renderer->SetBackground2( color );
+  }    
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMedicalImageWidget::backgroundColor()
+{
+  QColorDialog dialog( this );
+  if( dialog.exec() )
+  {
+    QColor qcolor = dialog.selectedColor();
+    int iconSize = this->ui->backgroundButton->style()->pixelMetric( QStyle::PM_SmallIconSize );
+    QPixmap pix( iconSize , iconSize );
+    pix.fill( qcolor.isValid() ? this->ui->backgroundButton->palette().button().color() : Qt::transparent);
+    QPainter painter( &pix );
+    painter.setPen( QPen( Qt::gray ) );
+    painter.setBrush( qcolor.isValid() ? qcolor : QBrush( Qt::NoBrush ) );
+    painter.drawRect( 2, 2, pix.width() - 2, pix.height() - 2 ); 
+
+    this->ui->backgroundButton->setIcon( QIcon( pix ) );
+
+    double color[3];
+    color[0] = qcolor.redF();
+    color[1] = qcolor.greenF();
+    color[2] = qcolor.blueF();
+
+    vtkRenderer* renderer = this->viewer->GetRenderer();
+    renderer->GradientBackgroundOn();
+    renderer->SetBackground( color );
+  }    
+}

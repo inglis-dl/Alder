@@ -26,11 +26,11 @@
 #include <Wave.h>
 
 #include <vtkEventQtSlotConnect.h>
-#include <vtkMedicalImageViewer.h>
 #include <vtkNew.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
 
+#include <QMedicalImageWidget.h>
 #include <QVTKProgressDialog.h>
 
 #include <QMessageBox>
@@ -111,18 +111,7 @@ QAlderInterviewWidget::QAlderInterviewWidget( QWidget* parent )
     this,
     SLOT( updateEnabled() ) );
 
-  this->Viewer = vtkSmartPointer<vtkMedicalImageViewer>::New();
-  vtkRenderWindow* renwin = this->ui->imageWidget->GetRenderWindow();
-  vtkRenderer* renderer = this->Viewer->GetRenderer();
-  renderer->GradientBackgroundOn();
-  renderer->SetBackground( 0, 0, 0 );
-  renderer->SetBackground2( 0, 0, 1 );
-  this->Viewer->SetRenderWindow( renwin );
-  this->Viewer->InterpolateOff();
-  this->Viewer->SetImageToSinusoid();
-
   this->updateEnabled();
-
   this->initializeTreeWidget();
 };
 
@@ -130,12 +119,6 @@ QAlderInterviewWidget::QAlderInterviewWidget( QWidget* parent )
 QAlderInterviewWidget::~QAlderInterviewWidget()
 {
   this->ModalityLookup.clear();
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-vtkMedicalImageViewer* QAlderInterviewWidget::GetViewer()
-{
-  return static_cast<vtkMedicalImageViewer*>(this->Viewer.GetPointer());
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -856,14 +839,16 @@ void QAlderInterviewWidget::slotDerivedRatingToggle()
 void QAlderInterviewWidget::updateViewer()
 {
   Alder::Image *image = Alder::Application::GetInstance()->GetActiveImage();
-  if( image ) this->Viewer->Load( image->GetFileName().c_str() );
-  else this->Viewer->SetImageToSinusoid();
+  if( image )
+    this->ui->imageWidget->loadImage( image->GetFileName().c_str() );
+  else
+    this->ui->imageWidget->resetImage();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderInterviewWidget::saveImage( const QString& fileName )
 {
-  this->Viewer->WriteSlice( fileName.toStdString().c_str() );
+  this->ui->imageWidget->saveImage( fileName );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

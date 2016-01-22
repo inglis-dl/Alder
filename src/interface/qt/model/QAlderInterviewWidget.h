@@ -24,7 +24,6 @@ class Interview;
 };
 
 class vtkEventQtSlotConnect;
-class vtkMedicalImageViewer;
 class Ui_QAlderInterviewWidget;
 class QTableWidgetItem;
 class QTreeWidgetItem;
@@ -36,8 +35,6 @@ class QAlderInterviewWidget : public QWidget
 public:
   QAlderInterviewWidget( QWidget* parent = 0 );
   ~QAlderInterviewWidget();
-
-  vtkMedicalImageViewer *GetViewer();
 
 public slots:
   virtual void slotPrevious();
@@ -68,7 +65,7 @@ private:
   // Designer form
   Ui_QAlderInterviewWidget *ui;
 
-  vtkSmartPointer<vtkMedicalImageViewer> Viewer;
+  //vtkSmartPointer<vtkMedicalImageViewer> Viewer;
   vtkSmartPointer<vtkEventQtSlotConnect> Connections;
 
   /**

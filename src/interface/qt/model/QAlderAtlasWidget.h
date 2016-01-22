@@ -17,7 +17,6 @@
 #include <vtkSmartPointer.h>
 
 class vtkEventQtSlotConnect;
-class vtkMedicalImageViewer;
 class Ui_QAlderAtlasWidget;
 
 class QAlderAtlasWidget : public QWidget
@@ -28,7 +27,6 @@ public:
   QAlderAtlasWidget( QWidget* parent = 0 );
   ~QAlderAtlasWidget();
 
-  vtkMedicalImageViewer *GetViewer();
   virtual void showEvent( QShowEvent* );
   virtual void hideEvent( QHideEvent* );
 
@@ -50,7 +48,6 @@ private:
   // Designer form
   Ui_QAlderAtlasWidget *ui;
 
-  vtkSmartPointer<vtkMedicalImageViewer> Viewer;
   vtkSmartPointer<vtkEventQtSlotConnect> Connections;
 };
 
