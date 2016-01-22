@@ -41,14 +41,14 @@ QMedicalImageWidget::QMedicalImageWidget( QWidget* parent )
   this->ui->interpolationToggleButton->setIcon(QIcon(":/icons/nearesticon"));
   this->resetImage();
 
-  connect( this->ui->invertButton, SIGNAL( clicked() ), this, SLOT( invertViewWindowLevel() ) );
-  connect( this->ui->flipVerticalButton, SIGNAL( clicked() ), this, SLOT( flipViewVertical() ) );
-  connect( this->ui->flipHorizontalButton, SIGNAL( clicked() ), this, SLOT( flipViewHorizontal() ) );
-  connect( this->ui->rotateCWButton, SIGNAL( clicked() ), this, SLOT( rotateViewClockwise() ) );
-  connect( this->ui->rotateCCWButton, SIGNAL( clicked() ), this, SLOT( rotateViewCounterClockwise() ) );
-  connect( this->ui->interpolationToggleButton, SIGNAL( clicked() ), this, SLOT( interpolationToggle() ) );
-  connect( this->ui->foregroundButton, SIGNAL( clicked() ), this, SLOT( foregroundColor() ) );
-  connect( this->ui->backgroundButton, SIGNAL( clicked() ), this, SLOT( backgroundColor() ) );
+  connect( this->ui->invertButton, SIGNAL( clicked() ), this, SLOT( slotInvertWindowLevel() ) );
+  connect( this->ui->flipVerticalButton, SIGNAL( clicked() ), this, SLOT( slotFlipVertical() ) );
+  connect( this->ui->flipHorizontalButton, SIGNAL( clicked() ), this, SLOT( slotFlipHorizontal() ) );
+  connect( this->ui->rotateCWButton, SIGNAL( clicked() ), this, SLOT( slotRotateClockwise() ) );
+  connect( this->ui->rotateCCWButton, SIGNAL( clicked() ), this, SLOT( slotRotateCounterClockwise() ) );
+  connect( this->ui->interpolationToggleButton, SIGNAL( clicked() ), this, SLOT( slotInterpolationToggle() ) );
+  connect( this->ui->foregroundButton, SIGNAL( clicked() ), this, SLOT( slotSelectColor() ) );
+  connect( this->ui->backgroundButton, SIGNAL( clicked() ), this, SLOT( slotSelectColor() ) );
 
   this->ui->framePlayerWidget->setViewer( this->viewer );
 
@@ -61,7 +61,7 @@ QMedicalImageWidget::QMedicalImageWidget( QWidget* parent )
   QPainter painter( &pix );
   painter.setPen( QPen( Qt::gray ) );
   painter.setBrush( qcolor.isValid() ? qcolor : QBrush( Qt::NoBrush ) );
-  painter.drawRect( 2, 2, pix.width() - 2, pix.height() - 2 ); 
+  painter.drawRect( 2, 2, pix.width() - 2, pix.height() - 2 );
 
   this->ui->backgroundButton->setIcon( QIcon( pix ) );
 
@@ -69,7 +69,7 @@ QMedicalImageWidget::QMedicalImageWidget( QWidget* parent )
   qcolor.setRgbF( color[0], color[1], color[2] );
   pix.fill( qcolor.isValid() ? this->ui->foregroundButton->palette().button().color() : Qt::transparent);
   painter.setBrush( qcolor.isValid() ? qcolor : QBrush( Qt::NoBrush ) );
-  painter.drawRect( 2, 2, pix.width() - 2, pix.height() - 2 ); 
+  painter.drawRect( 2, 2, pix.width() - 2, pix.height() - 2 );
 
   this->ui->foregroundButton->setIcon( QIcon( pix ) );
 
@@ -120,31 +120,31 @@ void QMedicalImageWidget::saveImage( const QString& fileName )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMedicalImageWidget::flipViewVertical()
+void QMedicalImageWidget::slotFlipVertical()
 {
   this->viewer->FlipCameraVertical();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMedicalImageWidget::flipViewHorizontal()
+void QMedicalImageWidget::slotFlipHorizontal()
 {
   this->viewer->FlipCameraHorizontal();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMedicalImageWidget::rotateViewClockwise()
+void QMedicalImageWidget::slotRotateClockwise()
 {
   this->viewer->RotateCamera( -90.0 );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMedicalImageWidget::rotateViewCounterClockwise()
+void QMedicalImageWidget::slotRotateCounterClockwise()
 {
   this->viewer->RotateCamera( 90.0 );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMedicalImageWidget::interpolationToggle()
+void QMedicalImageWidget::slotInterpolationToggle()
 {
   int interpolate = this->viewer->GetInterpolate();
   if( interpolate )
@@ -160,27 +160,29 @@ void QMedicalImageWidget::interpolationToggle()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMedicalImageWidget::invertViewWindowLevel()
+void QMedicalImageWidget::slotInvertWindowLevel()
 {
   this->viewer->InvertWindowLevel();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMedicalImageWidget::foregroundColor()
+void QMedicalImageWidget::slotSelectColor()
 {
+  QToolButton* button = qobject_cast<QToolButton*>( sender() );
   QColorDialog dialog( this );
-  if( dialog.exec() )
+  if( button && dialog.exec() )
   {
+
     QColor qcolor = dialog.selectedColor();
-    int iconSize = this->ui->foregroundButton->style()->pixelMetric( QStyle::PM_SmallIconSize );
+    int iconSize = button->style()->pixelMetric( QStyle::PM_SmallIconSize );
     QPixmap pix( iconSize , iconSize );
-    pix.fill( qcolor.isValid() ? this->ui->foregroundButton->palette().button().color() : Qt::transparent);
+    pix.fill( qcolor.isValid() ? button->palette().button().color() : Qt::transparent);
     QPainter painter( &pix );
     painter.setPen( QPen( Qt::gray ) );
     painter.setBrush( qcolor.isValid() ? qcolor : QBrush( Qt::NoBrush ) );
-    painter.drawRect( 2, 2, pix.width() - 2, pix.height() - 2 ); 
+    painter.drawRect( 2, 2, pix.width() - 2, pix.height() - 2 );
 
-    this->ui->foregroundButton->setIcon( QIcon( pix ) );
+    button->setIcon( QIcon( pix ) );
 
     double color[3];
     color[0] = qcolor.redF();
@@ -188,35 +190,10 @@ void QMedicalImageWidget::foregroundColor()
     color[2] = qcolor.blueF();
 
     vtkRenderer* renderer = this->viewer->GetRenderer();
-    renderer->GradientBackgroundOn();
-    renderer->SetBackground2( color );
-  }    
+    if( QString("foregroundButton") == button->objectName() )
+      renderer->SetBackground2( color );
+    else
+      renderer->SetBackground( color );
+  }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMedicalImageWidget::backgroundColor()
-{
-  QColorDialog dialog( this );
-  if( dialog.exec() )
-  {
-    QColor qcolor = dialog.selectedColor();
-    int iconSize = this->ui->backgroundButton->style()->pixelMetric( QStyle::PM_SmallIconSize );
-    QPixmap pix( iconSize , iconSize );
-    pix.fill( qcolor.isValid() ? this->ui->backgroundButton->palette().button().color() : Qt::transparent);
-    QPainter painter( &pix );
-    painter.setPen( QPen( Qt::gray ) );
-    painter.setBrush( qcolor.isValid() ? qcolor : QBrush( Qt::NoBrush ) );
-    painter.drawRect( 2, 2, pix.width() - 2, pix.height() - 2 ); 
-
-    this->ui->backgroundButton->setIcon( QIcon( pix ) );
-
-    double color[3];
-    color[0] = qcolor.redF();
-    color[1] = qcolor.greenF();
-    color[2] = qcolor.blueF();
-
-    vtkRenderer* renderer = this->viewer->GetRenderer();
-    renderer->GradientBackgroundOn();
-    renderer->SetBackground( color );
-  }    
-}

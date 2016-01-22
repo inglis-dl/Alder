@@ -36,14 +36,13 @@ public:
 
 public slots:
 
-  void foregroundColor();
-  void backgroundColor();
-  void flipViewVertical();
-  void flipViewHorizontal();
-  void rotateViewClockwise();
-  void rotateViewCounterClockwise();
-  void invertViewWindowLevel();
-  void interpolationToggle();  
+  void slotSelectColor();
+  void slotFlipVertical();
+  void slotFlipHorizontal();
+  void slotRotateClockwise();
+  void slotRotateCounterClockwise();
+  void slotInvertWindowLevel();
+  void slotInterpolationToggle();  
 
 protected:
   void updateInterface();
