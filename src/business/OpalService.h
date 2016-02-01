@@ -105,6 +105,7 @@ namespace Alder
      * Returns a list of all identifiers in a particular data source and table.
      * @param dataSource name of an Opal data source
      * @param table      name of a table within the data source
+     * @throws           std::runtime_error
      * @return           vector of identifiers
      */
     std::vector< std::string > GetIdentifiers( const std::string &dataSource, const std::string &table ) const;
@@ -115,6 +116,7 @@ namespace Alder
      * @param table      name of a table within the data source
      * @param offset     the offset to begin the list at
      * @param limit      the number of key/value pairs to return
+     * @throws           std::runtime_error
      * @return           map of identifier keys to mapped data set values
      */
     std::map< std::string, std::map< std::string, std::string > > GetRows(
@@ -126,6 +128,7 @@ namespace Alder
      * @param dataSource name of an Opal data source
      * @param table      name of a table within the data source
      * @param identifier an Interview UId, or Wave Name
+     * @throws           std::runtime_error
      * @return           map of variable names to values
      */
     std::map< std::string, std::string > GetRow(
@@ -138,6 +141,7 @@ namespace Alder
      * @param variable   name of a table variable
      * @param offset     the offset to begin the list at
      * @param limit      the number of key/value pairs to return
+     * @throws           std::runtime_error
      * @return           map of identifiers to variable values
      */
     std::map< std::string, std::string > GetColumn(
@@ -150,6 +154,7 @@ namespace Alder
      * @param table      name of a table within the data source
      * @param identifier an Interview UId, or Wave Name
      * @param variable   name of a table variable
+     * @throws           std::runtime_error
      * @return           the value of a variable
      */
     std::string GetValue(
@@ -162,6 +167,7 @@ namespace Alder
      * @param table      name of a table within the data source
      * @param identifier an Interview UId, or Wave Name
      * @param variable   name of a table variable
+     * @throws           std::runtime_error
      * @return           the values of a variable
      */
     std::vector< std::string > GetValues(
@@ -172,6 +178,7 @@ namespace Alder
      * Returns an array of variable names within a table.
      * @param dataSource name of an Opal data source
      * @param table      name of a table within the data source
+     * @throws           std::runtime_error
      * @return           the variables of a table
      */
     std::vector< std::string > GetVariables(
@@ -180,6 +187,7 @@ namespace Alder
     /**
      * Returns an array of table names within a data source.
      * @param dataSource name of an Opal data source
+     * @throws           std::runtime_error
      * @return           the tables of a data source
      */
     std::vector< std::string > GetTables(
@@ -192,7 +200,8 @@ namespace Alder
      * @param table      name of a table within the data source
      * @param identifier an Interview UId, or Wave Name
      * @param variable   name of a table variable
-     * @param position if the data is repeatable, specify its cardinality
+     * @param position   if the data is repeatable, specify its cardinality
+     * @throws           std::runtime_error
      */
     void SaveFile(
       const std::string &fileName,
@@ -212,7 +221,7 @@ namespace Alder
      * @param servicePath a path to the requested data in Opal
      * @param fileName    name of a file to save the data to
      * @param progress    whether to show curl progress
-     * @throws            runtime_error
+     * @throws            std::runtime_error
      * @return            jason formatted data
      */
     virtual Json::Value Read(

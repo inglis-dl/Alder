@@ -87,7 +87,6 @@ namespace Alder
     const int &timeout,
     const int &verbose )
   {
-    //std::cout << "ok1 setup opal service" << std::endl;
     this->Username = username;
     this->Password = password;
     this->Host = host;
@@ -270,6 +269,13 @@ namespace Alder
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table << "/entities";
     Json::Value root = this->Read( stream.str() );
+    try
+    {
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
 
     std::vector< std::string > list;
     for( int i = 0; i < root.size(); ++i )
@@ -288,14 +294,21 @@ namespace Alder
     const std::string &dataSource, const std::string &table,
     const int &offset, const int &limit ) const
   {
-    std::map< std::string, std::map< std::string, std::string > > list;
-    std::string identifier, key, value;
     std::stringstream stream;
-
     stream << "/datasource/" << dataSource << "/table/" << table
            << "/valueSets?offset=" << offset << "&limit=" << limit;
-    Json::Value root = this->Read( stream.str() );
+    Json::Value root;
+    try
+    {
+      root = this->Read( stream.str() );
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
 
+    std::map< std::string, std::map< std::string, std::string > > list;
+    std::string identifier, key, value;
     for( int i = 0; i < root["valueSets"].size(); ++i )
     {
       identifier = root["valueSets"][i].get( "identifier", "" ).asString();
@@ -320,14 +333,21 @@ namespace Alder
   std::map< std::string, std::string > OpalService::GetRow(
     const std::string &dataSource, const std::string &table, const std::string &identifier ) const
   {
-    std::map< std::string, std::string > map;
-    std::string key, value;
     std::stringstream stream;
-
     stream << "/datasource/" << dataSource << "/table/" << table
            << "/valueSet/" << identifier;
-    Json::Value root = this->Read( stream.str(), "", false );
+    Json::Value root;
+    try
+    {
+      root = this->Read( stream.str(), "", false );
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
 
+    std::map< std::string, std::string > map;
+    std::string key, value;
     if( 0 < root["valueSets"][0].get( "identifier", "" ).asString().size() )
     {
       for( int j = 0; j < root["valueSets"][0]["values"].size(); ++j )
@@ -346,15 +366,22 @@ namespace Alder
     const std::string &dataSource, const std::string &table,
     const std::string &variable, const int &offset, const int &limit )
   {
-    std::map< std::string, std::string > map;
-    std::string identifier, value;
     std::stringstream stream;
-
     stream << "/datasource/" << dataSource << "/table/" << table
            << "/valueSets?offset=" << offset << "&limit=" << limit
            << "&select=name().eq('" << variable << "')";
-    Json::Value root = this->Read( stream.str() );
+    Json::Value root;
+    try
+    {
+      root = this->Read( stream.str() );
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
 
+    std::map< std::string, std::string > map;
+    std::string identifier, value;
     for( int i = 0; i < root["valueSets"].size(); ++i )
     {
       identifier = root["valueSets"][i].get( "identifier", "" ).asString();
@@ -377,7 +404,17 @@ namespace Alder
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table
            << "/valueSet/" << identifier << "/variable/" << variable;
-    return this->Read( stream.str(), "", false ).get( "value", "" ).asString();
+    Json::Value root;
+    try
+    {
+      root = this->Read( stream.str(), "", false );
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
+
+    return root.get( "value", "" ).asString();
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -385,14 +422,22 @@ namespace Alder
     const std::string &dataSource, const std::string &table,
     const std::string &identifier, const std::string &variable ) const
   {
-    std::vector< std::string > retValues;
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table
            << "/valueSet/" << identifier << "/variable/" << variable;
+    Json::Value root;
+    try
+    {
+      root = this->Read( stream.str(), "", false );
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
 
     // loop through the values array and get all the values
-    Json::Value values = this->Read( stream.str(), "", false ).get( "values", "" );
-
+    Json::Value values = root.get( "values", "" );
+    std::vector< std::string > retValues;
     for( int i = 0; i < values.size(); ++i )
       retValues.push_back( values[i].get( "value", "" ).asString() );
 
@@ -403,14 +448,21 @@ namespace Alder
   std::vector< std::string > OpalService::GetVariables(
     const std::string &dataSource, const std::string &table ) const
   {
-    std::vector< std::string > retValues;
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table
            << "/variables";
+    Json::Value values;
+    try
+    {
+      values = this->Read( stream.str(), "", false );
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
 
     // loop through the values array and get all the values
-    Json::Value values = this->Read( stream.str(), "", false );
-
+    std::vector< std::string > retValues;
     for( int i = 0; i < values.size(); ++i )
       retValues.push_back( values[i].get( "name", "" ).asString() );
 
@@ -421,13 +473,20 @@ namespace Alder
   std::vector< std::string > OpalService::GetTables(
     const std::string &dataSource ) const
   {
-    std::vector< std::string > retValues;
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/tables";
+    Json::Value values;
+    try
+    {
+      values = this->Read( stream.str(), "", false );
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
 
     // loop through the values array and get all the values
-    Json::Value values = this->Read( stream.str(), "", false );
-
+    std::vector< std::string > retValues;
     for( int i = 0; i < values.size(); ++i )
       retValues.push_back( values[i].get( "name", "" ).asString() );
 
@@ -450,6 +509,13 @@ namespace Alder
     // add on the position
     if( 0 <= position ) stream << "?pos=" << position;
 
-    this->Read( stream.str(), fileName );
+    try
+    {
+      this->Read( stream.str(), fileName );
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
   }
 }
