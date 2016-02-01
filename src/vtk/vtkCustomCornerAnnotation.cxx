@@ -10,8 +10,9 @@
 #include <vtkCustomCornerAnnotation.h>
 
 #include <vtkAlgorithmOutput.h>
-#include <vtkImageActor.h>
 #include <vtkImageData.h>
+#include <vtkImageSlice.h>
+#include <vtkImageSliceMapper.h>
 #include <vtkImageWindowLevel.h>
 #include <vtkObjectFactory.h>
 #include <vtkPropCollection.h>
@@ -22,7 +23,7 @@
 
 vtkStandardNewMacro(vtkCustomCornerAnnotation);
 
-vtkSetObjectImplementationMacro( vtkCustomCornerAnnotation, ImageActor, vtkImageActor );
+vtkSetObjectImplementationMacro( vtkCustomCornerAnnotation, ImageSlice, vtkImageSlice );
 vtkSetObjectImplementationMacro( vtkCustomCornerAnnotation, WindowLevel, vtkImageWindowLevel );
 vtkCxxSetObjectMacro( vtkCustomCornerAnnotation, TextProperty, vtkTextProperty );
 
@@ -54,14 +55,14 @@ vtkCustomCornerAnnotation::vtkCustomCornerAnnotation()
     this->TextActor[i] = vtkSmartPointer<vtkActor2D>::New();
     this->TextActor[i]->SetMapper(this->TextMapper[i]);
     }
-  
-  this->ImageActor = 0;
-  this->LastImageActor = 0;
+
+  this->ImageSlice = 0;
+  this->LastImageSlice = 0;
   this->WindowLevel = 0;
-  
+
   this->LevelShift = 0;
   this->LevelScale = 1;
-  
+
   this->ShowSliceAndImage = 1;
 }
 
@@ -70,7 +71,7 @@ vtkCustomCornerAnnotation::~vtkCustomCornerAnnotation()
 {
   this->SetTextProperty(0);
   this->SetWindowLevel(0);
-  this->SetImageActor(0);
+  this->SetImageSlice(0);
 }
 
 /**
@@ -91,7 +92,7 @@ void vtkCustomCornerAnnotation::ReleaseGraphicsResources(vtkWindow *win)
 #define text_swap(a,b,c){a=b;b=c;c=a;}
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkCustomCornerAnnotation::TextReplace(vtkImageActor *ia,
+void vtkCustomCornerAnnotation::TextReplace(vtkImageSlice *ia,
                                       vtkImageWindowLevel *wl)
 {
   int i;
@@ -107,30 +108,31 @@ void vtkCustomCornerAnnotation::TextReplace(vtkImageActor *ia,
     {
     window = wl->GetWindow();
     window *= this->LevelScale;
-    level = wl->GetLevel();    
+    level = wl->GetLevel();
     level = level * this->LevelScale + this->LevelShift;
     windowi = static_cast<long int>(window);
     leveli = static_cast<long int>(level);
     wl_input = vtkImageData::SafeDownCast(wl->GetInput());
     if (wl_input)
       {
-      input_type_is_float = (wl_input->GetScalarType() == VTK_FLOAT || 
+      input_type_is_float = (wl_input->GetScalarType() == VTK_FLOAT ||
                              wl_input->GetScalarType() == VTK_DOUBLE);
       }
     }
   if (ia)
     {
-    slice = ia->GetSliceNumber() - ia->GetSliceNumberMin() + 1;
-    slice_max = ia->GetSliceNumberMax() - ia->GetSliceNumberMin() + 1;
-    ia_input = ia->GetInput();
+    vtkImageSliceMapper* mapper = vtkImageSliceMapper::SafeDownCast(ia->GetMapper());
+    slice = mapper->GetSliceNumber() - mapper->GetSliceNumberMinValue() + 1;
+    slice_max = mapper->GetSliceNumberMaxValue() - mapper->GetSliceNumberMinValue() + 1;
+    ia_input = mapper->GetInput();
     if (!wl_input && ia_input)
       {
-      input_type_is_float = (ia_input->GetScalarType() == VTK_FLOAT || 
+      input_type_is_float = (ia_input->GetScalarType() == VTK_FLOAT ||
                              ia_input->GetScalarType() == VTK_DOUBLE);
       }
     }
 
-  
+
   // search for tokens, replace and then assign to TextMappers
   for (i = 0; i < 4; i++)
     {
@@ -154,7 +156,7 @@ void vtkCustomCornerAnnotation::TextReplace(vtkImageActor *ia,
           {
           sprintf(text2,"%s%s",text,rpos+7);
           }
-        text_swap(tmp,text,text2); 
+        text_swap(tmp,text,text2);
         rpos = strstr(text,"<image>");
         }
 
@@ -170,7 +172,7 @@ void vtkCustomCornerAnnotation::TextReplace(vtkImageActor *ia,
           {
           sprintf(text2,"%s%s",text,rpos+15);
           }
-        text_swap(tmp,text,text2); 
+        text_swap(tmp,text,text2);
         rpos = strstr(text,"<image_and_max>");
         }
 
@@ -212,21 +214,14 @@ void vtkCustomCornerAnnotation::TextReplace(vtkImageActor *ia,
         *rpos = '\0';
         if (ia && this->ShowSliceAndImage)
           {
-          double *dbounds = ia->GetDisplayBounds();
-          int *dext = ia->GetDisplayExtent();
+          int w = vtkImageSliceMapper::SafeDownCast(ia->GetMapper())->GetOrientation();
           double pos;
-          if (dext[0] == dext[1])
-            {
-            pos = dbounds[0];
-            }
-          else if (dext[2] == dext[3])
-            {
-            pos = dbounds[2];
-            }
-          else
-            {
-            pos = dbounds[4];
-            }
+          switch( w )
+          {
+            case 0: pos = ia->GetMinXBound(); break;
+            case 1: pos = ia->GetMinYBound(); break;
+            case 2: pos = ia->GetMinZBound(); break;
+          }
           sprintf(text2,"%s%g%s",text,pos,rpos+11);
           }
         else
@@ -337,13 +332,13 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
 {
   int fontSize;
   int i;
-  
+
   // Check to see whether we have to rebuild everything
   // If the viewport has changed we may - or may not need
   // to rebuild, it depends on if the projected coords chage
   int viewport_size_has_changed = 0;
   if (viewport->GetMTime() > this->BuildTime ||
-      (viewport->GetVTKWindow() && 
+      (viewport->GetVTKWindow() &&
        viewport->GetVTKWindow()->GetMTime() > this->BuildTime))
     {
     int *vSize = viewport->GetSize();
@@ -352,13 +347,13 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
       viewport_size_has_changed = 1;
       }
     }
-  
+
   // Is there an image actor ?
   vtkImageWindowLevel *wl = this->WindowLevel;
-  vtkImageActor *ia = 0;  
-  if (this->ImageActor)
+  vtkImageSlice *ia = 0;
+  if (this->ImageSlice)
     {
-    ia = this->ImageActor;
+    ia = this->ImageSlice;
     }
   else
     {
@@ -366,37 +361,37 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
     int numProps = pc->GetNumberOfItems();
     for (i = 0; i < numProps; i++)
       {
-      ia = vtkImageActor::SafeDownCast(pc->GetItemAsObject(i));
+      ia = vtkImageSlice::SafeDownCast(pc->GetItemAsObject(i));
       if (ia)
         {
-        if (ia->GetInput() && !wl)
+        if (ia->GetMapper()->GetInput() && !wl)
           {
           wl = vtkImageWindowLevel::SafeDownCast(
-            ia->GetInput()->GetProducerPort()->GetProducer());
+            ia->GetMapper()->GetInput()->GetProducerPort()->GetProducer());
           }
         break;
         }
-      }  
+      }
     }
-  
-  int tprop_has_changed = (this->TextProperty && 
+
+  int tprop_has_changed = (this->TextProperty &&
                            this->TextProperty->GetMTime() > this->BuildTime);
 
   // Check to see whether we have to rebuild everything
   if (viewport_size_has_changed ||
       tprop_has_changed ||
       (this->GetMTime() > this->BuildTime) ||
-      (ia && (ia != this->LastImageActor || 
+      (ia && (ia != this->LastImageSlice ||
               ia->GetMTime() > this->BuildTime)) ||
       (wl && wl->GetMTime() > this->BuildTime))
     {
     int *vSize = viewport->GetSize();
 
     vtkDebugMacro(<<"Rebuilding text");
-    
+
     // Replace text
     this->TextReplace(ia, wl);
-    
+
     // Get the viewport size in display coordinates
     this->LastSize[0] = vSize[0];
     this->LastSize[1] = vSize[1];
@@ -421,11 +416,11 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
         tprop = this->TextMapper[1]->GetTextProperty();
         tprop->ShallowCopy(this->TextProperty);
         tprop->SetFontSize(fontSize);
-        
+
         tprop = this->TextMapper[2]->GetTextProperty();
         tprop->ShallowCopy(this->TextProperty);
         tprop->SetFontSize(fontSize);
-        
+
         tprop = this->TextMapper[3]->GetTextProperty();
         tprop->ShallowCopy(this->TextProperty);
         tprop->SetFontSize(fontSize);
@@ -436,13 +431,13 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
       // Update all the composing objects to find the best size for the font
       // use the last size as a first guess
 
-      /*  
+      /*
           +--------+
           |2      3|
           |        |
           |        |
           |0      1|
-          +--------+  
+          +--------+
       */
 
       int tempi[8];
@@ -460,7 +455,7 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
         {
         return 0;
         }
-      
+
       int height_02 = tempi[1] + tempi[5];
       int height_13 = tempi[3] + tempi[7];
 
@@ -468,30 +463,30 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
       int width_23 = tempi[4] + tempi[6];
 
       int max_width = (width_01 > width_23) ? width_01 : width_23;
-      
-      int num_lines_02 = 
-        this->TextMapper[0]->GetNumberOfLines() + 
+
+      int num_lines_02 =
+        this->TextMapper[0]->GetNumberOfLines() +
         this->TextMapper[2]->GetNumberOfLines();
 
-      int num_lines_13 = 
-        this->TextMapper[1]->GetNumberOfLines() + 
+      int num_lines_13 =
+        this->TextMapper[1]->GetNumberOfLines() +
         this->TextMapper[3]->GetNumberOfLines();
-      
-      int line_max_02 = (int)(vSize[1] * this->MaximumLineHeight) * 
+
+      int line_max_02 = (int)(vSize[1] * this->MaximumLineHeight) *
         (num_lines_02 ? num_lines_02 : 1);
 
-      int line_max_13 = (int)(vSize[1] * this->MaximumLineHeight) * 
+      int line_max_13 = (int)(vSize[1] * this->MaximumLineHeight) *
         (num_lines_13 ? num_lines_13 : 1);
-      
+
       // Target size is to use 90% of x and y
 
       int tSize[2];
       tSize[0] = (int)(0.9*vSize[0]);
-      tSize[1] = (int)(0.9*vSize[1]);    
+      tSize[1] = (int)(0.9*vSize[1]);
 
       // While the size is too small increase it
 
-      while (height_02 < tSize[1] && 
+      while (height_02 < tSize[1] &&
              height_13 < tSize[1] &&
              max_width < tSize[0] &&
              height_02 < line_max_02 &&
@@ -513,11 +508,11 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
 
       // While the size is too large decrease it
 
-      while ((height_02 > tSize[1] || 
-              height_13 > tSize[1] || 
+      while ((height_02 > tSize[1] ||
+              height_13 > tSize[1] ||
               max_width > tSize[0] ||
-              height_02 > line_max_02 || 
-              height_13 > line_max_13) && 
+              height_02 > line_max_02 ||
+              height_13 > line_max_13) &&
              fontSize > 0)
         {
         fontSize--;
@@ -555,7 +550,7 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
         }
       }
     this->BuildTime.Modified();
-    this->LastImageActor = ia;
+    this->LastImageSlice = ia;
     }
 
   // Everything is built, just have to render
@@ -586,7 +581,7 @@ void vtkCustomCornerAnnotation::SetTextActorsPosition(int vsize[2])
   this->TextActor[2]->SetPosition(5, vsize[1] - 5);
   this->TextActor[3]->SetPosition(vsize[0] - 5, vsize[1] - 5);
 }
-      
+
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkCustomCornerAnnotation::SetTextActorsJustification()
 {
@@ -597,11 +592,11 @@ void vtkCustomCornerAnnotation::SetTextActorsJustification()
   tprop = this->TextMapper[1]->GetTextProperty();
   tprop->SetJustificationToRight();
   tprop->SetVerticalJustificationToBottom();
-        
+
   tprop = this->TextMapper[2]->GetTextProperty();
   tprop->SetJustificationToLeft();
   tprop->SetVerticalJustificationToTop();
-        
+
   tprop = this->TextMapper[3]->GetTextProperty();
   tprop->SetJustificationToRight();
   tprop->SetVerticalJustificationToTop();
@@ -616,9 +611,9 @@ void vtkCustomCornerAnnotation::SetText(int i, const char *text)
     }
 
   if ( text == this->CornerText[i] )
-    { 
+    {
     return;
-    } 
+    }
   this->CornerText[i] = text;
   this->Modified();
 }
@@ -656,7 +651,7 @@ void vtkCustomCornerAnnotation::CopyAllTextsFrom(vtkCustomCornerAnnotation *ca)
 void vtkCustomCornerAnnotation::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os,indent);
-  os << indent << "ImageActor: " << this->GetImageActor() << endl;
+  os << indent << "ImageSlice: " << this->GetImageSlice() << endl;
   os << indent << "MinimumFontSize: " << this->GetMinimumFontSize() << endl;
   os << indent << "MaximumFontSize: " << this->GetMaximumFontSize() << endl;
   os << indent << "LinearFontScaleFactor: " << this->GetLinearFontScaleFactor() << endl;

@@ -16,6 +16,11 @@
 #include <vtkRenderer.h>
 #include <vtkRenderWindowInteractor.h>
 
+#include "vtkAbstractPropPicker.h"
+#include "vtkAssemblyPath.h"
+#include "vtkPropCollection.h"
+
+
 vtkStandardNewMacro(vtkCustomInteractorStyleImage);
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -92,7 +97,29 @@ void vtkCustomInteractorStyleImage::WindowLevel()
 
       this->Interactor->Render();
       }
-    }  
+    }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void vtkCustomInteractorStyleImage::OnChar()
+{
+  vtkRenderWindowInteractor *rwi = this->Interactor;
+
+  // trap x y z char
+  switch (rwi->GetKeyCode())
+    {
+    case 'x' :
+    case 'X' :
+    case 'y' :
+    case 'Y' :
+    case 'z' :
+    case 'Z' :
+      break;
+
+    default:
+      this->Superclass::OnChar();
+      break;
+    }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
