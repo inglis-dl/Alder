@@ -42,7 +42,7 @@ public slots:
   void slotRotateClockwise();
   void slotRotateCounterClockwise();
   void slotInvertWindowLevel();
-  void slotInterpolationToggle();  
+  void slotInterpolationToggle();
 
 protected:
   void updateInterface();
