@@ -14,6 +14,8 @@
 
 #include <vtkMedicalImageViewer.h>
 #include <vtkRenderer.h>
+#include <vtkRenderWindow.h>
+#include <vtkEventQtSlotConnect.h>
 
 #include <QColorDialog>
 #include <QPainter>
@@ -73,12 +75,30 @@ QMedicalImageWidget::QMedicalImageWidget( QWidget* parent )
 
   this->ui->foregroundButton->setIcon( QIcon( pix ) );
 
+  this->ui->vtkWidget->installEventFilter( this );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QMedicalImageWidget::~QMedicalImageWidget()
 {
   this->ui->framePlayerWidget->setViewer( 0 );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+bool QMedicalImageWidget::eventFilter( QObject *obj, QEvent *event )
+{
+  if( obj == this->ui->vtkWidget )
+  {
+    if( QEvent::Enter == event->type() )
+    {
+      qobject_cast<QFrame*>(this->ui->vtkWidget->parent())->setStyleSheet("border : 3px solid red");
+    }
+    if( QEvent::Leave == event->type() )
+    {
+      qobject_cast<QFrame*>(this->ui->vtkWidget->parent())->setStyleSheet("border : 3px solid green");
+    }
+  }
+  return false;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

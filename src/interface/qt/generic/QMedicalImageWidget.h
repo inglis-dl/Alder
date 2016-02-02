@@ -47,6 +47,8 @@ public slots:
 protected:
   void updateInterface();
 
+  bool eventFilter( QObject *, QEvent * );
+
   vtkSmartPointer<vtkMedicalImageViewer> viewer;
 
 protected slots:

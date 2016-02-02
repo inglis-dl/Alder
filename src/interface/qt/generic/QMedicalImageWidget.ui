@@ -146,7 +146,25 @@
     </widget>
    </item>
    <item>
-    <widget class="QVTKWidget" name="vtkWidget"/>
+    <widget class="QFrame" name="frame">
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <property name="margin">
+       <number>0</number>
+      </property>
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QVTKWidget" name="vtkWidget"/>
+      </item>
+     </layout>
+    </widget>
    </item>
    <item>
     <widget class="QAlderFramePlayerWidget" name="framePlayerWidget" native="true"/>

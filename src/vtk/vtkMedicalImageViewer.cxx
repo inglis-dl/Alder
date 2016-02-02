@@ -134,7 +134,7 @@ class vtkOrientationCharCallback : public vtkCommand {
     void* vtkNotUsed(callData) )
   {
      vtkRenderWindowInteractor *rwi = this->Viewer->GetInteractor();
-     if ( 3 == this->Viewer->GetImageDimensionality() ) return;
+     if ( 3 != this->Viewer->GetImageDimensionality() ) return;
      if( rwi )
      {
       switch (rwi->GetKeyCode())
@@ -568,7 +568,7 @@ void vtkMedicalImageViewer::SetRenderWindow( vtkRenderWindow *arg )
 
   this->InstallPipeline();
 
-  if( this->Interactor == 0 && this->RenderWindow )
+  if( 0 == this->Interactor && this->RenderWindow )
   {
     this->SetInteractor( this->RenderWindow->GetInteractor() );
   }
@@ -805,6 +805,8 @@ void vtkMedicalImageViewer::InitializeCameraViews()
     camera->SetFocalPoint( fpt );
     camera->SetPosition( pos );
     camera->SetViewUp( vup );
+    camera->ComputeViewPlaneNormal();
+    camera->OrthogonalizeViewUp();
 
     this->Renderer->ResetCamera( bounds );
     this->Render();
@@ -859,6 +861,8 @@ void vtkMedicalImageViewer::UpdateCameraView()
     camera->SetPosition( pos );
     camera->SetFocalPoint( fpt );
     camera->SetViewUp( v );
+    camera->ComputeViewPlaneNormal();
+    camera->OrthogonalizeViewUp();
     camera->SetParallelScale( this->CameraParallelScale[this->ViewOrientation] );
     camera->SetClippingRange( this->CameraClippingRange[this->ViewOrientation] );
   }
