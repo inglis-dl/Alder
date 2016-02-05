@@ -295,7 +295,7 @@ public:
   //@}
 
   /** Record the current camera parameters */
-  void RecordCameraView();
+  void RecordCameraView( int specified = -1 );
 
   //@}
   //@{

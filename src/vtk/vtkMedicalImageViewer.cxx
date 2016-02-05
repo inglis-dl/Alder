@@ -809,15 +809,14 @@ void vtkMedicalImageViewer::InitializeCameraViews()
     camera->OrthogonalizeViewUp();
 
     this->Renderer->ResetCamera( bounds );
-    this->Render();
-    this->RecordCameraView();
+    this->RecordCameraView( w );
 
     this->LastSlice[w] = extent[2*w];
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkMedicalImageViewer::RecordCameraView()
+void vtkMedicalImageViewer::RecordCameraView( int specified )
 {
   vtkCamera *camera = this->Renderer->GetActiveCamera();
 
@@ -829,16 +828,17 @@ void vtkMedicalImageViewer::RecordCameraView()
     camera->GetPosition( pos );
     camera->GetFocalPoint( fpt );
     camera->GetViewUp( v );
+    int w = (-1 == specified) ? this->ViewOrientation : specified;
     for( int i = 0; i < 3; ++i )
     {
-      this->CameraPosition[this->ViewOrientation][i]   = pos[i];
-      this->CameraFocalPoint[this->ViewOrientation][i] = fpt[i];
-      this->CameraViewUp[this->ViewOrientation][i]     = v[i];
+      this->CameraPosition[w][i]   = pos[i];
+      this->CameraFocalPoint[w][i] = fpt[i];
+      this->CameraViewUp[w][i]     = v[i];
     }
-    this->CameraParallelScale[this->ViewOrientation] = camera->GetParallelScale();
-    this->CameraDistance[this->ViewOrientation] = camera->GetDistance();
-    this->CameraClippingRange[this->ViewOrientation][0] = camera->GetClippingRange()[0];
-    this->CameraClippingRange[this->ViewOrientation][1] = camera->GetClippingRange()[1];
+    this->CameraParallelScale[w] = camera->GetParallelScale();
+    this->CameraDistance[w] = camera->GetDistance();
+    this->CameraClippingRange[w][0] = camera->GetClippingRange()[0];
+    this->CameraClippingRange[w][1] = camera->GetClippingRange()[1];
   }
 }
 
