@@ -32,6 +32,10 @@
 #include <gdcmTrace.h>
 #include <gdcmWriter.h>
 
+#include <vtkDICOMCompiler.h>
+#include <vtkDICOMReader.h>
+#include <vtkDICOMMetaData.h>
+
 #include <stdexcept>
 
 namespace Alder
@@ -223,32 +227,24 @@ namespace Alder
     if( ".gz" == fileName.substr( fileName.size() - 3, 3 ) )
       fileName = fileName.substr( 0, fileName.size() - 3 );
 
-    gdcm::ImageReader reader;
-    reader.SetFileName( fileName.c_str() );
-    if( !reader.Read() )
-      throw std::runtime_error( "Unable to read file as DICOM." );
+    vtkNew<vtkDICOMReader> dcmReader;
+    dcmReader->SetFileName( fileName.c_str() );
+    dcmReader->UpdateInformation();
 
-    const gdcm::File &file = reader.GetFile();
-    const gdcm::DataSet &ds = file.GetDataSet();
-
-    // TODO: use GDCM to get the correct tags
-    gdcm::Tag tag;
-    if( "AcquisitionDateTime" == tagName ) tag = gdcm::Tag( 0x0008, 0x002a );
-    else if( "SeriesNumber" == tagName )   tag = gdcm::Tag( 0x0020, 0x0011 );
-    else if( "PatientsName" == tagName )   tag = gdcm::Tag( 0x0010, 0x0010 );
-    else if( "Laterality" == tagName )     tag = gdcm::Tag( 0x0020, 0x0060 );
-    else if( "Manufacturer" == tagName )   tag = gdcm::Tag( 0x0008, 0x0070 );
-    else throw std::runtime_error( "Unknown DICOM tag name." );
-
-    if( !ds.FindDataElement( tag ) )
-      throw std::runtime_error( "Unknown DICOM tag with name " + tagName );
-
-    // suppress gdcm warnings
-    bool warn = gdcm::Trace::GetWarningFlag();
-    gdcm::Trace::WarningOff();
-    std::string value =
-      gdcm::DirectoryHelper::GetStringValueFromTag( tag, ds );
-    gdcm::Trace::SetWarning( warn );
+    vtkDICOMMetaData* meta = dcmReader->GetMetaData();
+    std::string value;
+    if( "AcquisitionDateTime" == tagName )
+      value = meta->GetAttributeValue( vtkDICOMTag( 0x0008, 0x002a ) ).AsString();
+    else if( "SeriesNumber" == tagName )
+      value = meta->GetAttributeValue( vtkDICOMTag( 0x0020, 0x0011 ) ).AsString();
+    else if( "PatientName" == tagName )
+      value = meta->GetAttributeValue( vtkDICOMTag( 0x0010, 0x0010 ) ).AsString();
+    else if( "Laterality" == tagName )
+      value = meta->GetAttributeValue( vtkDICOMTag( 0x0020, 0x0060 ) ).AsString();
+    else if( "Manufacturer" == tagName )
+      value = meta->GetAttributeValue( vtkDICOMTag( 0x0008, 0x0070 ) ).AsString();
+    else
+      throw std::runtime_error( "Unknown DICOM tag name." );
 
     return value;
   }
@@ -297,7 +293,7 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Image::AnonymizeDICOM()
   {
-    if( !this->GetDICOMTag( "PatientsName" ).empty() )
+    if( !this->GetDICOMTag( "PatientName" ).empty() )
     {
       Application *app = Application::GetInstance();
       gdcm::Reader gdcmRead;
@@ -518,7 +514,7 @@ namespace Alder
     else if( "LateralBoneDensity" == typeStr )
     {
       // the lateral spine scans do not have a report to clean:
-      // anoymize the PatientsName dicom tag
+      // anoymize the PatientName dicom tag
       this->AnonymizeDICOM();
       return true;
     }
@@ -564,9 +560,10 @@ namespace Alder
       return false;
     }
 
+    int nComp = image->GetNumberOfScalarComponents();
     vtkNew< vtkImageCanvasSource2D > canvas;
     // copy the image onto the canvas
-    canvas->SetNumberOfScalarComponents( image->GetNumberOfScalarComponents() );
+    canvas->SetNumberOfScalarComponents( nComp );
     canvas->SetScalarType( image->GetScalarType() );
     canvas->SetExtent( extent );
     canvas->DrawImage( 0, 0, image );
@@ -581,41 +578,24 @@ namespace Alder
     flip->SetFilteredAxis( 1 );
     flip->Update();
 
-    // byte size of the original dicom file
-    unsigned long flength = Alder::Utilities::getFileLength( fileName );
     // byte size of the image
-    unsigned long ilength = dims[0]*dims[1]*3;
-    // byte size of the dicom header
-    unsigned long hlength = flength - ilength;
+    unsigned long length = dims[0]*dims[1]*nComp;
 
-    // read in the input dicom file
-    std::ifstream infs;
-    infs.open( fileName.c_str(), std::fstream::binary );
-    if( !infs.is_open() )
-      throw std::runtime_error( "ERROR: failed to stream in dicom data" );
+    vtkNew<vtkDICOMReader> dcmReader;
+    dcmReader->SetFileName( fileName.c_str() );
+    dcmReader->UpdateInformation();
 
-    char* buffer = new char[flength];
-    infs.read( buffer, hlength );
-    infs.close();
+    vtkDICOMMetaData* meta = dcmReader->GetMetaData();
+    meta->SetAttributeValue( vtkDICOMTag( 0x0010, 0x0010 ), std::string("") );
 
-    // output the repaired dicom file
-    std::ofstream outfs;
-    outfs.open( fileName.c_str(), std::ofstream::binary | std::ofstream::trunc );
-
-    if( !outfs.is_open() )
-    {
-      delete[] buffer;
-      throw std::runtime_error( "ERROR: failed to stream out dicom data" );
-    }
-
-    outfs.write( buffer, hlength );
-    outfs.write( (char*)(flip->GetOutput()->GetScalarPointer()), ilength );
-    outfs.close();
-
-    delete[] buffer;
-
-    // anonymize the PatientsName dicom tag
-    this->AnonymizeDICOM();
+    vtkNew<vtkDICOMCompiler> dcmCompiler;
+    dcmCompiler->SetFileName( fileName.c_str() );
+    dcmCompiler->KeepOriginalPixelDataVROff();
+    dcmCompiler->SetMetaData( meta );
+    dcmCompiler->WriteHeader();
+    dcmCompiler->WritePixelData(
+      reinterpret_cast<unsigned char *>( flip->GetOutput()->GetScalarPointer() ), length );
+    dcmCompiler->Close();
 
     return true;
   }

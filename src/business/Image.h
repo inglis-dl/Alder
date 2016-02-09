@@ -111,7 +111,7 @@ namespace Alder
      * Get a DICOM tag value. Accepted tag names are:
      *   AcquisitionDateTime - 0x0008, 0x002a
      *   SeriesNumber        - 0x0020, 0x0011
-     *   PatientsName        - 0x0010, 0x0010
+     *   PatientName         - 0x0010, 0x0010
      *   Laterality          - 0x0020, 0x0060
      *   Manufacturer        - 0x0008, 0x0070
      * No checking is done to ensure this is a dicom image: use
@@ -147,7 +147,7 @@ namespace Alder
     void SetExamSideFromDICOM();
 
     /**
-     * Anonymize a dicom image by clearing the PatientsName tag.
+     * Anonymize a dicom image by clearing the PatientName tag.
      * No checking is done to ensure this is a dicom image: use
      * IsDICOM() method to check first.
      * @return whether the file was anonymized

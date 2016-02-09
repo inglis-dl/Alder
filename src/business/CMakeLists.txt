@@ -45,6 +45,7 @@ TARGET_LINK_LIBRARIES( AlderBusiness
   AlderVTK
   ${CURL_LIBRARY}
   ${JSONCPP_LIBRARIES}
+  vtkDICOM
 )
 
 INSTALL( TARGETS AlderBusiness

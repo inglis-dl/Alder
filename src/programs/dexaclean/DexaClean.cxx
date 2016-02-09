@@ -145,7 +145,7 @@ int main( int argc, char** argv )
            << "Downloaded: "  << exam->Get( "Downloaded" ).ToInt() << std::endl;
 
           //check the dicom tag for a patient name
-          std::string nameStr = image->GetDICOMTag( "PatientsName" );
+          std::string nameStr = image->GetDICOMTag( "PatientName" );
           if( !nameStr.empty() ) 
           {
             std::cout << "CONFIDENTIALITY BREECH! " << nameStr << std::endl;
