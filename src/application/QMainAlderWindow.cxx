@@ -16,7 +16,6 @@
 #include <User.h>
 
 #include <vtkEventQtSlotConnect.h>
-#include <vtkMedicalImageViewer.h>
 #include <vtkNew.h>
 
 #include <QAboutDialog.h>
