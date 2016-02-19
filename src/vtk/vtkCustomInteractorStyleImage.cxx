@@ -33,13 +33,13 @@ void vtkCustomInteractorStyleImage::WindowLevel()
 
   if (this->HandleObservers &&
       this->HasObserver(vtkCommand::WindowLevelEvent))
-    {
+  {
     this->InvokeEvent(vtkCommand::WindowLevelEvent, this);
-    }
+  }
   else
-    {
+  {
     if (this->CurrentImageProperty)
-      {
+    {
       int *size = this->CurrentRenderer->GetSize();
 
       double window = this->WindowLevelInitial[0];
@@ -55,21 +55,21 @@ void vtkCustomInteractorStyleImage::WindowLevel()
       // Scale by current values
 
       if ( fabs( window ) > 0.01 )
-        {
+      {
         dx = dx * window;
-        }
+      }
       else
-        {
+      {
         dx = dx * ( window < 0 ? -0.01 : 0.01 );
-        }
+      }
       if ( fabs( level ) > 0.01 )
-        {
+      {
         dy = dy * level;
-        }
+      }
       else
-        {
+      {
         dy = dy * ( level < 0 ? -0.01 : 0.01 );
-        }
+      }
 
       // Abs so that direction does not flip
 
@@ -78,9 +78,9 @@ void vtkCustomInteractorStyleImage::WindowLevel()
         dx = -1 * dx;
         }
       if ( level < 0.0 )
-        {
+      {
         dy = -1 * dy;
-        }
+      }
 
       // Compute new window level
 
@@ -88,16 +88,16 @@ void vtkCustomInteractorStyleImage::WindowLevel()
       double newLevel = level - dy;
 
       if ( newWindow < 0.01 )
-        {
+      {
         newWindow = 0.01;
-        }
+      }
 
       this->CurrentImageProperty->SetColorWindow(newWindow);
       this->CurrentImageProperty->SetColorLevel(newLevel);
 
       this->Interactor->Render();
-      }
     }
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -107,7 +107,7 @@ void vtkCustomInteractorStyleImage::OnChar()
 
   // trap x y z char
   switch (rwi->GetKeyCode())
-    {
+  {
     case 'x' :
     case 'X' :
     case 'y' :
@@ -119,7 +119,7 @@ void vtkCustomInteractorStyleImage::OnChar()
     default:
       this->Superclass::OnChar();
       break;
-    }
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

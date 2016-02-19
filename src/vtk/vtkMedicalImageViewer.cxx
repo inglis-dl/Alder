@@ -116,6 +116,7 @@ class vtkAnimationCueCallback : public vtkCommand
     void Execute( vtkObject* vtkNotUsed(caller), unsigned long vtkNotUsed(event),
                   void * vtkNotUsed(callData) )
     {
+      if( !this->Viewer ) return;
       this->Viewer->SetSlice( this->Player->GetFrameNo() );
     }
 
@@ -133,30 +134,31 @@ class vtkOrientationCharCallback : public vtkCommand {
   void Execute( vtkObject* vtkNotUsed(caller), unsigned long vtkNotUsed(event),
     void* vtkNotUsed(callData) )
   {
-     vtkRenderWindowInteractor *rwi = this->Viewer->GetInteractor();
-     if ( 3 != this->Viewer->GetImageDimensionality() ) return;
-     if( rwi )
-     {
+    if( !this->Viewer ) return;
+    if ( 3 != this->Viewer->GetImageDimensionality() ) return;
+    vtkRenderWindowInteractor *rwi = this->Viewer->GetInteractor();
+    if( rwi )
+    {
       switch (rwi->GetKeyCode())
       {
         case 'x' :
         case 'X' :
           {
-          this->Viewer->SetViewOrientationToYZ();
+            this->Viewer->SetViewOrientationToYZ();
           }
           break;
 
         case 'y' :
         case 'Y' :
           {
-          this->Viewer->SetViewOrientationToXZ();
+            this->Viewer->SetViewOrientationToXZ();
           }
           break;
 
         case 'z' :
         case 'Z' :
           {
-          this->Viewer->SetViewOrientationToXY();
+            this->Viewer->SetViewOrientationToXY();
           }
           break;       
       }
