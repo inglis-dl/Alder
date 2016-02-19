@@ -47,10 +47,12 @@
 // Qt includes
 #include <QAbstractAnimation>
 #include <QIcon>
+#include <QPointer>
 #include <QWidget>
 
 // VTK includes
 class vtkMedicalImageViewer;
+class QAlderSliceView;
 class QAlderFramePlayerWidgetPrivate;
 
 class QAlderFramePlayerWidget : public QWidget
@@ -185,6 +187,8 @@ public:
   void setViewer(vtkMedicalImageViewer* viewer);
   vtkMedicalImageViewer* viewer() const;
   //@}
+
+  void setSliceView( QAlderSliceView* );
 
   //@{
   /** Set/Get the first frame icon. */
@@ -386,6 +390,7 @@ signals:
 
 protected:
   QScopedPointer<QAlderFramePlayerWidgetPrivate> d_ptr;
+  QPointer<QAlderSliceView> sliceView;
 
 private:
   Q_DECLARE_PRIVATE(QAlderFramePlayerWidget);

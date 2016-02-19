@@ -26,6 +26,8 @@
 #include <QAlderFramePlayerWidget.h>
 #include <ui_QAlderFramePlayerWidget.h>
 
+#include <QAlderSliceView.h>
+
 // Qt includes
 #include <QIcon>
 #include <QTime>
@@ -127,21 +129,45 @@ void QAlderFramePlayerWidgetPrivate::PipelineInfoType::printSelf()const
 QAlderFramePlayerWidgetPrivate::PipelineInfoType
 QAlderFramePlayerWidgetPrivate::retrievePipelineInfo()
 {
+  Q_Q(QAlderFramePlayerWidget);
   PipelineInfoType pipeInfo;
 
-  pipeInfo.isConnected = this->isConnected();
-  if (!pipeInfo.isConnected)
-    return pipeInfo;
-  if( this->viewer->GetImageDimensionality() < 3 ) 
-    return pipeInfo;
+  if( this->viewer )
+  {
+    pipeInfo.isConnected = this->isConnected();
+    if( !pipeInfo.isConnected )
+    {
+      return pipeInfo;
+    }
+    if( this->viewer->GetImageDimensionality() < 3 )
+    {
+      return pipeInfo;
+    }
 
-  pipeInfo.numberOfFrames =
-    this->viewer->GetNumberOfSlices();
-  pipeInfo.frameRange[0] = this->viewer->GetSliceMin();
-  pipeInfo.frameRange[1] = this->viewer->GetSliceMax();
-  
-  pipeInfo.currentFrame = this->viewer->GetSlice();
-  pipeInfo.maxFrameRate = this->viewer->GetMaxFrameRate();
+    pipeInfo.frameRange[0] = this->viewer->GetSliceMin();
+    pipeInfo.frameRange[1] = this->viewer->GetSliceMax();
+    pipeInfo.numberOfFrames = this->viewer->GetNumberOfSlices();
+    pipeInfo.currentFrame = this->viewer->GetSlice();
+    pipeInfo.maxFrameRate = this->viewer->GetMaxFrameRate();
+  }
+  else
+  {
+    pipeInfo.isConnected = !q->sliceView.isNull();
+    if( !pipeInfo.isConnected )
+    {
+      return pipeInfo;
+    }
+    if( q->sliceView.data()->dimensionality() < 3 )
+    {
+      pipeInfo.isConnected = false;
+      return pipeInfo;
+    }
+
+    pipeInfo.frameRange[0] = q->sliceView->sliceMin();
+    pipeInfo.frameRange[1] = q->sliceView->sliceMax();
+    pipeInfo.numberOfFrames = pipeInfo.frameRange[1] - pipeInfo.frameRange[0] + 1;
+    pipeInfo.currentFrame = q->sliceView->slice();
+  }
 
   return pipeInfo;
 }
@@ -159,7 +185,7 @@ clampTimeInterval(double playbackSpeed, double maxFrameRate) const
 
   // Clamp the frame rate
   double rate = qMin( playbackSpeed, maxFrameRate);
-  
+
   // return the time interval
   return  1000. / rate;
 }
@@ -167,9 +193,9 @@ clampTimeInterval(double playbackSpeed, double maxFrameRate) const
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 double QAlderFramePlayerWidgetPrivate::PipelineInfoType::validateFrame(double frame) const
 {
-  if (this->numberOfFrames == 0)
+  if( 0 == this->numberOfFrames )
     return vtkMath::Nan();
-  else if (this->numberOfFrames == 1)
+  else if ( 1 == this->numberOfFrames )
     return this->frameRange[0];
   return frame;
 }
@@ -177,34 +203,34 @@ double QAlderFramePlayerWidgetPrivate::PipelineInfoType::validateFrame(double fr
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 double QAlderFramePlayerWidgetPrivate::PipelineInfoType::previousFrame() const
 {
-  return this->validateFrame(this->currentFrame-1);
+  return this->validateFrame( this->currentFrame - 1 );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 double QAlderFramePlayerWidgetPrivate::PipelineInfoType::nextFrame() const
 {
-  return this->validateFrame(this->currentFrame+1);
+  return this->validateFrame( this->currentFrame + 1 );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderFramePlayerWidgetPrivate::setupUi(QWidget* widget)
+void QAlderFramePlayerWidgetPrivate::setupUi( QWidget* widget )
 {
   Q_Q(QAlderFramePlayerWidget);
 
-  this->Ui_QAlderFramePlayerWidget::setupUi(widget);
-  this->timer = new QTimer(widget);
+  this->Ui_QAlderFramePlayerWidget::setupUi( widget );
+  this->timer = new QTimer( widget );
 
   // Connect Menu ToolBars actions
-  q->connect(this->firstFrameButton, SIGNAL(pressed()), q, SLOT(goToFirstFrame()));
-  q->connect(this->previousFrameButton, SIGNAL(pressed()), q, SLOT(goToPreviousFrame()));
-  q->connect(this->playButton, SIGNAL(toggled(bool)), q, SLOT(playForward(bool)));
-  q->connect(this->playReverseButton, SIGNAL(toggled(bool)), q, SLOT(playBackward(bool)));
-  q->connect(this->nextFrameButton, SIGNAL(pressed()), q, SLOT(goToNextFrame()));
-  q->connect(this->lastFrameButton, SIGNAL(pressed()), q, SLOT(goToLastFrame()));
-  q->connect(this->speedFactorSpinBox, SIGNAL(valueChanged(double)), q, SLOT(setPlaySpeed(double)));
+  q->connect( this->firstFrameButton, SIGNAL(pressed()), q, SLOT(goToFirstFrame()) );
+  q->connect( this->previousFrameButton, SIGNAL(pressed()), q, SLOT(goToPreviousFrame()) );
+  q->connect( this->playButton, SIGNAL(toggled(bool)), q, SLOT(playForward(bool)) );
+  q->connect( this->playReverseButton, SIGNAL(toggled(bool)), q, SLOT(playBackward(bool)) );
+  q->connect( this->nextFrameButton, SIGNAL(pressed()), q, SLOT(goToNextFrame()) );
+  q->connect( this->lastFrameButton, SIGNAL(pressed()), q, SLOT(goToLastFrame()) );
+  q->connect( this->speedFactorSpinBox, SIGNAL(valueChanged(double)), q, SLOT(setPlaySpeed(double)) );
 
   // Connect the time slider
-  q->connect(this->frameSlider, SIGNAL(valueChanged(double)), q, SLOT(setCurrentFrame(double)));
+  q->connect( this->frameSlider, SIGNAL(valueChanged(double)), q, SLOT(setCurrentFrame(double)) );
   this->frameSlider->setSuffix("");
   this->frameSlider->setDecimals(0);
   this->frameSlider->setSingleStep(1);
@@ -217,28 +243,28 @@ void QAlderFramePlayerWidgetPrivate::setupUi(QWidget* widget)
 void QAlderFramePlayerWidgetPrivate::updateUi()
 {
   PipelineInfoType pipeInfo = this->retrievePipelineInfo();
-  this->updateUi(pipeInfo);
+  this->updateUi( pipeInfo );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderFramePlayerWidgetPrivate::updateUi(const PipelineInfoType& pipeInfo)
 {
   // Buttons
-  this->firstFrameButton->setEnabled((pipeInfo.currentFrame > pipeInfo.frameRange[0]));
-  this->previousFrameButton->setEnabled((pipeInfo.currentFrame > pipeInfo.frameRange[0]));
-  this->playButton->setEnabled((pipeInfo.numberOfFrames > 1));
-  this->playReverseButton->setEnabled((pipeInfo.numberOfFrames > 1));
-  this->nextFrameButton->setEnabled((pipeInfo.currentFrame < pipeInfo.frameRange[1]));
-  this->lastFrameButton->setEnabled((pipeInfo.currentFrame < pipeInfo.frameRange[1]));
-  this->repeatButton->setEnabled((pipeInfo.numberOfFrames > 1));
-  this->speedFactorSpinBox->setEnabled((pipeInfo.numberOfFrames > 1));
+  this->firstFrameButton->setEnabled( (pipeInfo.currentFrame > pipeInfo.frameRange[0]) );
+  this->previousFrameButton->setEnabled( (pipeInfo.currentFrame > pipeInfo.frameRange[0]) );
+  this->playButton->setEnabled( (pipeInfo.numberOfFrames > 1) );
+  this->playReverseButton->setEnabled( (pipeInfo.numberOfFrames > 1) );
+  this->nextFrameButton->setEnabled( (pipeInfo.currentFrame < pipeInfo.frameRange[1]) );
+  this->lastFrameButton->setEnabled( (pipeInfo.currentFrame < pipeInfo.frameRange[1]) );
+  this->repeatButton->setEnabled( (pipeInfo.numberOfFrames > 1) );
+  this->speedFactorSpinBox->setEnabled( (pipeInfo.numberOfFrames > 1) );
 
   // Slider
-  this->frameSlider->blockSignals(true);
-  this->frameSlider->setEnabled((pipeInfo.frameRange[0]!=pipeInfo.frameRange[1]));
-  this->frameSlider->setRange(pipeInfo.frameRange[0], pipeInfo.frameRange[1]);
-  this->frameSlider->setValue(pipeInfo.currentFrame);
-  this->frameSlider->blockSignals(false);
+  this->frameSlider->blockSignals( true );
+  this->frameSlider->setEnabled( (pipeInfo.frameRange[0] != pipeInfo.frameRange[1]) );
+  this->frameSlider->setRange( pipeInfo.frameRange[0], pipeInfo.frameRange[1] );
+  this->frameSlider->setValue( pipeInfo.currentFrame );
+  this->frameSlider->blockSignals( false );
 
   // SpinBox
   // the max frame rate from the pipeinfo object is set fom the viewer's information
@@ -258,15 +284,22 @@ void QAlderFramePlayerWidgetPrivate::requestData(const PipelineInfoType& pipeInf
   Q_Q(QAlderFramePlayerWidget);
 
   // We clamp the time requested
-  frame = qBound( pipeInfo.frameRange[0], 
-            static_cast<double>(vtkMath::Round(frame)), 
+  frame = qBound( pipeInfo.frameRange[0],
+            static_cast<double>(vtkMath::Round(frame)),
             pipeInfo.frameRange[1] );
 
   // Abort the request
   if (!pipeInfo.isConnected || frame == pipeInfo.currentFrame)
     return;
 
-  this->viewer->SetSlice( frame );
+  if( this->viewer )
+  {
+    this->viewer->SetSlice( frame );
+  }
+  else
+  {
+    q->sliceView.data()->setSlice( frame );
+  }
   emit q->currentFrameChanged(frame); // Emit the change
 }
 
@@ -274,17 +307,17 @@ void QAlderFramePlayerWidgetPrivate::requestData(const PipelineInfoType& pipeInf
 void QAlderFramePlayerWidgetPrivate::processRequest(double frame)
 {
   PipelineInfoType pipeInfo = this->retrievePipelineInfo();
-  this->processRequest(pipeInfo, frame);
+  this->processRequest( pipeInfo, frame );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderFramePlayerWidgetPrivate::processRequest(const PipelineInfoType& pipeInfo,
                                                  double frame)
 {
-  if (vtkMath::IsNan(frame))
+  if( vtkMath::IsNan(frame) )
     return;
 
-  this->requestData(pipeInfo, frame);
+  this->requestData( pipeInfo, frame );
   this->updateUi();
 }
 
@@ -313,6 +346,7 @@ QAlderFramePlayerWidget::~QAlderFramePlayerWidget()
 {
   Q_D(QAlderFramePlayerWidget);
   this->stop();
+  this->sliceView = 0;
   d->viewer = 0;
 }
 
@@ -340,6 +374,18 @@ void QAlderFramePlayerWidget::updateFromViewer()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderFramePlayerWidget::setSliceView( QAlderSliceView* view )
+{
+  Q_D(QAlderFramePlayerWidget);
+  this->sliceView = view;
+  if( !this->sliceView.isNull() )
+  {
+    connect( this->sliceView.data(), SIGNAL( imageDataChanged() ), this, SLOT( goToFirstFrame() ) );
+  }
+  d->updateUi();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderFramePlayerWidget::goToFirstFrame()
 {
   Q_D(QAlderFramePlayerWidget);
@@ -360,7 +406,7 @@ void QAlderFramePlayerWidget::goToPreviousFrame()
   QAlderFramePlayerWidgetPrivate::PipelineInfoType
     pipeInfo = d->retrievePipelineInfo();
 
-  d->processRequest(pipeInfo, pipeInfo.previousFrame());
+  d->processRequest( pipeInfo, pipeInfo.previousFrame() );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -372,7 +418,7 @@ void QAlderFramePlayerWidget::goToNextFrame()
   QAlderFramePlayerWidgetPrivate::PipelineInfoType
     pipeInfo = d->retrievePipelineInfo();
 
-  d->processRequest(pipeInfo, pipeInfo.nextFrame());
+  d->processRequest( pipeInfo, pipeInfo.nextFrame() );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -384,15 +430,15 @@ void QAlderFramePlayerWidget::goToLastFrame()
   QAlderFramePlayerWidgetPrivate::PipelineInfoType
     pipeInfo = d->retrievePipelineInfo();
 
-  d->processRequest(pipeInfo, pipeInfo.frameRange[1]);
+  d->processRequest( pipeInfo, pipeInfo.frameRange[1] );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderFramePlayerWidget::play(bool playPause)
 {
-  if (!playPause)
+  if( !playPause )
     this->pause();
-  if (playPause)
+  if( playPause )
     this->play();
 }
 
@@ -406,48 +452,52 @@ void QAlderFramePlayerWidget::play()
     pipeInfo = d->retrievePipelineInfo();
   double period = pipeInfo.frameRange[1] - pipeInfo.frameRange[0];
 
-  if (!d->viewer || period == 0)
+  if( !pipeInfo.isConnected || 0 == period )
     return;
 
-  if (d->direction == QAbstractAnimation::Forward) {
-      d->playReverseButton->blockSignals(true);
-      d->playReverseButton->setChecked(false);
-      d->playReverseButton->blockSignals(false);
+  if( QAbstractAnimation::Forward == d->direction )
+  {
+    d->playReverseButton->blockSignals(true);
+    d->playReverseButton->setChecked(false);
+    d->playReverseButton->blockSignals(false);
 
-      // Use when set the play by script
-      if (!d->playButton->isChecked()) {
-        d->playButton->blockSignals(true);
-        d->playButton->setChecked(true);
-        d->playButton->blockSignals(false);
-      }
+    // Use when set the play by script
+    if( !d->playButton->isChecked() )
+    {
+      d->playButton->blockSignals(true);
+      d->playButton->setChecked(true);
+      d->playButton->blockSignals(false);
+    }
 
     // We reset the Slider to the initial value if we play from the end
-    if (pipeInfo.currentFrame == pipeInfo.frameRange[1])
+    if( pipeInfo.currentFrame == pipeInfo.frameRange[1] )
       d->frameSlider->setValue(pipeInfo.frameRange[0]);
   }
-  else if (d->direction == QAbstractAnimation::Backward) {
-      d->playButton->blockSignals(true);
-      d->playButton->setChecked(false);
-      d->playButton->blockSignals(false);
+  else if( QAbstractAnimation::Backward == d->direction )
+  {
+    d->playButton->blockSignals(true);
+    d->playButton->setChecked(false);
+    d->playButton->blockSignals(false);
 
-      // Use when set the play by script
-      if (!d->playReverseButton->isChecked()) {
-        d->playReverseButton->blockSignals(true);
-        d->playReverseButton->setChecked(true);
-        d->playReverseButton->blockSignals(false);
-      }
+    // Use when set the play by script
+    if( !d->playReverseButton->isChecked() )
+    {
+      d->playReverseButton->blockSignals(true);
+      d->playReverseButton->setChecked(true);
+      d->playReverseButton->blockSignals(false);
+    }
 
     // We reset the Slider to the initial value if we play from the beginning
-    if (pipeInfo.currentFrame == pipeInfo.frameRange[0])
+    if( pipeInfo.currentFrame == pipeInfo.frameRange[0] )
       d->frameSlider->setValue(pipeInfo.frameRange[1]);
   }
 
   double timeInterval =
-    pipeInfo.clampTimeInterval(d->speedFactorSpinBox->value(), d->maxFrameRate);
+    pipeInfo.clampTimeInterval( d->speedFactorSpinBox->value(), d->maxFrameRate );
 
   d->realTime.start();
-  d->timer->start(timeInterval);
-  emit this->playing(true);
+  d->timer->start( timeInterval );
+  emit this->playing( true );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -455,12 +505,13 @@ void QAlderFramePlayerWidget::pause()
 {
   Q_D(QAlderFramePlayerWidget);
 
-  if (d->direction == QAbstractAnimation::Forward)
+  if( QAbstractAnimation::Forward == d->direction )
     d->playButton->setChecked(false);
-  else if (d->direction == QAbstractAnimation::Backward)
+  else if( QAbstractAnimation::Backward == d->direction )
     d->playReverseButton->setChecked(false);
 
-  if (d->timer->isActive()) {
+  if( d->timer->isActive() )
+  {
     d->timer->stop();
     emit this->playing(false);
   }
@@ -474,17 +525,17 @@ void QAlderFramePlayerWidget::stop()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderFramePlayerWidget::playForward(bool play)
+void QAlderFramePlayerWidget::playForward( bool play )
 {
-  this->setDirection(QAbstractAnimation::Forward);
-  this->play(play);
+  this->setDirection( QAbstractAnimation::Forward );
+  this->play( play );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderFramePlayerWidget::playBackward(bool play)
+void QAlderFramePlayerWidget::playBackward( bool play )
 {
-  this->setDirection(QAbstractAnimation::Backward);
-  this->play(play);
+  this->setDirection( QAbstractAnimation::Backward );
+  this->play( play );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -499,32 +550,38 @@ void QAlderFramePlayerWidget::onTick()
   QAlderFramePlayerWidgetPrivate::PipelineInfoType
     pipeInfo = d->retrievePipelineInfo();
 
-  // currentFrame + number of milliseconds since starting x speed x direction  
+  // currentFrame + number of milliseconds since starting x speed x direction
   double sec = d->realTime.restart() / 1000.;
   double frameRequest = pipeInfo.currentFrame + sec *
                        d->speedFactorSpinBox->value() *
                        ((d->direction == QAbstractAnimation::Forward) ? 1 : -1);
 
-  if (d->playButton->isChecked() && !d->playReverseButton->isChecked()) {
-    if (frameRequest > pipeInfo.frameRange[1] && !d->repeatButton->isChecked()) {
-      d->processRequest(pipeInfo, frameRequest);
-      this->playForward(false);
+  if( d->playButton->isChecked() && !d->playReverseButton->isChecked() )
+  {
+    if( frameRequest > pipeInfo.frameRange[1] && !d->repeatButton->isChecked() )
+    {
+      d->processRequest( pipeInfo, frameRequest );
+      this->playForward( false );
       return;
     }
-    else if (frameRequest > pipeInfo.frameRange[1] &&
-             d->repeatButton->isChecked()) { // We Loop
+    else if( frameRequest > pipeInfo.frameRange[1] &&
+             d->repeatButton->isChecked() )
+    { // We Loop
       frameRequest = pipeInfo.frameRange[0];
       emit this->loop();
     }
   }
-  else if (!d->playButton->isChecked() && d->playReverseButton->isChecked()) {
-    if (frameRequest < pipeInfo.frameRange[0] && !d->repeatButton->isChecked()) {
-      d->processRequest(pipeInfo, frameRequest);
-      this->playBackward(false);
+  else if( !d->playButton->isChecked() && d->playReverseButton->isChecked() )
+  {
+    if( frameRequest < pipeInfo.frameRange[0] && !d->repeatButton->isChecked() )
+    {
+      d->processRequest( pipeInfo, frameRequest );
+      this->playBackward( false );
       return;
     }
-    else if (frameRequest < pipeInfo.frameRange[0] &&
-             d->repeatButton->isChecked()) { // We Loop
+    else if( frameRequest < pipeInfo.frameRange[0] &&
+             d->repeatButton->isChecked())
+    { // We Loop
       frameRequest = pipeInfo.frameRange[1];
       emit this->loop();
     }
@@ -534,29 +591,29 @@ void QAlderFramePlayerWidget::onTick()
     return; // Undefined status
   }
 
-  d->processRequest(pipeInfo, frameRequest);
+  d->processRequest( pipeInfo, frameRequest );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderFramePlayerWidget::setCurrentFrame(double frame)
+void QAlderFramePlayerWidget::setCurrentFrame( double frame )
 {
   Q_D(QAlderFramePlayerWidget);
-  d->processRequest(frame);
+  d->processRequest( frame );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderFramePlayerWidget::setPlaySpeed(double speedFactor)
+void QAlderFramePlayerWidget::setPlaySpeed( double speedFactor )
 {
   Q_D(QAlderFramePlayerWidget);
   speedFactor = speedFactor <= 0. ? 1. : speedFactor;
-  d->speedFactorSpinBox->setValue(speedFactor);
+  d->speedFactorSpinBox->setValue( speedFactor );
 
   QAlderFramePlayerWidgetPrivate::PipelineInfoType
     pipeInfo = d->retrievePipelineInfo();
 
   double timeInterval =
     pipeInfo.clampTimeInterval(speedFactor, d->maxFrameRate);
-  d->timer->setInterval(timeInterval);
+  d->timer->setInterval( timeInterval );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -748,7 +805,8 @@ void QAlderFramePlayerWidget::setSliderSingleStep(double singleStep)
 {
   Q_D(QAlderFramePlayerWidget);
 
-  if (singleStep < 0.) {
+  if( singleStep < 0. )
+  {
     return;
   }
 
@@ -781,7 +839,8 @@ void QAlderFramePlayerWidget::setDirection(QAbstractAnimation::Direction directi
 {
   Q_D(QAlderFramePlayerWidget);
 
-  if (d->direction != direction) {
+  if( direction != d->direction )
+  {
     d->direction = direction;
     emit this->directionChanged(direction);
   }
@@ -813,7 +872,7 @@ void QAlderFramePlayerWidget::setMaxFramerate(double frameRate)
 {
   Q_D(QAlderFramePlayerWidget);
   // Clamp frameRate min value
-  frameRate = (frameRate <= 0) ? 60 : frameRate;
+  frameRate = (0 >= frameRate ) ? 60 : frameRate;
   d->maxFrameRate = frameRate;
 }
 
