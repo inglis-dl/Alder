@@ -6,10 +6,10 @@ SET( AlderQtGenericLib_SRC
   QAlderDoubleSlider.cxx
   QAlderFramePlayerWidget.cxx
   QAlderSliderWidget.cxx
-#  QAlderImageWidget.cxx
-#  QAlderAbstractView.cxx
-#  QAlderSliceView.cxx
   QMedicalImageWidget.cxx
+#  QAlderImageWidget.cxx
+  QAlderAbstractView.cxx
+#  QAlderSliceView.cxx
 )
 
 SET( AlderQtGeneric_Uis
@@ -17,8 +17,8 @@ SET( AlderQtGeneric_Uis
   QAlderDicomTagWidget.ui
   QAlderFramePlayerWidget.ui
   QAlderSliderWidget.ui
-#  QAlderImageWidget.ui
   QMedicalImageWidget.ui
+#  QAlderImageWidget.ui
 )
 
 SET( AlderQtGeneric_MocHeaders
@@ -27,12 +27,12 @@ SET( AlderQtGeneric_MocHeaders
   QAlderDoubleSlider.h
   QAlderFramePlayerWidget.h
   QAlderSliderWidget.h
+  QMedicalImageWidget.h
 #  QAlderImageWidget.h
-#  QAlderAbstractView.h
-#  QAlderAbstractView_p.h
+  QAlderAbstractView.h
+  QAlderAbstractView_p.h
 #  QAlderSliceView.h
 #  QAlderSliceView_p.h
-  QMedicalImageWidget.h
 )
 
 SET( AlderQtGeneric_Resources

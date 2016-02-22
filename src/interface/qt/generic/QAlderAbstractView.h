@@ -54,15 +54,15 @@ public:
 
   bool orientationDisplay() const;
 
-  Q_INVOKABLE vtkRenderWindow* renderWindow() const;
+  vtkRenderWindow* renderWindow() const;
 
-  Q_INVOKABLE vtkRenderWindowInteractor* interactor() const;
+  vtkRenderWindowInteractor* interactor() const;
 
   virtual void setInteractor(vtkRenderWindowInteractor* interactor);
 
-  Q_INVOKABLE vtkInteractorObserver* interactorStyle() const;
+  vtkInteractorObserver* interactorStyle() const;
 
-  Q_INVOKABLE QVTKWidget* VTKWidget() const;
+  QVTKWidget* VTKWidget() const;
 
   virtual QColor backgroundColor() const;
 

@@ -6,13 +6,12 @@ I  Module:    QAlderAbstractView.cxx
   Author:    Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
+#include "QAlderAbstractView.h"
+#include "QAlderAbstractView_p.h"
 
 // Qt includes
 #include <QVBoxLayout>
 #include <QDebug>
-
-#include "QAlderAbstractView.h"
-#include "QAlderAbstractView_p.h"
 
 // VTK includes
 #include <vtkOpenGLRenderWindow.h>
@@ -30,6 +29,11 @@ QAlderAbstractViewPrivate::QAlderAbstractViewPrivate(QAlderAbstractView& object)
   this->RenderWindow = vtkSmartPointer<vtkRenderWindow>::New();
   this->AxesActor = vtkSmartPointer<vtkAxesActor>::New();
   this->OrientationMarkerWidget = vtkSmartPointer<vtkOrientationMarkerWidget>::New();
+  this->OrientationMarkerWidget->SetOrientationMarker( this->AxesActor );
+  this->OrientationMarkerWidget->KeyPressActivationOff();
+  this->OrientationMarkerWidget->SetViewport( 0.8, 0.0, 1.0, 0.2 );
+  this->OrientationMarkerWidget->InteractiveOff();
+  this->axesOverView = true;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -45,9 +49,6 @@ void QAlderAbstractViewPrivate::init()
   q->layout()->setSpacing(0);
   q->layout()->addWidget(this->VTKWidget);
 
-  this->OrientationMarkerWidget->SetOrientationMarker( this->AxesActor );
-  this->OrientationMarkerWidget->KeyPressActivationOff();
-
   this->setupRendering();
 
   q->setInteractor(this->RenderWindow->GetInteractor());
@@ -60,6 +61,23 @@ void QAlderAbstractViewPrivate::setupRendering()
   Q_ASSERT(this->Renderer);
   this->RenderWindow->AddRenderer(this->Renderer);
   this->VTKWidget->SetRenderWindow(this->RenderWindow);
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+--
+void QAlderAbstractViewPrivate::setupAxesWidget()
+{
+  Q_ASSERT(this->RenderWindow);
+  Q_ASSERT(this->Renderer);
+  if( this->axesOverView )
+  {
+    this->OrientationMarkerWidget->SetDefaultRenderer( this->Renderer );
+    this->OrientationMarkerWidget->SetInteractor( this->RenderWindow->GetInteractor() );
+    this->OrientationMarkerWidget->On();
+  }
+  else
+  {
+    this->OrientationMarkerWidget->Off();
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+--
@@ -96,11 +114,6 @@ QAlderAbstractView::QAlderAbstractView(QWidget* parentWidget)
 {
   Q_D(QAlderAbstractView);
   d->init();
-
-  d->OrientationMarkerWidget->SetInteractor(d->RenderWindow->GetInteractor());
-  d->OrientationMarkerWidget->SetViewport( 0.8, 0.0, 1.0, 0.2 );
-  d->OrientationMarkerWidget->On();
-  d->OrientationMarkerWidget->InteractiveOff();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

@@ -13,6 +13,7 @@
 // Qt includes
 #include <QObject>
 
+// Alder includes
 #include "QAlderAbstractView.h"
 
 // VTK includes
@@ -37,6 +38,9 @@ public:
 
   virtual void init();
   virtual void setupRendering();
+  virtual void setupAxesWidget();
+
+  bool axesOverView;
 
   QList<vtkRenderer*> renderers()const;
   vtkRenderer* firstRenderer()const;

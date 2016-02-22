@@ -6,12 +6,15 @@
   Author:    Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
+#include "QAlderSliceView.h"
+#include "QAlderSliceView_p.h"
+
+// Alder includes
+#include <vtkImageDataReader.h>
+#include <vtkImageDataWriter.h>
 
 // Qt includes
 #include <QDebug>
-
-#include "QAlderSliceView.h"
-#include "QAlderSliceView_p.h"
 
 // VTK includes
 #include <vtkCamera.h>
@@ -20,8 +23,6 @@
 #include <vtkImageChangeInformation.h>
 #include <vtkImageClip.h>
 #include <vtkImageData.h>
-#include <vtkImageDataReader.h>
-#include <vtkImageDataWriter.h>
 #include <vtkImagePermute.h>
 #include <vtkImageProperty.h>
 #include <vtkImageSinusoidSource.h>
@@ -171,6 +172,24 @@ QAlderSliceViewPrivate::QAlderSliceViewPrivate(QAlderSliceView& object)
   this->cursorOverView = true;
 
   this->InteractorStyle = vtkSmartPointer<vtkCustomInteractorStyleImage>::New();
+
+  this->slice = 0;
+  double p[3] = { 1.0, -1.0, 1.0 };
+  for( int i = 0; i < 3; ++i )
+  {
+    for( int j = 0; j < 3; ++j )
+    {
+      this->cameraPosition[i][j] = ( i == j ? p[j] : 0.0 );
+      this->cameraFocalPoint[i][j] = 0.0;
+      this->cameraViewUp[i][j] = 0.0;
+    }
+    this->cameraViewUp[i][( i != 2 ? 2 : 1 )] = 1.0;
+    this->cameraParallelScale[i] = 1.0;
+    this->cameraDistance[i] = 1.0;
+    this->cameraClippingRange[i][0]=0.001;
+    this->cameraClippingRange[i][1]=1000.;
+    this->lastSlice[i] = 0;
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -225,7 +244,6 @@ void QAlderSliceViewPrivate::setSlice( const int& _slice )
   }
 
   this->recordCameraView();
-
   this->lastSlice[this->orientation] = this->slice;
   this->slice = slice;
 
@@ -252,7 +270,7 @@ void QAlderSliceViewPrivate::setImageData( vtkImageData* input )
   this->dimensionality = 0;
   if( input )
   {
-    input->UpdateInformation();
+    input->Update();
     int dims[3];
     input->GetDimensions(dims);
     this->dimensionality = 3;
@@ -264,7 +282,31 @@ void QAlderSliceViewPrivate::setImageData( vtkImageData* input )
         break;
       }
     }
-    std::cout << "new input dims: " << dims[0] << "," << dims[1] << "," << dims[2] << std::endl;
+    if( 2 == this->dimensionality && QAlderSliceView::OrientationXY != this->orientation )
+     this->orientation = QAlderSliceView::OrientationXY;
+
+    bool initCamera = false;
+    vtkImageData* lastInput = vtkImageData::SafeDownCast(this->WindowLevel->GetInput());
+    if( lastInput )
+    {
+      double *lastSpacing = lastInput->GetSpacing();
+      double *spacing = input->GetSpacing();
+      double *lastOrigin = lastInput->GetOrigin();
+      double *origin = input->GetOrigin();
+      int *lastExtent = lastInput->GetWholeExtent();
+      int *extent = input->GetWholeExtent();
+      for( int i = 0; i < 3; ++i )
+      {
+        if( lastSpacing[i]    != spacing[i]  ||
+            lastOrigin[i]     != origin[i]   ||
+            lastExtent[2*i]   != extent[2*i] ||
+            lastExtent[2*i+1] != extent[2*i+1] )
+        {
+          initCamera = true;
+          break;
+        }
+      }
+    }
 
     this->WindowLevel->SetInput( input );
     this->ImageSliceMapper->SetInput( this->WindowLevel->GetOutput() );
@@ -287,30 +329,17 @@ void QAlderSliceViewPrivate::setImageData( vtkImageData* input )
         break;
     }
     this->WindowLevel->Modified();
-    this->setupRendering( true );
+    this->setupRendering( true, initCamera );
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderSliceViewPrivate::setupRendering( const bool& display )
+void QAlderSliceViewPrivate::setupRendering( const bool& display, const bool& initCamera )
 {
   vtkImageData* input = vtkImageData::SafeDownCast(this->WindowLevel->GetInput());
   if( display && input )
   {
     this->RenderWindow->GetInteractor()->SetInteractorStyle( this->InteractorStyle );
-
-    this->initializeCameraViews();
-    this->initializeWindowLevel();
-
-    this->orientation = QAlderSliceView::OrientationXY;
-    this->slice = this->lastSlice[ this->orientation ];
-
-    this->ImageSliceMapper->SetSliceNumber( this->slice );
-    this->Renderer->AddViewProp( this->ImageSlice );
-    this->ImageSlice->VisibilityOn();
-
-    this->ImageSliceMapper->Update();
-
     if( 3 == this->dimensionality )
       this->InteractorStyle->SetInteractionModeToImage3D();
     else
@@ -336,8 +365,18 @@ void QAlderSliceViewPrivate::setupRendering( const bool& display )
     this->callbackTags[ vtkCommand::GetStringFromEventId(vtkCommand::CharEvent) ] =
       this->RenderWindow->GetInteractor()->AddObserver( vtkCommand::CharEvent, charCbk );
 
+    this->Renderer->AddViewProp( this->ImageSlice );
+    this->Renderer->GetActiveCamera()->ParallelProjectionOn();
+
     this->setupCornerAnnotation();
     this->setupCoordinateWidget();
+    this->setupAxesWidget();
+
+    this->initializeWindowLevel();
+    if( initCamera )
+      this->initializeCameraViews();
+
+    this->setSlice(  this->lastSlice[ this->orientation ] );
   }
   else
   {
@@ -372,18 +411,24 @@ void QAlderSliceViewPrivate::setupRendering( const bool& display )
       this->RenderWindow->GetInteractor()->RemoveObserver( it->second );
       this->callbackTags.erase( it );
     }
-    it = this->callbackTags.find(vtkCommand::GetStringFromEventId(vtkCommand::InteractionEvent));
-    if( it != this->callbackTags.end() )
-    {
-      this->CoordinateWidget->RemoveObserver( it->second );
-      this->callbackTags.erase( it );
-    }
 
-    this->ImageSlice->VisibilityOff();
-    this->CornerAnnotation->VisibilityOff();
+    bool oldcursorOverView = this->cursorOverView;
+    bool oldannotateOverView = this->annotateOverView;
+    bool oldaxesOverView = this->axesOverView;
+
+    this->cursorOverView = false;
+    this->annotateOverView = false;
+    this->axesOverView = false;
+
+    this->setupCornerAnnotation();
+    this->setupCoordinateWidget();
+    this->setupAxesWidget();
+
+    this->cursorOverView = oldcursorOverView;
+    this->annotateOverView = oldannotateOverView;
+    this->axesOverView = oldcursorOverView;
+
     this->Renderer->RemoveViewProp( this->ImageSlice );
-    this->Renderer->RemoveViewProp( this->CornerAnnotation );
-    this->CoordinateWidget->Off();
   }
 }
 
@@ -504,36 +549,21 @@ void QAlderSliceViewPrivate::initializeCameraViews()
     bounds[2*w]   = origin[w] + spacing[w] * extent[2*w];
     bounds[2*w+1] = bounds[2*w];
 
-    fpt[u] = pos[u] = 0.5 * ( bounds[2*u] + bounds[2*u+1] );
-    fpt[v] = pos[v] = 0.5 * ( bounds[2*v] + bounds[2*v+1] );
-    fpt[w] = bounds[2*w];
-    double distance =    
-      ( 0. == spacing[w] ? (0.5*(spacing[u]+spacing[v])) : spacing[w] );
-    
-    pos[w] = fpt[w] + vpn[w] * distance;
+    fpt[u] = pos[u] = origin[u] + 0.5 * spacing[u] * ( extent[2*u] + extent[2*u+1] );
+    fpt[v] = pos[v] = origin[v] + 0.5 * spacing[v] * ( extent[2*v] + extent[2*v+1] );
+    fpt[w] = origin[w] + spacing[w] * ( 1 == w ? extent[2*w+1] : extent[2*w] );
+    if( 3 == this->dimensionality )
+      pos[w] = fpt[w] + vpn[w] * spacing[w] * ( extent[2*w+1] - extent[2*w] );
+    else
+      pos[w] = fpt[w] + vpn[w] * spacing[w];
 
-    vtkCamera *camera = this->Renderer->GetActiveCamera();
-    camera->SetViewUp( vup );
+    vtkCamera * camera = this->Renderer->GetActiveCamera();
     camera->SetFocalPoint( fpt );
     camera->SetPosition( pos );
-    //camera->SetPosition( pos );
-    //camera->SetViewUp( vup );
+    camera->SetViewUp( vup );
 
-    std::cout << "record 1" << std::endl;
-    std::cout << "set fpt to " << fpt[0]<<","<<fpt[1]<<","<<fpt[2]<<std::endl;
-    std::cout << "set pos to " << pos[0]<<","<<pos[1]<<","<<pos[2]<<std::endl;
-    std::cout << "set vup to " << vup[0]<<","<<vup[1]<<","<<vup[2]<<std::endl;
-    this->recordCameraView( w );
-    std::cout << "record 2" << std::endl;
-
-
-    std::cout << "w = " << w << std::endl;
     this->Renderer->ResetCamera( bounds );
-    std::cout << "after reset camera 1" << std::endl;
     this->recordCameraView( w );
-    std::cout << "after reset camera 2" << std::endl;
-    std::cout << "camera vup= "<<       
-    this->cameraViewUp[w][0] << "," << this->cameraViewUp[w][1] << "," << this->cameraViewUp[w][2] << std::endl;
 
     this->lastSlice[w] = extent[2*w];
   }
@@ -552,63 +582,16 @@ void QAlderSliceViewPrivate::recordCameraView( const int& specified )
     camera->GetFocalPoint( fpt );
     camera->GetViewUp( v );
     int w = ( -1 == specified ) ? this->orientation : specified;
-    bool a = false;
-    bool b = false;
-    bool c = false;
     for( int i = 0; i < 3; ++i )
     {
-      if(this->cameraPosition[w][i]   != pos[i]) a=true;
-      else 
-        this->cameraPosition[w][i]   = pos[i];
-      if(this->cameraFocalPoint[w][i] != fpt[i] ) b=true;
-      else 
-        this->cameraFocalPoint[w][i] = fpt[i];
-      if( this->cameraViewUp[w][i] !=  v[i] ) c= true;
-      else 
-        this->cameraViewUp[w][i]     = v[i];
+      this->cameraPosition[w][i]   = pos[i];
+      this->cameraFocalPoint[w][i] = fpt[i];
+      this->cameraViewUp[w][i]     = v[i];
     }
     this->cameraParallelScale[w]    = camera->GetParallelScale();
     this->cameraDistance[w]         = camera->GetDistance();
     this->cameraClippingRange[w][0] = camera->GetClippingRange()[0];
     this->cameraClippingRange[w][1] = camera->GetClippingRange()[1];
-    if(a) 
-        {
-          std::cout << "w = " << w <<
-          (( -1 != specified ) ?" (specified) " :"")
-          << " changing pos " <<
-            this->cameraPosition[w][0] << "," <<
-            this->cameraPosition[w][1] << "," <<
-            this->cameraPosition[w][2] << " => " <<
-            v[0] << "," << v[1] << "," << v[2] << std::endl;
-        }
-    if(b) 
-        {
-          std::cout << "w = " << w <<
-          (( -1 != specified ) ?" (specified) " :"")
-          << " changing fpt " <<
-            this->cameraFocalPoint[w][0] << "," <<
-            this->cameraFocalPoint[w][1] << "," <<
-            this->cameraFocalPoint[w][2] << " => " <<
-            v[0] << "," << v[1] << "," << v[2] << std::endl;
-        }
-    if(c) 
-        {
-          std::cout << "w = " << w <<
-          (( -1 != specified ) ?" (specified) " :"")
-          << " changing vup " <<
-            this->cameraViewUp[w][0] << "," <<
-            this->cameraViewUp[w][1] << "," <<
-            this->cameraViewUp[w][2] << " => " <<
-            v[0] << "," << v[1] << "," << v[2] << std::endl;
-        }
-
-     if(a || b || c)      
-    for( int i = 0; i < 3; ++i )
-    {
-        this->cameraPosition[w][i]   = pos[i];
-        this->cameraFocalPoint[w][i] = fpt[i];
-        this->cameraViewUp[w][i]     = v[i];
-    }
   }
 }
 
@@ -694,6 +677,9 @@ void QAlderSliceViewPrivate::setupCornerAnnotation()
   else
   {
     this->CornerAnnotation->VisibilityOff();
+    this->Renderer->RemoveViewProp( this->CornerAnnotation );
+    this->CornerAnnotation->SetImageSlice( 0 );
+    this->CornerAnnotation->SetWindowLevel( 0 );
   }
 }
 
@@ -718,13 +704,6 @@ void QAlderSliceViewPrivate::updateCameraView()
     camera->SetPosition( pos );
     camera->SetParallelScale( this->cameraParallelScale[w] );
     camera->SetClippingRange( this->cameraClippingRange[w] );
-
-    if( 1== w )
-    {
-      std::cout << "pos = " << pos[0] << "," << pos[1] << "," << pos[2] << std::endl;
-      std::cout << "fpt = " << fpt[0] << "," << fpt[1] << "," << fpt[2] << std::endl;
-      std::cout << "vup = " << v[0] << "," << v[1] << "," << v[2] << std::endl;
-    }
   }
 }
 
@@ -785,38 +764,26 @@ void QAlderSliceViewPrivate::setOrientation( const QAlderSliceView::Orientation&
 {
   if( _orientation == this->orientation ) return;
 
-  std::cout << "ok1" << std::endl;
-
-  this->orientation = _orientation;
   this->recordCameraView();
+  this->lastSlice[this->orientation] = this->slice;
+  this->orientation = _orientation;
   this->slice = this->lastSlice[this->orientation];
 
-  std::cout << "ok2" << std::endl;
   this->ImageSliceMapper->SetOrientation( this->orientation );
-  std::cout << "ok3" << std::endl;
   this->ImageSliceMapper->SetSliceNumber( this->slice );
   this->ImageSliceMapper->Update();
-  std::cout << "ok4" << std::endl;
 
   this->computeCameraFromCurrentSlice( false );
-  std::cout << "ok5" << std::endl;
   this->updateCameraView();
-  std::cout << "ok6" << std::endl;
   this->RenderWindow->Render();
-  std::cout << "ok7" << std::endl;
 
   if( this->annotateOverView && this->CoordinateWidget->GetEnabled()
       && this->CornerAnnotation->GetVisibility() )
   {
-  std::cout << "ok8" << std::endl;
     this->CoordinateWidget->UpdateMessageString();
-  std::cout << "ok9" << std::endl;
     this->CornerAnnotation->SetText( 0, this->CoordinateWidget->GetMessageString() );
-  std::cout << "ok10" << std::endl;
     this->CornerAnnotation->Modified();
-  std::cout << "ok11" << std::endl;
     this->RenderWindow->Render();
-  std::cout << "ok12" << std::endl;
   }
 }
 
@@ -829,8 +796,11 @@ void QAlderSliceViewPrivate::setInterpolation( const int& newInterpolation )
   {
     this->interpolation = newInterpolation;
     this->ImageSlice->GetProperty()->SetInterpolationType( this->interpolation );
-    if( this->ImageSlice->GetVisibility() )
-      this->RenderWindow->Render();
+    this->CoordinateWidget->SetCursoringMode(
+      VTK_NEAREST_INTERPOLATION == this->interpolation ?
+      vtkImageCoordinateWidget::Discrete :
+      vtkImageCoordinateWidget::Continuous );
+    this->RenderWindow->Render();
   }
 }
 
@@ -858,7 +828,17 @@ void QAlderSliceViewPrivate::setupCoordinateWidget()
   }
   else
   {
-    this->CoordinateWidget->Off();
+    if( this->CoordinateWidget->GetEnabled() )
+      this->CoordinateWidget->Off();
+    this->CoordinateWidget->RemoveAllProps();
+    this->CoordinateWidget->SetInput( 0 );
+    std::map<std::string,unsigned long>::iterator it;
+    it = this->callbackTags.find(vtkCommand::GetStringFromEventId(vtkCommand::InteractionEvent));
+    if( it != this->callbackTags.end() )
+    {
+      this->CoordinateWidget->RemoveObserver( it->second );
+      this->callbackTags.erase( it );
+    }
   }
 }
 
@@ -926,11 +906,7 @@ QAlderSliceView::QAlderSliceView(QWidget* parentWidget)
 {
   Q_D(QAlderSliceView);
   d->init();
-
-  d->OrientationMarkerWidget->SetInteractor(d->RenderWindow->GetInteractor());
-  d->OrientationMarkerWidget->SetViewport( 0.8, 0.0, 1.0, 0.2 );
-  d->OrientationMarkerWidget->On();
-  d->OrientationMarkerWidget->InteractiveOff();
+  d->setupRendering( false );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -1254,4 +1230,3 @@ void QAlderSliceView::setImageToSinusoid()
   d->setImageData( sinusoid->GetOutput() );
   d->setSlice( 15 );
 }
-

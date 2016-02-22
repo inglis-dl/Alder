@@ -6,23 +6,23 @@
   Author:    Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #ifndef __QAlderSliceView_p_h
 #define __QAlderSliceView_p_h
 
 // Qt includes
 #include <QObject>
 
+// Alder includes
 #include "QAlderSliceView.h"
 #include "QAlderAbstractView_p.h"
-
-// VTK includes
 #include <vtkCustomCornerAnnotation.h>
 #include <vtkCustomInteractorStyleImage.h>
 #include <vtkImageCoordinateWidget.h>
+#include <vtkImageWindowLevel.h>
+
+// VTK includes
 #include <vtkImageSlice.h>
 #include <vtkImageSliceMapper.h>
-#include <vtkImageWindowLevel.h>
 #include <vtkRenderer.h>
 #include <vtkSmartPointer.h>
 
@@ -58,7 +58,7 @@ public:
   vtkSmartPointer<vtkCustomInteractorStyleImage> InteractorStyle;
   vtkSmartPointer<vtkImageWindowLevel>           WindowLevel;
 
-  void setupRendering( const bool& );
+  void setupRendering( const bool& display, const bool& initCamera = false );
   void setupCoordinateWidget();
   void setupCornerAnnotation();
 
