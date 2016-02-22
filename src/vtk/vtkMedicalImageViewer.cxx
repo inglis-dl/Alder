@@ -10,8 +10,10 @@
 =========================================================================*/
 #include <vtkMedicalImageViewer.h>
 
+// Alder includes
 #include <Common.h>
 
+// VTK includes
 #include <vtkAnimationCue.h>
 #include <vtkAnimationScene.h>
 #include <vtkAxes.h>
@@ -1051,6 +1053,7 @@ void vtkMedicalImageViewer::SetViewOrientation( const int& orientation )
   if( orientation == this->ViewOrientation ) return;
 
   this->RecordCameraView();
+  this->LastSlice[this->ViewOrientation] = this->Slice;
   this->ViewOrientation = orientation;
   this->Slice = this->LastSlice[this->ViewOrientation];
 
