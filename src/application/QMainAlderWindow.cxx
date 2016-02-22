@@ -11,12 +11,12 @@
 #include <QMainAlderWindow.h>
 #include <ui_QMainAlderWindow.h>
 
+// Alder includes
 #include <Application.h>
+#include <Common.h>
 #include <Interview.h>
 #include <User.h>
-
-#include <vtkEventQtSlotConnect.h>
-#include <vtkNew.h>
+#include <Utilities.h>
 
 #include <QAboutDialog.h>
 #include <QAlderDicomTagWidget.h>
@@ -29,6 +29,11 @@
 #include <QUserListDialog.h>
 #include <QVTKProgressDialog.h>
 
+// VTK includes
+#include <vtkEventQtSlotConnect.h>
+#include <vtkNew.h>
+
+// Qt includes
 #include <QCloseEvent>
 #include <QFileDialog>
 #include <QInputDialog>
@@ -94,7 +99,7 @@ QMainAlderWindow::QMainAlderWindow( QWidget* parent )
   QObject::connect(
     this->ui->atlasWidget, SIGNAL( showing( bool ) ),
     this->ui->interviewWidget, SLOT( slotHideControls( bool ) ) );
-  
+
   this->readSettings();
 
   // toggle visibility of the atlas widget
@@ -104,7 +109,7 @@ QMainAlderWindow::QMainAlderWindow( QWidget* parent )
   this->DicomTagWidget = new QAlderDicomTagWidget( this );
   this->Connections = vtkSmartPointer<vtkEventQtSlotConnect>::New();
   this->Connections->Connect( Alder::Application::GetInstance(),
-    Alder::Application::ActiveImageEvent,
+    Alder::Common::ActiveImageEvent,
     this, SLOT( updateDicomTagWidget() ) );
 
   this->dicomTagsVisible = false;
@@ -157,7 +162,7 @@ void QMainAlderWindow::slotOpenInterview()
         "Downloading Exam Images",
         "Please wait while the interview's images are downloaded.",
         func );
-      app->InvokeEvent( Alder::Application::ActiveInterviewUpdateImageDataEvent );
+      app->InvokeEvent( Alder::Common::ActiveInterviewUpdateImageDataEvent );
     }
     */
   }

@@ -12,6 +12,7 @@
 #include <ui_QAlderAtlasWidget.h>
 
 #include <Application.h>
+#include <Common.h>
 #include <Exam.h>
 #include <Image.h>
 #include <ImageNote.h>
@@ -50,13 +51,13 @@ QAlderAtlasWidget::QAlderAtlasWidget( QWidget* parent )
 
   this->Connections = vtkSmartPointer<vtkEventQtSlotConnect>::New();
   this->Connections->Connect( app,
-    Alder::Application::ActiveAtlasImageEvent,
+    Alder::Common::ActiveAtlasImageEvent,
     this, SLOT( updateInfo() ) );
   this->Connections->Connect( app,
-    Alder::Application::ActiveAtlasImageEvent,
+    Alder::Common::ActiveAtlasImageEvent,
     this, SLOT( updateViewer() ) );
   this->Connections->Connect( app,
-    Alder::Application::ActiveAtlasImageEvent,
+    Alder::Common::ActiveAtlasImageEvent,
     this, SLOT( updateEnabled() ) );
 
   this->updateEnabled();

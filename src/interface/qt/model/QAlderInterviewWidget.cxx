@@ -14,6 +14,7 @@
 #include <Application.h>
 #include <Code.h>
 #include <CodeType.h>
+#include <Common.h>
 #include <Exam.h>
 #include <Image.h>
 #include <ImageNote.h>
@@ -79,35 +80,35 @@ QAlderInterviewWidget::QAlderInterviewWidget( QWidget* parent )
 
   this->Connections = vtkSmartPointer<vtkEventQtSlotConnect>::New();
   this->Connections->Connect( app,
-    Alder::Application::ActiveInterviewEvent,
+    Alder::Common::ActiveInterviewEvent,
     this,
     SLOT( updateExamTreeWidget() ) );
   this->Connections->Connect( app,
-    Alder::Application::ActiveInterviewUpdateImageDataEvent,
+    Alder::Common::ActiveInterviewUpdateImageDataEvent,
     this,
     SLOT( updateExamTreeWidget() ) );
   this->Connections->Connect( app,
-    Alder::Application::ActiveImageEvent,
+    Alder::Common::ActiveImageEvent,
     this,
     SLOT( updateInfo() ) );
   this->Connections->Connect( app,
-    Alder::Application::ActiveImageEvent,
+    Alder::Common::ActiveImageEvent,
     this,
     SLOT( updateCodeList() ) );
   this->Connections->Connect( app,
-    Alder::Application::ActiveImageEvent,
+    Alder::Common::ActiveImageEvent,
     this,
     SLOT( updateRating() ) );
   this->Connections->Connect( app,
-    Alder::Application::ActiveImageEvent,
+    Alder::Common::ActiveImageEvent,
     this,
     SLOT( updateViewer() ) );
   this->Connections->Connect( app,
-    Alder::Application::ActiveInterviewEvent,
+    Alder::Common::ActiveInterviewEvent,
     this,
     SLOT( updateEnabled() ) );
   this->Connections->Connect( app,
-    Alder::Application::ActiveImageEvent,
+    Alder::Common::ActiveImageEvent,
     this,
     SLOT( updateEnabled() ) );
 

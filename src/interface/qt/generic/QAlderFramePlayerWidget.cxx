@@ -26,7 +26,7 @@
 #include <QAlderFramePlayerWidget.h>
 #include <ui_QAlderFramePlayerWidget.h>
 
-#include <QAlderSliceView.h>
+//#include <QAlderSliceView.h>
 
 // Qt includes
 #include <QIcon>
@@ -150,7 +150,8 @@ QAlderFramePlayerWidgetPrivate::retrievePipelineInfo()
     pipeInfo.currentFrame = this->viewer->GetSlice();
     pipeInfo.maxFrameRate = this->viewer->GetMaxFrameRate();
   }
-  else
+  /*
+  else if( !q->sliceView.isNull() )
   {
     pipeInfo.isConnected = !q->sliceView.isNull();
     if( !pipeInfo.isConnected )
@@ -168,7 +169,7 @@ QAlderFramePlayerWidgetPrivate::retrievePipelineInfo()
     pipeInfo.numberOfFrames = pipeInfo.frameRange[1] - pipeInfo.frameRange[0] + 1;
     pipeInfo.currentFrame = q->sliceView->slice();
   }
-
+  */
   return pipeInfo;
 }
 
@@ -296,10 +297,12 @@ void QAlderFramePlayerWidgetPrivate::requestData(const PipelineInfoType& pipeInf
   {
     this->viewer->SetSlice( frame );
   }
-  else
+  /*
+  else if( !q->sliceView.isNull() )
   {
     q->sliceView.data()->setSlice( frame );
   }
+  */
   emit q->currentFrameChanged(frame); // Emit the change
 }
 
@@ -346,7 +349,7 @@ QAlderFramePlayerWidget::~QAlderFramePlayerWidget()
 {
   Q_D(QAlderFramePlayerWidget);
   this->stop();
-  this->sliceView = 0;
+  //this->sliceView = 0;
   d->viewer = 0;
 }
 
@@ -354,7 +357,6 @@ QAlderFramePlayerWidget::~QAlderFramePlayerWidget()
 void QAlderFramePlayerWidget::setViewer(vtkMedicalImageViewer* viewer)
 {
   Q_D(QAlderFramePlayerWidget);
-
   d->viewer = viewer;
   d->updateUi();
 }
@@ -372,7 +374,7 @@ void QAlderFramePlayerWidget::updateFromViewer()
   Q_D(QAlderFramePlayerWidget);
   d->updateUi();
 }
-
+/*
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderFramePlayerWidget::setSliceView( QAlderSliceView* view )
 {
@@ -384,7 +386,7 @@ void QAlderFramePlayerWidget::setSliceView( QAlderSliceView* view )
   }
   d->updateUi();
 }
-
+*/
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderFramePlayerWidget::goToFirstFrame()
 {

@@ -8,12 +8,13 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #include <Application.h>
 
+// Alder includes
 #include <Code.h>
 #include <CodeType.h>
 #include <CodeGroup.h>
+#include <Common.h>
 #include <Configuration.h>
 #include <Database.h>
 #include <Exam.h>
@@ -26,8 +27,10 @@
 #include <ScanType.h>
 #include <Site.h>
 #include <User.h>
+#include <Utilities.h>
 #include <Wave.h>
 
+// VTK includes
 #include <vtkDirectory.h>
 #include <vtkObjectFactory.h>
 #include <vtkVariant.h>
@@ -293,7 +296,7 @@ namespace Alder
         }
       }
       this->Modified();
-      this->InvokeEvent( Application::ActiveUserEvent );
+      this->InvokeEvent( Alder::Common::ActiveUserEvent );
     }
   }
 
@@ -346,7 +349,7 @@ namespace Alder
         this->ActiveUser->Save();
       }
       this->Modified();
-      this->InvokeEvent( Application::ActiveInterviewEvent );
+      this->InvokeEvent( Alder::Common::ActiveInterviewEvent );
     }
   }
 
@@ -354,13 +357,13 @@ namespace Alder
   void Application::SetActiveImage( Image* image )
   {
     vtkSetObjectBodyMacro( ActiveImage, Image, image);
-    this->InvokeEvent( Application::ActiveImageEvent );
+    this->InvokeEvent( Alder::Common::ActiveImageEvent );
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Application::SetActiveAtlasImage( Image* image )
   {
     vtkSetObjectBodyMacro( ActiveAtlasImage, Image, image);
-    this->InvokeEvent( Application::ActiveAtlasImageEvent );
+    this->InvokeEvent( Alder::Common::ActiveAtlasImageEvent );
   }
 }

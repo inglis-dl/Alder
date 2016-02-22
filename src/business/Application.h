@@ -24,17 +24,16 @@
  * to Opal and tracks the state of the application such as active user and
  * study.
  */
-
 #ifndef __Application_h
 #define __Application_h
 
+// Alder includes
 #include <ModelObject.h>
-#include <Utilities.h>
-
-#include <vtkCommand.h>
 
 #include <iostream>
+#include <map>
 #include <ostream>
+#include <sstream>
 #include <stdexcept>
 
 /**
@@ -56,15 +55,6 @@ namespace Alder
     vtkTypeMacro( Application, ModelObject );
     static Application *GetInstance();
     static void DeleteInstance();
-
-    enum CustomEvents
-    {
-      ActiveUserEvent = vtkCommand::UserEvent + 100,
-      ActiveInterviewEvent,
-      ActiveInterviewUpdateImageDataEvent,
-      ActiveImageEvent,
-      ActiveAtlasImageEvent
-    };
 
     //@{
     /**

@@ -9,7 +9,12 @@
 
 =========================================================================*/
 #include <ProgressProxy.h>
+
+// Alder includes
 #include <OpalService.h>
+
+// VTK includes
+#include <vtkCommand.h>
 
 namespace Alder
 {
@@ -21,7 +26,7 @@ namespace Alder
     {
       this->progressData.second = percent;
       this->application->InvokeEvent( vtkCommand::ProgressEvent, static_cast<void *>( &this->progressData ) );
-    }  
+    }
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -37,7 +42,7 @@ namespace Alder
   {
     this->progressData =
       std::pair<int, double>( this->progressType, 0.0 );
-    this->application->InvokeEvent( vtkCommand::StartEvent, static_cast<void *>( &this->progressType ) );  
+    this->application->InvokeEvent( vtkCommand::StartEvent, static_cast<void *>( &this->progressType ) );
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -45,7 +50,7 @@ namespace Alder
   {
     this->application->InvokeEvent( vtkCommand::EndEvent, static_cast<void *>( &this->progressType ) );
     if( this->curlProgress )
-      OpalService::SetCurlProgress( false );  
+      OpalService::SetCurlProgress( false );
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -53,6 +58,6 @@ namespace Alder
   {
     if( this->application->GetAbortFlag() )
       this->application->SetAbortFlag(false);
-    this->application = NULL;  
+    this->application = NULL;
   }
 }

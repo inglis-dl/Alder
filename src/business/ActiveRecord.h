@@ -22,23 +22,24 @@
  * which correspond directly to a table (and named exactly the same way) must
  * extend this class.
  */
-
 #ifndef __ActiveRecord_h
 #define __ActiveRecord_h
 
-#include <ModelObject.h>
-
+// Alder includes
 #include <Application.h>
 #include <Database.h>
+#include <ModelObject.h>
 #include <QueryModifier.h>
-
 #include <vtkAlderMySQLQuery.h>
+
+// VTK includes
 #include <vtkNew.h>
 #include <vtkSmartPointer.h>
 #include <vtkVariant.h>
 
 #include <map>
 #include <stdexcept>
+#include <sstream>
 #include <typeinfo>
 #include <vector>
 

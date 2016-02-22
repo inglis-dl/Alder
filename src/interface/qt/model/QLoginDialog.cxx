@@ -11,12 +11,16 @@
 #include <QLoginDialog.h>
 #include <ui_QLoginDialog.h>
 
+// Alder includes
 #include <Application.h>
 #include <Modality.h>
 #include <User.h>
+#include <Utilities.h>
 
+// VTK includes
 #include <vtkSmartPointer.h>
 
+// Qt includes
 #include <QFile>
 #include <QInputDialog>
 #include <QMessageBox>

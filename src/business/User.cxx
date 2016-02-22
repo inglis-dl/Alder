@@ -10,9 +10,12 @@
 =========================================================================*/
 #include <User.h>
 
+// Alder includes
 #include <Modality.h>
 #include <QueryModifier.h>
+#include <Utilities.h>
 
+// VTK includes
 #include <vtkObjectFactory.h>
 
 namespace Alder

@@ -10,6 +10,7 @@
 =========================================================================*/
 #include <Interview.h>
 
+// Alder includes
 #include <Application.h>
 #include <Exam.h>
 #include <Modality.h>
@@ -17,7 +18,9 @@
 #include <ScanType.h>
 #include <Site.h>
 #include <User.h>
+#include <Utilities.h>
 
+// VTK includes
 #include <vtkCommand.h>
 #include <vtkNew.h>
 #include <vtkObjectFactory.h>

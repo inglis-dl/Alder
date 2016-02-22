@@ -8,13 +8,15 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #include <OpalService.h>
 
+// Alder includes
 #include <Application.h>
 #include <Configuration.h>
 #include <ProgressProxy.h>
+#include <Utilities.h>
 
+// VTK includes
 #include <vtkCommand.h>
 #include <vtkObjectFactory.h>
 

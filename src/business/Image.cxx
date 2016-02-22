@@ -16,6 +16,7 @@
 #include <Interview.h>
 #include <Rating.h>
 #include <User.h>
+#include <Utilities.h>
 
 // VTK includes
 #include <vtkDirectory.h>

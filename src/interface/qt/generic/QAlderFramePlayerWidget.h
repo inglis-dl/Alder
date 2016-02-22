@@ -52,7 +52,7 @@
 
 // VTK includes
 class vtkMedicalImageViewer;
-class QAlderSliceView;
+//class QAlderSliceView;
 class QAlderFramePlayerWidgetPrivate;
 
 class QAlderFramePlayerWidget : public QWidget
@@ -188,7 +188,7 @@ public:
   vtkMedicalImageViewer* viewer() const;
   //@}
 
-  void setSliceView( QAlderSliceView* );
+//  void setSliceView( QAlderSliceView* );
 
   //@{
   /** Set/Get the first frame icon. */
@@ -390,7 +390,7 @@ signals:
 
 protected:
   QScopedPointer<QAlderFramePlayerWidgetPrivate> d_ptr;
-  QPointer<QAlderSliceView> sliceView;
+//  QPointer<QAlderSliceView> sliceView;
 
 private:
   Q_DECLARE_PRIVATE(QAlderFramePlayerWidget);

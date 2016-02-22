@@ -10,6 +10,8 @@
 =========================================================================*/
 #include <vtkMedicalImageViewer.h>
 
+#include <Common.h>
+
 #include <vtkAnimationCue.h>
 #include <vtkAnimationScene.h>
 #include <vtkAxes.h>
@@ -126,6 +128,7 @@ class vtkAnimationCueCallback : public vtkCommand
   vtkFrameAnimationPlayer* Player;
 };
 
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 class vtkOrientationCharCallback : public vtkCommand {
   public:
     static vtkOrientationCharCallback *New() {
@@ -160,7 +163,7 @@ class vtkOrientationCharCallback : public vtkCommand {
           {
             this->Viewer->SetViewOrientationToXY();
           }
-          break;       
+          break;
       }
     }
   }
@@ -1015,7 +1018,6 @@ void vtkMedicalImageViewer::SetSlice( int slice )
   }
 
   this->RecordCameraView();
-
   this->LastSlice[this->ViewOrientation] = this->Slice;
   this->Slice = slice;
 
@@ -1033,6 +1035,8 @@ void vtkMedicalImageViewer::SetSlice( int slice )
     this->Annotation->Modified();
     this->Render();
   }
+
+  this->InvokeEvent( Alder::Common::SliceChangedEvent );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -1046,18 +1050,18 @@ void vtkMedicalImageViewer::SetViewOrientation( const int& orientation )
 
   if( orientation == this->ViewOrientation ) return;
 
+  this->RecordCameraView();
   this->ViewOrientation = orientation;
   this->Slice = this->LastSlice[this->ViewOrientation];
 
   this->ImageSliceMapper->SetOrientation( orientation );
   this->ImageSliceMapper->SetSliceNumber( this->Slice );
   this->ImageSliceMapper->Update();
-  
+
   this->ComputeCameraFromCurrentSlice( false );
   this->UpdateCameraView();
   this->Renderer->ResetCameraClippingRange( this->ImageSliceMapper->GetBounds() );
   this->Render();
-  //this->RecordCameraView();
 
   if( this->Cursor && this->Annotate )
   {
@@ -1066,6 +1070,8 @@ void vtkMedicalImageViewer::SetViewOrientation( const int& orientation )
     this->Annotation->Modified();
     this->Render();
   }
+
+  this->InvokeEvent( Alder::Common::OrientationChangedEvent );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

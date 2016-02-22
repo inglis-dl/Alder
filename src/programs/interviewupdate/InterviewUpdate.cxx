@@ -8,6 +8,9 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
+
+// Alder includes
+#include <AlderConfig.h>
 #include <Application.h>
 #include <Configuration.h>
 #include <Exam.h>
@@ -16,17 +19,18 @@
 #include <User.h>
 #include <Wave.h>
 
+// VTK includes
 #include <vtkNew.h>
 #include <vtkSmartPointer.h>
 
-#include <stdexcept>
-
-#include <termios.h>
-#include <unistd.h>
-#include <stdio.h>
+#include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <sstream>
-#include <fstream>
+#include <stdexcept>
+#include <stdio.h>
+#include <termios.h>
+#include <unistd.h>
 
 bool ApplicationInit();
 
@@ -173,9 +177,9 @@ int main( int argc, char** argv )
     {
       vtkNew< Alder::Site > site;
       std::string siteId;
-      if( site->Load( "Name", site_str ) ) 
+      if( site->Load( "Name", site_str ) )
         siteId = site->Get( "Id" ).ToString();
-      else if( site->Load( "Alias", site_str ) ) 
+      else if( site->Load( "Alias", site_str ) )
         siteId = site->Get( "Id" ).ToString();
       if( !siteId.empty() )
         modifier->Where( "SiteId", "=", vtkVariant( siteId ) );
