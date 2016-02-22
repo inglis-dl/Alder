@@ -10,12 +10,14 @@
 =========================================================================*/
 #include <Image.h>
 
+// Alder includes
 #include <Configuration.h>
 #include <Exam.h>
 #include <Interview.h>
 #include <Rating.h>
 #include <User.h>
 
+// VTK includes
 #include <vtkDirectory.h>
 #include <vtkImageData.h>
 #include <vtkImageDataReader.h>
@@ -25,6 +27,7 @@
 #include <vtkObjectFactory.h>
 #include <vtkSmartPointer.h>
 
+// GDCM includes
 #include <gdcmAnonymizer.h>
 #include <gdcmDirectoryHelper.h>
 #include <gdcmImageReader.h>
@@ -32,9 +35,11 @@
 #include <gdcmTrace.h>
 #include <gdcmWriter.h>
 
+// vtk-dicom includes
 #include <vtkDICOMCompiler.h>
-#include <vtkDICOMReader.h>
 #include <vtkDICOMMetaData.h>
+#include <vtkDICOMParser.h>
+#include <vtkDICOMReader.h>
 
 #include <stdexcept>
 
@@ -227,11 +232,11 @@ namespace Alder
     if( ".gz" == fileName.substr( fileName.size() - 3, 3 ) )
       fileName = fileName.substr( 0, fileName.size() - 3 );
 
-    vtkNew<vtkDICOMReader> dcmReader;
-    dcmReader->SetFileName( fileName.c_str() );
-    dcmReader->UpdateInformation();
+    vtkNew<vtkDICOMParser> parser;
+    parser->SetFileName( fileName.c_str() );
+    parser->Update();
 
-    vtkDICOMMetaData* meta = dcmReader->GetMetaData();
+    vtkDICOMMetaData* meta = parser->GetMetaData();
     std::string value;
     if( "AcquisitionDateTime" == tagName )
       value = meta->GetAttributeValue( vtkDICOMTag( 0x0008, 0x002a ) ).AsString();
@@ -497,7 +502,6 @@ namespace Alder
     std::string typeStr = exam->GetScanType();
     int examType = -1;
 
-    // TODO add SpineBoneDensity type
     if( "DualHipBoneDensity" == typeStr )
     {
       examType = "left" == latStr ? 0 : 1;
@@ -510,6 +514,10 @@ namespace Alder
     {
       // check if the image has a parent, if so, it is a body composition file
       examType = this->Get( "ParentImageId" ).IsValid() ? 4 : 3;
+    }
+    else if( "SpineBoneDensity" == typeStr )
+    {
+      examType = 5;
     }
     else if( "LateralBoneDensity" == typeStr )
     {
@@ -535,11 +543,11 @@ namespace Alder
     // increment across until the color changes to 255,255,255
 
     // left edge coordinates for each DEXA exam type
-    int x0[5] = { 168, 168, 168, 168, 193 };
+    int x0[6] = { 168, 168, 168, 168, 193, 168 };
     // bottom edge coordinates
-    int y0[5] = { 1622, 1622, 1111, 1377, 1434 };
+    int y0[6] = { 1622, 1622, 1111, 1377, 1434, 1401 };
     // top edge coordinates
-    int y1[5] = { 1648, 1648, 1138, 1403, 1456 };
+    int y1[6] = { 1648, 1648, 1138, 1403, 1456, 1427 };
 
     bool found = false;
     // start search from the middle of the left edge
