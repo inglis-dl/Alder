@@ -25,7 +25,7 @@
 
 ==============================================================================*/
 
-/** 
+/**
  * @class QAlderDoubleSlider
  *
  * @author Patrick Emond <emondpd AT mcmaster DOT ca>
@@ -50,7 +50,7 @@
 #include <QPointer>
 #include <QWidget>
 
-// VTK includes
+// Alder includes
 class vtkMedicalImageViewer;
 //class QAlderSliceView;
 class QAlderFramePlayerWidgetPrivate;
@@ -59,43 +59,43 @@ class QAlderFramePlayerWidget : public QWidget
 {
   Q_OBJECT
 
-  /** 
+  /**
    * This property holds the firstFrame button's icon.
    * @see firstFrameIcon(), setFirstFrameIcon()
    */
   Q_PROPERTY(QIcon firstFrameIcon READ firstFrameIcon WRITE setFirstFrameIcon)
 
-  /** 
+  /**
    * This property holds the previousFrame button's icon.
    * @see previousFrameIcon(), setPreviousFrameIcon()
    */
   Q_PROPERTY(QIcon previousFrameIcon READ previousFrameIcon WRITE setPreviousFrameIcon)
 
-  /** 
+  /**
    * This property holds the play button's icon.
    * @see playIcon(), setPlayIcon()
    */
   Q_PROPERTY(QIcon playIcon READ playIcon WRITE setPlayIcon)
 
-  /** 
+  /**
    * This property holds the play reverse button's icon.
    * @see playReverseIcon(), setPlayReverseIcon()
    */
   Q_PROPERTY(QIcon playReverseIcon READ playReverseIcon WRITE setPlayReverseIcon)
 
-  /** 
+  /**
    * This property holds the nextFrame button's icon.
    * @see nextFrameIcon(), setNextFrameIcon()
    */
   Q_PROPERTY(QIcon nextFrameIcon READ nextFrameIcon WRITE setNextFrameIcon)
 
-  /** 
+  /**
    * This property holds the lastFrame button's icon.
    * @see lastFrameIcon(), setLastFrameIcon()
    */
   Q_PROPERTY(QIcon lastFrameIcon READ lastFrameIcon WRITE setLastFrameIcon)
 
-  /** 
+  /**
    * This property holds the repeat button's icon.
    * @see repeatIcon(), setRepeatIcon()
    */
@@ -107,13 +107,13 @@ class QAlderFramePlayerWidget : public QWidget
    */
   Q_PROPERTY(bool playReverseVisibility READ playReverseVisibility WRITE setPlayReverseVisibility)
 
-  /** 
+  /**
    * Enable/Disable the visibility of the firstFrame and lastFrame buttons.
    * @see boundFramesVisibility(), setBoundFramesVisibility()
    */
   Q_PROPERTY(bool boundFramesVisibility READ boundFramesVisibility WRITE setBoundFramesVisibility)
 
-  /** 
+  /**
    * Enable/Disable the visibility of the seekBackward and seekForward buttons.
    * @see goToVisibility(), setGoToVisibility()
    */
@@ -131,7 +131,7 @@ class QAlderFramePlayerWidget : public QWidget
    */
   Q_PROPERTY(int sliderDecimals READ sliderDecimals WRITE setSliderDecimals)
 
-  /** 
+  /**
    * This property holds the page step for the frameSlider.
    * @see sliderPageStep(), setSliderPageStep()
    */
@@ -305,6 +305,12 @@ public slots:
   virtual void setPlaySpeed(double speedCoef);
 
   /**
+   * Set the current frame to the current frame provided by the source.
+   * @see goToPreviousFrame(), goToNextFrame(), goToLastFrame()
+   */
+  virtual void goToCurrentFrame();
+
+  /**
    * Set the current frame to the first frame.
    * @see goToPreviousFrame(), goToNextFrame(), goToLastFrame()
    */
@@ -328,7 +334,7 @@ public slots:
    */
   virtual void goToLastFrame();
 
-  /** 
+  /**
    * Automatically browse all the frames in the direction order.
    * @see pause(), stop(), direction
    */
@@ -364,7 +370,10 @@ public slots:
    */
   void stop();
 
-  virtual void updateFromViewer();
+  /**
+   * force and update to the widget's UI elements
+   */
+  virtual void update();
 
 protected slots:
   virtual void onTick();

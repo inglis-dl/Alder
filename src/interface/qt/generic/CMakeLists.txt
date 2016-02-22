@@ -40,6 +40,7 @@ SET( AlderQtGeneric_Resources
 )
 
 INCLUDE_DIRECTORIES(
+  ${ALDER_COMMON_DIR}
   ${ALDER_VTK_DIR}
 )
 

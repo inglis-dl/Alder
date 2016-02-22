@@ -28,14 +28,18 @@
 
 //#include <QAlderSliceView.h>
 
+// Alder includes
+#include <Common.h>
+#include <vtkMedicalImageViewer.h>
+
 // Qt includes
 #include <QIcon>
 #include <QTime>
 #include <QTimer>
 
 // VTK includes
+#include <vtkEventQtSlotConnect.h>
 #include <vtkMath.h>
-#include <vtkMedicalImageViewer.h>
 #include <vtkNew.h>
 #include <vtkSmartPointer.h>
 
@@ -47,6 +51,7 @@ protected:
   QAlderFramePlayerWidget* const q_ptr;
 
   vtkSmartPointer<vtkMedicalImageViewer> viewer;
+  vtkSmartPointer< vtkEventQtSlotConnect > connector;
 
   double maxFrameRate;                    // Time Playing speed factor.
   QTimer* timer;                          // Timer to process the player.
@@ -94,12 +99,13 @@ QAlderFramePlayerWidgetPrivate::QAlderFramePlayerWidgetPrivate
   : q_ptr(&object)
 {
   this->maxFrameRate = 60;          // 60 FPS by default
+  this->viewer = 0;
+  this->connector = 0;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QAlderFramePlayerWidgetPrivate::~QAlderFramePlayerWidgetPrivate()
 {
-  this->viewer = NULL;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -327,7 +333,7 @@ void QAlderFramePlayerWidgetPrivate::processRequest(const PipelineInfoType& pipe
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 bool QAlderFramePlayerWidgetPrivate::isConnected()
 {
-  return this->viewer && this->viewer->GetInput();
+  return this->viewer && this->viewer->GetInput() && this->connector;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -349,15 +355,29 @@ QAlderFramePlayerWidget::~QAlderFramePlayerWidget()
 {
   Q_D(QAlderFramePlayerWidget);
   this->stop();
-  //this->sliceView = 0;
-  d->viewer = 0;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderFramePlayerWidget::setViewer(vtkMedicalImageViewer* viewer)
 {
   Q_D(QAlderFramePlayerWidget);
+  if( d->viewer && d->connector )
+  {
+    d->connector->Disconnect(
+      d->viewer, Alder::Common::OrientationChangedEvent,
+      this, SLOT( goToCurrentFrame() ) );
+  }
   d->viewer = viewer;
+  if( viewer )
+  {
+    if( !d->connector )
+      d->connector =
+        vtkSmartPointer< vtkEventQtSlotConnect >::New();
+
+    d->connector->Connect(
+      viewer, Alder::Common::OrientationChangedEvent,
+      this, SLOT( goToCurrentFrame() ) );
+  }
   d->updateUi();
 }
 
@@ -369,7 +389,7 @@ vtkMedicalImageViewer* QAlderFramePlayerWidget::viewer() const
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderFramePlayerWidget::updateFromViewer()
+void QAlderFramePlayerWidget::update()
 {
   Q_D(QAlderFramePlayerWidget);
   d->updateUi();
@@ -387,6 +407,18 @@ void QAlderFramePlayerWidget::setSliceView( QAlderSliceView* view )
   d->updateUi();
 }
 */
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderFramePlayerWidget::goToCurrentFrame()
+{
+  Q_D(QAlderFramePlayerWidget);
+
+  // Fetch pipeline information
+  QAlderFramePlayerWidgetPrivate::PipelineInfoType
+    pipeInfo = d->retrievePipelineInfo();
+
+  d->processRequest(pipeInfo, pipeInfo.currentFrame);
+}
+
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderFramePlayerWidget::goToFirstFrame()
 {

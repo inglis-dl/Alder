@@ -9,14 +9,16 @@
 
 =========================================================================*/
 #include <QMedicalImageWidget.h>
-
 #include <ui_QMedicalImageWidget.h>
 
+// Alder includes
 #include <vtkMedicalImageViewer.h>
+
+// VTK includes
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
-#include <vtkEventQtSlotConnect.h>
 
+// Qt includes
 #include <QColorDialog>
 #include <QPainter>
 #include <QPen>
@@ -130,7 +132,7 @@ void QMedicalImageWidget::loadImage( QString filename )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QMedicalImageWidget::updateInterface()
 {
-  this->ui->framePlayerWidget->updateFromViewer();
+  this->ui->framePlayerWidget->update();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
