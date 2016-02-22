@@ -812,8 +812,6 @@ void vtkMedicalImageViewer::InitializeCameraViews()
     camera->SetFocalPoint( fpt );
     camera->SetPosition( pos );
     camera->SetViewUp( vup );
-    camera->ComputeViewPlaneNormal();
-    camera->OrthogonalizeViewUp();
 
     this->Renderer->ResetCamera( bounds );
     this->RecordCameraView( w );
@@ -868,8 +866,6 @@ void vtkMedicalImageViewer::UpdateCameraView()
     camera->SetPosition( pos );
     camera->SetFocalPoint( fpt );
     camera->SetViewUp( v );
-    camera->ComputeViewPlaneNormal();
-    camera->OrthogonalizeViewUp();
     camera->SetParallelScale( this->CameraParallelScale[this->ViewOrientation] );
     camera->SetClippingRange( this->CameraClippingRange[this->ViewOrientation] );
   }
@@ -1063,7 +1059,6 @@ void vtkMedicalImageViewer::SetViewOrientation( const int& orientation )
 
   this->ComputeCameraFromCurrentSlice( false );
   this->UpdateCameraView();
-  this->Renderer->ResetCameraClippingRange( this->ImageSliceMapper->GetBounds() );
   this->Render();
 
   if( this->Cursor && this->Annotate )
