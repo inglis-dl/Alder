@@ -52,7 +52,7 @@
 
 // Alder includes
 class vtkMedicalImageViewer;
-//class QAlderSliceView;
+class QAlderSliceView;
 class QAlderFramePlayerWidgetPrivate;
 
 class QAlderFramePlayerWidget : public QWidget
@@ -188,7 +188,7 @@ public:
   vtkMedicalImageViewer* viewer() const;
   //@}
 
-//  void setSliceView( QAlderSliceView* );
+  void setSliceView( QAlderSliceView* );
 
   //@{
   /** Set/Get the first frame icon. */
@@ -375,10 +375,10 @@ public slots:
    */
   virtual void update();
 
-protected slots:
+protected Q_SLOTS:
   virtual void onTick();
 
-signals:
+Q_SIGNALS:
   /** Emitted when the frame has been changed */
   void currentFrameChanged(double);
 
@@ -399,7 +399,7 @@ signals:
 
 protected:
   QScopedPointer<QAlderFramePlayerWidgetPrivate> d_ptr;
-//  QPointer<QAlderSliceView> sliceView;
+  QPointer<QAlderSliceView> sliceView;
 
 private:
   Q_DECLARE_PRIVATE(QAlderFramePlayerWidget);

@@ -26,11 +26,10 @@
 #include <QAlderFramePlayerWidget.h>
 #include <ui_QAlderFramePlayerWidget.h>
 
-//#include <QAlderSliceView.h>
-
 // Alder includes
 #include <Common.h>
 #include <vtkMedicalImageViewer.h>
+#include <QAlderSliceView.h>
 
 // Qt includes
 #include <QIcon>
@@ -50,7 +49,7 @@ class QAlderFramePlayerWidgetPrivate : public Ui_QAlderFramePlayerWidget
 protected:
   QAlderFramePlayerWidget* const q_ptr;
 
-  vtkSmartPointer<vtkMedicalImageViewer> viewer;
+  vtkSmartPointer< vtkMedicalImageViewer > viewer;
   vtkSmartPointer< vtkEventQtSlotConnect > connector;
 
   double maxFrameRate;                    // Time Playing speed factor.
@@ -66,7 +65,7 @@ public:
   virtual void updateUi();
 
   struct PipelineInfoType
-    {
+  {
     PipelineInfoType();
 
     bool isConnected;
@@ -75,12 +74,13 @@ public:
     double currentFrame;
     int maxFrameRate;
 
-    void printSelf()const;
+    void printSelf() const;
     double clampTimeInterval(double, double) const; // Transform a frameRate into a time interval
     double validateFrame(double) const;    // Validate a frame
     double nextFrame() const;     // Get the next frame.
     double previousFrame() const; // Get the previous frame.
-    };
+  };
+
   PipelineInfoType retrievePipelineInfo();            // Get pipeline information.
   virtual void processRequest(double);                // Request Data and Update
   virtual bool isConnected();                         // Check if the pipeline is ready
@@ -156,7 +156,6 @@ QAlderFramePlayerWidgetPrivate::retrievePipelineInfo()
     pipeInfo.currentFrame = this->viewer->GetSlice();
     pipeInfo.maxFrameRate = this->viewer->GetMaxFrameRate();
   }
-  /*
   else if( !q->sliceView.isNull() )
   {
     pipeInfo.isConnected = !q->sliceView.isNull();
@@ -164,7 +163,7 @@ QAlderFramePlayerWidgetPrivate::retrievePipelineInfo()
     {
       return pipeInfo;
     }
-    if( q->sliceView.data()->dimensionality() < 3 )
+    if( 3 > q->sliceView.data()->dimensionality() )
     {
       pipeInfo.isConnected = false;
       return pipeInfo;
@@ -175,7 +174,6 @@ QAlderFramePlayerWidgetPrivate::retrievePipelineInfo()
     pipeInfo.numberOfFrames = pipeInfo.frameRange[1] - pipeInfo.frameRange[0] + 1;
     pipeInfo.currentFrame = q->sliceView->slice();
   }
-  */
   return pipeInfo;
 }
 
@@ -185,7 +183,7 @@ clampTimeInterval(double playbackSpeed, double maxFrameRate) const
 {
   Q_ASSERT(playbackSpeed > 0.);
 
-  // the time interval is the time between QTimer emitting
+  // the time interval is the time between QTimer Q_EMITting
   // timeout signals, which in turn fires onTick, wherein the
   // frame is selected and displayed by the viewer
   // the playback speed is set in frames per second: eg., 60 FPS
@@ -303,13 +301,12 @@ void QAlderFramePlayerWidgetPrivate::requestData(const PipelineInfoType& pipeInf
   {
     this->viewer->SetSlice( frame );
   }
-  /*
   else if( !q->sliceView.isNull() )
   {
     q->sliceView.data()->setSlice( frame );
   }
-  */
-  emit q->currentFrameChanged(frame); // Emit the change
+  
+  Q_EMIT q->currentFrameChanged(frame); // Emit the change
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -394,19 +391,23 @@ void QAlderFramePlayerWidget::update()
   Q_D(QAlderFramePlayerWidget);
   d->updateUi();
 }
-/*
+
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderFramePlayerWidget::setSliceView( QAlderSliceView* view )
 {
   Q_D(QAlderFramePlayerWidget);
+
+  if( d->viewer )
+    this->setViewer( 0 );
+
   this->sliceView = view;
   if( !this->sliceView.isNull() )
   {
-    connect( this->sliceView.data(), SIGNAL( imageDataChanged() ), this, SLOT( goToFirstFrame() ) );
+    connect( this->sliceView.data(), SIGNAL( imageDataChanged() ), this, SLOT( goToCurrenttFrame() ) );
   }
   d->updateUi();
 }
-*/
+
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderFramePlayerWidget::goToCurrentFrame()
 {
@@ -531,7 +532,7 @@ void QAlderFramePlayerWidget::play()
 
   d->realTime.start();
   d->timer->start( timeInterval );
-  emit this->playing( true );
+  Q_EMIT this->playing( true );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -547,7 +548,7 @@ void QAlderFramePlayerWidget::pause()
   if( d->timer->isActive() )
   {
     d->timer->stop();
-    emit this->playing(false);
+    Q_EMIT this->playing(false);
   }
 }
 
@@ -578,7 +579,7 @@ void QAlderFramePlayerWidget::onTick()
   Q_D(QAlderFramePlayerWidget);
 
   // Forward the internal timer timeout signal
-  emit this->onTimeout();
+  Q_EMIT this->onTimeout();
 
   // Fetch pipeline information
   QAlderFramePlayerWidgetPrivate::PipelineInfoType
@@ -602,7 +603,7 @@ void QAlderFramePlayerWidget::onTick()
              d->repeatButton->isChecked() )
     { // We Loop
       frameRequest = pipeInfo.frameRange[0];
-      emit this->loop();
+      Q_EMIT this->loop();
     }
   }
   else if( !d->playButton->isChecked() && d->playReverseButton->isChecked() )
@@ -617,7 +618,7 @@ void QAlderFramePlayerWidget::onTick()
              d->repeatButton->isChecked())
     { // We Loop
       frameRequest = pipeInfo.frameRange[1];
-      emit this->loop();
+      Q_EMIT this->loop();
     }
   }
   else
@@ -876,7 +877,7 @@ void QAlderFramePlayerWidget::setDirection(QAbstractAnimation::Direction directi
   if( direction != d->direction )
   {
     d->direction = direction;
-    emit this->directionChanged(direction);
+    Q_EMIT this->directionChanged(direction);
   }
 }
 

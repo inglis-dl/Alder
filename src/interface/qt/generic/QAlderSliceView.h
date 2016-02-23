@@ -24,7 +24,7 @@ class QAlderSliceView : public QAlderAbstractView
     WRITE setCursorOverView)
   Q_PROPERTY(double colorLevel READ colorLevel WRITE setColorLevel)
   Q_PROPERTY(double colorWindow READ colorWindow WRITE setColorWindow)
-  Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation)
+  Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged)
   Q_PROPERTY(int interpolation READ interpolation WRITE setInterpolation)
   Q_ENUMS(Orientation)
 
@@ -88,7 +88,6 @@ public Q_SLOTS:
 
 Q_SIGNALS:
   void orientationChanged( QAlderSliceView::Orientation orientation );
-  void sliceChanged( int slice );
   void imageDataChanged();
 
 private:

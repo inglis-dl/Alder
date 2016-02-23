@@ -35,10 +35,10 @@
 
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-class vtkWindowLevelCallback : public vtkCommand
+class QAlderWindowLevelCallback : public vtkCommand
 {
 public:
-  static vtkWindowLevelCallback *New() { return new vtkWindowLevelCallback; }
+  static QAlderWindowLevelCallback *New() { return new QAlderWindowLevelCallback; }
 
   void Execute( vtkObject *vtkNotUsed( caller ), unsigned long event,
                 void *vtkNotUsed( callData ) )
@@ -60,18 +60,18 @@ public:
     }
   }
 
-  vtkWindowLevelCallback():pimpl( 0 ){}
-  ~vtkWindowLevelCallback(){ this->pimpl = 0; }
+  QAlderWindowLevelCallback():pimpl( 0 ){}
+  ~QAlderWindowLevelCallback(){ this->pimpl = 0; }
 
   QAlderSliceViewPrivate* pimpl;
 };
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-class vtkCoordinateWidgetToCornerAnnotationCallback : public vtkCommand
+class QAlderAnnotationUpdateCallback : public vtkCommand
 {
 public:
-  static vtkCoordinateWidgetToCornerAnnotationCallback *New() {
-    return new vtkCoordinateWidgetToCornerAnnotationCallback; }
+  static QAlderAnnotationUpdateCallback *New() {
+    return new QAlderAnnotationUpdateCallback; }
 
   void Execute( vtkObject *caller, unsigned long vtkNotUsed( event ),
                 void *vtkNotUsed( callData ) )
@@ -84,17 +84,17 @@ public:
     this->pimpl->RenderWindow->Render();
   }
 
-  vtkCoordinateWidgetToCornerAnnotationCallback():pimpl( 0 ){}
-  ~vtkCoordinateWidgetToCornerAnnotationCallback(){ this->pimpl = 0; }
+  QAlderAnnotationUpdateCallback():pimpl( 0 ){}
+  ~QAlderAnnotationUpdateCallback(){ this->pimpl = 0; }
 
   QAlderSliceViewPrivate *pimpl;
 };
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-class vtkOrientationCharCallback : public vtkCommand {
+class QAlderOrientationCallback : public vtkCommand {
   public:
-    static vtkOrientationCharCallback *New() {
-      return new vtkOrientationCharCallback; }
+    static QAlderOrientationCallback *New() {
+      return new QAlderOrientationCallback; }
 
   void Execute( vtkObject* vtkNotUsed(caller), unsigned long vtkNotUsed(event),
     void* vtkNotUsed(callData) )
@@ -129,8 +129,8 @@ class vtkOrientationCharCallback : public vtkCommand {
     }
   }
 
-  vtkOrientationCharCallback():pimpl( 0 ){}
-  ~vtkOrientationCharCallback(){ this->pimpl = 0; }
+  QAlderOrientationCallback():pimpl( 0 ){}
+  ~QAlderOrientationCallback(){ this->pimpl = 0; }
 
   QAlderSliceViewPrivate *pimpl;
 };
@@ -345,7 +345,7 @@ void QAlderSliceViewPrivate::setupRendering( const bool& display, const bool& in
     else
       this->InteractorStyle->SetInteractionModeToImage2D();
 
-    vtkSmartPointer< vtkWindowLevelCallback > cbk = vtkSmartPointer< vtkWindowLevelCallback >::New();
+    vtkSmartPointer< QAlderWindowLevelCallback > cbk = vtkSmartPointer< QAlderWindowLevelCallback >::New();
     cbk->pimpl = this;
 
     this->callbackTags[ vtkCommand::GetStringFromEventId(vtkCommand::StartWindowLevelEvent) ] =
@@ -360,7 +360,7 @@ void QAlderSliceViewPrivate::setupRendering( const bool& display, const bool& in
     this->callbackTags[ vtkCommand::GetStringFromEventId(vtkCommand::ResetWindowLevelEvent) ] =
       this->InteractorStyle->AddObserver( vtkCommand::ResetWindowLevelEvent, cbk );
 
-    vtkSmartPointer< vtkOrientationCharCallback > charCbk = vtkSmartPointer< vtkOrientationCharCallback >::New();
+    vtkSmartPointer< QAlderOrientationCallback > charCbk = vtkSmartPointer< QAlderOrientationCallback >::New();
     charCbk->pimpl = this;
     this->callbackTags[ vtkCommand::GetStringFromEventId(vtkCommand::CharEvent) ] =
       this->RenderWindow->GetInteractor()->AddObserver( vtkCommand::CharEvent, charCbk );
@@ -817,8 +817,8 @@ void QAlderSliceViewPrivate::setupCoordinateWidget()
 
     if( this->annotateOverView && this->CornerAnnotation->GetVisibility() )
     {
-      vtkSmartPointer< vtkCoordinateWidgetToCornerAnnotationCallback > cbk =
-        vtkSmartPointer< vtkCoordinateWidgetToCornerAnnotationCallback >::New();
+      vtkSmartPointer< QAlderAnnotationUpdateCallback > cbk =
+        vtkSmartPointer< QAlderAnnotationUpdateCallback >::New();
       cbk->pimpl = this;
       this->callbackTags[ vtkCommand::GetStringFromEventId(vtkCommand::InteractionEvent) ] =
         this->CoordinateWidget->AddObserver( vtkCommand::InteractionEvent, cbk );
@@ -921,7 +921,7 @@ void QAlderSliceView::setImageData( vtkImageData* newImageData )
 {
   Q_D(QAlderSliceView);
   d->setImageData( newImageData );
-  emit imageDataChanged();
+  Q_EMIT imageDataChanged();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -979,7 +979,7 @@ void QAlderSliceView::setOrientation( Orientation orientation )
   }
 
   d->setOrientation( orientation );
-  emit orientationChanged( orientation );
+  Q_EMIT orientationChanged( orientation );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -1024,7 +1024,6 @@ void QAlderSliceView::setSlice( int slice )
 {
   Q_D(QAlderSliceView);
   d->setSlice( slice );
-  emit sliceChanged( slice );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
