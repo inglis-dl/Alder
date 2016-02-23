@@ -26,7 +26,7 @@
 ==============================================================================*/
 
 /**
- * @class QAlderDoubleSlider
+ * @class QAlderFramePlayerWidget
  *
  * @author Patrick Emond <emondpd AT mcmaster DOT ca>
  * @author Dean Inglis <inglisd AT mcmaster DOT ca>
@@ -39,7 +39,7 @@
  *
  * This class was adapted from the MSVTK library for playing cineloops.
  *
- * @see QAlderDoubleSlider, QAlderSliderWidget, vtkMedicalImageViewer
+ * @see QAlderDoubleSlider, QAlderSliderWidget, vtkMedicalImageViewer, QAlderSliceView
  */
 #ifndef __QAlderFramePlayerWidget_h
 #define __QAlderFramePlayerWidget_h
