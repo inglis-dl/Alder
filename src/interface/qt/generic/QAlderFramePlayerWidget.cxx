@@ -305,7 +305,7 @@ void QAlderFramePlayerWidgetPrivate::requestData(const PipelineInfoType& pipeInf
   {
     q->sliceView.data()->setSlice( frame );
   }
-  
+
   Q_EMIT q->currentFrameChanged(frame); // Emit the change
 }
 
@@ -403,7 +403,8 @@ void QAlderFramePlayerWidget::setSliceView( QAlderSliceView* view )
   this->sliceView = view;
   if( !this->sliceView.isNull() )
   {
-    connect( this->sliceView.data(), SIGNAL( imageDataChanged() ), this, SLOT( goToCurrenttFrame() ) );
+    connect( this->sliceView.data(), SIGNAL( imageDataChanged() ),
+             this, SLOT( goToCurrentFrame() ) );
   }
   d->updateUi();
 }

@@ -50,8 +50,6 @@ public:
   bool annotateOverView() const;
   bool cursorOverView() const;
 
-  virtual void setInteractor( vtkRenderWindowInteractor* interactor );
-
   bool hasImageData();
 
   int dimensionality() const;

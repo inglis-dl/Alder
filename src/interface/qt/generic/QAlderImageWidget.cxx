@@ -9,14 +9,17 @@
 
 =========================================================================*/
 #include <QAlderImageWidget.h>
-
 #include <ui_QAlderImageWidget.h>
 
+// Alder includes
 #include <QAlderSliceView.h>
+
+// VTK includes
+#include <vtkEventQtSlotConnect.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
-#include <vtkEventQtSlotConnect.h>
 
+// Qt includes
 #include <QColorDialog>
 #include <QPainter>
 #include <QPen>
@@ -167,4 +170,3 @@ void QAlderImageWidget::slotSelectColor()
       this->ui->sliceView->setBackgroundColor( qcolor );
   }
 }
-

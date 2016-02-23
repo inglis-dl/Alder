@@ -37,7 +37,6 @@ public:
   QAlderAbstractViewPrivate(QAlderAbstractView& object);
 
   virtual void init();
-  virtual void setupRendering();
   virtual void setupAxesWidget();
 
   bool axesOverView;

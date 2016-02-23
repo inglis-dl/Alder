@@ -146,7 +146,6 @@ QAlderSliceViewPrivate::QAlderSliceViewPrivate(QAlderSliceView& object)
   this->ImageSliceMapper->CroppingOff();
 
   this->ImageSlice = vtkSmartPointer<vtkImageSlice>::New();
-  this->ImageSlice->VisibilityOff();
   vtkImageProperty* property = this->ImageSlice->GetProperty();
   property->SetInterpolationTypeToNearest();
   this->interpolation = VTK_NEAREST_INTERPOLATION;
@@ -285,7 +284,7 @@ void QAlderSliceViewPrivate::setImageData( vtkImageData* input )
     if( 2 == this->dimensionality && QAlderSliceView::OrientationXY != this->orientation )
      this->orientation = QAlderSliceView::OrientationXY;
 
-    bool initCamera = false;
+    bool initCamera = true;
     vtkImageData* lastInput = vtkImageData::SafeDownCast(this->WindowLevel->GetInput());
     if( lastInput )
     {
@@ -295,6 +294,7 @@ void QAlderSliceViewPrivate::setImageData( vtkImageData* input )
       double *origin = input->GetOrigin();
       int *lastExtent = lastInput->GetWholeExtent();
       int *extent = input->GetWholeExtent();
+      initCamera = false;
       for( int i = 0; i < 3; ++i )
       {
         if( lastSpacing[i]    != spacing[i]  ||
@@ -1066,15 +1066,6 @@ int QAlderSliceView::dimensionality() const
 {
   Q_D(const QAlderSliceView);
   return d->dimensionality;
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderSliceView::setInteractor( vtkRenderWindowInteractor* interactor )
-{
-  Q_D(QAlderSliceView);
-  d->setupRendering(false);
-  this->Superclass::setInteractor(interactor);
-  d->setupRendering(true);
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

@@ -32,7 +32,6 @@ QAlderAbstractViewPrivate::QAlderAbstractViewPrivate(QAlderAbstractView& object)
   this->OrientationMarkerWidget->SetOrientationMarker( this->AxesActor );
   this->OrientationMarkerWidget->KeyPressActivationOff();
   this->OrientationMarkerWidget->SetViewport( 0.8, 0.0, 1.0, 0.2 );
-  this->OrientationMarkerWidget->InteractiveOff();
   this->axesOverView = true;
 }
 
@@ -49,18 +48,10 @@ void QAlderAbstractViewPrivate::init()
   q->layout()->setSpacing(0);
   q->layout()->addWidget(this->VTKWidget);
 
-  this->setupRendering();
-
-  q->setInteractor(this->RenderWindow->GetInteractor());
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+--
-void QAlderAbstractViewPrivate::setupRendering()
-{
-  Q_ASSERT(this->RenderWindow);
-  Q_ASSERT(this->Renderer);
   this->RenderWindow->AddRenderer(this->Renderer);
   this->VTKWidget->SetRenderWindow(this->RenderWindow);
+
+  q->setInteractor(this->RenderWindow->GetInteractor());
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+--
@@ -68,15 +59,17 @@ void QAlderAbstractViewPrivate::setupAxesWidget()
 {
   Q_ASSERT(this->RenderWindow);
   Q_ASSERT(this->Renderer);
-  if( this->axesOverView )
+  if( this->axesOverView && this->RenderWindow->GetInteractor() )
   {
     this->OrientationMarkerWidget->SetDefaultRenderer( this->Renderer );
     this->OrientationMarkerWidget->SetInteractor( this->RenderWindow->GetInteractor() );
     this->OrientationMarkerWidget->On();
+    this->OrientationMarkerWidget->InteractiveOff();
   }
   else
   {
-    this->OrientationMarkerWidget->Off();
+    if( this->OrientationMarkerWidget->GetInteractor() )
+      this->OrientationMarkerWidget->Off();
   }
 }
 
@@ -171,7 +164,8 @@ vtkRenderWindowInteractor* QAlderAbstractView::interactor()const
 void QAlderAbstractView::setOrientationDisplay(bool display)
 {
   Q_D(QAlderAbstractView);
-  d->OrientationMarkerWidget->SetEnabled(display);
+  if( d->OrientationMarkerWidget->GetInteractor() )
+    d->OrientationMarkerWidget->SetEnabled(display);
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---

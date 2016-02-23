@@ -11,6 +11,7 @@
 #include <QAlderAtlasWidget.h>
 #include <ui_QAlderAtlasWidget.h>
 
+// Alder includes
 #include <Application.h>
 #include <Common.h>
 #include <Exam.h>
@@ -21,9 +22,10 @@
 #include <Rating.h>
 #include <ScanType.h>
 #include <User.h>
+#include <QAlderImageWidget.h>
 
+// VTK includes
 #include <vtkEventQtSlotConnect.h>
-#include <QMedicalImageWidget.h>
 #include <vtkNew.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>

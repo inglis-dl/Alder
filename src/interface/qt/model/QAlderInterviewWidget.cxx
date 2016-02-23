@@ -11,6 +11,7 @@
 #include <QAlderInterviewWidget.h>
 #include <ui_QAlderInterviewWidget.h>
 
+// Alder includes
 #include <Application.h>
 #include <Code.h>
 #include <CodeType.h>
@@ -25,15 +26,16 @@
 #include <Site.h>
 #include <User.h>
 #include <Wave.h>
-
-#include <vtkEventQtSlotConnect.h>
-#include <vtkNew.h>
-#include <vtkRenderer.h>
-#include <vtkRenderWindow.h>
-
-#include <QMedicalImageWidget.h>
+#include <QAlderImageWidget.h>
 #include <QVTKProgressDialog.h>
 
+// VTK includes
+#include <vtkEventQtSlotConnect.h>
+#include <vtkNew.h>
+//#include <vtkRenderer.h>
+//#include <vtkRenderWindow.h>
+
+// Qt includes
 #include <QMessageBox>
 #include <QTreeWidgetItem>
 
