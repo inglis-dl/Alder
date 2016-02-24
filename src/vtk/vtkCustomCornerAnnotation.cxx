@@ -46,6 +46,8 @@ vtkCustomCornerAnnotation::vtkCustomCornerAnnotation()
 
   vtkSmartPointer<vtkTextProperty> tprop = vtkSmartPointer<vtkTextProperty>::New();
   tprop->ShadowOff();
+  double color[3] = {1.,1.,1.};
+  tprop->SetColor(color);
   this->SetTextProperty(tprop);
 
   for (int i = 0; i < 4; i++)
