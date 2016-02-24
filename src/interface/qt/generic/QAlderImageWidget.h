@@ -4,7 +4,6 @@
   Module:   QAlderImageWidget.h
   Language: C++
 
-  Author: Patrick Emond <emondpd AT mcmaster DOT ca>
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
@@ -14,29 +13,31 @@
 // Qt includes
 #include <QWidget>
 
-class Ui_QAlderImageWidget;
+class QAlderImageWidgetPrivate;
 
 class QAlderImageWidget : public QWidget
 {
   Q_OBJECT
 
 public:
+  typedef QWidget Superclass;
   //constructor
   QAlderImageWidget( QWidget* parent = 0 );
   //destructor
-  ~QAlderImageWidget();
+  virtual ~QAlderImageWidget();
 
   void resetImage();
   void loadImage( const QString& filename );
   void saveImage( const QString& fileName );
 
 protected:
+  QScopedPointer<QAlderImageWidgetPrivate> d_ptr;
 
   bool eventFilter( QObject *, QEvent * );
 
 private:
-  // Designer form
-  Ui_QAlderImageWidget *ui;
+  Q_DECLARE_PRIVATE(QAlderImageWidget);
+  Q_DISABLE_COPY(QAlderImageWidget);
 };
 
 #endif

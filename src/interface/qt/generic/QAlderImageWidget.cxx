@@ -4,7 +4,6 @@
   Module:   QAlderImageWidget.cxx
   Language: C++
 
-  Author: Patrick Emond <emondpd AT mcmaster DOT ca>
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
@@ -22,24 +21,52 @@
 #include <sstream>
 #include <stdexcept>
 
+class QAlderImageWidgetPrivate : public Ui_QAlderImageWidget
+{
+  Q_DECLARE_PUBLIC(QAlderImageWidget);
+protected:
+  QAlderImageWidget* const q_ptr;
+
+public:
+  QAlderImageWidgetPrivate(QAlderImageWidget& object);
+  virtual ~QAlderImageWidgetPrivate();
+
+  virtual void setupUi(QWidget*);
+};
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+//
+// QAlderImageWidgetPrivate methods
+//
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QAlderImageWidgetPrivate::QAlderImageWidgetPrivate
+(QAlderImageWidget& object)
+  : q_ptr(&object)
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QAlderImageWidgetPrivate::~QAlderImageWidgetPrivate()
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderImageWidgetPrivate::setupUi( QWidget* widget )
+{
+  Q_Q(QAlderImageWidget);
+
+  this->Ui_QAlderImageWidget::setupUi( widget );
+  this->imageControl->setSliceView( this->sliceView );
+  this->framePlayerWidget->setSliceView( this->sliceView );
+}
+
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QAlderImageWidget::QAlderImageWidget( QWidget* parent )
-  : QWidget( parent )
+  : Superclass( parent )
+  , d_ptr(new QAlderImageWidgetPrivate(*this))
 {
-  this->ui = new Ui_QAlderImageWidget;
-  this->ui->setupUi( this );
-
-/*
-  vtkRenderer* renderer = this->ui->sliceView->renderer();
-  renderer->GradientBackgroundOn();
-  renderer->SetBackground( 0, 0, 0 );
-  renderer->SetBackground2( 0, 0, 1 );
-*/
-
-  this->ui->imageControl->setSliceView( this->ui->sliceView );
-  this->ui->framePlayerWidget->setSliceView( this->ui->sliceView );
-
-  this->ui->sliceView->VTKWidget()->installEventFilter( this );
+  Q_D(QAlderImageWidget);
+  d->setupUi( this );
   this->resetImage();
 }
 
@@ -51,15 +78,16 @@ QAlderImageWidget::~QAlderImageWidget()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 bool QAlderImageWidget::eventFilter( QObject *obj, QEvent *event )
 {
-  if( obj == this->ui->sliceView->VTKWidget() )
+  Q_D(QAlderImageWidget);
+  if( obj == d->sliceView->VTKWidget() )
   {
     if( QEvent::Enter == event->type() )
     {
-      this->ui->frame->setStyleSheet("border : 3px solid red");
+      d->frame->setStyleSheet("border : 3px solid red");
     }
     if( QEvent::Leave == event->type() )
     {
-      this->ui->frame->setStyleSheet("border : 3px solid green");
+      d->frame->setStyleSheet("border : 3px solid green");
     }
   }
   return false;
@@ -68,13 +96,15 @@ bool QAlderImageWidget::eventFilter( QObject *obj, QEvent *event )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderImageWidget::resetImage()
 {
-  this->ui->sliceView->setImageToSinusoid();
+  Q_D(QAlderImageWidget);
+  d->sliceView->setImageToSinusoid();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderImageWidget::loadImage( const QString& fileName )
 {
-  if( !this->ui->sliceView->load( fileName ) )
+  Q_D(QAlderImageWidget);
+  if( !d->sliceView->load( fileName ) )
   {
     std::stringstream stream;
     stream << "Unable to load image file \"" << fileName.toStdString() << "\"";
@@ -85,5 +115,6 @@ void QAlderImageWidget::loadImage( const QString& fileName )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderImageWidget::saveImage( const QString& fileName )
 {
-  this->ui->sliceView->writeSlice( fileName );
+  Q_D(QAlderImageWidget);
+  d->sliceView->writeSlice( fileName );
 }
