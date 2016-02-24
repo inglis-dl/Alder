@@ -8,10 +8,10 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #ifndef __QAlderImageWidget_h
 #define __QAlderImageWidget_h
 
+// Qt includes
 #include <QWidget>
 
 class Ui_QAlderImageWidget;
@@ -30,17 +30,9 @@ public:
   void loadImage( const QString& filename );
   void saveImage( const QString& fileName );
 
-public slots:
-
-  void slotSelectColor();
-  void slotInterpolationToggle();
-
 protected:
-  void updateInterface();
 
   bool eventFilter( QObject *, QEvent * );
-
-protected slots:
 
 private:
   // Designer form

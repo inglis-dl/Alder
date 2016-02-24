@@ -156,23 +156,23 @@ QAlderFramePlayerWidgetPrivate::retrievePipelineInfo()
     pipeInfo.currentFrame = this->viewer->GetSlice();
     pipeInfo.maxFrameRate = this->viewer->GetMaxFrameRate();
   }
-  else if( !q->sliceView.isNull() )
+  else if( !q->sliceViewPointer.isNull() )
   {
-    pipeInfo.isConnected = !q->sliceView.isNull();
+    pipeInfo.isConnected = !q->sliceViewPointer.isNull();
     if( !pipeInfo.isConnected )
     {
       return pipeInfo;
     }
-    if( 3 > q->sliceView.data()->dimensionality() )
+    if( 3 > q->sliceViewPointer.data()->dimensionality() )
     {
       pipeInfo.isConnected = false;
       return pipeInfo;
     }
 
-    pipeInfo.frameRange[0] = q->sliceView->sliceMin();
-    pipeInfo.frameRange[1] = q->sliceView->sliceMax();
+    pipeInfo.frameRange[0] = q->sliceViewPointer->sliceMin();
+    pipeInfo.frameRange[1] = q->sliceViewPointer->sliceMax();
     pipeInfo.numberOfFrames = pipeInfo.frameRange[1] - pipeInfo.frameRange[0] + 1;
-    pipeInfo.currentFrame = q->sliceView->slice();
+    pipeInfo.currentFrame = q->sliceViewPointer->slice();
   }
   return pipeInfo;
 }
@@ -301,9 +301,9 @@ void QAlderFramePlayerWidgetPrivate::requestData(const PipelineInfoType& pipeInf
   {
     this->viewer->SetSlice( frame );
   }
-  else if( !q->sliceView.isNull() )
+  else if( !q->sliceViewPointer.isNull() )
   {
-    q->sliceView.data()->setSlice( frame );
+    q->sliceViewPointer.data()->setSlice( frame );
   }
 
   Q_EMIT q->currentFrameChanged(frame); // Emit the change
@@ -400,10 +400,10 @@ void QAlderFramePlayerWidget::setSliceView( QAlderSliceView* view )
   if( d->viewer )
     this->setViewer( 0 );
 
-  this->sliceView = view;
-  if( !this->sliceView.isNull() )
+  this->sliceViewPointer = view;
+  if( !this->sliceViewPointer.isNull() )
   {
-    connect( this->sliceView.data(), SIGNAL( imageDataChanged() ),
+    connect( this->sliceViewPointer.data(), SIGNAL( imageDataChanged() ),
              this, SLOT( goToCurrentFrame() ) );
   }
   d->updateUi();

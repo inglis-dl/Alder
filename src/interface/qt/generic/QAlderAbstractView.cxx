@@ -50,6 +50,11 @@ void QAlderAbstractViewPrivate::init()
 
   this->RenderWindow->AddRenderer(this->Renderer);
   this->VTKWidget->SetRenderWindow(this->RenderWindow);
+  this->Renderer->GradientBackgroundOn();
+  double color[3] = {0.,0.,0.};
+  this->Renderer->SetBackground(color); // black (lower part of gradient)
+  color[2]=1.;
+  this->Renderer->SetBackground2(color); // blue (upper part of gradient)
 
   q->setInteractor(this->RenderWindow->GetInteractor());
 }
@@ -217,20 +222,6 @@ int QAlderAbstractView::heightForWidth(int width)const
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
-void QAlderAbstractView::setBackgroundColor(const QColor& newBackgroundColor)
-{
-  Q_D(QAlderAbstractView);
-  double color[3];
-  color[0] = newBackgroundColor.redF();
-  color[1] = newBackgroundColor.greenF();
-  color[2] = newBackgroundColor.blueF();
-  foreach(vtkRenderer* renderer, d->renderers())
-  {
-    renderer->SetBackground(color);
-  }
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
 vtkRenderer* QAlderAbstractView::renderer()
 {
   Q_D(const QAlderAbstractView);
@@ -238,7 +229,21 @@ vtkRenderer* QAlderAbstractView::renderer()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
-QColor QAlderAbstractView::backgroundColor()const
+void QAlderAbstractView::setBackgroundColor(const QColor& qcolor)
+{
+  Q_D(QAlderAbstractView);
+  double color[3];
+  color[0] = qcolor.redF();
+  color[1] = qcolor.greenF();
+  color[2] = qcolor.blueF();
+  foreach(vtkRenderer* renderer, d->renderers())
+  {
+    renderer->SetBackground(color);
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+QColor QAlderAbstractView::backgroundColor() const
 {
   Q_D(const QAlderAbstractView);
   vtkRenderer* firstRenderer = d->firstRenderer();
@@ -249,13 +254,13 @@ QColor QAlderAbstractView::backgroundColor()const
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
-void QAlderAbstractView::setBackgroundColor2(const QColor& newBackgroundColor)
+void QAlderAbstractView::setForegroundColor(const QColor& qcolor)
 {
   Q_D(QAlderAbstractView);
   double color[3];
-  color[0] = newBackgroundColor.redF();
-  color[1] = newBackgroundColor.greenF();
-  color[2] = newBackgroundColor.blueF();
+  color[0] = qcolor.redF();
+  color[1] = qcolor.greenF();
+  color[2] = qcolor.blueF();
   foreach(vtkRenderer* renderer, d->renderers())
   {
     renderer->SetBackground2(color);
@@ -263,7 +268,7 @@ void QAlderAbstractView::setBackgroundColor2(const QColor& newBackgroundColor)
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
-QColor QAlderAbstractView::backgroundColor2()const
+QColor QAlderAbstractView::foregroundColor() const
 {
   Q_D(const QAlderAbstractView);
   vtkRenderer* firstRenderer = d->firstRenderer();

@@ -28,8 +28,9 @@ class QAlderAbstractView : public QWidget
   Q_PROPERTY(bool orientationDisplay READ orientationDisplay
     WRITE setOrientationDisplay)
   Q_PROPERTY(QColor backgroundColor READ backgroundColor WRITE setBackgroundColor)
-  Q_PROPERTY(QColor backgroundColor2 READ backgroundColor2 WRITE setBackgroundColor)
+  Q_PROPERTY(QColor foregroundColor READ foregroundColor WRITE setForegroundColor)
   Q_PROPERTY(bool gradientBackground READ gradientBackground WRITE setGradientBackground)
+
 public:
 
   typedef QWidget Superclass;
@@ -42,9 +43,9 @@ public Q_SLOTS:
 
   virtual void forceRender();
 
-  virtual void setBackgroundColor(const QColor& newBackgroundColor);
+  virtual void setForegroundColor(const QColor& qcolor);
 
-  virtual void setBackgroundColor2(const QColor& newBackgroundColor);
+  virtual void setBackgroundColor(const QColor& qcolor);
 
   virtual void setGradientBackground(bool enable);
 
@@ -66,7 +67,7 @@ public:
 
   virtual QColor backgroundColor() const;
 
-  virtual QColor backgroundColor2() const;
+  virtual QColor foregroundColor() const;
 
   virtual bool gradientBackground() const;
 

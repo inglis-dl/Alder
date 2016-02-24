@@ -399,7 +399,7 @@ Q_SIGNALS:
 
 protected:
   QScopedPointer<QAlderFramePlayerWidgetPrivate> d_ptr;
-  QPointer<QAlderSliceView> sliceView;
+  QPointer<QAlderSliceView> sliceViewPointer;
 
 private:
   Q_DECLARE_PRIVATE(QAlderFramePlayerWidget);

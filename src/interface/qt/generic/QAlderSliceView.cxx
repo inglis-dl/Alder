@@ -29,6 +29,7 @@
 #include <vtkNew.h>
 #include <vtkPointData.h>
 #include <vtkRenderWindowInteractor.h>
+#include <vtkTextProperty.h>
 
 // --------------------------------------------------------------------------
 // QAlderSliceViewPrivate methods
@@ -925,10 +926,11 @@ void QAlderSliceView::setImageData( vtkImageData* newImageData )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-bool QAlderSliceView::hasImageData()
+bool QAlderSliceView::hasImageData() const
 {
-  Q_D(QAlderSliceView);
-  return 0 != d->WindowLevel->GetInput();
+  Q_D(const QAlderSliceView);
+  vtkImageData* input = 0;
+  return (input = vtkImageData::SafeDownCast(d->WindowLevel->GetInput()));
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -1206,7 +1208,6 @@ bool QAlderSliceView::load( const QString& fileName )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliceView::setImageToSinusoid()
 {
-  Q_D(QAlderSliceView);
   // Create the sinusoid default image like MicroView does
   vtkNew< vtkImageSinusoidSource > sinusoid;
   sinusoid->SetPeriod( 32 );
@@ -1217,6 +1218,28 @@ void QAlderSliceView::setImageToSinusoid()
   sinusoid->GetOutput()->UpdateInformation();
   sinusoid->GetOutput()->Update();
 
-  d->setImageData( sinusoid->GetOutput() );
-  d->setSlice( 15 );
+  this->setImageData( sinusoid->GetOutput() );
+  this->setSlice( 15 );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+void QAlderSliceView::setAnnotationColor(const QColor& qcolor)
+{
+  Q_D(QAlderSliceView);
+  double color[3];
+  color[0] = qcolor.redF();
+  color[1] = qcolor.greenF();
+  color[2] = qcolor.blueF();
+  vtkTextProperty* prop = d->CornerAnnotation->GetTextProperty();
+  prop->SetColor( color );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+QColor QAlderSliceView::annotationColor() const
+{
+  Q_D(const QAlderSliceView);
+  vtkTextProperty* prop = d->CornerAnnotation->GetTextProperty();
+  double color[3];
+  prop->GetColor( color );
+  return QColor::fromRgbF(color[0],color[1],color[2]);
 }

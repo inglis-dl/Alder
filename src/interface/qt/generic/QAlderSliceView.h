@@ -26,6 +26,7 @@ class QAlderSliceView : public QAlderAbstractView
   Q_PROPERTY(double colorWindow READ colorWindow WRITE setColorWindow)
   Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged)
   Q_PROPERTY(int interpolation READ interpolation WRITE setInterpolation)
+  Q_PROPERTY(QColor annotationColor READ annotationColor WRITE setAnnotationColor)
   Q_ENUMS(Orientation)
 
 public:
@@ -50,13 +51,17 @@ public:
   bool annotateOverView() const;
   bool cursorOverView() const;
 
-  bool hasImageData();
+  bool hasImageData() const;
 
   int dimensionality() const;
 
   void setImageToSinusoid();
+
   bool load( const QString& fileName );
+
   void writeSlice( const QString& fileName );
+
+  virtual QColor annotationColor() const;
 
 public Q_SLOTS:
 
@@ -83,6 +88,8 @@ public Q_SLOTS:
   void flipCameraVertical();
   void rotateCameraClockwise();
   void rotateCameraCounterClockwise();
+
+  void setAnnotationColor(const QColor& qcolor);
 
 Q_SIGNALS:
   void orientationChanged( QAlderSliceView::Orientation orientation );
