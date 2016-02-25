@@ -46,6 +46,7 @@ private:
   QColor backgroundColor;
   QColor foregroundColor;
   QColor annotationColor;
+  bool interpolation;
 
   void drawButton( const int& which );
 };
@@ -96,6 +97,9 @@ void QAlderImageControlPrivate::updateUi()
     this->setColor( 2, view->annotationColor() );
     this->setColor( 1, view->foregroundColor() );
     this->setColor( 0, view->backgroundColor() );
+    this->interpolationButton->blockSignals(true);
+    q->setInterpolation( view->interpolation() );
+    this->interpolationButton->blockSignals(false);
     bool enable = view->hasImageData();
     QList<QToolButton*> buttons = q->findChildren<QToolButton*>();
     QListIterator<QToolButton*> it(buttons);
@@ -130,7 +134,7 @@ void QAlderImageControlPrivate::setColor( const int& which, const QColor& color 
 
   if(1 == which)
     this->foregroundColor = color;
-  else 
+  else
     this->backgroundColor = color;
 
   bool gradient = true;
@@ -190,7 +194,7 @@ void QAlderImageControlPrivate::drawButton( const int& which )
   QPainter painter( &pix );
   painter.setPen( QPen( Qt::gray ) );
   painter.setBrush( color.isValid() ? color : QBrush( Qt::NoBrush ) );
-  painter.drawRect( 2, 2, pix.width() - 2, pix.height() - 2 );
+  painter.drawRect( 0, 0, pix.width(), pix.height() );
   button->setIcon( QIcon( pix ) );
 }
 
@@ -288,22 +292,37 @@ void QAlderImageControl::selectColor()
 void QAlderImageControl::interpolate(bool state)
 {
   Q_D(QAlderImageControl);
+  QAlderSliceView* view = this->sliceViewPointer.isNull() ? 0 : this->sliceViewPointer.data();
   if(state)
   {
-    if( !this->sliceViewPointer.isNull() )
+    if( view )
     {
-      this->sliceViewPointer.data()->setInterpolation( VTK_LINEAR_INTERPOLATION );
+      view->setInterpolation( VTK_LINEAR_INTERPOLATION );
     }
     d->interpolationButton->setIcon(QIcon(":/icons/linearicon"));
   }
   else
   {
-    if( !this->sliceViewPointer.isNull() )
+    if( view )
     {
-      this->sliceViewPointer.data()->setInterpolation( VTK_NEAREST_INTERPOLATION );
+      view->setInterpolation( VTK_NEAREST_INTERPOLATION );
     }
     d->interpolationButton->setIcon(QIcon(":/icons/nearesticon"));
   }
+  d->interpolation = state;
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+bool QAlderImageControl::interpolation() const
+{
+  Q_D(const QAlderImageControl);
+  return d->interpolation;
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderImageControl::setInterpolation( const bool& state )
+{
+  this->interpolate( state );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

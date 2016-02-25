@@ -82,6 +82,11 @@ class QAlderImageControl : public QWidget
    */
   Q_PROPERTY(QColor annotationColor READ annotationColor WRITE setAnnotationColor)
 
+  /**
+   * This property holds the interpolation status (on or off).
+   */
+  Q_PROPERTY(bool interpolation READ interpolation WRITE setInterpolation)
+
 public:
   typedef QWidget Superclass;
   QAlderImageControl(QWidget* parent=0);
@@ -145,6 +150,13 @@ public:
   QColor annotationColor() const;
   //@}
 
+  //@{
+  /** Set/Get the interpolation. */
+  void setInterpolation( const bool& );
+  bool interpolation() const;
+  //@}
+
+public Q_SLOTS:
 public Q_SLOTS:
 
   void selectColor();
