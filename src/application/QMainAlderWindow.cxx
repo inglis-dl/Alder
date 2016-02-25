@@ -572,5 +572,5 @@ void QMainAlderWindow::updateDicomTagWidget()
   Alder::Application *app = Alder::Application::GetInstance();
   Alder::Image *image = app->GetActiveImage();
   QString fileName = image ? image->GetFileName().c_str() : "";
-  this->DicomTagWidget->updateTableWidget( fileName );
+  this->DicomTagWidget->load( fileName );
 }

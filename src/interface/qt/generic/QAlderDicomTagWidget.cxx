@@ -11,6 +11,7 @@
 #include <QAlderDicomTagWidget.h>
 #include <ui_QAlderDicomTagWidget.h>
 
+// GDCM includes
 #include <gdcmDataSet.h>
 #include <gdcmDict.h>
 #include <gdcmDicts.h>
@@ -21,6 +22,7 @@
 #include <gdcmSequenceOfItems.h>
 #include <gdcmVR.h>
 
+// Qt includes
 #include <QTableWidgetItem>
 
 #include <map>
@@ -41,7 +43,7 @@ public:
 
   virtual void setupUi( QWidget* );
   virtual void updateUi();
-  virtual void setFileName( QString );
+  virtual void setFileName( const QString& );
   virtual void buildDicomStrings();
   
 private:
@@ -75,7 +77,7 @@ void QAlderDicomTagWidgetPrivate::setupUi(QWidget* widget)
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderDicomTagWidgetPrivate::setFileName( QString fileName )
+void QAlderDicomTagWidgetPrivate::setFileName( const QString& fileName )
 {
   this->fileName = fileName;
   this->updateUi();
@@ -381,7 +383,7 @@ QAlderDicomTagWidget::~QAlderDicomTagWidget()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderDicomTagWidget::updateTableWidget( QString fileName )
+void QAlderDicomTagWidget::load( const QString& fileName )
 {
   Q_D(QAlderDicomTagWidget);
   d->setFileName( fileName );

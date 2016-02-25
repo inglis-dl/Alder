@@ -67,7 +67,7 @@ QAlderImageWidget::QAlderImageWidget( QWidget* parent )
 {
   Q_D(QAlderImageWidget);
   d->setupUi( this );
-  this->resetImage();
+  this->reset();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -94,14 +94,14 @@ bool QAlderImageWidget::eventFilter( QObject *obj, QEvent *event )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderImageWidget::resetImage()
+void QAlderImageWidget::reset()
 {
   Q_D(QAlderImageWidget);
   d->sliceView->setImageToSinusoid();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderImageWidget::loadImage( const QString& fileName )
+void QAlderImageWidget::load( const QString& fileName )
 {
   Q_D(QAlderImageWidget);
   if( !d->sliceView->load( fileName ) )
@@ -113,7 +113,7 @@ void QAlderImageWidget::loadImage( const QString& fileName )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderImageWidget::saveImage( const QString& fileName )
+void QAlderImageWidget::save( const QString& fileName )
 {
   Q_D(QAlderImageWidget);
   d->sliceView->writeSlice( fileName );

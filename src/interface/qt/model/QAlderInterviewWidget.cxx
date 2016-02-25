@@ -843,15 +843,15 @@ void QAlderInterviewWidget::updateViewer()
 {
   Alder::Image *image = Alder::Application::GetInstance()->GetActiveImage();
   if( image )
-    this->ui->imageWidget->loadImage( image->GetFileName().c_str() );
+    this->ui->imageWidget->load( image->GetFileName().c_str() );
   else
-    this->ui->imageWidget->resetImage();
+    this->ui->imageWidget->reset();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderInterviewWidget::saveImage( const QString& fileName )
 {
-  this->ui->imageWidget->saveImage( fileName );
+  this->ui->imageWidget->save( fileName );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

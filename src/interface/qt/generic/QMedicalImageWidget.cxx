@@ -43,7 +43,7 @@ QMedicalImageWidget::QMedicalImageWidget( QWidget* parent )
   this->viewer->SetRenderWindow( renwin );
   this->viewer->InterpolateOff();
   this->ui->interpolationToggleButton->setIcon(QIcon(":/icons/nearesticon"));
-  this->resetImage();
+  this->reset();
 
   connect( this->ui->invertButton, SIGNAL( clicked() ), this, SLOT( slotInvertWindowLevel() ) );
   connect( this->ui->flipVerticalButton, SIGNAL( clicked() ), this, SLOT( slotFlipVertical() ) );
@@ -110,19 +110,19 @@ vtkMedicalImageViewer* QMedicalImageWidget::GetViewer()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMedicalImageWidget::resetImage()
+void QMedicalImageWidget::reset()
 {
   this->viewer->SetImageToSinusoid();
   this->updateInterface();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMedicalImageWidget::loadImage( QString filename )
+void QMedicalImageWidget::load( const QString& fileName )
 {
-  if( !this->viewer->Load( filename.toStdString() ) )
+  if( !this->viewer->Load( fileName.toStdString() ) )
   {
     std::stringstream stream;
-    stream << "Unable to load image file \"" << filename.toStdString() << "\"";
+    stream << "Unable to load image file \"" << fileName.toStdString() << "\"";
     throw std::runtime_error( stream.str() );
   }
 
@@ -136,7 +136,7 @@ void QMedicalImageWidget::updateInterface()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMedicalImageWidget::saveImage( const QString& fileName )
+void QMedicalImageWidget::save( const QString& fileName )
 {
   this->viewer->WriteSlice( fileName.toStdString().c_str() );
 }

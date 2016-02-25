@@ -26,9 +26,9 @@ public:
   //destructor
   virtual ~QAlderImageWidget();
 
-  void resetImage();
-  void loadImage( const QString& filename );
-  void saveImage( const QString& fileName );
+  void reset();
+  void load( const QString& filename );
+  void save( const QString& fileName );
 
 protected:
   QScopedPointer<QAlderImageWidgetPrivate> d_ptr;

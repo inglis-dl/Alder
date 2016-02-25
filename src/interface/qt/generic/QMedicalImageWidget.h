@@ -30,9 +30,9 @@ public:
   //destructor
   ~QMedicalImageWidget();
 
-  void resetImage();
-  void loadImage( QString filename );
-  void saveImage( const QString& fileName );
+  void reset();
+  void load( const QString& fileName );
+  void save( const QString& fileName );
   vtkMedicalImageViewer* GetViewer();
 
 public Q_SLOTS:
