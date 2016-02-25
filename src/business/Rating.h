@@ -22,6 +22,7 @@
 #ifndef __Rating_h
 #define __Rating_h
 
+// Alder includes
 #include <ActiveRecord.h>
 
 /**
@@ -47,7 +48,7 @@ namespace Alder
      * The Rating can be set from the computed DerivedRating.
      * @param derive set the rating from the derived rating
      */
-    void UpdateDerivedRating( const bool derive = false );
+    void UpdateDerivedRating( const bool& derive = false );
 
     /**
      * Get the number of ratings by modality that the User has access to.
@@ -65,12 +66,12 @@ namespace Alder
      * @throws         runtime_error
      */
     static std::vector<std::map<std::string,std::string>> GetRatingReportData(
-      User* user, const std::string modality = "" );
+      User* user, const std::string& modality = "" );
 
     /**
      * Update all computed DerivedRating and Rating values.
      */
-    static void UpdateRatings();  
+    static void UpdateRatings();
 
   protected:
     Rating() {}

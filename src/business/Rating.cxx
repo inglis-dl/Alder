@@ -10,11 +10,13 @@
 =========================================================================*/
 #include <Rating.h>
 
+// Alder includes
 #include <Code.h>
 #include <CodeType.h>
 #include <CodeGroup.h>
 #include <User.h>
 
+// VTK includes
 #include <vtkObjectFactory.h>
 
 namespace Alder
@@ -22,7 +24,7 @@ namespace Alder
   vtkStandardNewMacro( Rating );
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Rating::UpdateDerivedRating( const bool derived )
+  void Rating::UpdateDerivedRating( const bool& derived )
   {
     this->AssertPrimaryId();
 
@@ -181,7 +183,7 @@ namespace Alder
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::vector<std::map<std::string,std::string>> Rating::GetRatingReportData( User* user,
-    const std::string modality )
+    const std::string& modality )
   {
     if( !user ) throw std::runtime_error( "Tried to get rating data for null user" );
 
@@ -197,7 +199,7 @@ namespace Alder
            << "Exam.Side AS SIDE, "
            << "Interview.UId AS UID, "
            << "Interview.VisitDate AS VISITDATE, "
-           << "Interview.Site AS SITE, "
+           << "Site.Name AS SITE, "
            << "Exam.Interviewer AS INTERVIEWER, "
            << "Rating.CreateTimestamp AS RATING_CREATE_DATETIME, "
            << "Rating.UpdateTimestamp AS RATING_UPDATE_DATETIME "
@@ -207,6 +209,7 @@ namespace Alder
            << "JOIN ScanType ON ScanType.Id=Exam.ScanTypeId "
            << "JOIN Modality ON Modality.Id=ScanType.ModalityId "
            << "JOIN Interview ON Interview.Id=Exam.InterviewId "
+           << "JOIN Site ON Site.Id=Interview.SiteId "
            << "JOIN User ON User.Id=Rating.UserId "
            << "LEFT JOIN ( "
            << "  SELECT "
