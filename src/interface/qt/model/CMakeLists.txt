@@ -10,7 +10,6 @@ SET( AlderQtModelLib_SRC
   QSelectInterviewDialog.cxx
   QSelectWaveDialog.cxx
   QUserListDialog.cxx
-  QMailSender.cxx
   QVTKProgressDialog.cxx
 )
 
@@ -37,7 +36,6 @@ SET( AlderQtModel_MocHeaders
   QSelectInterviewDialog.h
   QSelectWaveDialog.h
   QUserListDialog.h
-  QMailSender.h
   QVTKProgressDialog.h
 )
 
@@ -68,7 +66,6 @@ ADD_LIBRARY( AlderQtModel
 TARGET_LINK_LIBRARIES( AlderQtModel
   AlderVTK
   QVTK
-  Qt4::QtNetwork
   AlderQtGeneric
 )
 

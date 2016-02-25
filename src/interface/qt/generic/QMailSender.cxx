@@ -4,13 +4,12 @@
   Module:    QMailSender.cxx
   Language:  C++
 
-  Author: Patrick Emond <emondpd AT mcmaster DOT ca>
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #include <QMailSender.h>
 
+// Qt includes
 #include <QByteArray>
 #include <QCryptographicHash>
 #include <QDateTime>
@@ -31,7 +30,6 @@ static QString encodeBase64( const QString &s )
   text.append( s );
   return text.toBase64();
 }
-
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 static QString timeStamp()
@@ -520,7 +518,7 @@ bool QMailSender::send()
     {
       return false;
     }
-    
+
     QSslSocket *pssl = qobject_cast<QSslSocket *>(this->socket);
     if( 0 == pssl )
     {

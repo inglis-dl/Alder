@@ -36,9 +36,9 @@ public slots:
   virtual void add();
   virtual void remove();
   virtual void resetPassword();
-  virtual void itemChanged( QTableWidgetItem* );
-  virtual void headerClicked( int index );
-  virtual void selectionChanged();
+  virtual void modalitySelectionChanged( QTableWidgetItem* );
+  virtual void sortColumn( int index );
+  virtual void userSelectionChanged();
 
 protected:
   QScopedPointer<QUserListDialogPrivate> d_ptr;

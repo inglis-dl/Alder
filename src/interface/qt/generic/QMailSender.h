@@ -4,14 +4,13 @@
   Module:   QLoginDialog.h
   Language: C++
 
-  Author: Patrick Emond <emondpd AT mcmaster DOT ca>
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #ifndef __QMailSender_h
 #define __QMailSender_h
 
+// Qt includes
 #include <QAuthenticator>
 #include <QPointer>
 #include <QSslSocket>
@@ -21,30 +20,20 @@
 class QMailSender : public QObject
 {
     Q_OBJECT
+    Q_ENUMS(Priority)
+    Q_ENUMS(ContentType)
+    Q_ENUMS(Encoding)
+    Q_ENUMS(ISO)
 
 public:
 
-  enum Priority {
-    HighPriority,
-    NormalPriority,
-    LowPriority
-    };
+  enum Priority { HighPriority, NormalPriority, LowPriority };
 
-  enum ContentType {
-    TextContent,
-    HtmlContent
-    };
+  enum ContentType { TextContent, HtmlContent };
 
-  enum Encoding {
-    Encoding_7bit,
-    Encoding_8bit,
-    Encoding_base64
-    };
+  enum Encoding { Encoding_7bit, Encoding_8bit, Encoding_base64 };
 
-  enum ISO {
-    utf8,
-    iso88591
-    };
+  enum ISO { utf8, iso88591 };
 
   //constructors
   QMailSender();

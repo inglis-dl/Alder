@@ -44,6 +44,7 @@ public:
 
   virtual void setupUi(QWidget*);
   virtual void updateUi();
+  virtual void updateUserUi();
   virtual void sort(int);
 
   QMap<QString, int> columnIndex;
@@ -136,15 +137,15 @@ void QUserListDialogPrivate::setupUi( QWidget* widget )
 
   QObject::connect(
     this->userTableWidget, SIGNAL( itemSelectionChanged() ),
-    q, SLOT( selectionChanged() ) );
+    q, SLOT( userSelectionChanged() ) );
 
   QObject::connect(
     this->userTableWidget->horizontalHeader(), SIGNAL( sectionClicked( int ) ),
-    q, SLOT( headerClicked( int ) ) );
+    q, SLOT( sortColumn( int ) ) );
 
   QObject::connect(
     this->userTableWidget, SIGNAL( itemChanged( QTableWidgetItem* ) ),
-    q, SLOT( itemChanged( QTableWidgetItem* ) ) );
+    q, SLOT( modalitySelectionChanged( QTableWidgetItem* ) ) );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -199,22 +200,20 @@ void QUserListDialogPrivate::updateUi()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-//
-// QUserListDialog methods
-//
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-QUserListDialog::QUserListDialog( QWidget* parent )
-  : Superclass( parent )
-  , d_ptr(new QUserListDialogPrivate(*this))
+void QUserListDialogPrivate::updateUserUi()
 {
-  Q_D(QUserListDialog);
-  d->setupUi(this);
-  d->updateUi();
-}
+  QList< QTableWidgetItem* > items = this->userTableWidget->selectedItems();
+  bool selected = !items.empty();
+  this->removePushButton->setEnabled( selected );
+  this->resetPasswordPushButton->setEnabled( selected );
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-QUserListDialog::~QUserListDialog()
-{
+  // do not allow resetting the password to the admin account
+  if( selected )
+  {
+    QTableWidgetItem* item = items.at( this->columnIndex["Name"] );
+    if( "administrator" == item->text() )
+      this->resetPasswordPushButton->setEnabled( false );
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -239,26 +238,33 @@ void QUserListDialogPrivate::sort( int index )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QUserListDialog::selectionChanged()
+//
+// QUserListDialog methods
+//
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QUserListDialog::QUserListDialog( QWidget* parent )
+  : Superclass( parent )
+  , d_ptr(new QUserListDialogPrivate(*this))
 {
   Q_D(QUserListDialog);
-
-  QList< QTableWidgetItem* > items = d->userTableWidget->selectedItems();
-  bool selected = !items.empty();
-  d->removePushButton->setEnabled( selected );
-  d->resetPasswordPushButton->setEnabled( selected );
-
-  // do not allow resetting the password to the admin account
-  if( selected )
-  {
-    QTableWidgetItem* item = items.at( d->columnIndex["Name"] );
-    if( "administrator" == item->text() )
-      d->resetPasswordPushButton->setEnabled( false );
-  }
+  d->setupUi(this);
+  d->updateUi();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QUserListDialog::headerClicked( int index )
+QUserListDialog::~QUserListDialog()
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QUserListDialog::userSelectionChanged()
+{
+  Q_D(QUserListDialog);
+  d->updateUserUi();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QUserListDialog::sortColumn( int index )
 {
   Q_D(QUserListDialog);
   d->sort( index );
@@ -336,7 +342,7 @@ void QUserListDialog::add()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QUserListDialog::itemChanged( QTableWidgetItem *item )
+void QUserListDialog::modalitySelectionChanged( QTableWidgetItem *item )
 {
   Q_D(QUserListDialog);
 
@@ -387,4 +393,3 @@ void QUserListDialog::close()
 {
   this->accept();
 }
-
