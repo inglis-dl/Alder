@@ -462,10 +462,10 @@ void QMainAlderWindow::slotChangePassword()
   if(  NULL != ( user = app->GetActiveUser() ) )
   {
     QString password = user->Get("Password").ToString().c_str();
-    QChangePasswordDialog dialog( password, this );
+    QChangePasswordDialog dialog( this, password );
     dialog.setModal( true );
     QObject::connect(
-      &dialog, SIGNAL( passwordChange( QString ) ),
+      &dialog, SIGNAL( passwordChanged( QString ) ),
      this, SLOT( changeActiveUserPassword( QString ) ));
     dialog.exec();
   }
@@ -554,7 +554,6 @@ void QMainAlderWindow::updateInterface()
   this->ui->actionSaveImage->setEnabled( loggedIn );
   this->ui->actionLoadUIDs->setEnabled( loggedIn );
 
-  //this->ui->framePlayerWidget->setEnabled( loggedIn );
   this->ui->splitter->setEnabled( loggedIn );
 
   this->ui->interviewWidget->setEnabled( loggedIn );
