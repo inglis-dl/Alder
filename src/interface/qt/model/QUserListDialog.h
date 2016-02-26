@@ -24,7 +24,7 @@ class QUserListDialog : public QDialog
 public:
   typedef QDialog Superclass;
   //constructor
-  QUserListDialog( QWidget* parent = 0 );
+  explicit QUserListDialog( QWidget* parent = 0 );
   //destructor
   virtual ~QUserListDialog();
 
@@ -36,9 +36,6 @@ public slots:
   virtual void add();
   virtual void remove();
   virtual void resetPassword();
-  virtual void modalitySelectionChanged( QTableWidgetItem* );
-  virtual void sortColumn( int index );
-  virtual void userSelectionChanged();
 
 protected:
   QScopedPointer<QUserListDialogPrivate> d_ptr;

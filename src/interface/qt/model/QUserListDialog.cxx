@@ -9,7 +9,7 @@
 
 =========================================================================*/
 #include <QUserListDialog.h>
-#include <ui_QUserListDialog.h>
+#include <QUserListDialog_p.h>
 
 // Alder includes
 #include <Modality.h>
@@ -32,36 +32,12 @@
 #include <vector>
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-class QUserListDialogPrivate : public Ui_QUserListDialog
-{
-  Q_DECLARE_PUBLIC(QUserListDialog);
-protected:
-  QUserListDialog* const q_ptr;
-
-public:
-  QUserListDialogPrivate(QUserListDialog& object);
-  virtual ~QUserListDialogPrivate();
-
-  virtual void setupUi(QWidget*);
-  virtual void updateUi();
-  virtual void updateUserUi();
-  virtual void sort(int);
-
-  QMap<QString, int> columnIndex;
-
-private:
-  int sortColumn;
-  Qt::SortOrder sortOrder;
-};
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 //
 // QUserListDialogPrivate methods
 //
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-QUserListDialogPrivate::QUserListDialogPrivate
-(QUserListDialog& object)
-  : q_ptr(&object)
+QUserListDialogPrivate::QUserListDialogPrivate(QUserListDialog& object)
+  : QObject(&object), q_ptr(&object)
 {
 }
 
@@ -137,15 +113,15 @@ void QUserListDialogPrivate::setupUi( QWidget* widget )
 
   QObject::connect(
     this->userTableWidget, SIGNAL( itemSelectionChanged() ),
-    q, SLOT( userSelectionChanged() ) );
+    this, SLOT( userSelectionChanged() ) );
 
   QObject::connect(
     this->userTableWidget->horizontalHeader(), SIGNAL( sectionClicked( int ) ),
-    q, SLOT( sortColumn( int ) ) );
+    this, SLOT( sort( int ) ) );
 
   QObject::connect(
     this->userTableWidget, SIGNAL( itemChanged( QTableWidgetItem* ) ),
-    q, SLOT( modalitySelectionChanged( QTableWidgetItem* ) ) );
+    this, SLOT( modalitySelectionChanged( QTableWidgetItem* ) ) );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -200,7 +176,76 @@ void QUserListDialogPrivate::updateUi()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QUserListDialogPrivate::updateUserUi()
+void QUserListDialogPrivate::sort( int col )
+{
+  // NOTE: currently the columns with checkboxes cannot be sorted.  In order to do this we would need
+  // to either override QSortFilterProxyModel::lessThan() or QAbstractTableModel::sort()
+  // For now we'll just ignore requests to sort by these columns
+
+  if( col == this->columnIndex["Name"] ||
+      col == this->columnIndex["LastLogin"] )
+  {
+    // reverse order if already sorted
+    if( col == this->sortColumn )
+    {
+      this->sortOrder =
+        Qt::AscendingOrder == this->sortOrder ? Qt::DescendingOrder : Qt::AscendingOrder;
+    }
+    this->sortColumn = col;
+    this->userTableWidget->sortItems( this->sortColumn, this->sortOrder );
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QUserListDialogPrivate::modalitySelectionChanged( QTableWidgetItem *item )
+{
+  Q_Q(QUserListDialog);
+
+  int row = item->row();
+  int column = item->column();
+  Qt::CheckState state = item->checkState();
+
+  // get the user
+  vtkNew< Alder::User > user;
+  user->Load( "Id",
+    this->userTableWidget->item(
+      row, this->columnIndex["Name"] )->data( Qt::UserRole ).toInt() );
+
+  // update the user's settings
+  bool modified = false;
+  if( this->columnIndex["Expert"] == column )
+  {
+    user->Set( "Expert", Qt::Checked == state ? 1 : 0 );
+    modified = true;
+  }
+  else
+  {
+    std::vector< vtkSmartPointer< Alder::Modality > > vecModality;
+    Alder::Modality::GetAll( &vecModality );
+    for( auto it = vecModality.begin(); it != vecModality.end(); ++it )
+    {
+      QString name = (*it)->Get( "Name" ).ToString().c_str();
+      if( this->columnIndex[ name ] == column )
+      {
+        if( Qt::Checked == state )
+          user->AddRecord( *it );
+        else
+          user->RemoveRecord( *it );
+
+        modified = true;
+        break;
+      }
+    }
+  }
+  if( modified )
+  {
+    user->Save();
+     emit q->userModalityChanged();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QUserListDialogPrivate::userSelectionChanged()
 {
   QList< QTableWidgetItem* > items = this->userTableWidget->selectedItems();
   bool selected = !items.empty();
@@ -213,27 +258,6 @@ void QUserListDialogPrivate::updateUserUi()
     QTableWidgetItem* item = items.at( this->columnIndex["Name"] );
     if( "administrator" == item->text() )
       this->resetPasswordPushButton->setEnabled( false );
-  }
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QUserListDialogPrivate::sort( int index )
-{
-  // NOTE: currently the columns with checkboxes cannot be sorted.  In order to do this we would need
-  // to either override QSortFilterProxyModel::lessThan() or QAbstractTableModel::sort()
-  // For now we'll just ignore requests to sort by these columns
-
-  if( index == this->columnIndex["Name"] ||
-      index == this->columnIndex["LastLogin"] )
-  {
-    // reverse order if already sorted
-    if( index == this->sortColumn )
-    {
-      this->sortOrder =
-        Qt::AscendingOrder == this->sortOrder ? Qt::DescendingOrder : Qt::AscendingOrder;
-    }
-    this->sortColumn = index;
-    this->userTableWidget->sortItems( this->sortColumn, this->sortOrder );
   }
 }
 
@@ -254,20 +278,6 @@ QUserListDialog::QUserListDialog( QWidget* parent )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QUserListDialog::~QUserListDialog()
 {
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QUserListDialog::userSelectionChanged()
-{
-  Q_D(QUserListDialog);
-  d->updateUserUi();
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QUserListDialog::sortColumn( int index )
-{
-  Q_D(QUserListDialog);
-  d->sort( index );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -315,7 +325,7 @@ void QUserListDialog::add()
   Q_D(QUserListDialog);
 
   // get the new user's name
-  QString name =QInputDialog::getText(
+  QString name = QInputDialog::getText(
     this, QObject::tr( "Create User" ), QObject::tr( "New user's name:" ), QLineEdit::Normal );
 
   if( !name.isEmpty() )
@@ -338,53 +348,6 @@ void QUserListDialog::add()
       user->Save();
       d->updateUi();
     }
-  }
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QUserListDialog::modalitySelectionChanged( QTableWidgetItem *item )
-{
-  Q_D(QUserListDialog);
-
-  int row = item->row();
-  int column = item->column();
-  Qt::CheckState state = item->checkState();
-
-  // get the user
-  vtkNew< Alder::User > user;
-  user->Load( "Id",
-    d->userTableWidget->item( row, d->columnIndex["Name"] )->data( Qt::UserRole ).toInt() );
-
-  // update the user's settings
-  bool modified = false;
-  if( d->columnIndex["Expert"] == column )
-  {
-    user->Set( "Expert", Qt::Checked == state ? 1 : 0 );
-    modified = true;
-  }
-  else
-  {
-    std::vector< vtkSmartPointer< Alder::Modality > > vecModality;
-    Alder::Modality::GetAll( &vecModality );
-    for( auto it = vecModality.begin(); it != vecModality.end(); ++it )
-    {
-      QString name = (*it)->Get( "Name" ).ToString().c_str();
-      if( d->columnIndex[ name ] == column )
-      {
-        if( Qt::Checked == state )
-          user->AddRecord( *it );
-        else
-          user->RemoveRecord( *it );
-
-        modified = true;
-        break;
-      }
-    }
-  }
-  if( modified )
-  {
-    user->Save();
-     emit userModalityChanged();
   }
 }
 

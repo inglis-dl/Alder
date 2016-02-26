@@ -36,6 +36,7 @@ SET( AlderQtModel_MocHeaders
   QSelectInterviewDialog.h
   QSelectWaveDialog.h
   QUserListDialog.h
+  QUserListDialog_p.h
   QVTKProgressDialog.h
 )
 
