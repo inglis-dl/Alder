@@ -14,8 +14,13 @@ SET( ALDER_APP_MOC
   QMainAlderWindow.h
 )
 
+SET( AlderApp_Resources
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/QAlderApplication.qrc
+)
+
 QT4_WRAP_UI( AlderApp_UI   ${ALDER_APP_UI} )
 QT4_WRAP_CPP( AlderApp_MOC ${ALDER_APP_MOC} )
+QT4_ADD_RESOURCES( AlderApp_QRC ${AlderApp_Resources} )
 
 ADD_DEFINITIONS( -DQT_GUI_LIBS -DQT_CORE_LIB )
 

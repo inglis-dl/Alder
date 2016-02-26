@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/">
+    <file>icons/alder32x32.png</file>
+  </qresource>
+</RCC>

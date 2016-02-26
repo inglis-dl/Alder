@@ -102,6 +102,9 @@ QMainAlderWindow::QMainAlderWindow( QWidget* parent )
 
   this->readSettings();
 
+  QIcon icon(":/icons/alder32x32.png");
+  QApplication::setWindowIcon(icon);
+
   // toggle visibility of the atlas widget
   this->atlasVisible = true;
   this->slotShowAtlas();
@@ -121,7 +124,6 @@ QMainAlderWindow::QMainAlderWindow( QWidget* parent )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QMainAlderWindow::~QMainAlderWindow()
 {
-  //this->ui->framePlayerWidget->play( false );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

@@ -34,6 +34,10 @@
   <property name="windowTitle">
    <string>Alder</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="resources/QAlderApplication.qrc">
+    <normaloff>:/icons/alder32x32.png</normaloff>:/icons/alder32x32.png</iconset>
+  </property>
   <property name="dockNestingEnabled">
    <bool>true</bool>
   </property>
@@ -286,6 +290,8 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resources/QAlderApplication.qrc"/>
+ </resources>
  <connections/>
 </ui>
