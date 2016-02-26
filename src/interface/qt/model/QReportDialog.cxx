@@ -8,7 +8,7 @@
 
 =========================================================================*/
 #include <QReportDialog.h>
-#include <ui_QReportDialog.h>
+#include <QReportDialog_p.h>
 
 // Alder includes
 #include <Application.h>
@@ -16,7 +16,6 @@
 #include <Modality.h>
 #include <Rating.h>
 #include <User.h>
-#include <QMailSender.h>
 
 // VTK includes
 #include <vtkNew.h>
@@ -39,45 +38,13 @@
 #include <vector>
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-class QReportDialogPrivate : public Ui_QReportDialog
-{
-  Q_DECLARE_PUBLIC(QReportDialog);
-protected:
-  QReportDialog* const q_ptr;
-
-public:
-  QReportDialogPrivate(QReportDialog& object);
-  virtual ~QReportDialogPrivate();
-
-  void setupUi(QWidget*);
-  void updateUi();
-  void updateServerUi(int);
-  void updateSmtpUi(QTableWidgetItem*);
-  void send();
-  void sort(int);
-  void setProgress( int value );
-
-private:
-  int sortColumn;
-  Qt::SortOrder sortOrder;
-  QMailSender mailSender;
-  QMap<QString, int> columnIndex;
-  QMap<int, QString> columnText;
-  QString currentReportFileName;
-  double percentBuild;
-  double percentWrite;
-
-  bool buildReportFile();
-};
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 //
 // QReportDialogPrivate methods
 //
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QReportDialogPrivate::QReportDialogPrivate
 (QReportDialog& object)
-  : q_ptr(&object), percentBuild(45.), percentWrite(45.)
+  : QObject(&object), q_ptr(&object), percentBuild(45.), percentWrite(45.)
 {
 }
 
@@ -127,19 +94,19 @@ void QReportDialogPrivate::setupUi( QWidget* widget )
 
   QObject::connect(
     this->sendPushButton, SIGNAL( clicked( bool ) ),
-    q, SLOT( send() ) );
+    this, SLOT( send() ) );
   QObject::connect(
     this->closePushButton, SIGNAL( clicked( bool ) ),
     q, SLOT( close() ) );
   QObject::connect(
     this->userTableWidget->horizontalHeader(), SIGNAL( sectionClicked( int ) ),
-    q, SLOT( sortColumn( int ) ) );
+    this, SLOT( sort( int ) ) );
   QObject::connect(
     this->smtpServerComboBox, SIGNAL( currentIndexChanged( int ) ),
-    q, SLOT( serverSelectionChanged( int ) ) );
+    this, SLOT( serverSelectionChanged( int ) ) );
   QObject::connect(
     this->userTableWidget, SIGNAL( itemChanged( QTableWidgetItem* ) ),
-    q, SLOT( modalitySelectionChanged( QTableWidgetItem* ) ) );
+    this, SLOT( modalitySelectionChanged( QTableWidgetItem* ) ) );
 
   // setup the smtp server selection UI
   Alder::Application *app =  Alder::Application::GetInstance();
@@ -229,7 +196,7 @@ void QReportDialogPrivate::updateUi()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QReportDialogPrivate::updateSmtpUi( QTableWidgetItem* item )
+void QReportDialogPrivate::modalitySelectionChanged( QTableWidgetItem* item )
 {
   bool hasSmtp = ( 0 < this->smtpServerComboBox->count() );
   bool enableSmtp = false;
@@ -238,7 +205,7 @@ void QReportDialogPrivate::updateSmtpUi( QTableWidgetItem* item )
     if( item && Qt::Checked == item->checkState() )
     {
       enableSmtp = true;
-    } 
+    }
     else
     {
       for( int row = 0; row < this->userTableWidget->rowCount() && !enableSmtp; ++row )
@@ -262,28 +229,28 @@ void QReportDialogPrivate::updateSmtpUi( QTableWidgetItem* item )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QReportDialogPrivate::sort( int index )
+void QReportDialogPrivate::sort( int col )
 {
   // NOTE: currently the columns with checkboxes cannot be sorted.  In order to do this we would need
   // to either override QSortFilterProxyModel::lessThan() or QAbstractTableModel::sort()
   // For now we'll just ignore requests to sort by these columns
 
-  if( index == this->columnIndex["Name"] ||
-      index == this->columnIndex["LastLogin"] )
+  if( col == this->columnIndex["Name"] ||
+      col == this->columnIndex["LastLogin"] )
   {
     // reverse order if already sorted
-    if( index == this->sortColumn )
+    if( col == this->sortColumn )
     {
       this->sortOrder =
         Qt::AscendingOrder == this->sortOrder ? Qt::DescendingOrder : Qt::AscendingOrder;
     }
-    this->sortColumn = index;
+    this->sortColumn = col;
     this->userTableWidget->sortItems( this->sortColumn, this->sortOrder );
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QReportDialogPrivate::updateServerUi( int item )
+void QReportDialogPrivate::serverSelectionChanged( int item )
 {
   QVariant data = this->smtpServerComboBox->itemData( item );
   QMap<QString, QVariant> qmap = data.toMap();
@@ -337,7 +304,7 @@ void QReportDialogPrivate::send()
     this->mailSender.setBody(
       "Hello,\nattached is your requested Alder rating report." );
     this->mailSender.setAttachments( QStringList( this->currentReportFileName ) );
-    
+
     if( this->mailSender.send() )
     {
       msgBoxMessage =
@@ -393,7 +360,7 @@ bool QReportDialogPrivate::buildReportFile()
         continue;
       }
       if( Qt::Checked == item->checkState() )
-      { 
+      {
         modalityVec.push_back( this->columnText[col].toStdString() );
         numBuildSteps++;
       }
@@ -405,7 +372,7 @@ bool QReportDialogPrivate::buildReportFile()
   std::vector<std::map<std::string,std::string>> global;
   vtkSmartPointer< Alder::User > user = vtkSmartPointer< Alder::User >::New();
   double progressScale = this->percentBuild / numBuildSteps;
-  int step = 1; 
+  int step = 1;
   for( auto it = userModalityMap.begin(); it != userModalityMap.end(); ++it )
   {
     std::string name = it->first;
@@ -515,37 +482,9 @@ QReportDialog::~QReportDialog()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QReportDialog::modalitySelectionChanged( QTableWidgetItem* item )
-{
-  Q_D(QReportDialog);
-  d->updateSmtpUi(item);
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QReportDialog::send()
-{
-  Q_D(QReportDialog);
-  d->send(); 
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QReportDialog::close()
 {
   this->accept();
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QReportDialog::sortColumn( int index )
-{
-  Q_D(QReportDialog);
-  d->sort( index );
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QReportDialog::serverSelectionChanged( int item )
-{
-  Q_D(QReportDialog);
-  d->updateServerUi( item );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

@@ -33,6 +33,7 @@ SET( AlderQtModel_MocHeaders
   QCodeDialog.h
   QLoginDialog.h
   QReportDialog.h
+  QReportDialog_p.h
   QSelectInterviewDialog.h
   QSelectWaveDialog.h
   QUserListDialog.h

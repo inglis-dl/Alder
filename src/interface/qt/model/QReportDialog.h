@@ -25,7 +25,7 @@ class QReportDialog : public QDialog
 public:
   typedef QDialog Superclass;
   //constructor
-  QReportDialog( QWidget* parent = 0 );
+  explicit QReportDialog( QWidget* parent = 0 );
   //destructor
   ~QReportDialog();
 
@@ -33,11 +33,7 @@ public:
   double percentWrite() const;
 
 public slots:
-  virtual void send();
   virtual void close();
-  virtual void sortColumn( int );
-  virtual void serverSelectionChanged( int );
-  virtual void modalitySelectionChanged( QTableWidgetItem* );
 
 protected:
   QScopedPointer<QReportDialogPrivate> d_ptr;
