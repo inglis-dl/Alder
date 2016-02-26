@@ -27,18 +27,63 @@
 #include <QTextStream>
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-QLoginDialog::QLoginDialog( QWidget* parent )
-  : QDialog( parent )
+class QLoginDialogPrivate : public Ui_QLoginDialog
 {
-  this->ui = new Ui_QLoginDialog;
-  this->ui->setupUi( this );
+  Q_DECLARE_PUBLIC(QLoginDialog);
+protected:
+  QLoginDialog* const q_ptr;
+
+public:
+  explicit QLoginDialogPrivate(QLoginDialog& object);
+  virtual ~QLoginDialogPrivate();
+
+  void init();
+  void setupUi(QDialog*);
+};
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+//
+// QLoginDialogPrivate methods
+//
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QLoginDialogPrivate::QLoginDialogPrivate(QLoginDialog& object)
+  : q_ptr(&object)
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QLoginDialogPrivate::~QLoginDialogPrivate()
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QLoginDialogPrivate::init()
+{
+  Q_Q(QLoginDialog);
+  this->setupUi(q);
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QLoginDialogPrivate::setupUi( QDialog* widget )
+{
+  Q_Q(QLoginDialog);
+
+  this->Ui_QLoginDialog::setupUi( widget );
 
   QObject::connect(
-    this->ui->buttonBox, SIGNAL( accepted() ),
-    this, SLOT( slotAccepted() ) );
+    this->buttonBox, SIGNAL( accepted() ),
+    q, SLOT( accepted() ) );
 
-  this->ui->passwordLineEdit->setEchoMode( QLineEdit::Password );
-  this->ui->usernameLineEdit->setFocus( Qt::PopupFocusReason ); // make sure username box is focused
+  this->passwordLineEdit->setEchoMode( QLineEdit::Password );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QLoginDialog::QLoginDialog( QWidget* parent )
+  : Superclass( parent )
+  , d_ptr(new QLoginDialogPrivate(*this))
+{
+  Q_D(QLoginDialog);
+  d->init();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -47,12 +92,13 @@ QLoginDialog::~QLoginDialog()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QLoginDialog::slotAccepted()
+void QLoginDialog::accepted()
 {
-  QString password = this->ui->passwordLineEdit->text();
+  Q_D(QLoginDialog);
+  QString password = d->passwordLineEdit->text();
 
   vtkSmartPointer< Alder::User > user = vtkSmartPointer< Alder::User >::New();
-  if( user->Load( "Name", this->ui->usernameLineEdit->text().toStdString() ) &&
+  if( user->Load( "Name", d->usernameLineEdit->text().toStdString() ) &&
       user->IsPassword( password.toStdString() ) )
   { // login successful
     // if the password matches the default password, force the user to change it

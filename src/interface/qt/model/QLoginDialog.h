@@ -8,34 +8,36 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #ifndef __QLoginDialog_h
 #define __QLoginDialog_h
 
+// Qt includes
 #include <QDialog>
 
-class Ui_QLoginDialog;
+class QLoginDialogPrivate;
 
 class QLoginDialog : public QDialog
 {
   Q_OBJECT
 
 public:
+  typedef QDialog Superclass;
   //constructor
-  QLoginDialog( QWidget* parent = 0 );
+  explicit QLoginDialog( QWidget* parent = 0 );
   //destructor
-  ~QLoginDialog();
+  virtual ~QLoginDialog();
   
 public slots:
-  virtual void slotAccepted();
+  virtual void accepted();
 
 protected:
+  QScopedPointer<QLoginDialogPrivate> d_ptr;
 
 protected slots:
 
 private:
-  // Designer form
-  Ui_QLoginDialog *ui;
+  Q_DECLARE_PRIVATE(QLoginDialog);
+  Q_DISABLE_COPY(QLoginDialog);
 };
 
 #endif

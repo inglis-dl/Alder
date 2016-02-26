@@ -81,8 +81,8 @@ void QChangePasswordDialogPrivate::setupUi( QDialog* widget )
     this->cancelButton, SIGNAL( clicked() ),
     q, SLOT( reject() ) );
 
-  this->newPasswordLineEdit->installEventFilter( q );   
-  this->confirmPasswordLineEdit->installEventFilter( q );   
+  this->newPasswordLineEdit->installEventFilter( q );
+  this->confirmPasswordLineEdit->installEventFilter( q );
 
   this->newPasswordLineEdit->setFocus( Qt::PopupFocusReason );
   this->newPasswordLineEdit->setEchoMode( QLineEdit::Password );
@@ -98,7 +98,7 @@ bool QChangePasswordDialogPrivate::validate()
   QString password = this->newPasswordLineEdit->text();
   bool noError = true;
   QString errStr;
-  if( password.isEmpty() ) 
+  if( password.isEmpty() )
   {
     errStr = "empty";
     noError = false;
@@ -165,7 +165,7 @@ bool QChangePasswordDialogPrivate::confirmChange()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QChangePasswordDialog::QChangePasswordDialog( QWidget* parent, const QString& pwd )
   : Superclass( parent )
-  , d_ptr(new QChangePasswordDialogPrivate(*this, pwd) ) 
+  , d_ptr(new QChangePasswordDialogPrivate(*this, pwd) )
 {
   Q_D(QChangePasswordDialog);
   d->init();
@@ -182,7 +182,7 @@ bool QChangePasswordDialog::eventFilter( QObject* watched, QEvent* event )
   Q_D(QChangePasswordDialog);
   if( watched == d->newPasswordLineEdit )
   {
-    if( event->type() == QEvent::KeyPress ) 
+    if( event->type() == QEvent::KeyPress )
     {
       QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
       if( keyEvent->key() == Qt::Key_Return ||
@@ -199,8 +199,8 @@ bool QChangePasswordDialog::eventFilter( QObject* watched, QEvent* event )
         {
           d->confirmPasswordLineEdit->setDisabled( true );
           return true;
-        }  
-      }  
+        }
+      }
       else
       {
         d->confirmPasswordLineEdit->setDisabled( true );
@@ -210,7 +210,7 @@ bool QChangePasswordDialog::eventFilter( QObject* watched, QEvent* event )
     else if( event->type() == QEvent::FocusIn )
     {
       d->confirmPasswordLineEdit->setDisabled( true );
-      return false;  
+      return false;
     }
     else
     {
@@ -241,10 +241,9 @@ bool QChangePasswordDialog::eventFilter( QObject* watched, QEvent* event )
 void QChangePasswordDialog::accepted()
 {
   Q_D(QChangePasswordDialog);
-  if( !d->newPassword.isEmpty() ) 
+  if( !d->newPassword.isEmpty() )
   {
     emit passwordChanged( d->newPassword  );
   }
   accept();
 }
-
