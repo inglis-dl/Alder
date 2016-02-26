@@ -72,7 +72,6 @@ QAlderDicomTagWidgetPrivate::QAlderDicomTagWidgetPrivate(
 void QAlderDicomTagWidgetPrivate::setupUi(QWidget* widget)
 {
   Q_Q(QAlderDicomTagWidget);
-
   this->Ui_QAlderDicomTagWidget::setupUi(widget);
 }
 
@@ -370,7 +369,8 @@ void QAlderDicomTagWidgetPrivate::getElementString( std::vector< std::string >& 
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QAlderDicomTagWidget::QAlderDicomTagWidget( QWidget* parent )
-  : Superclass( parent ) , d_ptr( new QAlderDicomTagWidgetPrivate( *this ) )
+  : Superclass( parent )
+  , d_ptr( new QAlderDicomTagWidgetPrivate( *this ) )
 {
   Q_D(QAlderDicomTagWidget);
   d->setupUi(this);

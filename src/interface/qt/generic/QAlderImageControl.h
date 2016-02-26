@@ -7,6 +7,8 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 ==============================================================================*/
+#ifndef __QAlderImageControl_h
+#define __QAlderImageControl_h
 
 /**
  * @class QAlderImageControl
@@ -14,8 +16,6 @@
  * @brief Qt widget for controlling images in a QAlderSliceView.
  *
  */
-#ifndef __QAlderImageControl_h
-#define __QAlderImageControl_h
 
 // Qt includes
 #include <QColor>
@@ -156,7 +156,6 @@ public:
   bool interpolation() const;
   //@}
 
-public Q_SLOTS:
 public Q_SLOTS:
 
   void selectColor();

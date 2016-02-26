@@ -22,7 +22,7 @@ class QAlderDicomTagWidget : public QWidget
 
 public:
   typedef QWidget Superclass;
-  QAlderDicomTagWidget( QWidget* parent = 0 );
+  explicit QAlderDicomTagWidget( QWidget* parent = 0 );
   virtual ~QAlderDicomTagWidget();
 
 public Q_SLOTS:

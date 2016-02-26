@@ -22,7 +22,7 @@ class QAlderImageWidget : public QWidget
 public:
   typedef QWidget Superclass;
   //constructor
-  QAlderImageWidget( QWidget* parent = 0 );
+  explicit QAlderImageWidget( QWidget* parent = 0 );
   //destructor
   virtual ~QAlderImageWidget();
 

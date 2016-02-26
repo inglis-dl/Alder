@@ -8,10 +8,10 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #ifndef __QAboutDialog_h
 #define __QAboutDialog_h
 
+// Qt includes
 #include <QDialog>
 
 class Ui_QAboutDialog;
