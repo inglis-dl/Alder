@@ -28,6 +28,7 @@ SET( AlderQtModel_Uis
 
 SET( AlderQtModel_MocHeaders
   QAlderAtlasWidget.h
+  QAlderAtlasWidget_p.h
   QAlderInterviewWidget.h
   QChangePasswordDialog.h
   QCodeDialog.h
@@ -36,6 +37,7 @@ SET( AlderQtModel_MocHeaders
   QReportDialog.h
   QReportDialog_p.h
   QSelectInterviewDialog.h
+  QSelectInterviewDialog_p.h
   QSelectWaveDialog.h
   QUserListDialog.h
   QUserListDialog_p.h

@@ -500,4 +500,3 @@ double QReportDialog::percentWrite() const
   Q_D(const QReportDialog);
   return d->percentWrite;
 }
-

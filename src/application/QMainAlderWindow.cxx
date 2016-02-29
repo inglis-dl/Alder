@@ -206,20 +206,18 @@ void QMainAlderWindow::slotShowAtlas()
   {
     // add the widget to the splitter
     this->ui->splitter->insertWidget( 0, this->ui->atlasWidget );
-    this->ui->atlasWidget->setVisible( true );
+    this->ui->atlasWidget->show();
 
     QList<int> sizeList = this->ui->splitter->sizes();
     int total = sizeList[0] + sizeList[1];
     sizeList[0] = floor( total / 2 );
     sizeList[1] = sizeList[0];
     this->ui->splitter->setSizes( sizeList );
-
-    this->ui->atlasWidget->updateViewer();
   }
   else
   {
     // remove the widget from the splitter
-    this->ui->atlasWidget->setVisible( false );
+    this->ui->atlasWidget->hide();
     this->ui->atlasWidget->setParent( this );
 
     Alder::Application::GetInstance()->SetActiveAtlasImage( NULL );
@@ -561,7 +559,7 @@ void QMainAlderWindow::updateInterface()
   this->ui->interviewWidget->setEnabled( loggedIn );
   this->ui->interviewWidget->updateEnabled();
   this->ui->atlasWidget->setEnabled( loggedIn );
-  this->ui->atlasWidget->updateEnabled();
+  this->ui->atlasWidget->setEnabled( loggedIn );
 
   this->ui->actionShowDicomTags->setEnabled( loggedIn );
   this->DicomTagWidget->setEnabled( loggedIn );

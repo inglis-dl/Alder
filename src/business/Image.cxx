@@ -374,7 +374,11 @@ namespace Alder
     Image *activeImage = app->GetActiveImage();
     bool hasParent = this->Get( "ParentImageId" ).IsValid();
 
+    vtkSmartPointer< Exam > exam;
+    this->GetRecord( exam );
+
     // get neighbouring image which matches this image's exam type and the given rating
+    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
     std::stringstream stream;
     stream << "SELECT Image.Id "
            << "FROM Image "
@@ -383,13 +387,8 @@ namespace Alder
            << "JOIN Interview ON Exam.InterviewId = Interview.Id "
            << "JOIN Rating ON Image.Id = Rating.ImageId "
            << "JOIN User ON Rating.UserId = User.Id "
-           << "WHERE Exam.ScanTypeId = ( "
-           <<   "SELECT Exam.ScanTypeId "
-           <<   "FROM Exam "
-           <<   "JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
-           <<   "JOIN Image ON Exam.Id = Image.ExamId "
-           <<   "WHERE Image.Id = " << this->Get( "Id" ).ToString() << " "
-           << ") "
+           << "WHERE ScanType.Type = " << query->EscapeString( exam->GetScanType() ) << " "
+           << "AND Exam.Side = " << query->EscapeString( exam->Get( "Side" ).ToString() ) << " "
            << "AND Image.ParentImageId IS " << ( hasParent ? "NOT" : "" ) << " NULL "
            << "AND Rating = " << rating << " "
            << "AND User.Expert = true ";
@@ -402,7 +401,6 @@ namespace Alder
     if( !forward ) stream << "DESC ";
 
     app->Log( "Querying Database: " + stream.str() );
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery( stream.str().c_str() );
     query->Execute();
 
@@ -464,6 +462,7 @@ namespace Alder
            << "JOIN Rating ON Image.Id = Rating.ImageId "
            << "JOIN User ON Rating.UserId = User.Id "
            << "WHERE ScanType.Type = " << query->EscapeString( exam->GetScanType() ) << " "
+           << "AND Exam.Side = " << query->EscapeString( exam->Get( "Side" ).ToString() ) << " "
            << "AND Image.ParentImageId IS " << ( hasParent ? "NOT" : "" ) << " NULL "
            << "AND Rating = " << rating << " "
            << "AND User.Expert = true "

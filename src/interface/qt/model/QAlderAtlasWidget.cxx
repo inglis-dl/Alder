@@ -9,7 +9,7 @@
 
 =========================================================================*/
 #include <QAlderAtlasWidget.h>
-#include <ui_QAlderAtlasWidget.h>
+#include <QAlderAtlasWidget_p.h>
 
 // Alder includes
 #include <Application.h>
@@ -21,6 +21,7 @@
 #include <Modality.h>
 #include <Rating.h>
 #include <ScanType.h>
+#include <Site.h>
 #include <User.h>
 #include <QAlderImageWidget.h>
 
@@ -33,144 +34,92 @@
 #include <stdexcept>
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-QAlderAtlasWidget::QAlderAtlasWidget( QWidget* parent )
-  : QWidget( parent )
+//
+// QAlderAtlasWidgetPrivate methods
+//
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QAlderAtlasWidgetPrivate::QAlderAtlasWidgetPrivate(QAlderAtlasWidget& object)
+  : QObject(&object), q_ptr(&object)
 {
+  this->qvtkConnection = vtkSmartPointer<vtkEventQtSlotConnect>::New();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QAlderAtlasWidgetPrivate::~QAlderAtlasWidgetPrivate()
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderAtlasWidgetPrivate::setupUi( QWidget* widget )
+{
+  Q_Q(QAlderAtlasWidget);
+
+  this->Ui_QAlderAtlasWidget::setupUi( widget );
+
+  QObject::connect(
+    this->previousPushButton, SIGNAL( clicked() ),
+    this, SLOT( previous() ) );
+  QObject::connect(
+    this->nextPushButton, SIGNAL( clicked() ),
+    this, SLOT( next() ) );
+  QObject::connect(
+    this->ratingComboBox, SIGNAL( currentIndexChanged( int ) ),
+    this, SLOT( ratingChanged() ) );
+
   Alder::Application *app = Alder::Application::GetInstance();
 
-  this->ui = new Ui_QAlderAtlasWidget;
-  this->ui->setupUi( this );
-
-  QObject::connect(
-    this->ui->previousPushButton, SIGNAL( clicked() ),
-    this, SLOT( slotPrevious() ) );
-  QObject::connect(
-    this->ui->nextPushButton, SIGNAL( clicked() ),
-    this, SLOT( slotNext() ) );
-  QObject::connect(
-    this->ui->ratingComboBox, SIGNAL( currentIndexChanged( int ) ),
-    this, SLOT( slotRatingChanged( int ) ) );
-
-  this->Connections = vtkSmartPointer<vtkEventQtSlotConnect>::New();
-  this->Connections->Connect( app,
-    Alder::Common::ActiveAtlasImageEvent,
-    this, SLOT( updateInfo() ) );
-  this->Connections->Connect( app,
-    Alder::Common::ActiveAtlasImageEvent,
-    this, SLOT( updateViewer() ) );
-  this->Connections->Connect( app,
-    Alder::Common::ActiveAtlasImageEvent,
-    this, SLOT( updateEnabled() ) );
-
-  this->updateEnabled();
+  this->qvtkConnection->Connect( app, Alder::Common::ActiveAtlasImageEvent,
+    q, SLOT( update() ) );
 };
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-QAlderAtlasWidget::~QAlderAtlasWidget()
+void QAlderAtlasWidgetPrivate::ratingChanged()
 {
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderAtlasWidget::showEvent( QShowEvent* event )
-{
-  QWidget::showEvent( event );
-
-  this->updateAtlasImage();
-
-  emit showing( true );
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderAtlasWidget::hideEvent( QHideEvent* event )
-{
-  QWidget::hideEvent( event );
-  emit showing( false );
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderAtlasWidget::updateAtlasImage()
-{
-  if( ! this->isVisible() ) return;
-
   Alder::Application *app = Alder::Application::GetInstance();
-  Alder::Image *atlasImage = app->GetActiveAtlasImage();
   Alder::Image *image = app->GetActiveImage();
-
-  // select an appropriate atlas image, if necessary
   if( image )
   {
-    bool getNewAtlasImage = false;
-
+    // See if we have an atlas entry for this kind of image at the requested rating
     vtkSmartPointer< Alder::Exam > exam;
     image->GetRecord( exam );
-
-    if( NULL == atlasImage ) getNewAtlasImage = true;
-    else
-    {
-      vtkSmartPointer< Alder::Exam > atlasExam;
-      atlasImage->GetRecord( atlasExam );
-      if( exam->GetScanType() != atlasExam->GetScanType() ) getNewAtlasImage = true;
-    }
-
-    if( getNewAtlasImage )
-    {
-      vtkSmartPointer< Alder::Image > newAtlasImage =
-        image->GetAtlasImage( this->ui->ratingComboBox->currentIndex() + 1 );
-      app->SetActiveAtlasImage( newAtlasImage->Get( "Id" ).IsValid() ? newAtlasImage : NULL );
-    }
+    vtkSmartPointer< Alder::Image > newAtlasImage =
+      image->GetAtlasImage( this->rating() );
+    app->SetActiveAtlasImage( newAtlasImage->Get( "Id" ).IsValid() ? newAtlasImage : NULL );
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderAtlasWidget::slotPrevious()
+void QAlderAtlasWidgetPrivate::previous()
 {
   Alder::Application *app = Alder::Application::GetInstance();
   Alder::Image *image = app->GetActiveAtlasImage();
 
-  if( NULL != image )
+  if( image )
   {
     vtkSmartPointer< Alder::Image > previousImage =
-      image->GetPreviousAtlasImage( this->ui->ratingComboBox->currentIndex() + 1 );
+      image->GetPreviousAtlasImage( this->rating() );
     app->SetActiveAtlasImage( previousImage->Get( "Id" ).IsValid() ? previousImage : NULL );
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderAtlasWidget::slotNext()
+void QAlderAtlasWidgetPrivate::next()
 {
   Alder::Application *app = Alder::Application::GetInstance();
   Alder::Image *image = app->GetActiveAtlasImage();
 
-  if( NULL != image )
+  if( image )
   {
     vtkSmartPointer< Alder::Image > nextImage =
-      image->GetNextAtlasImage( this->ui->ratingComboBox->currentIndex() + 1 );
+      image->GetNextAtlasImage( this->rating() );
     app->SetActiveAtlasImage( nextImage->Get( "Id" ).IsValid() ? nextImage : NULL );
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderAtlasWidget::slotRatingChanged( int value )
+void QAlderAtlasWidgetPrivate::updateUi()
 {
-  Alder::Application *app = Alder::Application::GetInstance();
-
-  // make sure we have an active user and image
-  Alder::User *user = app->GetActiveUser();
-  if( !user ) throw std::runtime_error( "Rating slider modified without an active user" );
-  Alder::Image *image = app->GetActiveImage();
-  if( !image ) throw std::runtime_error( "Rating slider modified without an active image" );
-
-  // See if we have an atlas entry for this kind of image at the requested rating
-  vtkSmartPointer< Alder::Exam > exam;
-  image->GetRecord( exam );
-  vtkSmartPointer< Alder::Image > newAtlasImage =
-    image->GetAtlasImage( this->ui->ratingComboBox->currentIndex() + 1 );
-  app->SetActiveAtlasImage( newAtlasImage->Get( "Id" ).IsValid() ? newAtlasImage : NULL );
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderAtlasWidget::updateInfo()
-{
+  Q_Q(QAlderAtlasWidget);
   QString helpString = "";
   QStringList noteString;
   QString interviewerString = tr( "N/A" );
@@ -180,11 +129,15 @@ void QAlderAtlasWidget::updateInfo()
   QString codeString = tr( "N/A" );
 
   Alder::Image *image = Alder::Application::GetInstance()->GetActiveAtlasImage();
+  bool enable = false;
   if( image )
   {
     vtkSmartPointer< Alder::Exam > exam;
     vtkSmartPointer< Alder::Interview > interview;
-    if( image->GetRecord( exam ) && exam->GetRecord( interview ) )
+    vtkSmartPointer< Alder::Site > site;
+    if( image->GetRecord( exam ) &&
+        exam->GetRecord( interview ) &&
+        interview->GetRecord( site ) )
     {
       std::vector< vtkSmartPointer< Alder::ImageNote > > noteList;
       image->GetList( &noteList );
@@ -196,7 +149,7 @@ void QAlderAtlasWidget::updateInfo()
         }
       }
       interviewerString = exam->Get( "Interviewer" ).ToString().c_str();
-      siteString = interview->Get( "Site" ).ToString().c_str();
+      siteString = site->Get( "Name" ).ToString().c_str();
       dateString = exam->Get( "DatetimeAcquired" ).ToString().c_str();
       uidString = interview->Get( "UId" ).ToString().c_str();
       codeString = image->GetCode().c_str();
@@ -207,41 +160,110 @@ void QAlderAtlasWidget::updateInfo()
       scanType->GetRecord( modality );
       helpString = modality->Get( "Help" ).ToString();
     }
+    this->imageWidget->load( image->GetFileName().c_str() );
+    enable = true;
   }
+  else
+    this->imageWidget->reset();
 
-  this->ui->helpTextEdit->setPlainText( helpString );
+  this->helpTextEdit->setPlainText( helpString );
   for( int i = 0; i < noteString.size(); ++i )
   {
-    this->ui->noteTextEdit->insertPlainText( noteString.at(i) );
-    this->ui->noteTextEdit->moveCursor( QTextCursor::End );
+    this->noteTextEdit->insertPlainText( noteString.at(i) );
+    this->noteTextEdit->moveCursor( QTextCursor::End );
   }
-  this->ui->infoInterviewerValueLabel->setText( interviewerString );
-  this->ui->infoSiteValueLabel->setText( siteString );
-  this->ui->infoDateValueLabel->setText( dateString );
-  this->ui->infoCodeValueLabel->setText( codeString );
-  this->ui->infoUIdValueLabel->setText( uidString );
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderAtlasWidget::updateViewer()
-{
-  Alder::Image *image = Alder::Application::GetInstance()->GetActiveImage();
-  if( image )
-    this->ui->imageWidget->load( image->GetFileName().c_str() );
-  else
-    this->ui->imageWidget->reset();
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderAtlasWidget::updateEnabled()
-{
-  Alder::Application *app = Alder::Application::GetInstance();
-  Alder::Image *image = app->GetActiveAtlasImage();
+  this->infoInterviewerValueLabel->setText( interviewerString );
+  this->infoSiteValueLabel->setText( siteString );
+  this->infoDateValueLabel->setText( dateString );
+  this->infoCodeValueLabel->setText( codeString );
+  this->infoUIdValueLabel->setText( uidString );
 
   // set all widget enable states
-  this->ui->previousPushButton->setEnabled( image );
-  this->ui->nextPushButton->setEnabled( image );
-  this->ui->noteTextEdit->setEnabled( image );
-  this->ui->helpTextEdit->setEnabled( image );
-  this->ui->ratingComboBox->setEnabled( this->isVisible() );
+  this->previousPushButton->setEnabled( enable );
+  this->nextPushButton->setEnabled( enable );
+  this->noteTextEdit->setEnabled( enable );
+  this->helpTextEdit->setEnabled( enable );
+  this->ratingComboBox->setEnabled( q->isVisible() );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+int QAlderAtlasWidgetPrivate::rating()
+{
+  return this->ratingComboBox->currentIndex() + 1;
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+//
+// QAlderAtlasWidget methods
+//
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QAlderAtlasWidget::QAlderAtlasWidget( QWidget* parent )
+  : Superclass( parent )
+  , d_ptr(new QAlderAtlasWidgetPrivate(*this))
+{
+  Q_D(QAlderAtlasWidget);
+  d->setupUi(this);
+  d->updateUi();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QAlderAtlasWidget::~QAlderAtlasWidget()
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderAtlasWidget::showEvent( QShowEvent* event )
+{
+  Q_D(QAlderAtlasWidget);
+  QWidget::showEvent( event );
+
+  Alder::Application *app = Alder::Application::GetInstance();
+  Alder::Image *image = app->GetActiveImage();
+
+  // select an appropriate atlas image, if necessary
+  if( image )
+  {
+    bool getNewAtlasImage = false;
+
+    vtkSmartPointer< Alder::Exam > exam;
+    image->GetRecord( exam );
+    Alder::Image *atlasImage = app->GetActiveAtlasImage();
+    if( atlasImage )
+    {
+      vtkSmartPointer< Alder::Exam > atlasExam;
+      atlasImage->GetRecord( atlasExam );
+      if( exam->GetScanType() != atlasExam->GetScanType() ||
+          exam->Get("Side").ToString() != atlasExam->Get("Side").ToString() )
+        getNewAtlasImage = true;
+    }
+    else
+      getNewAtlasImage = true;
+
+    if( getNewAtlasImage )
+    {
+      vtkSmartPointer< Alder::Image > newAtlasImage =
+        image->GetAtlasImage( d->rating() );
+      app->SetActiveAtlasImage( newAtlasImage->Get( "Id" ).IsValid() ? newAtlasImage : NULL );
+    }
+  }
+  d->updateUi();
+  emit showing( true );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderAtlasWidget::hideEvent( QHideEvent* event )
+{
+  QWidget::hideEvent( event );
+  Alder::Application *app = Alder::Application::GetInstance();
+  app->SetActiveAtlasImage( NULL );
+  emit showing( false );
+}
+
+// called when the application sets a new atlas image
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderAtlasWidget::update()
+{
+  if( !this->isVisible() ) return;
+  Q_D(QAlderAtlasWidget);
+  d->updateUi();
 }
