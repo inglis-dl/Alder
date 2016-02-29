@@ -6,7 +6,6 @@
   Author:    Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #ifndef __QAlderAbstractView_p_h
 #define __QAlderAbstractView_p_h
 
