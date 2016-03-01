@@ -10,6 +10,7 @@
 =========================================================================*/
 #include <QAlderApplication.h>
 
+// Qt includes
 #include <QErrorMessage>
 
 #include <stdexcept>
@@ -20,7 +21,7 @@ bool QAlderApplication::notify( QObject *pObject, QEvent *pEvent )
 {
   try
   {
-    return QApplication::notify( pObject,pEvent );
+    return QApplication::notify( pObject, pEvent );
   }
   catch( std::exception &e )
   {

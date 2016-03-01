@@ -8,10 +8,10 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #ifndef __QAlderApplication_h
 #define __QAlderApplication_h
 
+// Qt includes
 #include <QApplication>
 
 class Ui_QAlderApplication;
