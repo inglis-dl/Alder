@@ -28,7 +28,6 @@ public:
   explicit QCodeDialogPrivate(QCodeDialog& object);
   virtual ~QCodeDialogPrivate();
 
-  void init();
   void setupUi(QDialog*);
   void updateGroupUi();
   void updateCodeUi();

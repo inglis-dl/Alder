@@ -4,52 +4,41 @@
   Module:   QSelectWaveDialog.h
   Language: C++
 
-  Author: Patrick Emond <emondpd AT mcmaster DOT ca>
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #ifndef __QSelectWaveDialog_h
 #define __QSelectWaveDialog_h
 
+// Qt includes
 #include <QDialog>
-#include <QTableWidgetItem>
-#include <map>
+
 #include <vector>
 
-class Ui_QSelectWaveDialog;
+class QSelectWaveDialogPrivate;
 
 class QSelectWaveDialog : public QDialog
 {
   Q_OBJECT
 
 public:
+  typedef QDialog Superclass;
   //constructor
-  QSelectWaveDialog( QWidget* parent = 0 );
+  explicit QSelectWaveDialog( QWidget* parent = 0 );
   //destructor
-  ~QSelectWaveDialog();
+  virtual ~QSelectWaveDialog();
 
-  std::vector< std::pair< int, bool > > getSelection() { return this->selection; };
+  std::vector<std::pair<int,bool>> selection();
 
 public slots:
-  virtual void slotAccepted();
-  virtual void slotHeaderClicked( int index );
-  virtual void slotItemPressed( QTableWidgetItem * );
-  virtual void slotItemClicked( QTableWidgetItem * );
+  void close();
 
 protected:
-  int sortColumn;
-  Qt::SortOrder sortOrder;
-  std::map< std::string, int > columnIndex;
-
-protected slots:
+  QScopedPointer<QSelectWaveDialogPrivate> d_ptr;
 
 private:
-  // Designer form
-  Ui_QSelectWaveDialog *ui;
-
-  std::vector< std::pair< int, bool > > selection;
-  Qt::CheckState lastItemPressedState;
+  Q_DECLARE_PRIVATE(QSelectWaveDialog);
+  Q_DISABLE_COPY(QSelectWaveDialog);
 };
 
 #endif

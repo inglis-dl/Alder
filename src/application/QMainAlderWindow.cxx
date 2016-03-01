@@ -420,7 +420,7 @@ void QMainAlderWindow::adminUpdateDatabase()
   QSelectWaveDialog waveDialog( this );
   waveDialog.setModal( true );
   waveDialog.exec();
-  std::vector< std::pair< int, bool > > waveVec = waveDialog.getSelection();
+  std::vector< std::pair< int, bool > > waveVec = waveDialog.selection();
   if( !waveVec.empty() )
   {
     Alder::Interview::UpdateInterviewData( waveVec );

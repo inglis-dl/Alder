@@ -4,7 +4,6 @@
   Module:   QCodeDialog.h
   Language: C++
 
-  Author: Patrick Emond <emondpd AT mcmaster DOT ca>
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
@@ -25,17 +24,13 @@ public:
   //constructor
   explicit QCodeDialog( QWidget* parent = 0 );
   //destructor
-  ~QCodeDialog();
-
-signals:
+  virtual ~QCodeDialog();
 
 public slots:
   void close();
 
 protected:
   QScopedPointer<QCodeDialogPrivate> d_ptr;
-
-protected slots:
 
 private:
   Q_DECLARE_PRIVATE(QCodeDialog);

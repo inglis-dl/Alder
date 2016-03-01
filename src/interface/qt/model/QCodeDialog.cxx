@@ -4,7 +4,6 @@
   Module:   QCodeDialog.cxx
   Language: C++
 
-  Author: Patrick Emond <emondpd AT mcmaster DOT ca>
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
@@ -35,13 +34,6 @@ QCodeDialogPrivate::QCodeDialogPrivate(QCodeDialog& object)
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QCodeDialogPrivate::~QCodeDialogPrivate()
 {
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialogPrivate::init()
-{
-  Q_Q(QCodeDialog);
-  this->setupUi(q);
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -170,8 +162,6 @@ void QCodeDialogPrivate::setupUi( QDialog* widget )
   QRegExp crx("[A-Z,a-z]{1,3}");
   QValidator* cv = new QRegExpValidator( crx, this );
   this->codeLineEdit->setValidator( cv );
-
-  this->updateUi();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -834,7 +824,8 @@ QCodeDialog::QCodeDialog( QWidget* parent )
   , d_ptr(new QCodeDialogPrivate(*this))
 {
   Q_D(QCodeDialog);
-  d->init();
+  d->setupUi(this);
+  d->updateUi();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
