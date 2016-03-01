@@ -245,5 +245,5 @@ void QChangePasswordDialog::accepted()
   {
     emit passwordChanged( d->newPassword  );
   }
-  accept();
+  this->accept();
 }
