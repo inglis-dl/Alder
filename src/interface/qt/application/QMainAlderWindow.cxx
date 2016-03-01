@@ -9,7 +9,7 @@
 
 =========================================================================*/
 #include <QMainAlderWindow.h>
-#include <ui_QMainAlderWindow.h>
+#include <QMainAlderWindow_p.h>
 
 // Alder includes
 #include <Application.h>
@@ -44,107 +44,105 @@
 #include <stdexcept>
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-QMainAlderWindow::QMainAlderWindow( QWidget* parent )
-  : QMainWindow( parent )
+//
+// QMainAlderWindowPrivate methods
+//
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QMainAlderWindowPrivate::QMainAlderWindowPrivate(QMainAlderWindow& object)
+  : QObject(&object), q_ptr(&object)
 {
-  this->ui = new Ui_QMainAlderWindow;
-  this->ui->setupUi( this );
+  this->qvtkConnection = vtkSmartPointer<vtkEventQtSlotConnect>::New();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QMainAlderWindowPrivate::~QMainAlderWindowPrivate()
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindowPrivate::setupUi( QMainWindow* window )
+{
+  Q_Q(QMainAlderWindow);
+
+  this->Ui_QMainAlderWindow::setupUi( window );
 
   // connect the menu items
   QObject::connect(
-    this->ui->actionOpenInterview, SIGNAL( triggered() ),
-    this, SLOT( slotOpenInterview() ) );
+    this->actionOpenInterview, SIGNAL( triggered() ),
+    this, SLOT( openInterview() ) );
   QObject::connect(
-    this->ui->actionShowAtlas, SIGNAL( triggered() ),
-    this, SLOT( slotShowAtlas() ) );
+    this->actionShowAtlas, SIGNAL( triggered() ),
+    this, SLOT( showAtlas() ) );
   QObject::connect(
-    this->ui->actionShowDicomTags, SIGNAL( triggered() ),
-    this, SLOT( slotShowDicomTags() ) );
+    this->actionShowDicomTags, SIGNAL( triggered() ),
+    this, SLOT( showDicomTags() ) );
   QObject::connect(
-    this->ui->actionLogin, SIGNAL( triggered() ),
-    this, SLOT( slotLogin() ) );
+    this->actionLogin, SIGNAL( triggered() ),
+    this, SLOT( login() ) );
   QObject::connect(
-    this->ui->actionChangePassword, SIGNAL( triggered() ),
-    this, SLOT( slotChangePassword() ) );
+    this->actionChangePassword, SIGNAL( triggered() ),
+    this, SLOT( changePassword() ) );
   QObject::connect(
-    this->ui->actionUserManagement, SIGNAL( triggered() ),
-    this, SLOT( slotUserManagement() ) );
+    this->actionUserManagement, SIGNAL( triggered() ),
+    this, SLOT( userManagement() ) );
   QObject::connect(
-    this->ui->actionUpdateDatabase, SIGNAL( triggered() ),
-    this, SLOT( slotUpdateDatabase() ) );
+    this->actionUpdateDatabase, SIGNAL( triggered() ),
+    this, SLOT( updateDatabase() ) );
   QObject::connect(
-    this->ui->actionReports, SIGNAL( triggered() ),
-    this, SLOT( slotReports() ) );
+    this->actionReports, SIGNAL( triggered() ),
+    this, SLOT( reports() ) );
   QObject::connect(
-    this->ui->actionRatingCodes, SIGNAL( triggered() ),
-    this, SLOT( slotRatingCodes() ) );
+    this->actionRatingCodes, SIGNAL( triggered() ),
+    this, SLOT( ratingCodes() ) );
   QObject::connect(
-    this->ui->actionLoadUIDs, SIGNAL( triggered() ),
-    this, SLOT( slotLoadUIDs() ) );
+    this->actionLoadUIDs, SIGNAL( triggered() ),
+    this, SLOT( loadUIDs() ) );
   QObject::connect(
-    this->ui->actionExit, SIGNAL( triggered() ),
+    this->actionExit, SIGNAL( triggered() ),
     qApp, SLOT( closeAllWindows() ) );
   QObject::connect(
-    this->ui->actionSaveImage, SIGNAL( triggered() ),
-    this, SLOT( slotSaveImage() ) );
+    this->actionSaveImage, SIGNAL( triggered() ),
+    this, SLOT( saveImage() ) );
 
   // connect the help menu items
   QObject::connect(
-    this->ui->actionAbout, SIGNAL( triggered() ),
-    this, SLOT( slotAbout() ) );
+    this->actionAbout, SIGNAL( triggered() ),
+    this, SLOT( about() ) );
   QObject::connect(
-    this->ui->actionManual, SIGNAL( triggered() ),
-    this, SLOT( slotManual() ) );
+    this->actionManual, SIGNAL( triggered() ),
+    this, SLOT( manual() ) );
 
   QObject::connect(
-    this->ui->atlasWidget, SIGNAL( showing( bool ) ),
-    this->ui->interviewWidget, SLOT( hideControls( bool ) ) );
-
-  this->readSettings();
+    this->atlasWidget, SIGNAL( showing( bool ) ),
+    this->interviewWidget, SLOT( hideControls( bool ) ) );
 
   QIcon icon(":/icons/alder32x32.png");
   QApplication::setWindowIcon(icon);
 
-  // toggle visibility of the atlas widget
-  this->atlasVisible = true;
-  this->slotShowAtlas();
-
-  this->DicomTagWidget = new QAlderDicomTagWidget( this );
-  this->Connections = vtkSmartPointer<vtkEventQtSlotConnect>::New();
-  this->Connections->Connect( Alder::Application::GetInstance(),
+  this->qvtkConnection = vtkSmartPointer<vtkEventQtSlotConnect>::New();
+  this->qvtkConnection->Connect( Alder::Application::GetInstance(),
     Alder::Common::ActiveImageEvent,
     this, SLOT( updateDicomTagWidget() ) );
 
+  this->atlasWidget->setParent( q );
+  this->atlasVisible = false;
+  this->atlasWidget->hide();
+  this->dicomTagWidget->setParent( q );
   this->dicomTagsVisible = false;
-  this->DicomTagWidget->hide();
-
-  this->updateInterface();
+  this->dicomTagWidget->hide();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-QMainAlderWindow::~QMainAlderWindow()
+void QMainAlderWindowPrivate::openInterview()
 {
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::closeEvent( QCloseEvent *event )
-{
-  //this->ui->framePlayerWidget->setViewer( 0 );
-  this->writeSettings();
-  event->accept();
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::slotOpenInterview()
-{
+  Q_Q(QMainAlderWindow);
   Alder::Application *app = Alder::Application::GetInstance();
   Alder::User* user = app->GetActiveUser();
-
   if( user )
   {
-    QSelectInterviewDialog dialog( this );
+    QSelectInterviewDialog dialog( q );
     dialog.setModal( true );
-    dialog.setWindowTitle( tr( "Select Interview" ) );
+    dialog.setWindowTitle( QDialog::tr( "Select Interview" ) );
     dialog.exec();
 
     /*
@@ -171,162 +169,116 @@ void QMainAlderWindow::slotOpenInterview()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::slotLogin()
+void QMainAlderWindowPrivate::login()
 {
+  Q_Q(QMainAlderWindow);
   Alder::Application *app = Alder::Application::GetInstance();
   bool loggedIn = NULL != app->GetActiveUser();
-
   if( loggedIn )
   {
     app->ResetApplication();
   }
   else
   {
-    QLoginDialog dialog( this );
+    QLoginDialog dialog( q );
     dialog.setModal( true );
-    dialog.setWindowTitle( tr( "Login" ) );
+    dialog.setWindowTitle( QDialog::tr( "Login" ) );
     dialog.exec();
   }
 
   // active user may have changed so update the interface
-  this->updateInterface();
+  this->updateUi();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::slotShowAtlas()
+void QMainAlderWindowPrivate::showAtlas()
 {
+  Q_Q(QMainAlderWindow);
   bool lastVisible = this->atlasVisible;
 
-  if( !lastVisible && this->dicomTagsVisible ) this->slotShowDicomTags();
+  if( !lastVisible && this->dicomTagsVisible ) this->showDicomTags();
 
   this->atlasVisible = !this->atlasVisible;
-  this->ui->actionShowAtlas->setText( tr( this->atlasVisible ? "Hide Atlas" : "Show Atlas" ) );
+  this->actionShowAtlas->setText(( this->atlasVisible ? "Hide Atlas" : "Show Atlas" ));
 
   if( this->atlasVisible )
   {
     // add the widget to the splitter
-    this->ui->splitter->insertWidget( 0, this->ui->atlasWidget );
-    this->ui->atlasWidget->show();
+    this->splitter->insertWidget( 0, this->atlasWidget );
+    this->atlasWidget->show();
 
-    QList<int> sizeList = this->ui->splitter->sizes();
+    QList<int> sizeList = this->splitter->sizes();
     int total = sizeList[0] + sizeList[1];
     sizeList[0] = floor( total / 2 );
     sizeList[1] = sizeList[0];
-    this->ui->splitter->setSizes( sizeList );
+    this->splitter->setSizes( sizeList );
   }
   else
   {
     // remove the widget from the splitter
-    this->ui->atlasWidget->hide();
-    this->ui->atlasWidget->setParent( this );
-
+    this->atlasWidget->hide();
+    this->atlasWidget->setParent( q );
     Alder::Application::GetInstance()->SetActiveAtlasImage( NULL );
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::slotShowDicomTags()
+void QMainAlderWindowPrivate::showDicomTags()
 {
+  Q_Q(QMainAlderWindow);
   if( this->atlasVisible ) return;
 
   this->dicomTagsVisible = !this->dicomTagsVisible;
 
-  this->ui->actionShowDicomTags->setText(
-    tr( this->dicomTagsVisible ? "Hide Dicom Tags" : "Show Dicom Tags" ) );
+  this->actionShowDicomTags->setText(
+    ( this->dicomTagsVisible ? "Hide Dicom Tags" : "Show Dicom Tags" ));
 
   if( this->dicomTagsVisible )
   {
-    this->ui->splitter->insertWidget( 0, qobject_cast<QWidget*>(this->DicomTagWidget));
-    this->DicomTagWidget->show();
+    this->splitter->insertWidget( 0, this->dicomTagWidget );
+    this->dicomTagWidget->show();
   }
   else
   {
-    this->DicomTagWidget->hide();
-    this->DicomTagWidget->setParent( this );
+    this->dicomTagWidget->hide();
+    this->dicomTagWidget->setParent( q );
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::slotUserManagement()
+void QMainAlderWindowPrivate::userManagement()
 {
-  this->adminLoginDo( &QMainAlderWindow::adminUserManagement );
+  Q_Q(QMainAlderWindow);
+  q->adminLoginDo( &QMainAlderWindow::adminUserManagement );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::slotUpdateDatabase()
+void QMainAlderWindowPrivate::updateDatabase()
 {
-  this->adminLoginDo( &QMainAlderWindow::adminUpdateDatabase );
+  Q_Q(QMainAlderWindow);
+  q->adminLoginDo( &QMainAlderWindow::adminUpdateDatabase );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::slotReports()
+void QMainAlderWindowPrivate::reports()
 {
-  this->adminLoginDo( &QMainAlderWindow::adminReports );
+  Q_Q(QMainAlderWindow);
+  q->adminLoginDo( &QMainAlderWindow::adminReports );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::slotRatingCodes()
+void QMainAlderWindowPrivate::ratingCodes()
 {
-  this->adminLoginDo( &QMainAlderWindow::adminRatingCodes );
+  Q_Q(QMainAlderWindow);
+  q->adminLoginDo( &QMainAlderWindow::adminRatingCodes );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::adminLoginDo( void (QMainAlderWindow::*fn)() )
+void QMainAlderWindowPrivate::loadUIDs()
 {
-  int attempt = 1;
-
-  while( attempt < 4 )
-  {
-    // check for admin password
-    QString text = QInputDialog::getText(
-      this,
-      QObject::tr( "User Management" ),
-      QObject::tr( attempt > 1 ? "Wrong password, try again:" : "Administrator password:" ),
-      QLineEdit::Password );
-
-    // do nothing if the user hit the cancel button
-    if( text.isEmpty() ) break;
-
-    vtkNew< Alder::User > user;
-    user->Load( "Name", "administrator" );
-    if( user->IsPassword( text.toStdString().c_str() ) )
-    {
-      user->Set( "LastLogin", Alder::Utilities::getTime( "%Y-%m-%d %H:%M:%S" ) );
-      user->Save();
-
-      (this->*fn)();
-
-      break;
-    }
-    attempt++;
-  }
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::adminRatingCodes()
-{
-  // load the code dialog
-  QCodeDialog codeDialog( this );
-  codeDialog.setModal( true );
-  codeDialog.setWindowTitle( tr( "Rating Codes" ) );
-  codeDialog.exec();
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::adminReports()
-{
-  // load the reports dialog
-  QReportDialog reportDialog( this );
-  reportDialog.setModal( true );
-  reportDialog.setWindowTitle( tr( "Rating Reports" ) );
-  reportDialog.exec();
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::slotLoadUIDs()
-{
-  QFileDialog dialog(this, tr("Open File") );
-  dialog.setNameFilter( tr("CSV files (*.csv)") );
+  Q_Q(QMainAlderWindow);
+  QFileDialog dialog( q, QDialog::tr("Open File") );
+  dialog.setNameFilter( QDialog::tr("CSV files (*.csv)") );
   dialog.setFileMode( QFileDialog::ExistingFile );
 
   QStringList selectedFiles;
@@ -406,12 +358,206 @@ void QMainAlderWindow::slotLoadUIDs()
 
   if( error )
   {
-    QMessageBox messageBox( this );
+    QMessageBox messageBox( q );
     messageBox.setWindowModality( Qt::WindowModal );
     messageBox.setIcon( QMessageBox::Warning );
     messageBox.setText( errorMsg );
     messageBox.exec();
   }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindowPrivate::changePassword()
+{
+  Q_Q(QMainAlderWindow);
+  Alder::Application *app = Alder::Application::GetInstance();
+  Alder::User* user;
+  if(  NULL != ( user = app->GetActiveUser() ) )
+  {
+    QString password = user->Get("Password").ToString().c_str();
+    QChangePasswordDialog dialog( q, password );
+    dialog.setModal( true );
+    QObject::connect(
+      &dialog, SIGNAL( passwordChanged( QString ) ),
+     this, SLOT( changeActiveUserPassword( QString ) ));
+    dialog.exec();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindowPrivate::changeActiveUserPassword( QString password )
+{
+  if( password.isEmpty() ) return;
+  Alder::Application *app = Alder::Application::GetInstance();
+  Alder::User* user;
+  if(  NULL != ( user = app->GetActiveUser() ) )
+  {
+    user->Set( "Password", vtkVariant( password.toStdString() ) );
+    user->Save();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindowPrivate::about()
+{
+  Q_Q(QMainAlderWindow);
+  QAboutDialog dialog( q );
+  dialog.setModal( true );
+  dialog.setWindowTitle( QDialog::tr( "About Alder" ) );
+  dialog.exec();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindowPrivate::manual()
+{
+  // TODO: open link to Alder manual
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindowPrivate::saveImage()
+{
+  Q_Q(QMainAlderWindow);
+  QString fileName = QFileDialog::getSaveFileName( q,
+    QDialog::tr("Save Image to File"), this->lastSavePath,
+    QDialog::tr("Images (*.png *.pnm *.bmp *.jpg *.jpeg *.tif *.tiff)"));
+
+  if( fileName.isEmpty() ) return;
+  else
+  {
+    this->interviewWidget->saveImage( fileName );
+    this->lastSavePath = QFileInfo( fileName ).path();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindowPrivate::updateUi()
+{
+  Alder::Application *app = Alder::Application::GetInstance();
+  bool loggedIn = NULL != app->GetActiveUser();
+
+  // dynamic menu action names
+  this->actionLogin->setText((loggedIn ? "Logout" : "Login"));
+
+  // set all widget enable states
+  this->actionOpenInterview->setEnabled( loggedIn );
+  this->actionChangePassword->setEnabled( loggedIn );
+  this->actionShowAtlas->setEnabled( loggedIn );
+  this->actionShowDicomTags->setEnabled( loggedIn );
+  this->actionSaveImage->setEnabled( loggedIn );
+  this->actionLoadUIDs->setEnabled( loggedIn );
+
+  this->splitter->setEnabled( loggedIn );
+
+  this->interviewWidget->setEnabled( loggedIn );
+  this->atlasWidget->setEnabled( loggedIn );
+  this->dicomTagWidget->setEnabled( loggedIn );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindowPrivate::updateDicomTagWidget()
+{
+  Alder::Application *app = Alder::Application::GetInstance();
+  Alder::Image *image = app->GetActiveImage();
+  QString fileName = image ? image->GetFileName().c_str() : "";
+  this->dicomTagWidget->load( fileName );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+//
+// QMainAlderWindow methods
+//
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QMainAlderWindow::QMainAlderWindow( QWidget* parent )
+  : Superclass( parent )
+  , d_ptr(new QMainAlderWindowPrivate(*this))
+{
+  Q_D(QMainAlderWindow);
+  d->setupUi(this);
+  this->readSettings();
+  d->updateUi();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QMainAlderWindow::~QMainAlderWindow()
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindow::closeEvent( QCloseEvent *event )
+{
+  this->writeSettings();
+  event->accept();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindow::readSettings()
+{
+  QSettings settings( "CLSA", "Alder" );
+  settings.beginGroup( "MainAlderWindow" );
+  if( settings.contains( "size" ) ) this->resize( settings.value( "size" ).toSize() );
+  if( settings.contains( "pos" ) ) this->move( settings.value( "pos" ).toPoint() );
+  if( settings.contains( "maximized" ) && settings.value( "maximized" ).toBool() )
+    this->showMaximized();
+  settings.endGroup();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindow::writeSettings()
+{
+  QSettings settings( "CLSA", "Alder" );
+  settings.beginGroup( "MainAlderWindow" );
+  settings.setValue( "size", this->size() );
+  settings.setValue( "pos", this->pos() );
+  settings.setValue( "maximized", this->isMaximized() );
+  settings.endGroup();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindow::adminLoginDo( void (QMainAlderWindow::*fn)() )
+{
+  int attempt = 1;
+  while( attempt < 4 )
+  {
+    // check for admin password
+    QString text = QInputDialog::getText(
+      this,
+      QDialog::tr( "User Management" ),
+      QDialog::tr( attempt > 1 ? "Wrong password, try again:" : "Administrator password:" ),
+      QLineEdit::Password );
+
+    // do nothing if the user hit the cancel button
+    if( text.isEmpty() ) break;
+
+    vtkNew< Alder::User > user;
+    user->Load( "Name", "administrator" );
+    if( user->IsPassword( text.toStdString().c_str() ) )
+    {
+      user->Set( "LastLogin", Alder::Utilities::getTime( "%Y-%m-%d %H:%M:%S" ) );
+      user->Save();
+      (this->*fn)();
+      break;
+    }
+    attempt++;
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindow::adminUserManagement( )
+{
+  Q_D(QMainAlderWindow);
+  // load the users dialog
+  QUserListDialog usersDialog( this );
+  usersDialog.setModal( true );
+  usersDialog.setWindowTitle( QDialog::tr( "User Management" ) );
+
+  Alder::Application *app = Alder::Application::GetInstance();
+  if(  NULL != app->GetActiveUser() )
+  {
+    QObject::connect(
+      &usersDialog, SIGNAL( userModalityChanged() ),
+     d->interviewWidget, SLOT( activeInterviewChanged() ));
+  }
+  usersDialog.exec();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -437,137 +583,23 @@ void QMainAlderWindow::adminUpdateDatabase()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::adminUserManagement( )
+void QMainAlderWindow::adminRatingCodes()
 {
-  // load the users dialog
-  QUserListDialog usersDialog( this );
-  usersDialog.setModal( true );
-  usersDialog.setWindowTitle( tr( "User Management" ) );
-
-  Alder::Application *app = Alder::Application::GetInstance();
-  if(  NULL != app->GetActiveUser() )
-  {
-    QObject::connect(
-      &usersDialog, SIGNAL( userModalityChanged() ),
-     this->ui->interviewWidget, SLOT( activeInterviewChanged() ));
-  }
-  usersDialog.exec();
+  // load the code dialog
+  QCodeDialog codeDialog( this );
+  codeDialog.setModal( true );
+  codeDialog.setWindowTitle( QDialog::tr( "Rating Codes" ) );
+  codeDialog.exec();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::slotChangePassword()
+void QMainAlderWindow::adminReports()
 {
-  Alder::Application *app = Alder::Application::GetInstance();
-  Alder::User* user;
-  if(  NULL != ( user = app->GetActiveUser() ) )
-  {
-    QString password = user->Get("Password").ToString().c_str();
-    QChangePasswordDialog dialog( this, password );
-    dialog.setModal( true );
-    QObject::connect(
-      &dialog, SIGNAL( passwordChanged( QString ) ),
-     this, SLOT( changeActiveUserPassword( QString ) ));
-    dialog.exec();
-  }
+  // load the reports dialog
+  QReportDialog reportDialog( this );
+  reportDialog.setModal( true );
+  reportDialog.setWindowTitle( QDialog::tr( "Rating Reports" ) );
+  reportDialog.exec();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::changeActiveUserPassword( QString password )
-{
-  if( password.isEmpty() ) return;
-  Alder::Application *app = Alder::Application::GetInstance();
-  Alder::User* user;
-  if(  NULL != ( user = app->GetActiveUser() ) )
-  {
-    user->Set( "Password", vtkVariant( password.toStdString() ) );
-    user->Save();
-  }
-}
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::slotAbout()
-{
-  QAboutDialog dialog( this );
-  dialog.setModal( true );
-  dialog.setWindowTitle( tr( "About Alder" ) );
-  dialog.exec();
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::slotManual()
-{
-  // TODO: open link to Alder manual
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::slotSaveImage()
-{
-  QString fileName = QFileDialog::getSaveFileName( this,
-    tr("Save Image to File"), this->lastSavePath,
-    tr("Images (*.png *.pnm *.bmp *.jpg *.jpeg *.tif *.tiff)"));
-
-  if( fileName.isEmpty() ) return;
-  else
-  {
-    this->ui->interviewWidget->saveImage( fileName );
-    this->lastSavePath = QFileInfo( fileName ).path();
-  }
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::readSettings()
-{
-  QSettings settings( "CLSA", "Alder" );
-
-  settings.beginGroup( "MainAlderWindow" );
-  if( settings.contains( "size" ) ) this->resize( settings.value( "size" ).toSize() );
-  if( settings.contains( "pos" ) ) this->move( settings.value( "pos" ).toPoint() );
-  if( settings.contains( "maximized" ) && settings.value( "maximized" ).toBool() )
-    this->showMaximized();
-  settings.endGroup();
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::writeSettings()
-{
-  QSettings settings( "CLSA", "Alder" );
-  settings.beginGroup( "MainAlderWindow" );
-  settings.setValue( "size", this->size() );
-  settings.setValue( "pos", this->pos() );
-  settings.setValue( "maximized", this->isMaximized() );
-  settings.endGroup();
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::updateInterface()
-{
-  Alder::Application *app = Alder::Application::GetInstance();
-  bool loggedIn = NULL != app->GetActiveUser();
-
-  // dynamic menu action names
-  this->ui->actionLogin->setText( tr( loggedIn ? "Logout" : "Login" ) );
-
-  // set all widget enable states
-  this->ui->actionOpenInterview->setEnabled( loggedIn );
-  this->ui->actionChangePassword->setEnabled( loggedIn );
-  this->ui->actionShowAtlas->setEnabled( loggedIn );
-  this->ui->actionSaveImage->setEnabled( loggedIn );
-  this->ui->actionLoadUIDs->setEnabled( loggedIn );
-
-  this->ui->splitter->setEnabled( loggedIn );
-
-  this->ui->interviewWidget->setEnabled( loggedIn );
-  this->ui->atlasWidget->setEnabled( loggedIn );
-
-  this->ui->actionShowDicomTags->setEnabled( loggedIn );
-  this->DicomTagWidget->setEnabled( loggedIn );
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::updateDicomTagWidget()
-{
-  Alder::Application *app = Alder::Application::GetInstance();
-  Alder::Image *image = app->GetActiveImage();
-  QString fileName = image ? image->GetFileName().c_str() : "";
-  this->DicomTagWidget->load( fileName );
-}

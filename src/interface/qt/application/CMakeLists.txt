@@ -12,6 +12,7 @@ SET( ALDER_APP_UI
 
 SET( ALDER_APP_MOC
   QMainAlderWindow.h
+  QMainAlderWindow_p.h
 )
 
 SET( AlderApp_Resources

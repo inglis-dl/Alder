@@ -56,6 +56,28 @@
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
+     <widget class="QAlderDicomTagWidget" name="dicomTagWidget" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>300</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="sizeIncrement">
+       <size>
+        <width>0</width>
+        <height>0</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="QSplitter" name="splitter">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
@@ -281,6 +303,12 @@
    <class>QAlderAtlasWidget</class>
    <extends>QWidget</extends>
    <header>QAlderAtlasWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>QAlderDicomTagWidget</class>
+   <extends>QWidget</extends>
+   <header>QAlderDicomTagWidget.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
