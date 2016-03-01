@@ -227,4 +227,3 @@ void QSelectWaveDialog::close()
 {
   this->accept();
 }
-
