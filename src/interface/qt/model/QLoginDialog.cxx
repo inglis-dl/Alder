@@ -108,8 +108,8 @@ void QLoginDialog::accepted()
       // prompt for new password
       QString password1 = QInputDialog::getText(
         this,
-        QObject::tr( "Change Password" ),
-        QObject::tr( "Please provide a new password (cannot be \"password\") for your account:" ),
+        QDialog::tr( "Change Password" ),
+        QDialog::tr( "Please provide a new password (cannot be \"password\") for your account:" ),
         QLineEdit::Password );
 
       if( !password1.isEmpty() && password1 != defPassword )
@@ -117,8 +117,8 @@ void QLoginDialog::accepted()
         // re-prompt to repeat password
         QString password2 = QInputDialog::getText(
           this,
-          QObject::tr( "Re-type Password" ),
-          QObject::tr( "Please verify your new password by typing it again:" ),
+          QDialog::tr( "Re-type Password" ),
+          QDialog::tr( "Please verify your new password by typing it again:" ),
           QLineEdit::Password );
 
         if( password1 == password2 )

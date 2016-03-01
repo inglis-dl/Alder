@@ -178,7 +178,7 @@ void QAlderInterviewWidgetPrivate::setActiveInterview( Alder::Interview* intervi
     errorMessage.setWindowModality( Qt::WindowModal );
     errorMessage.setIcon( QMessageBox::Warning );
     errorMessage.setText(
-      QObject::tr( "There are no remaining studies available which meet your criteria." ) );
+      QDialog::tr( "There are no remaining studies available which meet your criteria." ) );
     errorMessage.exec();
   }
   else
@@ -252,7 +252,7 @@ void QAlderInterviewWidgetPrivate::ratingChanged( int value )
     rating->Save();
   }
   this->ratingValueLabel->setText( 0 == value ?
-    QObject::tr( "N/A" ) : QString::number( value ) );
+    QLabel::tr( "N/A" ) : QString::number( value ) );
 }
 
 
@@ -298,10 +298,10 @@ void QAlderInterviewWidgetPrivate::noteChanged()
 void QAlderInterviewWidgetPrivate::updateInfo()
 {
   QString noteString = "";
-  QString interviewerString = tr( "N/A" );
-  QString siteString = tr( "N/A" );
-  QString dateString = tr( "N/A" );
-  QString codeString = tr( "N/A" );
+  QString interviewerString = QLabel::tr( "N/A" );
+  QString siteString = QLabel::tr( "N/A" );
+  QString dateString = QLabel::tr( "N/A" );
+  QString codeString = QLabel::tr( "N/A" );
 
   // fill in the active exam information
   Alder::Application *app = Alder::Application::GetInstance();
@@ -324,16 +324,16 @@ void QAlderInterviewWidgetPrivate::updateInfo()
         if( note->Load( map ) )
           noteString = note->Get( "Note" ).ToString();
       }
-      interviewerString = exam->Get( "Interviewer" ).ToString().c_str();
+      interviewerString = QLabel::tr(exam->Get( "Interviewer" ).ToString().c_str());
       vtkSmartPointer< Alder::Site > site = vtkSmartPointer< Alder::Site >::New();
       interview->GetRecord( site );
       vtkSmartPointer< Alder::Wave > wave = vtkSmartPointer< Alder::Wave >::New();
       interview->GetRecord( wave );
-      siteString = site->Get( "Name" ).ToString().c_str();
+      siteString = QLabel::tr(site->Get( "Name" ).ToString().c_str());
       siteString += "/";
-      siteString += wave->Get( "Name" ).ToString().c_str();
-      dateString = exam->Get( "DatetimeAcquired" ).ToString().c_str();
-      codeString = image->GetCode().c_str();
+      siteString += QLabel::tr(wave->Get( "Name" ).ToString().c_str());
+      dateString = QLabel::tr(exam->Get( "DatetimeAcquired" ).ToString().c_str());
+      codeString = QLabel::tr(image->GetCode().c_str());
     }
   }
 
@@ -471,7 +471,7 @@ void QAlderInterviewWidgetPrivate::codeSelected()
         bool useDerived = this->useDerivedCheckBox->isChecked();
         rating->UpdateDerivedRating( useDerived );
         vtkVariant derivedRating = rating->Get("DerivedRating");
-        this->derivedRatingLabel->setText( tr( "Derived Rating " ) + derivedRating.ToString().c_str() );
+        this->derivedRatingLabel->setText( QLabel::tr( "Derived Rating " ) + derivedRating.ToString().c_str() );
         if( useDerived )
         {
           bool oldSignalState = this->ratingSlider->blockSignals( true );
@@ -678,7 +678,7 @@ void QAlderInterviewWidgetPrivate::resetRating()
 
     bool oldSignalState = this->ratingSlider->blockSignals( true );
     this->ratingSlider->setValue( 0 );
-    this->ratingValueLabel->setText( tr( "N/A" ) );
+    this->ratingValueLabel->setText( QLabel::tr( "N/A" ) );
     this->ratingSlider->blockSignals( oldSignalState );
   }
 }
@@ -744,10 +744,10 @@ void QAlderInterviewWidgetPrivate::updateRating()
 
   this->ratingSlider->setValue( ratingValue );
   this->ratingValueLabel->setText( 0 == ratingValue ?
-    tr( "N/A" ) :
+    QLabel::tr( "N/A" ) :
     QString::number( ratingValue ) );
   this->derivedRatingLabel->setText( "Derived Rating " +
-    ( 0 == derivedRating ? tr( "N/A" ) : QString::number( derivedRating ) ) );
+    ( 0 == derivedRating ? QLabel::tr( "N/A" ) : QString::number( derivedRating ) ) );
 
   this->useDerivedCheckBox->setChecked(
     ( derivedRating == ratingValue ? true : false ) );

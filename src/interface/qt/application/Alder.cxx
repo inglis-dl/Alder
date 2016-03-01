@@ -83,8 +83,8 @@ int main( int argc, char** argv )
     {
       QString text = QInputDialog::getText(
         &mainWindow,
-        QObject::tr( "Administrator Password" ),
-        QObject::tr( "Please provide a password for the mandatory administrator account:" ),
+        QDialog::tr( "Administrator Password" ),
+        QDialog::tr( "Please provide a password for the mandatory administrator account:" ),
         QLineEdit::Password );
 
       if( !text.isEmpty() )

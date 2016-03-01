@@ -297,7 +297,10 @@ void QUserListDialog::remove()
          << "All of this user's ratings will also be permanantely removed.  "
          << "This operation cannot be undone.";
   if( QMessageBox::Yes == QMessageBox::question(
-     this, "Remove User", stream.str().c_str(), QMessageBox::Yes | QMessageBox::No ) )
+     this, 
+     QDialog::tr("Remove User"),
+     stream.str().c_str(),
+     QMessageBox::Yes | QMessageBox::No ) )
   {
     user->Remove();
     d->updateUi();
@@ -326,7 +329,10 @@ void QUserListDialog::add()
 
   // get the new user's name
   QString name = QInputDialog::getText(
-    this, QObject::tr( "Create User" ), QObject::tr( "New user's name:" ), QLineEdit::Normal );
+    this,
+    QDialog::tr( "Create User" ),
+    QDialog::tr( "New user's name:" ),
+    QLineEdit::Normal );
 
   if( !name.isEmpty() )
   {
@@ -339,7 +345,7 @@ void QUserListDialog::add()
       stream << "Unable to create new user \"" << s << "\", name already in use.";
       QErrorMessage *dialog = new QErrorMessage( this );
       dialog->setModal( true );
-      dialog->showMessage( tr( stream.str().c_str() ) );
+      dialog->showMessage( QDialog::tr( stream.str().c_str() ) );
     }
     else
     {

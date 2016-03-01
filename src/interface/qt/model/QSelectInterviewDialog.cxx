@@ -117,8 +117,8 @@ void QSelectInterviewDialogPrivate::search()
 
   bool ok;
   QString text = QInputDialog::getText(
-    q, QObject::tr( "Search Term" ),
-    QObject::tr(
+    q, QDialog::tr( "Search Term" ),
+    QDialog::tr(
       "Provide some or all of the interviews to search for,\nusing commas to separate terms:" ),
     QLineEdit::Normal, QString(), &ok );
 
@@ -227,11 +227,11 @@ void QSelectInterviewDialogPrivate::updateRow( const int &row, Alder::Interview 
     {
       QString name = it.key();
       QString s = QString::number( downloadCount.value(name) );
-      s += tr( " of " );
+      s += QWidget::tr( " of " );
       s += QString::number( examCount.value(name) );
-      s += tr( ", " );
+      s += QWidget::tr( ", " );
       s += QString::number( ratedCount.value(name) );
-      s += tr( " rated" );
+      s += QWidget::tr( " rated" );
       itemText.insert(name, s);
     }
   }
@@ -303,10 +303,10 @@ void QSelectInterviewDialogPrivate::updateUi()
     QMessageBox messageBox( q );
     messageBox.setWindowModality( Qt::WindowModal );
     messageBox.setIcon( QMessageBox::Information );
-    std::string s = "No matches for search criteria ";
-    s += modifier->GetSql();
-    s += ", please try again.";
-    messageBox.setText( tr( s.c_str() ) );
+    QString s = QDialog::tr("No matches for search criteria ");
+    s += modifier->GetSql().c_str();
+    s += QDialog::tr(", please try again.");
+    messageBox.setText( s );
     messageBox.exec();
     return;
   }

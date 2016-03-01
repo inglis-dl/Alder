@@ -28,7 +28,7 @@ bool QAlderApplication::notify( QObject *pObject, QEvent *pEvent )
     // catch any exception and display it to the user
     QErrorMessage *dialog = new QErrorMessage( this->activeWindow() );
     dialog->setModal( true );
-    dialog->showMessage( tr( e.what() ) );
+    dialog->showMessage( QDialog::tr( e.what() ) );
   }
 
   return false;

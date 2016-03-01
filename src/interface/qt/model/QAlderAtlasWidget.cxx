@@ -122,11 +122,11 @@ void QAlderAtlasWidgetPrivate::updateUi()
   Q_Q(QAlderAtlasWidget);
   QString helpString = "";
   QStringList noteString;
-  QString interviewerString = tr( "N/A" );
-  QString siteString = tr( "N/A" );
-  QString dateString = tr( "N/A" );
-  QString uidString = tr( "N/A" );
-  QString codeString = tr( "N/A" );
+  QString interviewerString = QLabel::tr( "N/A" );
+  QString siteString = QLabel::tr( "N/A" );
+  QString dateString = QLabel::tr( "N/A" );
+  QString uidString = QLabel::tr( "N/A" );
+  QString codeString = QLabel::tr( "N/A" );
 
   Alder::Image *image = Alder::Application::GetInstance()->GetActiveAtlasImage();
   bool enable = false;
