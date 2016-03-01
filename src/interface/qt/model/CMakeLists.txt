@@ -30,6 +30,7 @@ SET( AlderQtModel_MocHeaders
   QAlderAtlasWidget.h
   QAlderAtlasWidget_p.h
   QAlderInterviewWidget.h
+  QAlderInterviewWidget_p.h
   QChangePasswordDialog.h
   QCodeDialog.h
   QCodeDialog_p.h

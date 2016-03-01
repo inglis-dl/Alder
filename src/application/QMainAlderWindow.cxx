@@ -98,7 +98,7 @@ QMainAlderWindow::QMainAlderWindow( QWidget* parent )
 
   QObject::connect(
     this->ui->atlasWidget, SIGNAL( showing( bool ) ),
-    this->ui->interviewWidget, SLOT( slotHideControls( bool ) ) );
+    this->ui->interviewWidget, SLOT( hideControls( bool ) ) );
 
   this->readSettings();
 
@@ -449,7 +449,7 @@ void QMainAlderWindow::adminUserManagement( )
   {
     QObject::connect(
       &usersDialog, SIGNAL( userModalityChanged() ),
-     this->ui->interviewWidget, SLOT( updateExamTreeWidget() ));
+     this->ui->interviewWidget, SLOT( activeInterviewChanged() ));
   }
   usersDialog.exec();
 }
@@ -557,8 +557,6 @@ void QMainAlderWindow::updateInterface()
   this->ui->splitter->setEnabled( loggedIn );
 
   this->ui->interviewWidget->setEnabled( loggedIn );
-  this->ui->interviewWidget->updateEnabled();
-  this->ui->atlasWidget->setEnabled( loggedIn );
   this->ui->atlasWidget->setEnabled( loggedIn );
 
   this->ui->actionShowDicomTags->setEnabled( loggedIn );
