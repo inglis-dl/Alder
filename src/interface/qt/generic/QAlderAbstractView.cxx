@@ -14,9 +14,12 @@ I  Module:    QAlderAbstractView.cxx
 #include <QDebug>
 
 // VTK includes
+#include <vtkCaptionActor2D.h>
 #include <vtkOpenGLRenderWindow.h>
 #include <vtkRendererCollection.h>
 #include <vtkRenderWindowInteractor.h>
+#include <vtkTextActor.h>
+#include <vtkTextProperty.h>
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 // QAlderAbstractViewPrivate methods
@@ -27,7 +30,22 @@ QAlderAbstractViewPrivate::QAlderAbstractViewPrivate(QAlderAbstractView& object)
 {
   this->Renderer = vtkSmartPointer<vtkRenderer>::New();
   this->RenderWindow = vtkSmartPointer<vtkRenderWindow>::New();
-  this->AxesActor = vtkSmartPointer<vtkAxesActor>::New();
+  this->AxesActor = vtkSmartPointer<vtkCenteredAxesActor>::New();
+  this->AxesActor->PickableOff();
+  this->AxesActor->DragableOff();
+  // Set up axes actor label size to scale with view size
+  vtkCaptionActor2D* captionActors[3] =
+  {
+    this->AxesActor->GetXAxisCaptionActor2D(),
+    this->AxesActor->GetYAxisCaptionActor2D(),
+    this->AxesActor->GetZAxisCaptionActor2D()
+  };
+  for (int i=0; i<3; i++)
+  {
+    captionActors[i]->GetTextActor()->SetTextScaleModeToViewport();
+    captionActors[i]->GetTextActor()->SetNonLinearFontScale( 0.9, 24 );
+    captionActors[i]->GetTextActor()->GetTextProperty()->SetFontSize( 36 );
+  }
   this->OrientationMarkerWidget = vtkSmartPointer<vtkOrientationMarkerWidget>::New();
   this->OrientationMarkerWidget->SetOrientationMarker( this->AxesActor );
   this->OrientationMarkerWidget->KeyPressActivationOff();

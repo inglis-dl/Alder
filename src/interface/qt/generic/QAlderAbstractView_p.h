@@ -16,7 +16,7 @@
 #include "QAlderAbstractView.h"
 
 // VTK includes
-#include <vtkAxesActor.h>
+#include <vtkCenteredAxesActor.h>
 #include <QVTKWidget.h>
 #include <vtkOrientationMarkerWidget.h>
 #include <vtkRenderer.h>
@@ -46,7 +46,7 @@ public:
   QVTKWidget*                                 VTKWidget;
   vtkSmartPointer<vtkRenderer>                Renderer;
   vtkSmartPointer<vtkRenderWindow>            RenderWindow;
-  vtkSmartPointer<vtkAxesActor>               AxesActor;
+  vtkSmartPointer<vtkCenteredAxesActor>       AxesActor;
   vtkSmartPointer<vtkOrientationMarkerWidget> OrientationMarkerWidget;
 };
 
