@@ -319,8 +319,7 @@ namespace Alder
       Image* image = *it;
       if( isHologic )
       {
-        // TODO: disable until a workaround can be found for unique index issue
-        // image->SetExamSideFromDICOM();
+        image->SetExamSideFromDICOM();
         image->CleanHologicDICOM();
       }
        image->AnonymizeDICOM();

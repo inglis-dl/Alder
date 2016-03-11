@@ -338,16 +338,38 @@ namespace Alder
       std::string latStr = exam->Get( "Side" ).ToString();
       if( "none" != latStr )
       {
-        try{
+        try
+        {
           std::string tagStr = this->GetDICOMTag( "Laterality" );
           if( 0 < tagStr.size() )
           {
             tagStr = Utilities::toLower( tagStr );
             if( 0 != tagStr.compare(0, 1, latStr, 0, 1) )
             {
-              latStr = 0 == tagStr.compare(0, 1, "l", 0, 1) ? "left" : "right";
-              exam->Set( "Side", latStr );
-              exam->Save();
+              std::string newLat = 0 == tagStr.compare(0, 1, "l", 0, 1) ? "left" : "right";
+              std::map< std::string, std::string > loader;
+              loader["InterviewId"] = exam->Get( "InterviewId" ).ToString();
+              loader["ScanTypeId"] = exam->Get( "ScanTypeId" ).ToString();
+              loader["Side"] = newLat;
+              vtkSmartPointer< Exam > sibling;
+              if( sibling->Load(loader) )
+              {
+                exam->Set( "Side", "none" );
+                exam->Save();
+                sibling->Set( "Side", latStr );
+                sibling->Save();
+                exam->Set( "Side", newLat );
+                exam->Save();
+
+                // alternate solution disable unique key checking
+                //SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+                //SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+              }
+              else
+              {
+                exam->Set( "Side", newLat );
+                exam->Save();
+              }
             }
           }
         }
