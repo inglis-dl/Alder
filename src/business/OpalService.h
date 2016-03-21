@@ -26,15 +26,21 @@
 #ifndef __OpalService_h
 #define __OpalService_h
 
+// Alder includes
 #include <ModelObject.h>
-
-#include <vtkSmartPointer.h>
 #include <vtkAlderMySQLQuery.h>
 
+// VTK includes
+#include <vtkSmartPointer.h>
+
+// curl includes
 #include </usr/include/curl/curl.h>
 #include </usr/include/curl/stdcheaders.h>
-#include <iostream>
+
+// json includes
 #include <json/reader.h>
+
+#include <iostream>
 #include <map>
 #include <vector>
 

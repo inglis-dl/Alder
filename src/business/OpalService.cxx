@@ -20,9 +20,11 @@
 #include <vtkCommand.h>
 #include <vtkObjectFactory.h>
 
+// curl includes
+#include </usr/include/curl/easy.h>
+
 #include <sstream>
 #include <stdexcept>
-#include </usr/include/curl/easy.h>
 
 namespace Alder
 {
