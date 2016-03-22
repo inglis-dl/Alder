@@ -142,7 +142,6 @@
       </variable>
       <variable name="SpineBoneDensity.Stage" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/SpineBoneDensity.Stage</attribute>
           <attribute name="script" valueType="text">$group(&apos;clsa-dcs-f1.Participants:Admin.StageInstance.stage&apos;, &apos;SpineBoneDensity&apos;, &apos;Admin.StageInstance.lastState&apos;).asSequence().last();</attribute>
         </attributes>
       </variable>
@@ -153,31 +152,22 @@
       </variable>
       <variable name="SpineBoneDensity.DatetimeAcquired" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/SpineBoneDensity.DatetimeAcquired</attribute>
           <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.SpineBoneDensity:InstrumentRun.timeStart&apos;);</attribute>
         </attributes>
       </variable>
       <variable name="RetinalScanLeft.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
-          <attribute name="script" valueType="text">$(&apos;SIDE&apos;).lowerCase()</attribute>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/RetinalScanLeft.Laterality</attribute>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.RetinalScanLeft:SIDE&apos;).lowerCase()</attribute>
         </attributes>
       </variable>
       <variable name="RetinalScanRight.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
-          <attribute name="script" valueType="text">$(&apos;SIDE&apos;).lowerCase()</attribute>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/RetinalScanRight.Laterality</attribute>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.RetinalScanRight:SIDE&apos;).lowerCase()</attribute>
         </attributes>
       </variable>
       <variable name="CarotidIntima.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
-          <attribute name="stage" valueType="text">CarotidIntima</attribute>
-          <attribute name="captureMethod" valueType="text">AUTOMATIC</attribute>
-          <attribute name="isManualCaptureAllowed" valueType="text">false</attribute>
-          <attribute name="vendorName" valueType="text">SIDE</attribute>
-          <attribute name="occurrenceCount" valueType="text">Data[INTEGER:2]</attribute>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/CarotidIntima.Side</attribute>
-          <attribute name="script" valueType="text">var sides=$(&apos;Measure.SIDE&apos;).lowerCase();
+          <attribute name="script" valueType="text">var sides=$(&apos;clsa-dcs-images-f1.CarotidIntima:Measure.SIDE&apos;).lowerCase();
 if (sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;);
   var res=newValue(&apos;&apos;);
@@ -198,13 +188,7 @@ if (sides.isNull().not().value()) {
       </variable>
       <variable name="DualHipBoneDensity.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
-          <attribute name="stage" valueType="text">DualHipBoneDensity</attribute>
-          <attribute name="captureMethod" valueType="text">AUTOMATIC</attribute>
-          <attribute name="isManualCaptureAllowed" valueType="text">true</attribute>
-          <attribute name="vendorName" valueType="text">HIP_SIDE</attribute>
-          <attribute name="occurrenceCount" valueType="text">$(&apos;QuestionnaireBoneDensity:NB_HIP_SCAN&apos;)</attribute>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/DualHipBoneDensity.Side</attribute>
-          <attribute name="script" valueType="text">var sides=$(&apos;Measure.OUTPUT_HIP_SIDE&apos;).lowerCase();
+          <attribute name="script" valueType="text">var sides=$(&apos;clsa-dcs-images-f1.DualHipBoneDensity:Measure.OUTPUT_HIP_SIDE&apos;).lowerCase();
 if (sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;);
   var res=newValue(&apos;&apos;);
@@ -225,23 +209,12 @@ if (sides.isNull().not().value()) {
       </variable>
       <variable name="ForearmBoneDensity.Side" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
-          <attribute name="stage" valueType="text">ForearmBoneDensity</attribute>
-          <attribute name="captureMethod" valueType="text">AUTOMATIC</attribute>
-          <attribute name="isManualCaptureAllowed" valueType="text">true</attribute>
-          <attribute name="vendorName" valueType="text">FA_SIDE</attribute>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/ForearmBoneDensity.Side</attribute>
-          <attribute name="script" valueType="text">$(&apos;OUTPUT_FA_SIDE&apos;).lowerCase()</attribute>
+          <attribute name="script" valueType="text">$(&apos;clsa-dcs-images-f1.ForearmBoneDensity:OUTPUT_FA_SIDE&apos;).lowerCase()</attribute>
         </attributes>
       </variable>
       <variable name="CarotidIntima.SideIndex" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
-          <attribute name="stage" valueType="text">CarotidIntima</attribute>
-          <attribute name="captureMethod" valueType="text">AUTOMATIC</attribute>
-          <attribute name="isManualCaptureAllowed" valueType="text">false</attribute>
-          <attribute name="vendorName" valueType="text">SIDE</attribute>
-          <attribute name="occurrenceCount" valueType="text">Data[INTEGER:2]</attribute>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/CarotidIntima.SideIndex</attribute>
-          <attribute name="script" valueType="text">var sides=$(&apos;Measure.SIDE&apos;).lowerCase();
+          <attribute name="script" valueType="text">var sides=$(&apos;clsa-dcs-images-f1.CarotidIntima:Measure.SIDE&apos;).lowerCase();
 if (sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;);
   var res=newValue(&apos;&apos;);
@@ -264,13 +237,7 @@ if (sides.isNull().not().value()) {
       </variable>
       <variable name="DualHipBoneDensity.SideIndex" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
-          <attribute name="stage" valueType="text">DualHipBoneDensity</attribute>
-          <attribute name="captureMethod" valueType="text">AUTOMATIC</attribute>
-          <attribute name="isManualCaptureAllowed" valueType="text">true</attribute>
-          <attribute name="vendorName" valueType="text">HIP_SIDE</attribute>
-          <attribute name="occurrenceCount" valueType="text">$(&apos;QuestionnaireBoneDensity:NB_HIP_SCAN&apos;)</attribute>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Exam/variable/DualHipBoneDensity.SideIndex</attribute>
-          <attribute name="script" valueType="text">var sides=$(&apos;Measure.OUTPUT_HIP_SIDE&apos;).lowerCase();
+          <attribute name="script" valueType="text">var sides=$(&apos;clsa-dcs-images-f1.DualHipBoneDensity:Measure.OUTPUT_HIP_SIDE&apos;).lowerCase();
 if (sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;);
   var res=newValue(&apos;&apos;);
@@ -294,5 +261,5 @@ if (sides.isNull().not().value()) {
     </variables>
   </variables>
   <created valueType="datetime">2015-12-09T08:59:26.234-0500</created>
-  <updated valueType="datetime">2016-01-11T14:10:36.098-0500</updated>
+  <updated valueType="datetime">2016-03-22T14:32:56.344-0400</updated>
 </org.obiba.magma.views.View>
