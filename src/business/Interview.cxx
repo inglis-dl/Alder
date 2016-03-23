@@ -12,6 +12,7 @@
 
 // Alder includes
 #include <Application.h>
+#include <Common.h>
 #include <Exam.h>
 #include <Modality.h>
 #include <OpalService.h>
@@ -279,18 +280,38 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool Interview::HasImageData( QueryModifier *modifier )
+  Common::ImageStatus Interview::GetImageStatus( QueryModifier *modifier )
   {
     std::vector< vtkSmartPointer< Exam > > vecExam;
     this->GetList( &vecExam, modifier );
+    Common::ImageStatus status = Common::ImageStatus::None;
     if( vecExam.empty() )
-      return false;
-    for( auto it = vecExam.cbegin(); it != vecExam.cend(); ++it )
+      return status;
+
+    int downloadCount = 0;
+    int pendingCount = 0;
+    int missingCount = 0;
+    int examCount = 0;
+    for( auto it = vecExam.cbegin(); it != vecExam.cend(); ++it, ++examCount )
     {
-      if( (*it)->HasImageData() && 0 == (*it)->Get( "Downloaded" ).ToInt() )
-        return false;
+      if( (*it)->HasImageData() )
+      {
+        if( 0 == (*it)->Get( "Downloaded" ).ToInt() )
+          pendingCount++;
+        else
+          downloadCount++;
+      }
+      else
+        missingCount++;
     }
-    return true;
+    if( missingCount == examCount )
+      status = Common::ImageStatus::None;
+    else if( 0 < pendingCount )
+      status = Common::ImageStatus::Pending;
+    else if( 0 < downloadCount )
+      status = Common::ImageStatus::Complete;
+
+    return status;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -336,7 +357,6 @@ namespace Alder
 
     if( opalData.empty() )
     {
-      std::cout << "opal exam data missing for UId " << identifier << std::endl;
       return;
     }
 
@@ -363,9 +383,6 @@ namespace Alder
       std::vector< std::string > tmp = Alder::Utilities::explode( opalVar, "." );
       if( 2 != tmp.size() )
       {
-        std::cout << "skipping opal variable " << opalVar <<
-        " with value " << opalVal <<
-        " in update exam data" << std::endl;
         continue;
       }
       std::string type = tmp.front();
@@ -373,8 +390,6 @@ namespace Alder
 
       if( examData.find( type ) == examData.end() )
       {
-        std::cout << "skipping opal variable " << opalVar << " in update exam data: unknown type " <<
-        type << " with variable " << var << std::endl;
         continue;
       }
       examData[type][var] = opalVal;
@@ -499,7 +514,6 @@ namespace Alder
           exam->Set( "Interviewer", columns[ "Interviewer" ] );
           exam->Set( "DatetimeAcquired", columns[ "DatetimeAcquired" ] );
           exam->Save();
-          std::cout << identifier << ": new exam of type " << type << std::endl;
         }
       }
     }
@@ -555,20 +569,23 @@ namespace Alder
       std::string source = wave->Get( "ImageDataSource" ).ToString();
       std::string identifier = this->Get( "UId" ).ToString();
 
-      // TODO: implement progress
       int index = 0;
       int lastProgress = 0;
       int progress = 0;
       double size = vecExam.size();
+      app->SetAbortFlag(0);
+      app->InvokeEvent( vtkCommand::StartEvent );
       for( auto it = vecExam.cbegin(); it != vecExam.cend(); ++it, ++index )
       {
         progress = (int)(100.*index/size);
         if( lastProgress != progress )
-          std::cout << "progress: " << progress << std::endl;
-        lastProgress = progress;
-
+        {
+          app->InvokeEvent( vtkCommand::ProgressEvent, (void*)&progress );
+          lastProgress = progress;
+        }
         (*it)->UpdateImageData( identifier, source );
       }
+      app->InvokeEvent( vtkCommand::EndEvent );
     }
   }
 
@@ -611,6 +628,8 @@ namespace Alder
       std::sort( vecOpal.begin(), vecOpal.end() );
       std::vector< std::string > vecUId;
 
+      // if we are doing a partial update, then skip any existing identifiers that already
+      // have exam meta data
       if( !fullUpdate )
       {
         std::stringstream stream;
@@ -639,7 +658,6 @@ namespace Alder
 
       if( vecUId.empty() )
       {
-        std::cout << "downloading all opal interview data for wave " << waveId << std::endl;
         mapWave[ waveId ] = vecOpal;
       }
       else
@@ -650,9 +668,6 @@ namespace Alder
         vecWave.resize( vit - vecWave.begin() );
 
         mapWave[ waveId ] = vecWave;
-
-        std::cout << "downloading partial opal interview data for wave " << waveId <<
-                  vecOpal.size() << " ids in opal with " << vecWave.size() << " remaining to pull" << std::endl;
       }
 
       size += mapWave[ waveId ].size();
@@ -665,8 +680,6 @@ namespace Alder
       return;
     }
 
-    std::cout << "start looping on waves getting " << size << " opal identifiers" << std::endl;
-
     // get a map of site ids, names and aliases
     std::vector< vtkSmartPointer< Site > > vecSite;
     Alder::Site::GetAll( &vecSite );
@@ -676,20 +689,22 @@ namespace Alder
       Alder::Site *site = *it;
       std::string siteId = site->Get( "Id" ).ToString();
       mapSite[ site->Get( "Name" ).ToString() ] = siteId;
-      std::string alias = site->Get( "Name" ).ToString();
+      std::string alias = site->Get( "Alias" ).ToString();
       if( !alias.empty() )
         mapSite[ alias ] = siteId;
     }
 
     // determine number of identifiers to pull per Opal curl call
     int limit = static_cast<int>(0.1 * size);
-    limit = limit > 500 ? 500 : ( limit < 1 ? 1 : limit );
-    //TODO: implement progress
+    limit = limit > 500 ? 500 : ( limit < 10 ? 10 : limit );
     int index = 0;
     int progress = 0;
     int lastProgress = progress;
+    bool done = false;
     vtkSmartPointer< Wave > wave = vtkSmartPointer< Wave >::New();
-    for( auto it = mapWave.cbegin(); it != mapWave.cend(); ++it )
+    app->SetAbortFlag(0);
+    app->InvokeEvent( vtkCommand::StartEvent );
+    for( auto it = mapWave.cbegin(); it != mapWave.cend() && !done; ++it )
     {
       std::string waveId = it->first;
       wave->Load( "Id", waveId );
@@ -700,18 +715,24 @@ namespace Alder
       std::vector< std::string >::iterator iend = vecUId.end();
 
       std::map< std::string, std::map< std::string, std::string > > mapOpal;
-      bool done = false;
       int localIndex = 0;
       do
       {
         progress = (int)(100.0*index/size);
         if( lastProgress != progress )
-          std::cout << "progress " << progress << std::endl;
-        lastProgress = progress;
+        {
+          app->InvokeEvent( vtkCommand::ProgressEvent, (void*)&progress );
+          lastProgress = progress;
+        }
 
         mapOpal = opal->GetRows( source, "Interview", localIndex, limit );
         for( auto mit = mapOpal.cbegin(); mit != mapOpal.cend(); ++mit )
         {
+          if( app->GetAbortFlag() )
+          {
+            done = true;
+            break;
+          }
           // skip identifiers that are not in the requested update list
           std::string uidStr = mit->first;
           if( std::find( ibegin, iend, uidStr ) == iend )
@@ -757,7 +778,6 @@ namespace Alder
             interview->Set( loader );
             interview->Save();
             interview->Load( loader );
-            std::cout << "created new interview for UId: " << uidStr << std::endl;
           }
 
           interview->UpdateExamData( wave, source );
@@ -765,8 +785,9 @@ namespace Alder
         }
 
         localIndex += mapOpal.size();
-      } while ( !mapOpal.empty() );
+      } while ( !mapOpal.empty() && !done );
     }
+    app->InvokeEvent( vtkCommand::EndEvent );
 
     if( !sustain )
       opal->SustainConnectionOff();
@@ -790,7 +811,9 @@ namespace Alder
         loader[ "UId" ] = uidStr;
         loader[ "WaveId" ] = wave->Get( "Id" ).ToString();
         if( interview->Load( loader ) )
+        {
           vecRevised.push_back( interview );
+        }
       }
     }
 
@@ -819,18 +842,24 @@ namespace Alder
       vtkSmartPointer< Alder::QueryModifier >::New();
     user->InitializeExamModifier( modifier );
 
-    // TODO: implement progress
     int index = 0;
     int lastProgress = 0;
     int progress = 0;
     double size = (double)vecRevised.size();
-    bool pending = true;
+    app->InvokeEvent( vtkCommand::StartEvent );
     for( auto it = vecRevised.cbegin(); it != vecRevised.cend(); ++it, ++index )
     {
+      if( app->GetAbortFlag() )
+      {
+        break;
+      }
+
       progress = (int)(100.*index/size);
       if( lastProgress != progress )
-        std::cout << "progress: " << progress << std::endl;
-      lastProgress = progress;
+      {
+        lastProgress = progress;
+        app->InvokeEvent( vtkCommand::ProgressEvent, (void*)&progress );
+      }
 
       Interview *interview = *it;
       vtkSmartPointer< Wave > wave;
@@ -858,7 +887,7 @@ namespace Alder
         (*vit)->UpdateImageData( identifier, source );
       }
     }
-
+    app->InvokeEvent( vtkCommand::EndEvent );
     if( !sustain )
       opal->SustainConnectionOff();
 

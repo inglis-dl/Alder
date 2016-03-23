@@ -15,7 +15,6 @@ SET( AlderBusiness_SRCS
   Modality.cxx
   ModelObject.cxx
   OpalService.cxx
-  ProgressProxy.cxx
   QueryModifier.cxx
   Rating.cxx
   ScanType.cxx

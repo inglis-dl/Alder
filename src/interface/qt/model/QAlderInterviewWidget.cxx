@@ -27,7 +27,6 @@
 #include <User.h>
 #include <Wave.h>
 #include <QAlderImageWidget.h>
-#include <QVTKProgressDialog.h>
 
 // VTK includes
 #include <vtkEventQtSlotConnect.h>
@@ -53,6 +52,7 @@ QAlderInterviewWidgetPrivate::QAlderInterviewWidgetPrivate(QAlderInterviewWidget
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QAlderInterviewWidgetPrivate::~QAlderInterviewWidgetPrivate()
 {
+  this->qvtkConnection->Disconnect();
   this->modalityLookup.clear();
 }
 
@@ -143,7 +143,6 @@ void QAlderInterviewWidgetPrivate::previous()
     interview = activeInterview->GetPrevious(
       this->loadedCheckBox->isChecked(),
       this->unratedCheckBox->isChecked() );
-
     this->setActiveInterview( interview );
   }
 }
@@ -192,19 +191,18 @@ void QAlderInterviewWidgetPrivate::setActiveInterview( Alder::Interview* intervi
       vtkSmartPointer< Alder::QueryModifier >::New();
     user->InitializeExamModifier( modifier );
 
-    if( !interview->HasImageData( modifier ) )
+    Alder::Common::ImageStatus status = interview->GetImageStatus( modifier );
+    if( Alder::Common::ImageStatus::None == status )
+      return;
+
+    if( Alder::Common::ImageStatus::Pending == status )
     {
       interview->UpdateImageData();
-      // create a progress dialog to observe the progress of the update
-      // QVTKProgressDialog dialog( this );
-      //Alder::SingleInterviewProgressFunc func( interview );
-      //dialog.Run(
-      // "Downloading Exam Images",
-      // "Please wait while the interview's images are downloaded.",
-      // func );
+      status = interview->GetImageStatus( modifier );
     }
 
-    app->SetActiveInterview( interview );
+    if( Alder::Common::ImageStatus::Complete == status )
+      app->SetActiveInterview( interview );
   }
 }
 
@@ -214,7 +212,7 @@ void QAlderInterviewWidgetPrivate::treeSelectionChanged()
   QList<QTreeWidgetItem*> list = this->examTreeWidget->selectedItems();
   if( !list.isEmpty() )
   {
-    QMap<QTreeWidgetItem*, vtkSmartPointer<Alder::ActiveRecord>>::iterator it = 
+    QMap<QTreeWidgetItem*, vtkSmartPointer<Alder::ActiveRecord>>::iterator it =
       this->treeModelMap.find( list.front() );
     if( it != this->treeModelMap.end() )
     {

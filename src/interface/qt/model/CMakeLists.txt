@@ -10,7 +10,6 @@ SET( AlderQtModelLib_SRC
   QSelectInterviewDialog.cxx
   QSelectWaveDialog.cxx
   QUserListDialog.cxx
-  QVTKProgressDialog.cxx
 )
 
 SET( AlderQtModel_Uis
@@ -23,7 +22,6 @@ SET( AlderQtModel_Uis
   QSelectInterviewDialog.ui
   QSelectWaveDialog.ui
   QUserListDialog.ui
-  QVTKProgressDialog.ui
 )
 
 SET( AlderQtModel_MocHeaders
@@ -43,7 +41,6 @@ SET( AlderQtModel_MocHeaders
   QSelectWaveDialog_p.h
   QUserListDialog.h
   QUserListDialog_p.h
-  QVTKProgressDialog.h
 )
 
 SET( AlderQtModel_Resources

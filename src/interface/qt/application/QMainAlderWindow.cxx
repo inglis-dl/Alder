@@ -27,7 +27,6 @@
 #include <QSelectInterviewDialog.h>
 #include <QSelectWaveDialog.h>
 #include <QUserListDialog.h>
-#include <QVTKProgressDialog.h>
 
 // VTK includes
 #include <vtkEventQtSlotConnect.h>
@@ -38,6 +37,8 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QProgressBar>
+#include <QPushButton>
 #include <QSettings>
 #include <QTextStream>
 
@@ -57,6 +58,7 @@ QMainAlderWindowPrivate::QMainAlderWindowPrivate(QMainAlderWindow& object)
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QMainAlderWindowPrivate::~QMainAlderWindowPrivate()
 {
+  this->qvtkConnection->Disconnect();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -119,9 +121,10 @@ void QMainAlderWindowPrivate::setupUi( QMainWindow* window )
   QIcon icon(":/icons/alder32x32.png");
   QApplication::setWindowIcon(icon);
 
+  Alder::Application *app = Alder::Application::GetInstance();
   this->qvtkConnection = vtkSmartPointer<vtkEventQtSlotConnect>::New();
-  this->qvtkConnection->Connect( Alder::Application::GetInstance(),
-    Alder::Common::ActiveImageEvent,
+
+  this->qvtkConnection->Connect( app, Alder::Common::ActiveImageEvent,
     this, SLOT( updateDicomTagWidget() ) );
 
   this->atlasWidget->setParent( q );
@@ -130,6 +133,69 @@ void QMainAlderWindowPrivate::setupUi( QMainWindow* window )
   this->dicomTagWidget->setParent( q );
   this->dicomTagsVisible = false;
   this->dicomTagWidget->hide();
+
+  QProgressBar* progress = new QProgressBar();
+  this->statusbar->addPermanentWidget(progress);
+  progress->setVisible(false);
+  QPushButton* button = new QPushButton("Abort");
+  this->statusbar->addPermanentWidget(button);
+  button->setVisible(false);
+
+  this->qvtkConnection->Connect( app, vtkCommand::StartEvent,
+    this, SLOT( showProgress() ) );
+  this->qvtkConnection->Connect( app, vtkCommand::EndEvent,
+    this, SLOT( hideProgress() ) );
+  
+  this->qvtkConnection->Connect( app, vtkCommand::ProgressEvent,
+    this, SLOT( updateProgress(vtkObject*, unsigned long, void*, void* ) ) );
+
+  QObject::connect( button, SIGNAL(pressed()), this, SLOT(abort()), Qt::DirectConnection );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindowPrivate::showProgress()
+{
+  QProgressBar* progress = this->statusbar->findChild<QProgressBar*>();
+  if(progress)
+  {
+    progress->setVisible(true);
+    progress->setValue(0);
+  }
+  QPushButton* button = this->statusbar->findChild<QPushButton*>();
+  if(button)
+    button->setVisible(true);
+  this->statusbar->repaint();
+  QApplication::processEvents();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindowPrivate::hideProgress()
+{
+  QProgressBar* progress = this->statusbar->findChild<QProgressBar*>();
+  if(progress)
+  {
+    progress->setVisible(false);
+    this->statusbar->clearMessage();
+  }
+  QPushButton* button = this->statusbar->findChild<QPushButton*>();
+  if(button)
+    button->setVisible(false);
+  this->statusbar->repaint();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindowPrivate::updateProgress(vtkObject* , unsigned long , void* , void* call_data)
+{
+  QProgressBar* progress = this->statusbar->findChild<QProgressBar*>();
+  progress->setValue(*(reinterpret_cast<int*>(call_data)));
+  QApplication::processEvents();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindowPrivate::abort()
+{
+  Alder::Application::GetInstance()->SetAbortFlag(1);
+  QApplication::processEvents();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -140,31 +206,11 @@ void QMainAlderWindowPrivate::openInterview()
   Alder::User* user = app->GetActiveUser();
   if( user )
   {
+    // the dialog handles updating the application active interview
     QSelectInterviewDialog dialog( q );
     dialog.setModal( true );
     dialog.setWindowTitle( QDialog::tr( "Select Interview" ) );
     dialog.exec();
-
-    /*
-    // THE DIALOG SHOULD HANDLE THE SELECTION AND UPDATING
-    vtkSmartPointer< Alder::QueryModifier > modifier =
-      vtkSmartPointer< Alder::QueryModifier >::New();
-    user->InitializeExamModifier( modifier );
-
-    // update the interview's exams and images
-    Alder::Interview *activeInterview = app->GetActiveInterview();
-    if( activeInterview && !activeInterview->HasImageData( modifier ) )
-    {
-      // create a progress dialog to observe the progress of the update
-      QVTKProgressDialog dialog( this );
-      Alder::SingleInterviewProgressFunc func( activeInterview );
-      dialog.Run(
-        "Downloading Exam Images",
-        "Please wait while the interview's images are downloaded.",
-        func );
-      app->InvokeEvent( Alder::Common::ActiveInterviewUpdateImageDataEvent );
-    }
-    */
   }
 }
 
@@ -277,6 +323,7 @@ void QMainAlderWindowPrivate::ratingCodes()
 void QMainAlderWindowPrivate::loadUIDs()
 {
   Q_Q(QMainAlderWindow);
+  std::vector< std::pair< std::string, std::string > > list;
   QFileDialog dialog( q, QDialog::tr("Open File") );
   dialog.setNameFilter( QDialog::tr("CSV files (*.csv)") );
   dialog.setFileMode( QFileDialog::ExistingFile );
@@ -299,10 +346,9 @@ void QMainAlderWindowPrivate::loadUIDs()
   else
   {
     // csv file must contain UId and Wave rank
-    std::vector< std::pair< std::string, std::string > > list;
     QTextStream qstream( &file );
     std::string sep = "\",\"";
-    while( !file.atEnd() )
+    while( !qstream.atEnd() )
     {
       QString line = qstream.readLine();
       std::string str = line.toStdString();
@@ -326,33 +372,7 @@ void QMainAlderWindowPrivate::loadUIDs()
     }
     else
     {
-      // create a progress dialog to observe the progress of the update
-      /*
-      QVTKProgressDialog dialog( this );
-      Alder::ListInterviewProgressFunc func( uidList );
-      dialog.Run(
-        "Downloading Images",
-        "Please wait while the images are downloaded.",
-        func );
-
-      int numLoadedUIDs = func.GetNumLoaded();
-      */
-      int numLoaded = Alder::Interview::LoadFromList( list );
-
-      Alder::Application *app = Alder::Application::GetInstance();
-      std::stringstream log;
-      log << "Loaded "
-          << numLoaded
-          << " of "
-          << list.size()
-          << " requested identifiers from file "
-          << fileName.toStdString();
-      app->Log( log.str() );
-      if( numLoaded != list.size() )
-      {
-        error = true;
-        errorMsg = log.str().c_str();
-      }
+      int numLoaded = Alder::Interview::LoadFromList( list  );
     }
   }
 
@@ -571,15 +591,6 @@ void QMainAlderWindow::adminUpdateDatabase()
   {
     Alder::Interview::UpdateInterviewData( waveVec );
   }
-  // create a progress dialog to observe the progress of the update
-  /*
-  QVTKProgressDialog dialog( this );
-  Alder::MultiInterviewProgressFunc func;
-  dialog.Run(
-    "Updating Database",
-    "Please wait while the database is updated.",
-    func );
-  */
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -601,5 +612,3 @@ void QMainAlderWindow::adminReports()
   reportDialog.setWindowTitle( QDialog::tr( "Rating Reports" ) );
   reportDialog.exec();
 }
-
-

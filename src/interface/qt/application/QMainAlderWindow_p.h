@@ -14,6 +14,7 @@
 #include <ui_QMainAlderWindow.h>
 
 // VTK includes
+#include <vtkObject.h>
 #include <vtkSmartPointer.h>
 
 class vtkEventQtSlotConnect;
@@ -32,7 +33,7 @@ public:
   void setupUi(QMainWindow*);
   void updateUi();
 
-public Q_SLOTS:
+public slots:
   // action event functions
   virtual void openInterview();
   virtual void showAtlas();
@@ -46,14 +47,18 @@ public Q_SLOTS:
   virtual void reports();
   virtual void saveImage();
 
+  void abort();
+  void showProgress();
+  void hideProgress();
+  void updateProgress(vtkObject*, unsigned long, void*, void* call_data);
+
   // help event functions
   virtual void about();
   virtual void manual();
 
   virtual void updateDicomTagWidget();
   void changeActiveUserPassword( QString );
-
-
+  
 private:
   vtkSmartPointer<vtkEventQtSlotConnect> qvtkConnection;
   bool atlasVisible;

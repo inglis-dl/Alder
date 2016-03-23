@@ -10,6 +10,7 @@
 =========================================================================*/
 #include <Exam.h>
 
+// Alder includes
 #include <Application.h>
 #include <CodeType.h>
 #include <Image.h>
@@ -18,6 +19,7 @@
 #include <OpalService.h>
 #include <ScanType.h>
 
+// VTK includes
 #include <vtkNew.h>
 #include <vtkObjectFactory.h>
 
@@ -40,18 +42,21 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Exam::HasImageData()
   {
-    // TODO: add a consistency check action in the UI to set Downloaded to 0
-    // when no Image record exists for a given Exam
-    //
     std::string dateStr;
     std::string stageStr;
+    std::string emptyDate = "0000-00-00 00:00:00";
+    std::string validStage = "Completed";
     vtkVariant date = this->Get( "DatetimeAcquired" );
     if( date.IsValid() )
       dateStr = date.ToString();
+    if( dateStr.empty() ||  emptyDate == dateStr )
+      return false;
     vtkVariant stage = this->Get( "Stage" );
     if( stage.IsValid() )
       stageStr = stage.ToString();
-    return "Completed" == stageStr && !dateStr.empty();
+    if( stageStr.empty() || validStage != stageStr )
+      return false;
+    return true;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -302,7 +307,10 @@ namespace Alder
       }
     }
 
-    //TODO: clean all images
+    if( downloaded && dicom )
+    {
+      this->CleanImages();
+    }
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -319,10 +327,11 @@ namespace Alder
       Image* image = *it;
       if( isHologic )
       {
+
         image->SetExamSideFromDICOM();
         image->CleanHologicDICOM();
       }
-       image->AnonymizeDICOM();
+      image->AnonymizeDICOM();
     }
   }
 

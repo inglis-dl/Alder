@@ -13,7 +13,6 @@
 // Alder includes
 #include <Application.h>
 #include <Configuration.h>
-#include <ProgressProxy.h>
 #include <Utilities.h>
 
 // VTK includes
@@ -28,29 +27,6 @@
 
 namespace Alder
 {
-  bool OpalService::curlProgress = false;
-
-  // this function is used by curl to send progress signals
-  int OpalService::curlProgressCallback(
-    void* clientData,
-    const double downTotal, const double downNow,
-    const double upTotal, const double upNow )
-  {
-
-    double progress = 0.0 == downTotal ? downTotal : downNow / downTotal;
-    if( NULL == clientData )
-      throw std::runtime_error( "null curl progress client data" );
-
-    ProgressProxy* proxy = static_cast<ProgressProxy*>(clientData);
-    if( 0.0 == downTotal && !proxy->GetBusyProgress() )
-    {
-      proxy->SetBusyProgressOn();
-      proxy->ConfigureProgress();
-    }
-    proxy->UpdateProgress( progress );
-    return proxy->GetAbortStatus();
-  }
-
   vtkStandardNewMacro( OpalService );
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -62,8 +38,6 @@ namespace Alder
     this->Port = 8843;
     this->Timeout = 10;
     this->Verbose = 0;
-    OpalService::curlProgress = false;
-
     this->SustainConnection = 0;
     this->CurlConnection = NULL;
     this->CurlHeaders = NULL;
@@ -100,12 +74,6 @@ namespace Alder
     Application *app = Application::GetInstance();
     app->Log( "Setup Opal service using cURL version: " + std::string( curl_version() ) );
     curl_global_init( CURL_GLOBAL_SSL );
-  }
-
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void OpalService::SetCurlProgress( const bool &state )
-  {
-    OpalService::curlProgress = state;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -153,7 +121,7 @@ namespace Alder
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   Json::Value OpalService::Read(
-    const std::string &servicePath, const std::string &fileName, const bool &progress ) const
+    const std::string &servicePath, const std::string &fileName ) const
   {
     bool toFile = !fileName.empty();
     FILE *file;
@@ -214,27 +182,9 @@ namespace Alder
     }
 
     curl_easy_setopt( curl, CURLOPT_URL, url.c_str() );
-
-    ProgressProxy proxy;
-    if( progress && OpalService::curlProgress )
-    {
-      proxy.SetProgressTypeLocal();
-      proxy.SetBusyProgressOn();
-      proxy.ConfigureProgress();
-      curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 0L );
-      curl_easy_setopt( curl, CURLOPT_PROGRESSDATA, (void*)(&proxy) );
-      curl_easy_setopt( curl, CURLOPT_PROGRESSFUNCTION, OpalService::curlProgressCallback );
-      proxy.StartProgress();
-    }
-
     res = curl_easy_perform( curl );
 
     if( toFile ) fclose( file );
-
-    if( progress && OpalService::curlProgress )
-    {
-      proxy.EndProgress();
-    }
 
     // clean up
     if( !this->SustainConnection )
@@ -343,7 +293,7 @@ namespace Alder
     Json::Value root;
     try
     {
-      root = this->Read( stream.str(), "", false );
+      root = this->Read( stream.str() );
     }
     catch( std::runtime_error &e )
     {
@@ -411,7 +361,7 @@ namespace Alder
     Json::Value root;
     try
     {
-      root = this->Read( stream.str(), "", false );
+      root = this->Read( stream.str() );
     }
     catch( std::runtime_error &e )
     {
@@ -432,7 +382,7 @@ namespace Alder
     Json::Value root;
     try
     {
-      root = this->Read( stream.str(), "", false );
+      root = this->Read( stream.str() );
     }
     catch( std::runtime_error &e )
     {
@@ -458,7 +408,7 @@ namespace Alder
     Json::Value values;
     try
     {
-      values = this->Read( stream.str(), "", false );
+      values = this->Read( stream.str() );
     }
     catch( std::runtime_error &e )
     {
@@ -482,7 +432,7 @@ namespace Alder
     Json::Value values;
     try
     {
-      values = this->Read( stream.str(), "", false );
+      values = this->Read( stream.str() );
     }
     catch( std::runtime_error &e )
     {

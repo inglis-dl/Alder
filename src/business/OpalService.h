@@ -97,17 +97,6 @@ namespace Alder
     vtkBooleanMacro( SustainConnection, int );
 
     /**
-     * Call before invoking the application StartEvent for progress monitoring.
-     * If state is true, then the first curl progress callback will set
-     * whether the fine level (local) progress should be a regular progress
-     * meter or a busy meter, based on whether the expected size of the data
-     * to be downloaded is non-zero.  For file type data, this should be called
-     * with false, since we expect (image) files to have significant size.
-     * @param state set progress checking off or on
-     */
-    static void SetCurlProgress( const bool &state = true );
-
-    /**
      * Returns a list of all identifiers in a particular data source and table.
      * @param dataSource name of an Opal data source
      * @param table      name of a table within the data source
@@ -226,12 +215,11 @@ namespace Alder
      * empty then writes the response to the given filename (returning an empty json value).
      * @param servicePath a path to the requested data in Opal
      * @param fileName    name of a file to save the data to
-     * @param progress    whether to show curl progress
      * @throws            std::runtime_error
      * @return            jason formatted data
      */
     virtual Json::Value Read(
-      const std::string &servicePath, const std::string &fileName = "", const bool &progress = true ) const;
+      const std::string &servicePath, const std::string &fileName = "" ) const;
 
     std::map< std::string, std::map< std::string, std::map< std::string, std::string > > > Columns;
     std::string Username;
@@ -248,11 +236,6 @@ namespace Alder
   private:
     OpalService( const OpalService& ); /** Not implemented. */
     void operator=( const OpalService& ); /** Not implemented. */
-
-    static int curlProgressCallback( void* , const double, const double, const double, const double );
-
-  public:
-    static bool curlProgress;
   };
 }
 

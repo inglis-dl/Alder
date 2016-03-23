@@ -13,6 +13,7 @@
 
 // Alder includes
 #include <Application.h>
+#include <Common.h>
 #include <Database.h>
 #include <Exam.h>
 #include <Interview.h>
@@ -454,7 +455,7 @@ void QSelectInterviewDialog::accepted()
         QVariant vId = item->data( Qt::UserRole );
         if( vId.isValid() && !vId.isNull() && interview->Load( "Id", vId.toInt() ) )
         {
-          if( interview->HasImageData( modifier ) )
+          if( Alder::Common::ImageStatus::Complete == interview->GetImageStatus( modifier ) )
           {
             if( first )
             {
@@ -470,16 +471,29 @@ void QSelectInterviewDialog::accepted()
       }
     }
 
-    // process the list of interviews that require image data download
     if( !vecInterview.empty() )
     {
-      for( auto it = vecInterview.cbegin(); it != vecInterview.cend(); ++it )
+      QString title = "Confirm Image Download";
+      QString text = "There are ";
+      text += vecInterview.size();
+      text += " interviews requiring download of images. ";
+      if( 1 < vecInterview.size() )
+        text += "This could take some time to do. ";
+      text += "Proceed with downloading?";
+      QMessageBox::StandardButton reply = QMessageBox::question( this,
+        title, text, QMessageBox::Yes|QMessageBox::No );
+      if( QMessageBox::Yes == reply )
       {
-        (*it)->UpdateImageData();
-        if( first && (*it)->HasImageData( modifier ) )
+        for( auto it = vecInterview.cbegin(); it != vecInterview.cend(); ++it )
         {
-          app->SetActiveInterview( *it );
-          first = false;
+          // the interview will activate displaying progress of image downloads
+          (*it)->UpdateImageData();
+          if( first &&
+              Alder::Common::ImageStatus::Complete == (*it)->GetImageStatus( modifier ) )
+          {
+            app->SetActiveInterview( *it );
+            first = false;
+          }
         }
       }
     }

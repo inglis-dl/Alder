@@ -22,11 +22,12 @@
 #ifndef __Interview_h
 #define __Interview_h
 
+// Alder includes
 #include <ActiveRecord.h>
-#include <ProgressProxy.h>
 #include <Image.h>
 #include <User.h>
 #include <Wave.h>
+#include <Common.h>
 
 /**
  * @addtogroup Alder
@@ -59,7 +60,7 @@ namespace Alder
      * Returns whether any images remain to be downloaded.
      * @param modifier QueryModifier to constrain to user allowed modalities
      */
-    bool HasImageData( QueryModifier *modifier = NULL );
+    Alder::Common::ImageStatus GetImageStatus( QueryModifier *modifier = NULL );
 
     /**
      * Updates and/or creates all Exam data associated with the Interview from Opal.
@@ -138,12 +139,6 @@ namespace Alder
   protected:
     Interview() {}
     ~Interview() {}
-
-    /**
-     * Returns a vector of all UId/VisitDate pairs ordered by UId then VisitDate.
-     * @return vector of interview UId, VisitDate data
-     */
-    // static std::vector<std::pair<std::string, std::string>> GetUIdVisitDateList();
 
   private:
     Interview( const Interview& ); // Not implemented
