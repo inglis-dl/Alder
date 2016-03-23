@@ -177,7 +177,7 @@ namespace Alder
     Interview *ActiveInterview;
     Image *ActiveImage;
     Image *ActiveAtlasImage;
-    bool AbortFlag;
+    volatile bool AbortFlag;
 
   private:
     Application( const Application& );  // Not implemented.

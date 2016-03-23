@@ -577,6 +577,8 @@ namespace Alder
       app->InvokeEvent( vtkCommand::StartEvent );
       for( auto it = vecExam.cbegin(); it != vecExam.cend(); ++it, ++index )
       {
+        if( app->GetAbortFlag() )
+          break;
         progress = (int)(100.*index/size);
         if( lastProgress != progress )
         {
@@ -706,6 +708,10 @@ namespace Alder
     app->InvokeEvent( vtkCommand::StartEvent );
     for( auto it = mapWave.cbegin(); it != mapWave.cend() && !done; ++it )
     {
+      if( app->GetAbortFlag() )
+      {
+         break;
+      }
       std::string waveId = it->first;
       wave->Load( "Id", waveId );
       std::string source = wave->Get( "MetaDataSource" ).ToString();
