@@ -15,13 +15,13 @@ SET( ALDER_APP_MOC
   QMainAlderWindow_p.h
 )
 
-SET( AlderApp_Resources
+SET( ALDER_APP_RCC
   ${CMAKE_CURRENT_SOURCE_DIR}/resources/QAlderApplication.qrc
 )
 
 QT4_WRAP_UI( AlderApp_UI   ${ALDER_APP_UI} )
 QT4_WRAP_CPP( AlderApp_MOC ${ALDER_APP_MOC} )
-QT4_ADD_RESOURCES( AlderApp_QRC ${AlderApp_Resources} )
+QT4_ADD_RESOURCES( AlderApp_QRC ${ALDER_APP_RCC} )
 
 ADD_DEFINITIONS( -DQT_GUI_LIBS -DQT_CORE_LIB )
 
@@ -41,6 +41,7 @@ ADD_EXECUTABLE( alder
   ${ALDER_APP_SRC}
   ${AlderApp_UI}
   ${AlderApp_MOC}
+  ${AlderApp_QRC}
 )
 
 TARGET_LINK_LIBRARIES( alder
