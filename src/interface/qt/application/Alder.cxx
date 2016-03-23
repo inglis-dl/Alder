@@ -49,10 +49,9 @@ int main( int argc, char** argv )
     QAlderApplication qapp( argc, argv );
     QSplashScreen splash(QPixmap(":/icons/alder_splash.png"));
     splash.show();
+    splash.update();
     qapp.processEvents();
-
-    splash.showMessage( QObject::tr("Reading configuration..."), topMiddle, Qt::black );
-    splash.repaint();
+    splash.showMessage( QObject::tr("\nReading configuration..."), topMiddle, Qt::black );
     dummy.lock();
     wait.wait(&dummy,msec);
     dummy.unlock();
@@ -64,9 +63,7 @@ int main( int argc, char** argv )
       throw std::runtime_error( error.str() );
     }
 
-    splash.showMessage( QObject::tr("Opening log file..."), topMiddle, Qt::black );
-    splash.repaint();
-    //qapp.processEvents();
+    splash.showMessage( QObject::tr("\nOpening log file..."), topMiddle, Qt::black );
     dummy.lock();
     wait.wait(&dummy,msec);
     dummy.unlock();
@@ -78,9 +75,7 @@ int main( int argc, char** argv )
       throw std::runtime_error( error.str() );
     }
 
-    splash.showMessage( QObject::tr("Testing image data path..."), topMiddle, Qt::black );
-    splash.repaint();
-    //qapp.processEvents();
+    splash.showMessage( QObject::tr("\nTesting image data path..."), topMiddle, Qt::black );
     dummy.lock();
     wait.wait(&dummy,msec);
     dummy.unlock();
@@ -92,9 +87,7 @@ int main( int argc, char** argv )
       throw std::runtime_error( error.str() );
     }
 
-    splash.showMessage( QObject::tr("Connecting to database..."), topMiddle, Qt::black );
-    splash.repaint();
-    //qapp.processEvents();
+    splash.showMessage( QObject::tr("\nConnecting to database..."), topMiddle, Qt::black );
     dummy.lock();
     wait.wait(&dummy,msec);
     dummy.unlock();
@@ -105,18 +98,14 @@ int main( int argc, char** argv )
       throw std::runtime_error( error.str() );
     }
 
-    splash.showMessage( QObject::tr("Connecting to Opal..."), topMiddle, Qt::black );
-    splash.repaint();
-    //qapp.processEvents();
+    splash.showMessage( QObject::tr("\nConnecting to Opal..."), topMiddle, Qt::black );
     dummy.lock();
     wait.wait(&dummy,msec);
     dummy.unlock();
 
     app->SetupOpalService();
 
-    splash.showMessage( QObject::tr("Updating database..."), topMiddle, Qt::black );
-    splash.repaint();
-    //qapp.processEvents();
+    splash.showMessage( QObject::tr("\nUpdating database..."), topMiddle, Qt::black );
     dummy.lock();
     wait.wait(&dummy,msec);
     dummy.unlock();
@@ -144,10 +133,7 @@ int main( int argc, char** argv )
       }
     }
 
-    splash.showMessage( QObject::tr("Launching Alder..."), topMiddle, Qt::black );
-    splash.repaint();
-    //qapp.processEvents();
-
+    splash.showMessage( QObject::tr("\nLaunching Alder..."), topMiddle, Qt::black );
     splash.finish(&mainWindow);
     mainWindow.show();
 
