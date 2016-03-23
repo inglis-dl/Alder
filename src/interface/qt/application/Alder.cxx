@@ -18,13 +18,17 @@
 #include <Configuration.h>
 #include <User.h>
 #include <Utilities.h>
-
-// Qt includes
 #include <QMainAlderWindow.h>
 #include <QAlderApplication.h>
+
+// Qt includes
+#include <QSplashScreen>
 #include <QInputDialog>
 #include <QObject>
+#include <QPixmap>
 #include <QString>
+#include <QMutex>
+#include <QWaitCondition>
 
 #include <stdexcept>
 #include <sstream>
@@ -37,14 +41,35 @@ int main( int argc, char** argv )
   int status = EXIT_FAILURE;
   try
   {
+    Qt::Alignment topMiddle = Qt::AlignHCenter | Qt::AlignTop;
     std::stringstream error;
-    // start by reading the configuration, connecting to the database and setting up the Opal service
+    unsigned long msec = 2000;
+    QMutex dummy;
+    QWaitCondition wait;
+    QAlderApplication qapp( argc, argv );
+    QSplashScreen splash(QPixmap(":/icons/alder_splash.png"));
+    splash.show();
+    qapp.processEvents();
+
+    splash.showMessage( QObject::tr("Reading configuration..."), topMiddle, Qt::black );
+    splash.repaint();
+    dummy.lock();
+    wait.wait(&dummy,msec);
+    dummy.unlock();
+
     Application *app = Application::GetInstance();
     if( !app->ReadConfiguration( ALDER_CONFIG_FILE ) )
     {
       error << "ERROR: error while reading configuration file \"" << ALDER_CONFIG_FILE << "\"";
       throw std::runtime_error( error.str() );
     }
+
+    splash.showMessage( QObject::tr("Opening log file..."), topMiddle, Qt::black );
+    splash.repaint();
+    //qapp.processEvents();
+    dummy.lock();
+    wait.wait(&dummy,msec);
+    dummy.unlock();
 
     if( !app->OpenLogFile() )
     {
@@ -53,6 +78,13 @@ int main( int argc, char** argv )
       throw std::runtime_error( error.str() );
     }
 
+    splash.showMessage( QObject::tr("Testing image data path..."), topMiddle, Qt::black );
+    splash.repaint();
+    //qapp.processEvents();
+    dummy.lock();
+    wait.wait(&dummy,msec);
+    dummy.unlock();
+
     if( !app->TestImageDataPath() )
     {
       std::string imageDataPath = app->GetConfig()->GetValue( "Path", "ImageData" );
@@ -60,17 +92,38 @@ int main( int argc, char** argv )
       throw std::runtime_error( error.str() );
     }
 
+    splash.showMessage( QObject::tr("Connecting to database..."), topMiddle, Qt::black );
+    splash.repaint();
+    //qapp.processEvents();
+    dummy.lock();
+    wait.wait(&dummy,msec);
+    dummy.unlock();
+
     if( !app->ConnectToDatabase() )
     {
       error << "ERROR: error while connecting to the database";
       throw std::runtime_error( error.str() );
     }
 
+    splash.showMessage( QObject::tr("Connecting to Opal..."), topMiddle, Qt::black );
+    splash.repaint();
+    //qapp.processEvents();
+    dummy.lock();
+    wait.wait(&dummy,msec);
+    dummy.unlock();
+
     app->SetupOpalService();
+
+    splash.showMessage( QObject::tr("Updating database..."), topMiddle, Qt::black );
+    splash.repaint();
+    //qapp.processEvents();
+    dummy.lock();
+    wait.wait(&dummy,msec);
+    dummy.unlock();
+
     app->UpdateDatabase();
 
     // now create the user interface
-    QAlderApplication qapp( argc, argv );
     QMainAlderWindow mainWindow;
 
     // check to see if an admin user exists, create if not
@@ -91,6 +144,11 @@ int main( int argc, char** argv )
       }
     }
 
+    splash.showMessage( QObject::tr("Launching Alder..."), topMiddle, Qt::black );
+    splash.repaint();
+    //qapp.processEvents();
+
+    splash.finish(&mainWindow);
     mainWindow.show();
 
     // execute the application, then delete the application
