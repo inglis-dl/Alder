@@ -13,20 +13,21 @@
 // The main function which launches the application.
 //
 
+// Alder includes
 #include <Application.h>
 #include <Configuration.h>
 #include <User.h>
 #include <Utilities.h>
 
+// Qt includes
 #include <QMainAlderWindow.h>
 #include <QAlderApplication.h>
 #include <QInputDialog>
 #include <QObject>
 #include <QString>
 
-#include <vtkNew.h>
-
 #include <stdexcept>
+#include <sstream>
 
 using namespace Alder;
 
@@ -34,43 +35,38 @@ using namespace Alder;
 int main( int argc, char** argv )
 {
   int status = EXIT_FAILURE;
-
   try
   {
+    std::stringstream error;
     // start by reading the configuration, connecting to the database and setting up the Opal service
     Application *app = Application::GetInstance();
     if( !app->ReadConfiguration( ALDER_CONFIG_FILE ) )
     {
-      cerr << "ERROR: error while reading configuration file \"" << ALDER_CONFIG_FILE << "\"" << endl;
-      Application::DeleteInstance();
-      return status;
+      error << "ERROR: error while reading configuration file \"" << ALDER_CONFIG_FILE << "\"";
+      throw std::runtime_error( error.str() );
     }
 
     if( !app->OpenLogFile() )
     {
       std::string logPath = app->GetConfig()->GetValue( "Path", "Log" );
-      cerr << "ERROR: unable to open log file \"" << logPath << "\"" << endl;
-      Application::DeleteInstance();
-      return status;
+      error << "ERROR: unable to open log file \"" << logPath << "\"";
+      throw std::runtime_error( error.str() );
     }
 
     if( !app->TestImageDataPath() )
     {
       std::string imageDataPath = app->GetConfig()->GetValue( "Path", "ImageData" );
-      cerr << "ERROR: no write access to image data directory \"" << imageDataPath << "\"" << endl;
-      Application::DeleteInstance();
-      return status;
+      error << "ERROR: no write access to image data directory \"" << imageDataPath << "\"";
+      throw std::runtime_error( error.str() );
     }
 
     if( !app->ConnectToDatabase() )
     {
-      cerr << "ERROR: error while connecting to the database" << endl;
-      Application::DeleteInstance();
-      return status;
+      error << "ERROR: error while connecting to the database";
+      throw std::runtime_error( error.str() );
     }
 
     app->SetupOpalService();
-
     app->UpdateDatabase();
 
     // now create the user interface
@@ -99,14 +95,14 @@ int main( int argc, char** argv )
 
     // execute the application, then delete the application
     int status = qapp.exec();
-    Application::DeleteInstance();
   }
   catch( std::exception &e )
   {
-    cerr << "Uncaught exception: " << e.what() << endl;
-    return EXIT_FAILURE;
+    cerr << "Exception: " << e.what() << endl;
+    status = EXIT_FAILURE;
   }
 
+  Application::DeleteInstance();
   // return the result of the executed application
   return status;
 }
