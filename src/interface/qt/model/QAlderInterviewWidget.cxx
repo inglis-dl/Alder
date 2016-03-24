@@ -887,6 +887,7 @@ void QAlderInterviewWidget::hideControls( bool hide )
     else item->show();
   }
 }
+
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderInterviewWidget::activeImageChanged()
 {
