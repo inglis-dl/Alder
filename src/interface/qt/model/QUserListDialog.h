@@ -29,7 +29,7 @@ public:
   virtual ~QUserListDialog();
 
 signals:
-  void userModalityChanged();
+  void permissionChanged();
 
 public slots:
   virtual void close();

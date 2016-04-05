@@ -240,7 +240,7 @@ void QUserListDialogPrivate::modalitySelectionChanged( QTableWidgetItem *item )
   if( modified )
   {
     user->Save();
-     emit q->userModalityChanged();
+    emit q->permissionChanged();
   }
 }
 
@@ -297,7 +297,7 @@ void QUserListDialog::remove()
          << "All of this user's ratings will also be permanantely removed.  "
          << "This operation cannot be undone.";
   if( QMessageBox::Yes == QMessageBox::question(
-     this, 
+     this,
      QDialog::tr("Remove User"),
      stream.str().c_str(),
      QMessageBox::Yes | QMessageBox::No ) )
