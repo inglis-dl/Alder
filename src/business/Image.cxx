@@ -239,7 +239,6 @@ namespace Alder
     parser->SetFileName( fileName.c_str() );
     parser->Update();
 
-    //vtkDICOMMetaData* meta = parser->GetMetaData();
     std::string value;
     if( "AcquisitionDateTime" == tagName )
     {
