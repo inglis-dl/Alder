@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>407</width>
+    <width>410</width>
     <height>245</height>
    </rect>
   </property>
@@ -72,7 +72,12 @@
        </column>
        <column>
         <property name="text">
-         <string>Selected</string>
+         <string>Select</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Refresh</string>
         </property>
        </column>
        <column>

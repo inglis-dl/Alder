@@ -45,6 +45,14 @@ namespace Alder
     static void UpdateWaveData( const std::string &aSource );
 
     /**
+     * Get the maximum UpdateTimestamp from the Interview table as an estimate
+     * of when Interview data was updated from Opal.
+     * @return timestamp string
+     * @throws runtime_error
+     */
+    std::string GetMaximumInterviewUpdateTimestamp();
+
+    /**
      * Updates the ScanType, Modality and WaveHasScanType db tables with Opal information
      * from this Wave record.
      */
@@ -52,11 +60,15 @@ namespace Alder
 
     /**
      * Get the number of Interviews this Wave can have based on the number of Opal identifiers.
+     * @return identifier count
+     * @throws runtime_error
      */
     int GetIdentifierCount();
 
     /**
      * Get the maximum number of Exams that an Interview in this Wave can have.
+     * @return exam count
+     * @throws runtime_error
      */
     int GetMaximumExamCount();
 

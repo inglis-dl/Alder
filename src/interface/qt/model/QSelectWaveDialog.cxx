@@ -16,6 +16,7 @@
 // Alder includes
 #include <Application.h>
 #include <Wave.h>
+#include <Utilities.h>
 
 // VTK includes
 #include <vtkSmartPointer.h>
@@ -54,9 +55,11 @@ void QSelectWaveDialogPrivate::setupUi( QDialog* widget )
   this->columnIndex[labels.last()] = index++;
   labels << "Identifiers";
   this->columnIndex[labels.last()] = index++;
-  labels << "Selected";
+  labels << "Select";
   this->columnIndex[labels.last()] = index++;
-  labels << "Update";
+  labels << "Refresh";
+  this->columnIndex[labels.last()] = index++;
+  labels << "Updated";
   this->columnIndex[labels.last()] = index++;
 
   this->waveTableWidget->setHorizontalHeaderLabels( labels );
@@ -117,14 +120,22 @@ void QSelectWaveDialogPrivate::setupUi( QDialog* widget )
     item->setFlags( Qt::ItemIsEnabled | Qt::ItemIsUserCheckable );
     item->setCheckState( Qt::Unchecked );
     item->setData( Qt::UserRole, vId );
-    this->waveTableWidget->setItem( 0, this->columnIndex["Selected"], item );
+    this->waveTableWidget->setItem( 0, this->columnIndex["Select"], item );
 
     // add update checkbox to row
     item = new QTableWidgetItem;
     item->setFlags( Qt::ItemIsUserCheckable );
     item->setCheckState( Qt::Unchecked );
     item->setData( Qt::UserRole, vId );
-    this->waveTableWidget->setItem( 0, this->columnIndex["Update"], item );
+    this->waveTableWidget->setItem( 0, this->columnIndex["Refresh"], item );
+
+    // add most recent interview update timestamp to row
+    s = wave->GetMaximumInterviewUpdateTimestamp();
+    s = Alder::Utilities::left( s, 10 );
+    item = new QTableWidgetItem;
+    item->setFlags( Qt::ItemIsEnabled );
+    item->setText( s.c_str() );
+    this->waveTableWidget->setItem( 0, this->columnIndex["Updated"], item );
   }
 
   QObject::connect(
@@ -142,7 +153,7 @@ void QSelectWaveDialogPrivate::itemPressed( QTableWidgetItem *item )
 {
   // only check selected column items
   int column = this->waveTableWidget->column( item );
-  if( column == this->columnIndex["Selected"] )
+  if( column == this->columnIndex["Select"] )
     this->lastItemPressedState = item->checkState();
 }
 
@@ -151,12 +162,12 @@ void QSelectWaveDialogPrivate::itemClicked( QTableWidgetItem *item )
 {
   // only check selected column items
   int column = this->waveTableWidget->column( item );
-  if( column == this->columnIndex["Selected"] )
+  if( column == this->columnIndex["Select"] )
   {
     int row = this->waveTableWidget->row( item );
     if( this->lastItemPressedState != item->checkState() )
     {
-      QTableWidgetItem *companion = this->waveTableWidget->item( row, this->columnIndex["Update"] );
+      QTableWidgetItem *companion = this->waveTableWidget->item( row, this->columnIndex["Refresh"] );
       Qt::ItemFlags flags;
       if( Qt::Checked == item->checkState() )
         flags |= ( Qt::ItemIsEnabled | Qt::ItemIsUserCheckable );
@@ -186,10 +197,10 @@ void QSelectWaveDialogPrivate::buildSelection()
   this->selection.clear();
   for( int i = 0; i < this->waveTableWidget->rowCount(); ++i )
   {
-    QTableWidgetItem* item = this->waveTableWidget->item( i, this->columnIndex["Selected"] );
+    QTableWidgetItem* item = this->waveTableWidget->item( i, this->columnIndex["Select"] );
     if( Qt::Checked == item->checkState() )
     {
-      QTableWidgetItem *companion = this->waveTableWidget->item( i, this->columnIndex["Update"] );
+      QTableWidgetItem *companion = this->waveTableWidget->item( i, this->columnIndex["Refresh"] );
       this->selection.push_back(
         std::make_pair(
           item->data( Qt::UserRole ).toInt(),

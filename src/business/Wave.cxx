@@ -206,6 +206,30 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  std::string Wave::GetMaximumInterviewUpdateTimestamp()
+  {
+    Application *app = Application::GetInstance();
+    std::stringstream stream;
+    stream << "SELECT MAX( UpdateTimestamp ) "
+           << "FROM Interview "
+           << "WHERE WaveId=" << this->Get( "Id" ).ToString();
+    app->Log( "Querying Database: " + stream.str() );
+    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    query->SetQuery( stream.str().c_str() );
+    query->Execute();
+
+    if( query->HasError() )
+    {
+      app->Log( query->GetLastErrorText() );
+      throw std::runtime_error( "There was an error while trying to query the database." );
+    }
+
+    // only one row
+    query->NextRow();
+    return query->DataValue(0).ToString();
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   int Wave::GetMaximumExamCount()
   {
     Application *app = Application::GetInstance();
@@ -228,5 +252,4 @@ namespace Alder
     query->NextRow();
     return query->DataValue(0).ToInt();
   }
-
 }
