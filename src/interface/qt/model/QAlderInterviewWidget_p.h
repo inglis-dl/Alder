@@ -13,8 +13,11 @@
 #include <QAlderInterviewWidget.h>
 #include <ui_QAlderInterviewWidget.h>
 
+// Alder includes
+
 // Qt includes
 #include <QMap>
+#include <QHash>
 
 // VTK includes
 #include <vtkSmartPointer.h>
@@ -22,6 +25,9 @@
 namespace Alder { 
 class ActiveRecord; 
 class Interview;
+class Modality;
+class ParticipantData;
+class User;
 };
 
 class QTableWidgetItem;
@@ -40,15 +46,16 @@ public:
   virtual ~QAlderInterviewWidgetPrivate();
 
   void setupUi(QWidget*);
-  void setActiveInterview( Alder::Interview* );
   void updateInfo();
-  void updateExamTreeWidget();
+  void updateTree();
   void updateRating();
   void updateViewer();
   void updateEnabled();
   void updateCodeList();
+  void updatePermission();
+  void updateSelected();
 
-public Q_SLOTS:
+public slots:
 
   void next();
   void previous();
@@ -59,11 +66,29 @@ public Q_SLOTS:
   void codeChanged(QTableWidgetItem*);
   void codeSelected();
   void derivedRatingToggle();
+  void buildTree();
 
 private:
-  QMap<QTreeWidgetItem*, vtkSmartPointer<Alder::ActiveRecord>> treeModelMap;
+  // mapping between tree widget items and Alder::Interview and Alder::Image records
+  QHash<QTreeWidgetItem*, vtkSmartPointer<Alder::ActiveRecord>> treeModelMap;
+
+  // connect VTK events to Qt slots
   vtkSmartPointer<vtkEventQtSlotConnect> qvtkConnection;
-  QMap<QString, QTreeWidgetItem*> modalityLookup;
+
+  // mapping between Alder::Wave records and tree widget items
+  // sorted by Wave Name
+  QMap<QString, QTreeWidgetItem*> waveLookup;
+
+  // data containter class to facilitate building the tree widget
+  // based on participant UID
+  vtkSmartPointer<Alder::ParticipantData> participantData;
+
+  // mapping between Alder::Modality names and current Alder::User permissions
+  // sorted by Modalit Name
+  QMap<QString, bool> modalityPermission;
+
+  // method called by previous() and next() slots to change the interview
+  void setActiveInterview( Alder::Interview* );
 };
 
 #endif

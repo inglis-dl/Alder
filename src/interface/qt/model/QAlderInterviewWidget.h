@@ -26,11 +26,18 @@ public:
   virtual ~QAlderInterviewWidget();
 
   void saveImage( const QString& fileName );
+  int activeInterviewId();
+
+signals:
+  void imageSelected( int id );
 
 public slots:
   void hideControls( bool );
-  void activeInterviewChanged();
-  void activeImageChanged();
+  void interviewChanged();
+  void imageChanged();
+  void loadInterview( int id );
+  void userChanged();
+  void updatePermission();
 
 protected:
   QScopedPointer<QAlderInterviewWidgetPrivate> d_ptr;

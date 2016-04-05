@@ -32,7 +32,7 @@ signals:
   void showing( bool );
 
 public slots:
-  virtual void update();
+  virtual void loadImage( int id );
 
 protected:
   QScopedPointer<QAlderAtlasWidgetPrivate> d_ptr;

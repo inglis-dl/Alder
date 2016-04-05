@@ -45,8 +45,6 @@ namespace Alder
 {
   class Configuration;
   class Database;
-  class Image;
-  class Interview;
   class OpalService;
   class User;
   class Application : public ModelObject
@@ -100,35 +98,13 @@ namespace Alder
     vtkGetObjectMacro( DB, Database );
     vtkGetObjectMacro( Opal, OpalService );
     vtkGetObjectMacro( ActiveUser, User );
-    vtkGetObjectMacro( ActiveInterview, Interview );
-    vtkGetObjectMacro( ActiveImage, Image );
-    vtkGetObjectMacro( ActiveAtlasImage, Image );
 
     /**
      * When setting the active user the active interview will be set to the interview stored in the user's
      * record if the user being set is not null.
      * @param user a User record object
      */
-    virtual void SetActiveUser( User *user );
-
-    /**
-     * When setting the active interview the active image is automatically removed and,
-     * if there is an active user, the active interview is stored in the user's record.
-     * @param interview an Interview record object
-     */
-    virtual void SetActiveInterview( Interview *interview );
-
-    /**
-     * Sets the active image.
-     * @param image an Image record object
-     */
-    virtual void SetActiveImage( Image *image );
-
-    /**
-     * Sets the active atlas image.
-     * @param image an Image record object
-     */
-    virtual void SetActiveAtlasImage( Image *image );
+    void SetActiveUser( User *user );
 
     /**
      * Creates a new instance of a model object given its class name.
@@ -174,9 +150,6 @@ namespace Alder
     Database *DB;
     OpalService *Opal;
     User *ActiveUser;
-    Interview *ActiveInterview;
-    Image *ActiveImage;
-    Image *ActiveAtlasImage;
     volatile bool AbortFlag;
 
   private:

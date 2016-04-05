@@ -42,13 +42,13 @@ namespace Alder
 
     enum CustomEvents
     {
-      ActiveUserEvent = vtkCommand::UserEvent + 100,
-      ActiveInterviewEvent,
-      ActiveInterviewUpdateImageDataEvent,
-      ActiveImageEvent,
-      ActiveAtlasImageEvent,
+      UserChangedEvent = vtkCommand::UserEvent + 100,
+      InterviewChangedEvent,
+      ImageChangedEvent,
+      AtlasImageChangedEvent,
       SliceChangedEvent,
-      OrientationChangedEvent
+      OrientationChangedEvent,
+      DataChangedEvent
     };
 
   protected:

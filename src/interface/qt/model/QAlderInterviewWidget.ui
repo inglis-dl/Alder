@@ -73,7 +73,7 @@
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
-       <widget class="QTreeWidget" name="examTreeWidget">
+       <widget class="QTreeWidget" name="treeWidget">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
           <horstretch>0</horstretch>

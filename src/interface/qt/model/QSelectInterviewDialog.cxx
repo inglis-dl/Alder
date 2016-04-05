@@ -459,7 +459,7 @@ void QSelectInterviewDialog::accepted()
           {
             if( first )
             {
-              app->SetActiveInterview( interview );
+              emit interviewSelected( interview->Get("Id").ToInt() );
               first = false;
             }
           }
@@ -475,7 +475,7 @@ void QSelectInterviewDialog::accepted()
     {
       QString title = "Confirm Image Download";
       QString text = "There are ";
-      text += vecInterview.size();
+      text += QString::number(vecInterview.size());
       text += " interviews requiring download of images. ";
       if( 1 < vecInterview.size() )
         text += "This could take some time to do. ";
@@ -491,7 +491,7 @@ void QSelectInterviewDialog::accepted()
           if( first &&
               Alder::Common::ImageStatus::Complete == (*it)->GetImageStatus( modifier ) )
           {
-            app->SetActiveInterview( *it );
+            emit interviewSelected( (*it)->Get("Id").ToInt() );
             first = false;
           }
         }

@@ -30,6 +30,9 @@ public:
 public slots:
   virtual void accepted();
 
+signals:
+  void interviewSelected( int );
+
 protected:
   QScopedPointer<QSelectInterviewDialogPrivate> d_ptr;
 

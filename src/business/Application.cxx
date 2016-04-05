@@ -23,6 +23,7 @@
 #include <Interview.h>
 #include <Modality.h>
 #include <OpalService.h>
+#include <ParticipantData.h>
 #include <Rating.h>
 #include <ScanType.h>
 #include <Site.h>
@@ -52,9 +53,6 @@ namespace Alder
     this->DB = Database::New();
     this->Opal = OpalService::New();
     this->ActiveUser = NULL;
-    this->ActiveInterview = NULL;
-    this->ActiveImage = NULL;
-    this->ActiveAtlasImage = NULL;
 
     // populate the constructor and class name registries with all active record classes
     this->ConstructorRegistry["Exam"] = &createInstance<Exam>;
@@ -112,24 +110,6 @@ namespace Alder
     {
       this->ActiveUser->Delete();
       this->ActiveUser = NULL;
-    }
-
-    if( NULL != this->ActiveInterview )
-    {
-      this->ActiveInterview->Delete();
-      this->ActiveInterview = NULL;
-    }
-
-    if( NULL != this->ActiveImage )
-    {
-      this->ActiveImage->Delete();
-      this->ActiveImage = NULL;
-    }
-
-    if( NULL != this->ActiveAtlasImage )
-    {
-      this->ActiveAtlasImage->Delete();
-      this->ActiveAtlasImage = NULL;
     }
   }
 
@@ -262,16 +242,13 @@ namespace Alder
   void Application::UpdateDatabase()
   {
     std::string waveSource = this->Config->GetValue( "Opal", "WaveSource" );
-    Alder::Wave::UpdateWaveData( waveSource );
+    Wave::UpdateWaveData( waveSource );
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Application::ResetApplication()
   {
     this->SetActiveUser( NULL );
-    this->SetActiveInterview( NULL );
-    this->SetActiveImage( NULL );
-    this->SetActiveAtlasImage( NULL );
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -287,83 +264,9 @@ namespace Alder
       if( this->ActiveUser )
       {
         this->ActiveUser->Register( this );
-
-        // get the user's last active interview
-        vtkSmartPointer< Interview > interview;
-        if( this->ActiveUser->GetRecord( interview ) )
-        {
-          this->SetActiveInterview( interview );
-        }
       }
       this->Modified();
-      this->InvokeEvent( Alder::Common::ActiveUserEvent );
+      this->InvokeEvent( Common::UserChangedEvent );
     }
-  }
-
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Application::SetActiveInterview( Interview *interview )
-  {
-    if( interview != this->ActiveInterview )
-    {
-      if( this->ActiveInterview )
-      {
-        this->ActiveInterview->UnRegister( this );
-      }
-
-      this->ActiveInterview = interview;
-
-      if( this->ActiveInterview )
-      {
-        this->ActiveInterview->Register( this );
-
-        std::string lastId;
-        if( this->ActiveImage )
-        {
-          lastId = this->ActiveImage->Get( "Id" ).ToString();
-        }
-        std::string similar = interview->GetSimilarImageId( lastId );
-        if( !similar.empty() )
-        {
-          vtkSmartPointer<Image> image = vtkSmartPointer<Image>::New();
-          image->Load( "Id", similar );
-          this->SetActiveImage( image );
-        }
-        else
-        {
-          this->SetActiveImage( NULL );
-        }
-        this->SetActiveAtlasImage( NULL );
-      }
-
-      // if there is an active user, save the active interview
-      if( this->ActiveUser )
-      {
-        if( interview )
-        {
-          this->ActiveUser->Set( "InterviewId", interview->Get( "Id" ).ToInt() );
-        }
-        else
-        {
-          this->ActiveUser->SetNull( "InterviewId" );
-        }
-        this->ActiveUser->Save();
-      }
-      this->Modified();
-      this->InvokeEvent( Alder::Common::ActiveInterviewEvent );
-    }
-  }
-
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Application::SetActiveImage( Image* image )
-  {
-    vtkSetObjectBodyMacro( ActiveImage, Image, image);
-    this->InvokeEvent( Alder::Common::ActiveImageEvent );
-  }
-
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Application::SetActiveAtlasImage( Image* image )
-  {
-    vtkSetObjectBodyMacro( ActiveAtlasImage, Image, image);
-    this->InvokeEvent( Alder::Common::ActiveAtlasImageEvent );
   }
 }

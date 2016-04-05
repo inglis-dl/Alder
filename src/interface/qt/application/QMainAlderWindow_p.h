@@ -46,6 +46,8 @@ public slots:
   virtual void ratingCodes();
   virtual void reports();
   virtual void saveImage();
+  virtual void updateAtlas(int);
+  virtual void updateDicom(int);
 
   void abort();
   void showProgress();
@@ -56,7 +58,6 @@ public slots:
   virtual void about();
   virtual void manual();
 
-  virtual void updateDicomTagWidget();
   void changeActiveUserPassword( QString );
   
 private:

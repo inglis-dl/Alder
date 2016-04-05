@@ -18,6 +18,10 @@
 
 class vtkEventQtSlotConnect;
 
+namespace Alder {
+class Image;
+};
+
 class QAlderAtlasWidgetPrivate : public QObject, public Ui_QAlderAtlasWidget
 {
   Q_OBJECT
@@ -32,8 +36,9 @@ public:
   void setupUi(QWidget*);
   void updateUi();
   int  rating();
+  void updateRoot( const int &id );
 
-public Q_SLOTS:
+public slots:
 
   void next();
   void previous();
@@ -41,6 +46,9 @@ public Q_SLOTS:
 
 private:
   vtkSmartPointer<vtkEventQtSlotConnect> qvtkConnection;
+
+  vtkSmartPointer<Alder::Image> rootImage;
+  vtkSmartPointer<Alder::Image> atlasImage;
 };
 
 #endif

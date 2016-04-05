@@ -30,7 +30,7 @@ public:
   void setupUi(QWidget*);
   void updateUi();
 
-public Q_SLOTS:
+public slots:
 
   void sort(int);
 
