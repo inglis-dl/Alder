@@ -22,6 +22,7 @@
 #ifndef __User_h
 #define __User_h
 
+// Alder includes
 #include <ActiveRecord.h>
 
 #include <iostream>
@@ -53,6 +54,7 @@ namespace Alder
 
     /**
      * Get the default password.
+     * @return default password
      */
     static std::string GetDefaultPassword() { return "password"; }
 
