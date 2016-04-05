@@ -327,7 +327,6 @@ namespace Alder
       Image* image = *it;
       if( isHologic )
       {
-
         image->SetExamSideFromDICOM();
         image->CleanHologicDICOM();
       }
