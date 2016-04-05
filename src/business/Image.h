@@ -172,14 +172,15 @@ namespace Alder
      * A rating must be provided since an image may have more than one rating.
      * @param rating  the rating of the atlas image that matches this one
      * @param forward the order ASC (forward=true) or DESC to search by Interview.UId
+     * @param id      the id of the root image that this atlas is for
      * @return        a neigbouring atlas image
      * @throw         runtime_error
      */
-    vtkSmartPointer<Image> GetNeighbourAtlasImage( int const &rating, bool const &forward );
-    vtkSmartPointer<Image> GetNextAtlasImage( int const &rating )
-    { return this->GetNeighbourAtlasImage( rating, true ); }
-    vtkSmartPointer<Image> GetPreviousAtlasImage( int const &rating )
-    { return this->GetNeighbourAtlasImage( rating, false ); }
+    vtkSmartPointer<Image> GetNeighbourAtlasImage( const int &rating, const bool &forward, const int &id=0 );
+    vtkSmartPointer<Image> GetNextAtlasImage( const int &rating, const int &id=0 )
+    { return this->GetNeighbourAtlasImage( rating, true, id ); }
+    vtkSmartPointer<Image> GetPreviousAtlasImage( int const &rating, const int &id=0 )
+    { return this->GetNeighbourAtlasImage( rating, false, id ); }
     //@}
 
     /**
@@ -188,7 +189,7 @@ namespace Alder
      * @return       an atlas image matching this image
      * @throw        runtime_error
      */
-    vtkSmartPointer< Image > GetAtlasImage( int const &rating );
+    vtkSmartPointer< Image > GetAtlasImage( const int &rating );
 
   protected:
     Image() {}

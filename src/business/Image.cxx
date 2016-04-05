@@ -233,22 +233,44 @@ namespace Alder
     if( ".gz" == fileName.substr( fileName.size() - 3, 3 ) )
       fileName = fileName.substr( 0, fileName.size() - 3 );
 
+    vtkNew<vtkDICOMMetaData> meta;
     vtkNew<vtkDICOMParser> parser;
+    parser->SetMetaData( meta.GetPointer() );
     parser->SetFileName( fileName.c_str() );
     parser->Update();
 
-    vtkDICOMMetaData* meta = parser->GetMetaData();
+    //vtkDICOMMetaData* meta = parser->GetMetaData();
     std::string value;
     if( "AcquisitionDateTime" == tagName )
-      value = meta->GetAttributeValue( vtkDICOMTag( 0x0008, 0x002a ) ).AsString();
+    {
+      vtkDICOMTag tag( 0x0008, 0x002a );
+      if( meta->HasAttribute( tag ) )
+        value = meta->GetAttributeValue( tag ).AsString();
+    }
     else if( "SeriesNumber" == tagName )
-      value = meta->GetAttributeValue( vtkDICOMTag( 0x0020, 0x0011 ) ).AsString();
+    {
+      vtkDICOMTag tag( 0x0020, 0x0011 );
+      if( meta->HasAttribute( tag ) )
+        value = meta->GetAttributeValue( tag ).AsString();
+    }
     else if( "PatientName" == tagName )
-      value = meta->GetAttributeValue( vtkDICOMTag( 0x0010, 0x0010 ) ).AsString();
+    {
+      vtkDICOMTag tag( 0x0010, 0x0010 );
+      if( meta->HasAttribute( tag ) )
+        value = meta->GetAttributeValue( tag ).AsString();
+    }
     else if( "Laterality" == tagName )
-      value = meta->GetAttributeValue( vtkDICOMTag( 0x0020, 0x0060 ) ).AsString();
+    {
+      vtkDICOMTag tag( 0x0020, 0x0060 );
+      if( meta->HasAttribute( tag ) )
+        value = meta->GetAttributeValue( tag ).AsString();
+    }
     else if( "Manufacturer" == tagName )
-      value = meta->GetAttributeValue( vtkDICOMTag( 0x0008, 0x0070 ) ).AsString();
+    {
+      vtkDICOMTag tag( 0x0008, 0x0070 );
+      if( meta->HasAttribute( tag ) )
+        value = meta->GetAttributeValue( tag ).AsString();
+    }
     else
       throw std::runtime_error( "Unknown DICOM tag name." );
 
@@ -388,12 +410,11 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  vtkSmartPointer<Image> Image::GetNeighbourAtlasImage( int const &rating, bool const &forward )
+  vtkSmartPointer<Image> Image::GetNeighbourAtlasImage(  const int &rating, const bool &forward, const int &id )
   {
     this->AssertPrimaryId();
 
     Application *app = Application::GetInstance();
-    Image *activeImage = app->GetActiveImage();
     bool hasParent = this->Get( "ParentImageId" ).IsValid();
 
     vtkSmartPointer< Exam > exam;
@@ -416,7 +437,7 @@ namespace Alder
            << "AND User.Expert = true ";
 
     // do not show the active image
-    if( NULL != activeImage ) stream << "AND Image.Id != " << activeImage->Get( "Id" ).ToString() << " ";
+    if( 0 != id ) stream << "AND Image.Id != " << id << " ";
 
     // order the query by UId (descending if not forward)
     stream << "ORDER BY Interview.UId ";
@@ -466,7 +487,7 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  vtkSmartPointer< Image > Image::GetAtlasImage( int const &rating )
+  vtkSmartPointer< Image > Image::GetAtlasImage( const int &rating )
   {
     Application *app = Application::GetInstance();
     vtkSmartPointer< vtkAlderMySQLQuery > query = app->GetDB()->GetQuery();
