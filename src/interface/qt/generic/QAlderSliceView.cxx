@@ -283,7 +283,7 @@ void QAlderSliceViewPrivate::setImageData( vtkImageData* input )
       }
     }
     if( 2 == this->dimensionality && QAlderSliceView::OrientationXY != this->orientation )
-     this->orientation = QAlderSliceView::OrientationXY;
+      this->orientation = QAlderSliceView::OrientationXY;
 
     bool initCamera = true;
     vtkImageData* lastInput = vtkImageData::SafeDownCast(this->WindowLevel->GetInput());
