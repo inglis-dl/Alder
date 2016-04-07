@@ -15,6 +15,7 @@
 
 // VTK includes
 #include <vtkEventQtSlotConnect.h>
+#include <vtkImageData.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
 
@@ -118,3 +119,12 @@ void QAlderImageWidget::save( const QString& fileName )
   Q_D(QAlderImageWidget);
   d->sliceView->writeSlice( fileName );
 }
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+vtkImageData* QAlderImageWidget::imageData()
+{
+  Q_D(QAlderImageWidget);
+  return d->sliceView->imageData();
+}
+
+

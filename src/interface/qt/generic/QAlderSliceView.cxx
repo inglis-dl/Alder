@@ -1206,6 +1206,13 @@ bool QAlderSliceView::load( const QString& fileName )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+vtkImageData* QAlderSliceView::imageData()
+{
+  Q_D(QAlderSliceView);
+  return vtkImageData::SafeDownCast(d->WindowLevel->GetInput());
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliceView::setImageToSinusoid()
 {
   // Create the sinusoid default image like MicroView does

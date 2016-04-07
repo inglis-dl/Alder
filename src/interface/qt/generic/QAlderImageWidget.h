@@ -15,6 +15,8 @@
 
 class QAlderImageWidgetPrivate;
 
+class vtkImageData;
+
 class QAlderImageWidget : public QWidget
 {
   Q_OBJECT
@@ -29,6 +31,7 @@ public:
   void reset();
   void load( const QString& filename );
   void save( const QString& fileName );
+  vtkImageData* imageData();
 
 protected:
   QScopedPointer<QAlderImageWidgetPrivate> d_ptr;

@@ -63,7 +63,9 @@ public:
 
   virtual QColor annotationColor() const;
 
-public Q_SLOTS:
+  vtkImageData* imageData();
+
+public slots:
 
   void setImageData( vtkImageData* newImageData );
 
