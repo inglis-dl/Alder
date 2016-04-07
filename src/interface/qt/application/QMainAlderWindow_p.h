@@ -50,7 +50,7 @@ public slots:
   virtual void updateDicom(int);
 
   void abort();
-  void showProgress();
+  void showProgress(vtkObject*, unsigned long, void*, void* call_data);
   void hideProgress();
   void updateProgress(vtkObject*, unsigned long, void*, void* call_data);
 

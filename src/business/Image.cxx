@@ -15,6 +15,7 @@
 #include <Exam.h>
 #include <Interview.h>
 #include <Rating.h>
+#include <ScanType.h>
 #include <User.h>
 #include <Utilities.h>
 
@@ -27,6 +28,7 @@
 #include <vtkNew.h>
 #include <vtkObjectFactory.h>
 #include <vtkSmartPointer.h>
+#include <vtksys/SystemTools.hxx>
 
 // GDCM includes
 #include <gdcmAnonymizer.h>
@@ -177,6 +179,8 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::string Image::GetFileName()
   {
+    this->AssertPrimaryId();
+
     // make sure the path exists
     std::string path = this->GetFilePath();
 
@@ -212,6 +216,7 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Image::IsRatedBy( User* user )
   {
+    this->AssertPrimaryId();
     // make sure the user is not null
     if( !user ) throw std::runtime_error( "Tried to get rating for null user" );
 
@@ -270,6 +275,12 @@ namespace Alder
       if( meta->HasAttribute( tag ) )
         value = meta->GetAttributeValue( tag ).AsString();
     }
+    else if( "PhotometricInterpretation" == tagName )
+    {
+      vtkDICOMTag tag( 0x0028, 0x0004 );
+      if( meta->HasAttribute( tag ) )
+        value = meta->GetAttributeValue( tag ).AsString();
+    }
     else
       throw std::runtime_error( "Unknown DICOM tag name." );
 
@@ -304,6 +315,8 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Image::SetDimensionalityFromDICOM()
   {
+    this->AssertPrimaryId();
+
     std::vector< int > dims = this->GetDICOMDimensions();
     int dimensionality = 0;
     for( auto it = dims.begin(); it != dims.end(); ++it )
@@ -351,59 +364,142 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Image::SetExamSideFromDICOM()
+  bool Image::SwapExamSideFromDICOM()
   {
-    vtkSmartPointer< Exam > exam;
-    if( this->GetRecord( exam ) )
-    {
-      std::string latStr = exam->Get( "Side" ).ToString();
-      if( "none" != latStr )
-      {
-        try
-        {
-          std::string tagStr = this->GetDICOMTag( "Laterality" );
-          if( 0 < tagStr.size() )
-          {
-            tagStr = Utilities::toLower( tagStr );
-            if( 0 != tagStr.compare(0, 1, latStr, 0, 1) )
-            {
-              std::string newLat = 0 == tagStr.compare(0, 1, "l", 0, 1) ? "left" : "right";
-              std::map< std::string, std::string > loader;
-              loader["InterviewId"] = exam->Get( "InterviewId" ).ToString();
-              loader["ScanTypeId"] = exam->Get( "ScanTypeId" ).ToString();
-              loader["Side"] = newLat;
-              vtkSmartPointer< Exam > sibling;
-              if( sibling->Load(loader) )
-              {
-                exam->Set( "Side", "none" );
-                exam->Save();
-                sibling->Set( "Side", latStr );
-                sibling->Save();
-                exam->Set( "Side", newLat );
-                exam->Save();
+    this->AssertPrimaryId();
 
-                // alternate solution disable unique key checking
-                //SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
-                //SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
-              }
-              else
-              {
-                exam->Set( "Side", newLat );
-                exam->Save();
-              }
-            }
-          }
-        }
-        catch(...)
-        {
-        }
-      }
+    std::string tagStr = this->GetDICOMTag( "Laterality" );
+    if( tagStr.empty() )
+      return false;
+    tagStr = Utilities::toLower( tagStr );
+    std::string side = 0 == tagStr.compare(0, 1, "l", 0, 1) ? "left" : "right";
+
+    return this->SwapExamSideTo( side );
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  bool Image::SwapExamSideTo( const std::string &side )
+  {
+    if( side.empty() || !( "left" == side || "right" == side ) )
+      return false;
+
+    vtkSmartPointer< Exam > exam;
+    if( !this->GetRecord( exam ) )
+      return false;
+
+    Exam::SideStatus status = exam->GetSideStatus();
+    if( Exam::SideStatus::Pending == status ||
+        Exam::SideStatus::Fixed == status )
+      return false;
+
+    std::string currentSide = exam->Get( "Side" ).ToString();
+    if( side == currentSide )
+      return false;
+
+    // no sibling required
+    if( Exam::SideStatus::Changeable == status )
+    {
+      exam->Set( "Side", side );
+      exam->Save();
+      return true;
     }
+
+    if( Exam::SideStatus::Swappable == status )
+    {
+      // get the sibling exam
+      std::map< std::string, std::string > loader;
+      loader["InterviewId"] = exam->Get( "InterviewId" ).ToString();
+      loader["ScanTypeId"] = exam->Get( "ScanTypeId" ).ToString();
+      loader["Side"] = side;
+      vtkSmartPointer< Exam > siblingExam;
+      if( !siblingExam->Load(loader) )
+        return false;
+      if( siblingExam->GetSideStatus() != status )
+        return false;
+
+      loader.clear();
+      loader["ExamId"] = siblingExam->Get("Id").ToString();
+      loader["Acquisition"] = this->Get("Acquisition").ToString();
+      vtkSmartPointer<Image> siblingImage;
+      if( !siblingImage->Load(loader) )
+        return false;
+
+      std::string rootPath = Application::GetInstance()->GetConfig()->GetValue( "Path", "ImageData" );
+      if( !Utilities::fileExists(rootPath) )
+        return false;
+      std::string swapFile = rootPath + "/temp.dat";
+
+      // are there children?
+      vtkSmartPointer<ScanType> type;
+      exam->GetRecord( type );
+      int childCount = type->Get("ChildCount").ToInt();
+      bool move = true;
+      if( 0 < childCount )
+      {
+        // both sets of children must be present to prevent orphaning
+        std::vector<vtkSmartPointer<Image>> childList;
+        this->GetList( &childList, "ParentImageId" );
+        std::vector<vtkSmartPointer<Image>> siblingChildList;
+        siblingImage->GetList( &siblingChildList, "ParentImageId" );
+        if( siblingChildList.size() == childList.size() &&
+            childCount == childList.size() )
+        {
+          // swap the children
+          std::vector<vtkSmartPointer<Image>>::iterator cit = childList.begin();
+          std::vector<vtkSmartPointer<Image>>::iterator sit = siblingChildList.begin();
+          do
+          {
+            Image* a = *cit;
+            Image* b = *sit;
+            std::string aFile = a->GetFileName();
+            std::string bFile = b->GetFileName();
+            vtksys::SystemTools::CopyFileAlways(aFile.c_str(), swapFile.c_str());
+            vtksys::SystemTools::CopyFileAlways(bFile.c_str(), aFile.c_str());
+            vtksys::SystemTools::CopyFileAlways(swapFile.c_str(), bFile.c_str());
+            cit++;
+            sit++;
+          } while( cit != childList.end() && sit != siblingChildList.end() );
+          vtksys::SystemTools::RemoveFile( swapFile.c_str() );
+        }
+        else
+          move = false;
+      }
+
+      if(!move)
+        return false;
+
+      std::string aFile = this->GetFileName();
+      std::string bFile = siblingImage->GetFileName();
+      vtksys::SystemTools::CopyFileAlways(aFile.c_str(), swapFile.c_str());
+      vtksys::SystemTools::CopyFileAlways(bFile.c_str(), aFile.c_str());
+      vtksys::SystemTools::CopyFileAlways(swapFile.c_str(), bFile.c_str());
+      vtksys::SystemTools::RemoveFile( swapFile.c_str() );
+
+      return true;
+    }
+    return false;
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  bool Image::SwapExamSide()
+  {
+    this->AssertPrimaryId();
+
+    vtkSmartPointer< Exam > exam;
+    if( !this->GetRecord( exam ) )
+      return false;
+
+    std::string currentSide = exam->Get("Side").ToString();
+    std::string side = "left" == currentSide ? "right" : "left";
+
+    return this->SwapExamSideTo( side );
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Image::IsDICOM()
   {
+    this->AssertPrimaryId();
+
     vtkSmartPointer< Exam > exam;
     return this->GetRecord( exam ) ? exam->IsDICOM() : false;
   }

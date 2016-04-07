@@ -33,13 +33,6 @@ namespace Alder
   {
   public:
 
-    enum ImageStatus
-    {
-      None = 0,
-      Pending,
-      Complete
-    };
-
     enum CustomEvents
     {
       UserChangedEvent = vtkCommand::UserEvent + 100,

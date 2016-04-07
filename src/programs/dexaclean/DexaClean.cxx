@@ -133,7 +133,7 @@ int main( int argc, char** argv )
           Alder::Image *image = imageIt->GetPointer();
 
           //check and set the laterality correctly from the dicom tag
-          image->SetExamSideFromDICOM();
+          image->SwapExamSideFromDICOM();
           std::string sideStr = exam->Get( "Side" ).ToString();
 
           std::string fileName = image->GetFileName();

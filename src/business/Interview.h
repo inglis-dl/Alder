@@ -43,6 +43,13 @@ namespace Alder
     vtkTypeMacro( Interview, ActiveRecord );
     std::string GetName() const { return "Interview"; }
 
+    enum ImageStatus
+    {
+      None = 0,
+      Pending,
+      Complete
+    };
+
     /**
      * Updates the Interview table with all existing interviews in Opal
      * by Wave Id and whether to restrict the update all Interviews, or those
@@ -60,7 +67,7 @@ namespace Alder
      * Returns whether any images remain to be downloaded.
      * @param modifier QueryModifier to constrain to user allowed modalities
      */
-    Alder::Common::ImageStatus GetImageStatus( QueryModifier *modifier = NULL );
+    Interview::ImageStatus GetImageStatus( QueryModifier *modifier = NULL );
 
     /**
      * Updates and/or creates all Exam data associated with the Interview from Opal.

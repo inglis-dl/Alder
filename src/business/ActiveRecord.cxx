@@ -8,12 +8,13 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #include <ActiveRecord.h>
 
+// Alder includes
 #include <Application.h>
 #include <Database.h>
 
+// VTK includes
 #include <vtkAlderMySQLQuery.h>
 
 #include <sstream>

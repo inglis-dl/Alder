@@ -455,7 +455,7 @@ void QSelectInterviewDialog::accepted()
         QVariant vId = item->data( Qt::UserRole );
         if( vId.isValid() && !vId.isNull() && interview->Load( "Id", vId.toInt() ) )
         {
-          if( Alder::Common::ImageStatus::Complete == interview->GetImageStatus( modifier ) )
+          if( Alder::Interview::ImageStatus::Complete == interview->GetImageStatus( modifier ) )
           {
             if( first )
             {
@@ -489,7 +489,7 @@ void QSelectInterviewDialog::accepted()
           // the interview will activate displaying progress of image downloads
           (*it)->UpdateImageData();
           if( first &&
-              Alder::Common::ImageStatus::Complete == (*it)->GetImageStatus( modifier ) )
+              Alder::Interview::ImageStatus::Complete == (*it)->GetImageStatus( modifier ) )
           {
             emit interviewSelected( (*it)->Get("Id").ToInt() );
             first = false;

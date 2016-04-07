@@ -31,9 +31,12 @@
 
 // VTK includes
 #include <vtkEventQtSlotConnect.h>
+#include <vtkImageData.h>
+#include <vtkPointData.h>
 #include <vtkNew.h>
 
 // Qt includes
+#include <QFileInfo>
 #include <QMessageBox>
 #include <QTreeWidgetItem>
 
@@ -147,19 +150,20 @@ void QAlderInterviewWidgetPrivate::setupUi( QWidget* widget )
     QString name = (*m)->Get("Name").ToString().c_str();
     this->modalityPermission[ name ] = false;
   }
+
+  this->filenameValueLabel->setWordWrap(true);
 };
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderInterviewWidgetPrivate::previous()
 {
   Alder::Interview *activeInterview = this->participantData->GetActiveInterview();
-  vtkSmartPointer< Alder::Interview > interview;
   if( activeInterview )
   {
-    interview = activeInterview->GetPrevious(
+    vtkSmartPointer<Alder::Interview> interview = activeInterview->GetPrevious(
       this->loadedCheckBox->isChecked(),
       this->unratedCheckBox->isChecked() );
-    this->setActiveInterview( interview );
+    this->setActiveInterview( interview.GetPointer() );
   }
 }
 
@@ -167,13 +171,12 @@ void QAlderInterviewWidgetPrivate::previous()
 void QAlderInterviewWidgetPrivate::next()
 {
   Alder::Interview *activeInterview = this->participantData->GetActiveInterview();
-  vtkSmartPointer< Alder::Interview > interview;
   if( activeInterview )
   {
-    interview = activeInterview->GetNext(
+    vtkSmartPointer<Alder::Interview> interview = activeInterview->GetNext(
       this->loadedCheckBox->isChecked(),
       this->unratedCheckBox->isChecked() );
-    this->setActiveInterview( interview );
+    this->setActiveInterview( interview.GetPointer() );
   }
 }
 
@@ -183,11 +186,9 @@ void QAlderInterviewWidgetPrivate::next()
 void QAlderInterviewWidgetPrivate::setActiveInterview( Alder::Interview* interview )
 {
   Q_Q(QAlderInterviewWidget);
-  if( !interview ) return;
 
   // warn user if the neighbouring interview is an empty record (ie: no neighbour found)
-  vtkVariant v = interview->Get( "Id" );
-  if( !v.IsValid() || 0 == v.ToInt() )
+  if( !interview )
   {
     QMessageBox errorMessage( q );
     errorMessage.setWindowModality( Qt::WindowModal );
@@ -208,34 +209,18 @@ void QAlderInterviewWidgetPrivate::setActiveInterview( Alder::Interview* intervi
       vtkSmartPointer< Alder::QueryModifier >::New();
     user->InitializeExamModifier( modifier );
 
-    Alder::Common::ImageStatus status = interview->GetImageStatus( modifier );
-    if( Alder::Common::ImageStatus::None == status )
+    Alder::Interview::ImageStatus status = interview->GetImageStatus( modifier );
+    if( Alder::Interview::ImageStatus::None == status )
       return;
 
-    if( Alder::Common::ImageStatus::Pending == status )
+    if( Alder::Interview::ImageStatus::Pending == status )
     {
-      //TODO: send a statusbar message to the main window if images are being dl'd
       interview->UpdateImageData();
       status = interview->GetImageStatus( modifier );
     }
-
-    // if the interview can be set then
-    // 1) if the UID is not the root of the tree,
-    //    participantData fires DataChangedEvent after building its internal data structures
-    //    and buildTree slot is called
-    // or
-    // 2)  participantData fires InterViewChangedEvent and updateTree slot is called
-    //
-    // and
-    //     participantData fires ImageChangedEvent
-    if( Alder::Common::ImageStatus::Complete == status )
+    if( Alder::Interview::ImageStatus::Complete == status )
     {
       this->participantData->SetActiveInterview( interview );
-      // if the interview is changed, participantData will set the
-      // active image to a similar image
-      // check if one is set and if so highlight it as selected in the tree
-      // whenever the interview is changed check if there is an active
-      // image and highlight it in the tree
     }
   }
 }
@@ -285,8 +270,7 @@ void QAlderInterviewWidgetPrivate::updatePermission()
 }
 
 // build the tree with all available data
-// restricting access to those modalities the user currently does
-// not have access to
+// setting the disable state of items the user does not have modality permission for
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderInterviewWidgetPrivate::buildTree()
 {
@@ -432,8 +416,8 @@ void QAlderInterviewWidgetPrivate::buildTree()
 
           if( parent->isDisabled() )
             item->setDisabled( true );
-          else
-            item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
+            else
+              item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
           item->setExpanded( !item->isDisabled() );
 
           vtkSmartPointer<Alder::Image> active = this->participantData->GetActiveImage();
@@ -501,11 +485,10 @@ void setDisableChildren( QTreeWidgetItem* item, const bool& disable )
   }
 }
 
-// called when an interview is changed, or the user modality access changes
-// if a new participant data set is required, partipantData will fire
-// the buildTree slot first
-// if the user modality access changes, then we have
-// to enable the appropriate tree nodes
+// called when an interview is changed, or the user modality permission changes
+// if a new data set is required, participantData will fire DataChangedEvent
+// and the buildTree slot is call first
+// if the user modality permission changes, recursively set the disable state of the tree items
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderInterviewWidgetPrivate::updateTree()
 {
@@ -513,13 +496,11 @@ void QAlderInterviewWidgetPrivate::updateTree()
   QTreeWidgetItem* selected = 0;
   if( interview )
   {
-    vtkVariant v = interview->Get("Id");
     for( QHash<QTreeWidgetItem*,vtkSmartPointer<Alder::ActiveRecord>>::iterator it =
       this->treeModelMap.begin(); it != this->treeModelMap.end(); ++it )
     {
-      Alder::ActiveRecord *record = it.value();
-      Alder::Interview *i = Alder::Interview::SafeDownCast( record );
-      if( i && i->Get("Id") == v )
+      Alder::Interview *record = Alder::Interview::SafeDownCast( it.value() );
+      if( record && *record == *interview )
       {
         selected = it.key();
         break;
@@ -539,7 +520,7 @@ void QAlderInterviewWidgetPrivate::updateTree()
     {
       item->setDisabled( false );
       item->setExpanded( true );
-    }while(item = item->parent());
+    } while( item = item->parent() );
 
     for( QMap<QString,bool>::iterator m = this->modalityPermission.begin();
       m != this->modalityPermission.end(); ++m )
@@ -561,25 +542,21 @@ void QAlderInterviewWidgetPrivate::updateTree()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderInterviewWidgetPrivate::updateSelected()
 {
-  // called when imageChanged() slot of q_ptr is fired
-  // so and image has been changed, if the tree is already
-  //with a selected item skip out
-    // check if the current image should be removed from the view
+  // return if there is already a selected item
   QList<QTreeWidgetItem*> list = this->treeWidget->selectedItems();
   if( !list.isEmpty() )
     return;
 
+  // select the active image in the tree programmatcially
   vtkSmartPointer<Alder::Image> image = this->participantData->GetActiveImage();
   QTreeWidgetItem* selected = 0;
   if( image )
   {
-    vtkVariant v = image->Get("Id");
     for( QHash<QTreeWidgetItem*,vtkSmartPointer<Alder::ActiveRecord>>::iterator it =
       this->treeModelMap.begin(); it != this->treeModelMap.end(); ++it )
     {
-      Alder::ActiveRecord *record = it.value();
-      Alder::Image *i = Alder::Image::SafeDownCast( record );
-      if( i && i->Get("Id") == v )
+      Alder::Image *record = Alder::Image::SafeDownCast( it.value() );
+      if( record && *record == *image )
       {
         selected = it.key();
         break;
@@ -600,6 +577,15 @@ void QAlderInterviewWidgetPrivate::updateInfo()
   QString siteString = QLabel::tr( "N/A" );
   QString dateString = QLabel::tr( "N/A" );
   QString codeString = QLabel::tr( "N/A" );
+
+  QString originString = QLabel::tr( "N/A" );
+  QString dimensionsString = QLabel::tr( "N/A" );
+  QString spacingString = QLabel::tr( "N/A" );
+  QString bytesString = QLabel::tr( "N/A" );
+  QString filenameString = QLabel::tr( "N/A" );
+  QString typeString = QLabel::tr( "N/A" );
+  QString channelsString = QLabel::tr( "N/A" );
+  QString rangeString = QLabel::tr( "N/A" );
 
   // fill in the active exam information
   Alder::Interview *interview = this->participantData->GetActiveInterview();
@@ -631,6 +617,70 @@ void QAlderInterviewWidgetPrivate::updateInfo()
       siteString += QLabel::tr(wave->Get( "Name" ).ToString().c_str());
       dateString = QLabel::tr(exam->Get( "DatetimeAcquired" ).ToString().c_str());
       codeString = QLabel::tr(image->GetCode().c_str());
+
+      vtkImageData* vtkimage = this->imageWidget->imageData();
+      if(vtkimage)
+      {
+        int n = vtkimage->GetNumberOfScalarComponents();
+        channelsString = QString::number( n );
+
+        originString.clear();
+        spacingString.clear();
+        dimensionsString.clear();
+        QString sep = ", ";
+        double* o = vtkimage->GetOrigin();
+        double* s = vtkimage->GetSpacing();
+        int* d = vtkimage->GetDimensions();
+        for( int i = 0; i < 3; ++i )
+        {
+          originString += QString::number(o[i]);
+          spacingString += QString::number(s[i]);
+          dimensionsString += QString::number(d[i]);
+          if( i < 2 )
+          {
+            originString += sep;
+            spacingString += sep;
+            dimensionsString += sep;
+          }
+        }
+
+        typeString = vtkimage->GetScalarTypeAsString();
+
+        double range[2];
+        double min = vtkimage->GetScalarTypeMax();
+        double max = vtkimage->GetScalarTypeMin();
+        vtkDataArray* data = vtkimage->GetPointData()->GetScalars();
+        for( int i = 0; i < n; ++i )
+        {
+          data->GetRange( range, i );
+          min = min < range[0] ? min : range[0];
+          max = max > range[1] ? max : range[1];
+        }
+        rangeString = "[";
+        rangeString += QString::number(min);
+        rangeString += sep;
+        rangeString += QString::number(max);
+        rangeString += "]";
+
+        filenameString = image->GetFileName().c_str();
+        QFileInfo info(filenameString);
+
+        bytesString = QString::number( info.size() );
+
+        int count = 0;
+        for( int i = filenameString.size()-1; i >= 0;  --i )
+        {
+          if( filenameString[i] == QChar('/') )
+          {
+            count++;
+            if( 3 == count )
+            {
+              filenameString.insert(i+1,QString("\n"));
+              break;
+            }
+          }
+        }
+      }
     }
   }
 
@@ -643,6 +693,15 @@ void QAlderInterviewWidgetPrivate::updateInfo()
   this->infoSiteValueLabel->setText( siteString );
   this->infoDateValueLabel->setText( dateString );
   this->infoCodeValueLabel->setText( codeString );
+
+  this->dimensionsValueLabel->setText( dimensionsString );
+  this->spacingValueLabel->setText( spacingString );
+  this->bytesValueLabel->setText( bytesString );
+  this->channelsValueLabel->setText( channelsString );
+  this->originValueLabel->setText( originString );
+  this->rangeValueLabel->setText( rangeString );
+  this->filenameValueLabel->setText( filenameString );
+  this->typeValueLabel->setText( typeString );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -725,6 +784,28 @@ void QAlderInterviewWidgetPrivate::updateEnabled()
   this->codeTableWidget->setEnabled( image );
   this->ratingSlider->setEnabled( image && !this->useDerivedCheckBox->isChecked() );
   this->noteTextEdit->setEnabled( image );
+
+  // the action buttons depend on the type and content of the image
+  vtkSmartPointer<Alder::Exam> exam;
+  if( image && image->GetRecord( exam ) )
+  {
+    Alder::Exam::SideStatus status = exam->GetSideStatus();
+    this->swapSidesPushButton->setEnabled( Alder::Exam::SideStatus::Fixed < status );
+    bool isdicom = exam->IsDICOM();
+    if( isdicom )
+    {
+      std::string ybr = "YBR_FULL_422";
+      this->rgbFixPushButton->setEnabled(
+        ( ybr == image->GetDICOMTag( "PhotometricInterpretation" ) ) );
+    }
+    this->anonymizePushButton->setEnabled( isdicom );
+  }
+  else
+  {
+    this->swapSidesPushButton->setEnabled( false );
+    this->rgbFixPushButton->setEnabled( false );
+    this->anonymizePushButton->setEnabled( false );
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -1107,6 +1188,10 @@ void QAlderInterviewWidget::loadInterview( int id )
   Q_D(QAlderInterviewWidget);
   if( d->participantData->LoadInterview( id ) )
   {
+    Alder::Application *app = Alder::Application::GetInstance();
+    vtkSmartPointer<Alder::User> user = app->GetActiveUser();
+    user->Set( "InterviewId", id );
+    user->Save();
     d->updateEnabled();
   }
 }
@@ -1125,6 +1210,10 @@ void QAlderInterviewWidget::userChanged()
   if( user && user->GetRecord( interview ) )
   {
     d->participantData->SetActiveInterview( interview );
+  }
+  else
+  {
+    d->participantData->SetActiveInterview( NULL );
   }
 }
 
@@ -1148,11 +1237,11 @@ int QAlderInterviewWidget::activeInterviewId()
 void QAlderInterviewWidget::imageChanged()
 {
   Q_D(QAlderInterviewWidget);
-  d->updateInfo();
   d->updateCodeList();
   d->updateRating();
   d->updateViewer();
   d->updateSelected();
+  d->updateInfo();
   d->updateEnabled();
   Alder::Image* image = d->participantData->GetActiveImage();
   emit imageSelected( ( image ? image->Get("Id").ToInt() : 0 ) );

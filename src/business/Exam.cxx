@@ -327,7 +327,6 @@ namespace Alder
       Image* image = *it;
       if( isHologic )
       {
-        image->SetExamSideFromDICOM();
         image->CleanHologicDICOM();
       }
       image->AnonymizeDICOM();
@@ -393,5 +392,36 @@ namespace Alder
         data[ id.ToInt() ] = code.ToString();
     }
     return data;
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  Exam::SideStatus Exam::GetSideStatus()
+  {
+    Exam::SideStatus status = Exam::SideStatus::Pending;
+    vtkSmartPointer< ScanType > type;
+    if( this->GetRecord( type ) )
+    {
+      int downloaded = this->Get("Downloaded").ToInt();
+      if( 0 == downloaded )
+        status = Exam::SideStatus::Pending;
+      else
+      {
+        std::string side = this->Get( "Side" ).ToString();
+        if( "none" == side )
+        {
+          status = Exam::SideStatus::Fixed;
+        }
+        else
+        {
+          int sideCount = type->Get("SideCount").ToInt();
+          if( 1 == sideCount )
+            status = Exam::SideStatus::Changeable;
+          else if( 2 == sideCount )
+            status = Exam::SideStatus::Swappable;
+        }
+      }
+    }
+
+    return status;
   }
 }

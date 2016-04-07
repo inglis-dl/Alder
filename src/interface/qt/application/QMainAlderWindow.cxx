@@ -144,7 +144,7 @@ void QMainAlderWindowPrivate::setupUi( QMainWindow* window )
   button->setVisible(false);
 
   this->qvtkConnection->Connect( app, vtkCommand::StartEvent,
-    this, SLOT( showProgress() ) );
+    this, SLOT( showProgress(vtkObject*, unsigned long, void*, void* ) ) );
   this->qvtkConnection->Connect( app, vtkCommand::EndEvent,
     this, SLOT( hideProgress() ) );
 
@@ -155,7 +155,7 @@ void QMainAlderWindowPrivate::setupUi( QMainWindow* window )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindowPrivate::showProgress()
+void QMainAlderWindowPrivate::showProgress(vtkObject*, unsigned long, void*, void* call_data)
 {
   QProgressBar* progress = this->statusbar->findChild<QProgressBar*>();
   if(progress)
@@ -166,6 +166,10 @@ void QMainAlderWindowPrivate::showProgress()
   QPushButton* button = this->statusbar->findChild<QPushButton*>();
   if(button)
     button->setVisible(true);
+  QString message = reinterpret_cast<const char*>(call_data);
+  if(!message.isEmpty())
+    this->statusbar->showMessage(message);
+
   this->statusbar->repaint();
   QApplication::processEvents();
 }
@@ -182,11 +186,12 @@ void QMainAlderWindowPrivate::hideProgress()
   QPushButton* button = this->statusbar->findChild<QPushButton*>();
   if(button)
     button->setVisible(false);
+  this->statusbar->clearMessage();  
   this->statusbar->repaint();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindowPrivate::updateProgress(vtkObject* , unsigned long , void* , void* call_data)
+void QMainAlderWindowPrivate::updateProgress(vtkObject*, unsigned long, void*, void* call_data)
 {
   QProgressBar* progress = this->statusbar->findChild<QProgressBar*>();
   progress->setValue(*(reinterpret_cast<int*>(call_data)));

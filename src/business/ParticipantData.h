@@ -66,6 +66,13 @@ namespace Alder
   bool LoadData( const std::string& _uid );
 
   /**
+   * Reload the data for the current UID.  This method should be called
+   * whenever a change to the database occurs that may affect the data.
+   * This method invokes Common::DataChangedEvent
+   */
+  void ReloadData();
+
+  /**
    * Given a Wave instance, populate a vector of child Interview records.
    * @param Wave a wave
    * @param vector<vtkSmartPointer<Interview>>* container pointer
@@ -143,6 +150,7 @@ I  * Get the active Image.
     ~ParticipantData();
 
     void Clear();
+    void BuildData();
 
     std::string uid;
     std::map< Exam*, std::vector<vtkSmartPointer<Image>> > examImageMap;

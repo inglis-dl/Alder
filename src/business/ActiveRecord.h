@@ -490,6 +490,34 @@ namespace Alder
      */
     void LoadFromQuery( vtkAlderMySQLQuery *query );
 
+    bool operator == ( const ActiveRecord& rhs ) const
+    {
+      bool equal = this->Initialized == rhs.Initialized &&
+                   this->ColumnValues.size() == rhs.ColumnValues.size();
+      if( equal )
+      {
+        auto rit = rhs.ColumnValues.begin();
+        auto lit = this->ColumnValues.begin();
+        while( lit != this->ColumnValues.end() &&
+               rit != rhs.ColumnValues.end() )
+        {
+          if( lit->first != rit->first || lit->second != rit->second )
+          {
+            equal = false;
+            break;
+          }
+          lit++;
+          rit++;
+        }
+      }
+      return equal;
+    }
+
+    bool operator != ( const ActiveRecord& rhs ) const
+    {
+      return !( *this == rhs );
+    }
+
   protected:
     ActiveRecord();
     ~ActiveRecord() {}
@@ -543,7 +571,6 @@ namespace Alder
   private:
     ActiveRecord( const ActiveRecord& ); // Not implemented
     void operator=( const ActiveRecord& ); // Not implemented
-    void DeleteColumnValues();
   };
 }
 

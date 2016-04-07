@@ -114,6 +114,7 @@ namespace Alder
      *   PatientName         - 0x0010, 0x0010
      *   Laterality          - 0x0020, 0x0060
      *   Manufacturer        - 0x0008, 0x0070
+     *   PhotometricInterpretation - 0x0028, 0x0004
      * No checking is done to ensure this is a dicom image: use
      * IsDICOM() method to check first.
      * @param tagName the name of the dicom tag
@@ -143,8 +144,15 @@ namespace Alder
      * Set the side of the image's parent exam from its dicom tag (laterality) if available.
      * No checking is done to ensure this is a dicom image: use
      * IsDICOM() method to check first.
+     * @return whether the exam side was changed
      */
-    void SetExamSideFromDICOM();
+    bool SwapExamSideFromDICOM();
+
+    /**
+     * Swap the side of the images' parent exam with the parent exam's sibling.
+     * @return whether the exam side was changed
+     */
+    bool SwapExamSide();
 
     /**
      * Anonymize a dicom image by clearing the PatientName tag.
@@ -194,6 +202,8 @@ namespace Alder
   protected:
     Image() {}
     ~Image() {}
+
+    bool SwapExamSideTo( const std::string &side );
 
   private:
     Image( const Image& ); // Not implemented

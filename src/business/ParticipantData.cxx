@@ -57,7 +57,7 @@ namespace Alder
     {
       if( interview && this->ActiveInterview )
       {
-        if( interview->Get("Id") == this->ActiveInterview->Get("Id") )
+        if( *interview == *this->ActiveInterview )
           return;
       }
 
@@ -110,7 +110,7 @@ namespace Alder
   {
     if( image && this->ActiveImage )
     {
-      if( image->Get("Id") == this->ActiveImage->Get("Id") )
+      if( *image == *this->ActiveImage )
         return;
     }
     vtkSetObjectBodyMacro( ActiveImage, Image, image);
@@ -141,10 +141,33 @@ namespace Alder
     if( _uid.empty() )
       return false;
 
-    if( this->uid == _uid )
+    if( _uid == this->uid )
       return true;
 
     this->Clear();
+
+    this->uid = _uid;
+
+    this->BuildData();
+    this->InvokeEvent( Common::DataChangedEvent );
+    return true;
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void ParticipantData::ReloadData()
+  {
+    std::string last = this->uid;
+    this->Clear();
+    this->uid = last;
+    this->BuildData();
+    this->InvokeEvent( Common::DataChangedEvent );
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void ParticipantData::BuildData()
+  {
+    vtkVariant vuid = vtkVariant( this->uid.c_str() );
+
     vtkSmartPointer< Alder::QueryModifier > modifier =
       vtkSmartPointer< Alder::QueryModifier >::New();
 
@@ -161,7 +184,7 @@ namespace Alder
       // get the interviews
       std::vector<vtkSmartPointer<Interview>> ilist;
       modifier->Reset();
-      modifier->Where( "UId", "=", vtkVariant(_uid.c_str()) );
+      modifier->Where( "UId", "=", vuid );
       modifier->Where( "WaveId", "=", v );
 
       Interview::GetAll( &ilist, modifier );
@@ -199,9 +222,6 @@ namespace Alder
         }
       }
     }
-    this->uid = _uid;
-    this->InvokeEvent( Common::DataChangedEvent );
-    return true;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -210,10 +230,16 @@ namespace Alder
   {
     container->clear();
     if( this->uid.empty() ) return;
-    std::map< Wave*, std::vector<vtkSmartPointer<Interview>> >::iterator i
-      = this->waveInterviewMap.find( wave );
-    if( this->waveInterviewMap.end() != i )
-      *container = i->second;
+    auto it = this->waveInterviewMap.begin();
+    while( it != this->waveInterviewMap.end() )
+    {
+      if( *wave == *(it->first) )
+      {
+        *container = it->second;
+        break;
+      }
+      it++;
+    }
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -221,9 +247,9 @@ namespace Alder
   {
     container->clear();
     if( this->uid.empty() ) return;
-    for( auto i = rankWaveMap.begin(); i != rankWaveMap.end(); ++i )
+    for( auto it = rankWaveMap.begin(); it != rankWaveMap.end(); ++it )
     {
-      vtkSmartPointer<Wave> record = i->second;
+      vtkSmartPointer<Wave> record = it->second;
       container->push_back( record );
     }
   }
@@ -234,10 +260,16 @@ namespace Alder
   {
     container->clear();
     if( this->uid.empty() ) return;
-    std::map< Interview*, std::vector<vtkSmartPointer<Exam>> >::iterator i
-      = this->interviewExamMap.find( interview );
-    if( this->interviewExamMap.end() != i )
-      *container = i->second;
+    auto it = this->interviewExamMap.begin();
+    while( it != this->interviewExamMap.end() )
+    {
+      if( *interview == *(it->first) )
+      {
+        *container = it->second;
+        break;
+      }
+      it++;
+    }
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -246,20 +278,33 @@ namespace Alder
   {
     container->clear();
     if( this->uid.empty() ) return;
-    std::map< Exam*, std::vector<vtkSmartPointer<Image>> >::iterator i
-      = this->examImageMap.find( exam );
-    if( this->examImageMap.end() != i )
-      *container = i->second;
+    auto it = this->examImageMap.begin();
+    while( it != this->examImageMap.end() )
+    {
+      if( *exam == *(it->first) )
+      {
+        *container = it->second;
+        break;
+      }
+      it++;
+    }
   }
 
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void ParticipantData::GetChildImageList( Image* image,
     std::vector<vtkSmartPointer<Image>>* container )
   {
     container->clear();
     if( this->uid.empty() ) return;
-    std::map< Image* const, std::vector<vtkSmartPointer<Image>> >::iterator i
-      = this->childImageMap.find( image );
-    if( this->childImageMap.end() != i )
-      *container = i->second;
+    auto it = this->childImageMap.begin();
+    while( it != this->childImageMap.end() )
+    {
+      if( *image == *(it->first) )
+      {
+        *container = it->second;
+        break;
+      }
+      it++;
+    }
   }
 }

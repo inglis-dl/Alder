@@ -40,6 +40,14 @@ namespace Alder
     vtkTypeMacro( Exam, ActiveRecord );
     std::string GetName() const { return "Exam"; }
 
+    enum SideStatus
+    {
+      Pending = 0,
+      Fixed,
+      Changeable,
+      Swappable
+    };
+
     /**
      * Returns the exam's code (used to determine the exam's path in the image data directory)
      */
@@ -87,6 +95,18 @@ namespace Alder
      * @return map of Codes with their table Ids
      */
     std::map< int, std::string > GetCodeTypeData();
+
+    /**
+     * Get the enum status of the Side modification capability of this exam.
+     * Exam::Pending    - exam side status is unkown if the record is invalid or
+     *                    the images for the exam have not been downloaded
+     * Exam::Fixed      - the Side column of the exam record is "none"
+     * Exam::Changeable - the exam has one Side, either left or right with
+                          one image acquisition
+     * Exam::Swappable  - the exam has two image acquisitions, a left and a right
+     * @return Exam::SideStatus the side status of the exam
+     */
+    Exam::SideStatus GetSideStatus();
 
   protected:
     Exam() {}

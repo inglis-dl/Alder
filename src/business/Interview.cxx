@@ -280,11 +280,11 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  Common::ImageStatus Interview::GetImageStatus( QueryModifier *modifier )
+  Interview::ImageStatus Interview::GetImageStatus( QueryModifier *modifier )
   {
     std::vector< vtkSmartPointer< Exam > > vecExam;
     this->GetList( &vecExam, modifier );
-    Common::ImageStatus status = Common::ImageStatus::None;
+    Interview::ImageStatus status = Interview::ImageStatus::None;
     if( vecExam.empty() )
       return status;
 
@@ -305,11 +305,11 @@ namespace Alder
         missingCount++;
     }
     if( missingCount == examCount )
-      status = Common::ImageStatus::None;
+      status = Interview::ImageStatus::None;
     else if( 0 < pendingCount )
-      status = Common::ImageStatus::Pending;
+      status = Interview::ImageStatus::Pending;
     else if( 0 < downloadCount )
-      status = Common::ImageStatus::Complete;
+      status = Interview::ImageStatus::Complete;
 
     return status;
   }
@@ -573,8 +573,9 @@ namespace Alder
       int lastProgress = 0;
       int progress = 0;
       double size = vecExam.size();
+      std::string message = "Updating image data of " + std::to_string((int)(size)) + " exams";
       app->SetAbortFlag(0);
-      app->InvokeEvent( vtkCommand::StartEvent );
+      app->InvokeEvent( vtkCommand::StartEvent, (void*)(message.c_str()) );
       for( auto it = vecExam.cbegin(); it != vecExam.cend(); ++it, ++index )
       {
         if( app->GetAbortFlag() )
@@ -704,8 +705,9 @@ namespace Alder
     int lastProgress = progress;
     bool done = false;
     vtkSmartPointer< Wave > wave = vtkSmartPointer< Wave >::New();
+    std::string message = "Updating metadata of " + std::to_string((int)(size)) + " interviews";
     app->SetAbortFlag(0);
-    app->InvokeEvent( vtkCommand::StartEvent );
+    app->InvokeEvent( vtkCommand::StartEvent, (void*)(message.c_str()) );
     for( auto it = mapWave.cbegin(); it != mapWave.cend() && !done; ++it )
     {
       if( app->GetAbortFlag() )
@@ -852,7 +854,9 @@ namespace Alder
     int lastProgress = 0;
     int progress = 0;
     double size = (double)vecRevised.size();
-    app->InvokeEvent( vtkCommand::StartEvent );
+    std::string message = "Downloading images of " + std::to_string((int)(size)) + " interviews";
+    app->SetAbortFlag(0);
+    app->InvokeEvent( vtkCommand::StartEvent, (void*)(message.c_str()) );
     for( auto it = vecRevised.cbegin(); it != vecRevised.cend(); ++it, ++index )
     {
       if( app->GetAbortFlag() )
