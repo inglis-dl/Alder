@@ -73,7 +73,10 @@ void QAlderInterviewWidgetPrivate::setupUi( QWidget* widget )
 
   this->treeWidget->setIndentation( 10 );
   this->treeWidget->setSelectionMode( QAbstractItemView::SingleSelection );
-  this->treeWidget->setSelectionMode( QAbstractItemView::SingleSelection );
+  this->treeWidget->setSelectionBehavior( QAbstractItemView::SelectItems );
+
+  // force the branch area to be the color of the tree when selected
+  this->treeWidget->setStyleSheet( "QTreeWidget::branch:selected {background: white;}" );
 
   QObject::connect(
     this->previousPushButton, SIGNAL( clicked() ),
@@ -84,11 +87,9 @@ void QAlderInterviewWidgetPrivate::setupUi( QWidget* widget )
   QObject::connect(
     this->treeWidget, SIGNAL( itemSelectionChanged() ),
     this, SLOT( treeSelectionChanged() ) );
-
   QObject::connect(
      this->codeTableWidget, SIGNAL( itemClicked(QTableWidgetItem*) ),
      this, SLOT( codeChanged(QTableWidgetItem*) ) );
-
   QObject::connect(
     this->ratingSlider, SIGNAL( valueChanged( int ) ),
     this, SLOT( ratingChanged( int ) ) );
@@ -101,6 +102,15 @@ void QAlderInterviewWidgetPrivate::setupUi( QWidget* widget )
   QObject::connect(
     this->useDerivedCheckBox, SIGNAL( clicked() ),
     this, SLOT( derivedRatingToggle() ) );
+  QObject::connect(
+    this->rgbFixPushButton, SIGNAL( clicked() ),
+    this, SLOT( imageYBRToRGB() ) );
+  QObject::connect(
+    this->anonymizePushButton, SIGNAL( clicked() ),
+    this, SLOT( imageAnonymize() ) );
+  QObject::connect(
+    this->swapSidesPushButton, SIGNAL( clicked() ),
+    this, SLOT( imageSideSwap() ) );
 
   this->qvtkConnection->Connect( Alder::Application::GetInstance(),
     Alder::Common::UserChangedEvent,
@@ -228,6 +238,7 @@ void QAlderInterviewWidgetPrivate::setActiveInterview( Alder::Interview* intervi
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderInterviewWidgetPrivate::treeSelectionChanged()
 {
+  // only one item at a time can be selected
   QList<QTreeWidgetItem*> list = this->treeWidget->selectedItems();
   if( !list.isEmpty() )
   {
@@ -235,8 +246,11 @@ void QAlderInterviewWidgetPrivate::treeSelectionChanged()
       this->treeModelMap.find( list.front() );
     if( it != this->treeModelMap.end() )
     {
-      this->participantData->SetActiveImage(
-        Alder::Image::SafeDownCast( it.value() ) );
+      Alder::Image* image = 0;
+      if( ( image = Alder::Image::SafeDownCast( it.value() ) ) )
+      {
+        this->participantData->SetActiveImage( image );
+      }
     }
   }
 }
@@ -267,6 +281,8 @@ void QAlderInterviewWidgetPrivate::updatePermission()
       }
     }
   }
+  this->codeTableWidget->setEnabled(
+    user && user->Get("Expert").ToInt() );
 }
 
 // build the tree with all available data
@@ -406,7 +422,7 @@ void QAlderInterviewWidgetPrivate::buildTree()
           name += image->Get( "Acquisition" ).ToString().c_str();
 
           item = new QTreeWidgetItem( parent );
-          item->setFirstColumnSpanned(true);
+          item->setFirstColumnSpanned(false);
           item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
           this->treeModelMap[ item ] = image;
           item->setText( 0, name );
@@ -436,7 +452,7 @@ void QAlderInterviewWidgetPrivate::buildTree()
             name += image->Get( "Acquisition" ).ToString().c_str();
 
             item = new QTreeWidgetItem( grandParent );
-            item->setFirstColumnSpanned(true);
+            item->setFirstColumnSpanned(false);
             item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
             this->treeModelMap[ item ] = image;
             item->setText( 0, name );
@@ -708,7 +724,10 @@ void QAlderInterviewWidgetPrivate::updateInfo()
 void QAlderInterviewWidgetPrivate::updateCodeList()
 {
   Alder::Image *image = this->participantData->GetActiveImage();
-  if( !image ) return;
+  if( !image )
+  {
+    return;
+  }
   vtkSmartPointer< Alder::Exam > exam;
   image->GetRecord( exam );
   std::map<int,std::string> codeMap = exam->GetCodeTypeData();
@@ -771,6 +790,7 @@ void QAlderInterviewWidgetPrivate::updateEnabled()
 {
   Alder::Interview *interview = this->participantData->GetActiveInterview();
   Alder::Image *image = this->participantData->GetActiveImage();
+  Alder::User *user = Alder::Application::GetInstance()->GetActiveUser();
 
   // set all widget enable states
   this->unratedCheckBox->setEnabled( interview );
@@ -781,7 +801,7 @@ void QAlderInterviewWidgetPrivate::updateEnabled()
 
   this->useDerivedCheckBox->setEnabled( image );
   this->resetRatingPushButton->setEnabled( image );
-  this->codeTableWidget->setEnabled( image );
+  this->codeTableWidget->setEnabled( image && user && user->Get("Expert").ToInt() );
   this->ratingSlider->setEnabled( image && !this->useDerivedCheckBox->isChecked() );
   this->noteTextEdit->setEnabled( image );
 
@@ -1113,6 +1133,56 @@ void QAlderInterviewWidgetPrivate::noteChanged()
         map[ "Note" ] = noteStr;
         note->Save();
       }
+    }
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderInterviewWidgetPrivate::imageAnonymize()
+{
+  Alder::Image* image = this->participantData->GetActiveImage();
+  if(image && image->IsDICOM() && image->AnonymizeDICOM())
+  {
+    if( image->CleanHologicDICOM() )
+      this->updateViewer();
+    this->updateInfo();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderInterviewWidgetPrivate::imageYBRToRGB()
+{
+  Alder::Image* image = this->participantData->GetActiveImage();
+  if(image && image->IsDICOM() && image->YBRToRGB())
+  {
+    this->updateViewer();
+    this->updateInfo();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderInterviewWidgetPrivate::imageSideSwap()
+{
+  Q_Q(QAlderInterviewWidget);
+  Alder::Image* image = this->participantData->GetActiveImage();
+  if(image)
+  {
+    // if this image is a child image, warn the user
+    vtkVariant v = image->Get("ParentImageId");
+    if( v.IsValid() )
+    {
+      QString message = "This image is a child image.  Consider selecting the parent ";
+      message += "of this image for swapping instead.  Continue with this image?";
+      if( QMessageBox::No == QMessageBox::question(
+        q, QDialog::tr("Swap Images"), message,
+        QMessageBox::Yes | QMessageBox::No ) )
+        return;
+    }
+    if( image->SwapExamSide() )
+    {
+      this->updateTree();
+      this->updateViewer();
+      this->updateInfo();
     }
   }
 }

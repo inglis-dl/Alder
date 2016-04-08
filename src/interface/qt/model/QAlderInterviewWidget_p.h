@@ -67,6 +67,9 @@ public slots:
   void codeSelected();
   void derivedRatingToggle();
   void buildTree();
+  void imageYBRToRGB();
+  void imageAnonymize();
+  void imageSideSwap();
 
 private:
   // mapping between tree widget items and Alder::Interview and Alder::Image records

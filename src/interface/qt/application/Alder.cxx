@@ -43,7 +43,7 @@ int main( int argc, char** argv )
   {
     Qt::Alignment topMiddle = Qt::AlignHCenter | Qt::AlignTop;
     std::stringstream error;
-    unsigned long msec = 2000;
+    unsigned long msec = 200;
     QMutex dummy;
     QWaitCondition wait;
     QAlderApplication qapp( argc, argv );

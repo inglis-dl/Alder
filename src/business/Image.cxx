@@ -25,8 +25,11 @@
 #include <vtkImageDataReader.h>
 #include <vtkImageCanvasSource2D.h>
 #include <vtkImageFlip.h>
+#include <vtkMath.h>
+#include <vtkMatrix3x3.h>
 #include <vtkNew.h>
 #include <vtkObjectFactory.h>
+#include <vtkPointData.h>
 #include <vtkSmartPointer.h>
 #include <vtksys/SystemTools.hxx>
 
@@ -381,20 +384,28 @@ namespace Alder
   bool Image::SwapExamSideTo( const std::string &side )
   {
     if( side.empty() || !( "left" == side || "right" == side ) )
+    {
       return false;
+    }
 
     vtkSmartPointer< Exam > exam;
     if( !this->GetRecord( exam ) )
+    {
       return false;
+    }
 
     Exam::SideStatus status = exam->GetSideStatus();
     if( Exam::SideStatus::Pending == status ||
         Exam::SideStatus::Fixed == status )
+    {
       return false;
+    }
 
     std::string currentSide = exam->Get( "Side" ).ToString();
     if( side == currentSide )
+    {
       return false;
+    }
 
     // no sibling required
     if( Exam::SideStatus::Changeable == status )
@@ -411,22 +422,30 @@ namespace Alder
       loader["InterviewId"] = exam->Get( "InterviewId" ).ToString();
       loader["ScanTypeId"] = exam->Get( "ScanTypeId" ).ToString();
       loader["Side"] = side;
-      vtkSmartPointer< Exam > siblingExam;
+      vtkNew< Exam > siblingExam;
       if( !siblingExam->Load(loader) )
+      {
         return false;
+      }
       if( siblingExam->GetSideStatus() != status )
+      {
         return false;
+      }
 
       loader.clear();
       loader["ExamId"] = siblingExam->Get("Id").ToString();
       loader["Acquisition"] = this->Get("Acquisition").ToString();
-      vtkSmartPointer<Image> siblingImage;
+      vtkNew<Image> siblingImage;
       if( !siblingImage->Load(loader) )
+      {
         return false;
+      }
 
       std::string rootPath = Application::GetInstance()->GetConfig()->GetValue( "Path", "ImageData" );
       if( !Utilities::fileExists(rootPath) )
+      {
         return false;
+      }
       std::string swapFile = rootPath + "/temp.dat";
 
       // are there children?
@@ -434,15 +453,15 @@ namespace Alder
       exam->GetRecord( type );
       int childCount = type->Get("ChildCount").ToInt();
       bool move = true;
-      if( 0 < childCount )
+      bool isParent = !this->Get("ParentImageId").IsValid();
+      if( 0 < childCount && isParent )
       {
         // both sets of children must be present to prevent orphaning
         std::vector<vtkSmartPointer<Image>> childList;
         this->GetList( &childList, "ParentImageId" );
         std::vector<vtkSmartPointer<Image>> siblingChildList;
         siblingImage->GetList( &siblingChildList, "ParentImageId" );
-        if( siblingChildList.size() == childList.size() &&
-            childCount == childList.size() )
+        if( siblingChildList.size() == childList.size() )
         {
           // swap the children
           std::vector<vtkSmartPointer<Image>>::iterator cit = childList.begin();
@@ -466,7 +485,9 @@ namespace Alder
       }
 
       if(!move)
+      {
         return false;
+      }
 
       std::string aFile = this->GetFileName();
       std::string bFile = siblingImage->GetFileName();
@@ -744,5 +765,117 @@ namespace Alder
     dcmCompiler->Close();
 
     return true;
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  bool Image::YBRToRGB()
+  {
+    this->AssertPrimaryId();
+    bool result = false;
+
+    std::string fileName = this->GetFileName();
+    if( !Utilities::fileExists( fileName ) ||
+        0 == Utilities::getFileLength( fileName ) )
+      return result;
+
+    // read in the original image
+    vtkNew<vtkDICOMReader> reader;
+    reader->SetFileName( fileName.c_str() );
+    reader->SetMemoryRowOrderToTopDown();
+    reader->UpdateInformation();
+    reader->Update();
+
+    vtkDICOMMetaData* meta = reader->GetMetaData();
+    if( meta && "YBR_FULL_422" == meta->GetAttributeValue(vtkDICOMTag(0x0028, 0x0004)).AsString() )
+    {
+      vtkNew<vtkImageData> image;
+      image->DeepCopy( reader->GetOutput() );
+      image->UpdateInformation();
+
+      vtkNew<vtkMatrix3x3> in;
+      vtkNew<vtkMatrix3x3> out;
+
+      in->SetElement( 0, 0,  0.299 );
+      in->SetElement( 0, 1,  0.587 );
+      in->SetElement( 0, 2,  0.114 );
+      in->SetElement( 1, 0, -0.1687 );
+      in->SetElement( 1, 1, -0.3313 );
+      in->SetElement( 1, 2,  0.5 );
+      in->SetElement( 2, 0,  0.5 );
+      in->SetElement( 2, 1, -0.4187 );
+      in->SetElement( 2, 2, -0.0813 );
+      in->Invert(in.GetPointer(),out.GetPointer());
+
+      // NOTE: matrix inversion shows that A^-1 : A00, A10, A20 == 1
+      // mutliplication can therefore be expressed as:
+      // r = y0 + A01(y1 -128) + A02(y2 - 128)
+      // g = y0 + A11(y1 -128) + A12(y2 - 128)
+      // b = y0 + A21(y1 -128) + A22(y2 - 128)
+
+      vtkDataArray* data = image->GetPointData()->GetScalars();
+      double range[2] = { 0, 255 };
+      unsigned char* array = (unsigned char*)data->GetVoidPointer(0);
+      double a01 = out->GetElement(0,1);
+      double a02 = out->GetElement(0,2);
+      double a11 = out->GetElement(1,1);
+      double a12 = out->GetElement(1,2);
+      double a21 = out->GetElement(2,1);
+      double a22 = out->GetElement(2,2);
+      double rgb0;
+      double rgb1;
+      double rgb2;
+      double ybcr0;
+      double ybcr1;
+      double ybcr2;
+      int nTuple = data->GetNumberOfTuples();
+      for( int i = 0; i < nTuple; ++i )
+      {
+        unsigned char* ybcr = array + 3*i;
+        ybcr0 = ybcr[0];
+        ybcr1 = ybcr[1] - 128.;
+        ybcr2 = ybcr[2] - 128.;
+        rgb0 = ybcr0 + a01*ybcr1 + a02*ybcr2;
+        rgb1 = ybcr0 + a11*ybcr1 + a12*ybcr2;
+        rgb2 = ybcr0 + a21*ybcr1 + a22*ybcr2;
+
+        vtkMath::ClampValue( &rgb0, range );
+        vtkMath::ClampValue( &rgb1, range );
+        vtkMath::ClampValue( &rgb2, range );
+
+        *(ybcr+0)=(unsigned char)rgb0;
+        *(ybcr+1)=(unsigned char)rgb1;
+        *(ybcr+2)=(unsigned char)rgb2;
+      }
+      /*
+      for( int i = 0; i < data->GetNumberOfTuples(); ++i )
+      {
+        double *ycbcr = data->GetTuple(i);
+
+        double old[3] = { ycbcr[0],
+                          ycbcr[1] - 128.,
+                          ycbcr[2] - 128. };
+        double rgb[3];
+        out->MultiplyPoint( old, rgb );
+        vtkMath::ClampValue( &rgb[0], range );
+        vtkMath::ClampValue( &rgb[1], range );
+        vtkMath::ClampValue( &rgb[2], range );
+
+        data->SetTuple3( i, rgb[0], rgb[1], rgb[2] );
+      }
+      */
+      meta->SetAttributeValue( vtkDICOMTag( 0x0028, 0x0004 ), std::string("RGB") );
+
+      unsigned long length = 3*nTuple;
+
+      vtkNew<vtkDICOMCompiler> compiler;
+      compiler->SetFileName( fileName.c_str() );
+      compiler->KeepOriginalPixelDataVROff();
+      compiler->SetMetaData( meta );
+      compiler->WriteHeader();
+      compiler->WritePixelData((unsigned char *)(image->GetScalarPointer()), length );
+      compiler->Close();
+      result = true;
+    }
+    return result;
   }
 }

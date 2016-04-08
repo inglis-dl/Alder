@@ -174,6 +174,16 @@ namespace Alder
      */
     bool CleanHologicDICOM();
 
+    /**
+     * Convert photometric interpretation from YBR_FULL_422 to RGB.
+     * No checking is done to ensure this is a dicom image: use
+     * IsDICOM() method to check first.
+     * @return success or fail status of the conversion
+     * @throw  runtime_error
+     */
+    bool YBRToRGB();
+
+
     //@{
     /**
      * Returns the neighbouring interview in UId/VisitDate order.
