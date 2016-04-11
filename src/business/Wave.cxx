@@ -10,11 +10,14 @@
 =========================================================================*/
 #include <Wave.h>
 
+// Alder includes
+#include <CodeType.h>
 #include <Modality.h>
 #include <OpalService.h>
 #include <ScanType.h>
 #include <Utilities.h>
 
+// VTK includes
 #include <vtkObjectFactory.h>
 
 namespace Alder
@@ -45,6 +48,7 @@ namespace Alder
       opal->GetRows( source, "ScanType", 0, vecOpal.size() );
 
     std::string waveId = this->Get( "Id" ).ToString();
+    vtkSmartPointer< QueryModifier > modifier = vtkSmartPointer< QueryModifier >::New();
 
     for( auto it = mapOpal.cbegin(); it != mapOpal.cend(); ++it )
     {
@@ -95,6 +99,28 @@ namespace Alder
       {
         scanType->Set( loader );
         scanType->Save();
+      }
+      loader["WaveId"] = waveId;
+      loader["Type"] = type;
+      if( scanType->Load( loader ) )
+      {
+        // update the ScanTypeHasCodeType information
+
+        // get the vector of CodeTypes by ScanType.Type
+        modifier->Reset();
+        modifier->Join( "ScanTypeHasCodeType", "CodeType.Id","ScanTypeHasCodeType.CodeTypeId" );
+        modifier->Join( "ScanType", "ScanType.Id","ScanTypeHasCodeType.ScanTypeId" );
+        modifier->Where( "ScanType.Type", "=", scanType->Get("Type") );
+
+        std::vector< vtkSmartPointer< CodeType > > codeTypeList;
+        CodeType::GetAll( &codeTypeList, modifier );
+        if( !codeTypeList.empty() )
+        {
+          for( auto cit = codeTypeList.begin(); cit != codeTypeList.end(); ++cit )
+          {
+            scanType->AddRecord( (*cit) );
+          }
+        }
       }
     }
   }

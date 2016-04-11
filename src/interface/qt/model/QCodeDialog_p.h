@@ -13,7 +13,10 @@
 #include <QCodeDialog.h>
 #include <ui_QCodeDialog.h>
 
+// Qt includes
+#include <QList>
 #include <QMap>
+#include <QVariant>
 
 class QTableWidgetItem;
 
@@ -51,6 +54,7 @@ public slots:
 private:
   QMap<QString, QMap<QString, int>> columnIndex;
   QMap<QString, QMap<int, Qt::SortOrder>> sortOrder;
+  QMap<QString,QList<QVariant>> scanTypeMap;
 };
 
 #endif

@@ -53,14 +53,36 @@ void QCodeDialogPrivate::setupUi( QDialog* widget )
 
   std::vector< vtkSmartPointer< Alder::ScanType > > scanTypeList;
   Alder::ScanType::GetAll( &scanTypeList );
-
-  // list of all scan types that can have a code
+  this->scanTypeMap.clear();
   for( auto it = scanTypeList.begin(); it != scanTypeList.end(); ++it )
   {
     Alder::ScanType *scanType = (*it);
-    this->scanTypeComboBox->addItem(
-      scanType->Get( "Type" ).ToString().c_str(),
-      QVariant(scanType->Get( "Id" ).ToInt()) );
+    QString type = scanType->Get("Type").ToString().c_str();
+    QVariant id = scanType->Get("Id").ToInt();
+    QMap<QString,QList<QVariant>>::iterator m = this->scanTypeMap.find(type);
+    QList<QVariant> list;
+    if( m == this->scanTypeMap.end() )
+    {
+      list.push_back( id );
+    }
+    else
+    {
+      list = m.value();
+      if( !list.contains(id) )
+      {
+        list.push_back( id );
+      }
+    }
+    if( !list.isEmpty() )
+    {
+       this->scanTypeMap[type] = list;
+    }
+  }
+
+  // list of all scan types that can have a code
+  for( auto it = this->scanTypeMap.begin(); it != this->scanTypeMap.end(); ++it )
+  {
+    this->scanTypeComboBox->addItem( it.key(), it.value() );
   }
 
   this->codeGroupComboBox->addItem( "", QVariant( -1 ) );
@@ -251,26 +273,22 @@ void QCodeDialogPrivate::updateCodeUi()
   vtkSmartPointer< Alder::CodeGroup > codeGroup;
 
   vtkSmartPointer< Alder::QueryModifier > modifier = vtkSmartPointer< Alder::QueryModifier >::New();
-  modifier->Join( "ScanTypeHasCodeType", "ScanType.Id", "ScanTypeHasCodeType.ScanTypeId" );
-  modifier->Group( "ScanType.Id" );
-
-  std::vector< vtkSmartPointer< Alder::ScanType > > scanTypeList;
-  Alder::ScanType::GetAll( &scanTypeList, modifier );
-
-  modifier->Reset();
   modifier->Join( "ScanType", "ScanType.Id", "ScanTypeHasCodeType.ScanTypeId" );
   std::string override = "ScanTypeHasCodeType";
 
-  for( auto it = scanTypeList.begin(); it != scanTypeList.end(); ++it )
+  for( auto it = this->scanTypeMap.begin(); it != this->scanTypeMap.end(); ++it )
   { // for every scanType, add a new row
-    Alder::ScanType *scanType = (*it);
 
-    QVariant scanTypeId = scanType->Get( "Id" ).ToInt();
-    QString type = scanType->Get( "Type" ).ToString().c_str();
+    QList<QVariant> scanTypeIdList = it.value();
+    QString type = it.key();
+    // get one of the scantype records associated with this type
+    vtkNew<Alder::ScanType> scanType;
+    if( !scanType->Load( "Id", scanTypeIdList.first().toInt() ) )
+      continue;
 
     // get all the code types associated with this scan type
     std::vector< vtkSmartPointer< Alder::CodeType > > codeTypeList;
-    (*it)->GetList( &codeTypeList, modifier, override );
+    scanType->GetList( &codeTypeList, modifier, override );
     for( auto cit = codeTypeList.begin(); cit != codeTypeList.end(); ++cit )
     {
       Alder::CodeType *codeType = (*cit);
@@ -296,7 +314,7 @@ void QCodeDialogPrivate::updateCodeUi()
       item = new QTableWidgetItem;
       item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
       item->setText( type );
-      item->setData( Qt::UserRole, scanTypeId );
+      item->setData( Qt::UserRole, scanTypeIdList );
       this->codeTableWidget->setItem( 0, this->columnIndex[name]["Type"], item );
 
       // add Code to row
@@ -596,11 +614,11 @@ void QCodeDialogPrivate::addCode()
   if( code.empty() ) return;
 
   int index = this->scanTypeComboBox->currentIndex();
-  int scanTypeId = -1;
+  QList<QVariant> scanTypeIdList;
   if( -1 != index )
-    scanTypeId = this->scanTypeComboBox->itemData( index ).toInt();
+    scanTypeIdList = this->scanTypeComboBox->itemData( index ).toList();
 
-  if( -1 == scanTypeId )
+  if( scanTypeIdList.empty() )
   {
     QString title = "Invalid Code";
     QString text = "A Code must be associated with a Type";
@@ -627,10 +645,13 @@ void QCodeDialogPrivate::addCode()
     codeType->Save();
 
     // get the ScanType and add the CodeType to the ScanTypeHasCodeType table
-    vtkNew<Alder::ScanType> scanType;
-    scanType->Load( "Id", scanTypeId );
-    vtkSmartPointer<Alder::CodeType> ptr = codeType.GetPointer();
-    scanType->AddRecord( ptr );
+    for( auto it = scanTypeIdList.begin(); it != scanTypeIdList.end(); ++it )
+    {
+      vtkNew<Alder::ScanType> scanType;
+      scanType->Load( "Id", (*it).toInt() );
+      vtkSmartPointer<Alder::CodeType> ptr = codeType.GetPointer();
+      scanType->AddRecord( ptr );
+    }
 
     this->updateCodeUi();
   }
@@ -664,12 +685,17 @@ void QCodeDialogPrivate::removeCode()
       title, text, QMessageBox::Yes|QMessageBox::No );
     if( QMessageBox::Yes == reply )
     {
-      int scanTypeId = items.at( this->columnIndex[name]["Type"] )->data( Qt::UserRole ).toInt();
-      vtkNew<Alder::ScanType> scanType;
-      scanType->Load( "Id", scanTypeId );
-      vtkSmartPointer<Alder::CodeType> ptr = codeType.GetPointer();
-      scanType->RemoveRecord( ptr );
-
+      QList<QVariant> scanTypeIdList =
+        items.at( this->columnIndex[name]["Type"] )->data( Qt::UserRole ).toList();
+      for( auto it = scanTypeIdList.begin(); it != scanTypeIdList.end(); ++it )
+      {
+        vtkNew<Alder::ScanType> scanType;
+        if( scanType->Load( "Id", (*it).toInt() ) )
+        {
+          vtkSmartPointer<Alder::CodeType> ptr = codeType.GetPointer();
+          scanType->RemoveRecord( ptr );
+        }
+      }
       codeType->Remove();
       this->updateCodeUi();
     }
