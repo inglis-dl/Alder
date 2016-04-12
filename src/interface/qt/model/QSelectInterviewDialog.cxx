@@ -433,16 +433,11 @@ void QSelectInterviewDialog::accepted()
   {
     Alder::Application *app = Alder::Application::GetInstance();
     int col = d->columnIndex.value("UId");
-    bool first = true;
+    int lastId = -1;
     std::vector< vtkSmartPointer< Alder::Interview > > vecInterview;
 
-    vtkSmartPointer< Alder::Interview > interview =
-      vtkSmartPointer< Alder::Interview >::New();
-
-    // only worry about the modalities the user is allowed to access
-    vtkSmartPointer< Alder::QueryModifier > modifier =
-      vtkSmartPointer< Alder::QueryModifier >::New();
-
+    // handle modalities the user is permitted access to
+    vtkSmartPointer< Alder::QueryModifier > modifier = vtkSmartPointer< Alder::QueryModifier >::New();
     Alder::User *user = app->GetActiveUser();
     user->InitializeExamModifier( modifier );
 
@@ -453,15 +448,12 @@ void QSelectInterviewDialog::accepted()
       {
         QTableWidgetItem* item = d->interviewTableWidget->item( row, col );
         QVariant vId = item->data( Qt::UserRole );
+        vtkSmartPointer<Alder::Interview> interview = vtkSmartPointer<Alder::Interview>::New();
         if( vId.isValid() && !vId.isNull() && interview->Load( "Id", vId.toInt() ) )
         {
           if( Alder::Interview::ImageStatus::Complete == interview->GetImageStatus( modifier ) )
           {
-            if( first )
-            {
-              emit interviewSelected( interview->Get("Id").ToInt() );
-              first = false;
-            }
+            lastId = interview->Get("Id").ToInt();
           }
           else
           {
@@ -487,15 +479,18 @@ void QSelectInterviewDialog::accepted()
         for( auto it = vecInterview.cbegin(); it != vecInterview.cend(); ++it )
         {
           // the interview will activate displaying progress of image downloads
-          (*it)->UpdateImageData();
-          if( first &&
-              Alder::Interview::ImageStatus::Complete == (*it)->GetImageStatus( modifier ) )
+          Alder::Interview *interview = *it;
+          interview->UpdateImageData();
+          if( Alder::Interview::ImageStatus::Complete == interview->GetImageStatus( modifier ) )
           {
-            emit interviewSelected( (*it)->Get("Id").ToInt() );
-            first = false;
+            lastId = interview->Get("Id").ToInt();
           }
         }
       }
+    }
+    if( -1 != lastId )
+    {
+      emit interviewSelected( lastId );
     }
   }
 
