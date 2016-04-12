@@ -8,7 +8,7 @@
 
 =========================================================================*/
 
-/** 
+/**
  * @class vtkCustomCornerAnnotation
  *
  * @brief Text annotation in four corners
@@ -36,7 +36,7 @@
 
 #include <string>
 
-class vtkImageActor;
+class vtkImageSlice;
 class vtkImageWindowLevel;
 class vtkTextMapper;
 class vtkTextProperty;
@@ -59,17 +59,17 @@ public:
 
   /** Does this prop have some translucent polygonal geometry? */
   virtual int HasTranslucentPolygonalGeometry();
-  
+
   //@{
   /**
-   * Set/Get the maximum height of a line of text as a 
+   * Set/Get the maximum height of a line of text as a
    * percentage of the vertical area allocated to this
    * scaled text actor. Defaults to 1.0
    */
   vtkSetMacro( MaximumLineHeight, double );
   vtkGetMacro( MaximumLineHeight, double );
   //@}
-  
+
   //@{
   /**
    * Set/Get the minimum/maximum size font that will be shown.
@@ -85,9 +85,9 @@ public:
   /**
    * Set/Get font scaling factors
    * The font size, f, is calculated as the largest possible value
-   * such that the annotations for the given viewport do not overlap. 
+   * such that the annotations for the given viewport do not overlap.
    * This font size is scaled non-linearly with the viewport size,
-   * to maintain an acceptable readable size at larger viewport sizes, 
+   * to maintain an acceptable readable size at larger viewport sizes,
    * without being too big.
    * f' = linearScale * pow(f,nonlinearScale)
    */
@@ -114,10 +114,10 @@ public:
 
   //@{
   /** Set an image actor to look at for slice information */
-  void SetImageActor(vtkImageActor*);
-  vtkGetObjectMacro(ImageActor,vtkImageActor);
+  void SetImageSlice(vtkImageSlice*);
+  vtkGetObjectMacro(ImageSlice,vtkImageSlice);
   //@}
-  
+
   //@{
   /**
    * Set an instance of vtkImageWindowLevel to use for
@@ -132,13 +132,13 @@ public:
   vtkSetMacro(LevelShift, double);
   vtkGetMacro(LevelShift, double);
   //@}
-  
+
   //@{
   /** Set the value to scale the level by. */
   vtkSetMacro(LevelScale, double);
   vtkGetMacro(LevelScale, double);
   //@}
-  
+
   //@{
   /** Set/Get the text property of all corners. */
   virtual void SetTextProperty(vtkTextProperty*);
@@ -153,7 +153,7 @@ public:
   vtkSetMacro(ShowSliceAndImage, int);
   vtkGetMacro(ShowSliceAndImage, int);
   //@}
-  
+
 protected:
   vtkCustomCornerAnnotation();
   ~vtkCustomCornerAnnotation();
@@ -165,11 +165,11 @@ protected:
   vtkImageWindowLevel *WindowLevel;
   double LevelShift;
   double LevelScale;
-  vtkImageActor *ImageActor;
-  vtkImageActor *LastImageActor;
+  vtkImageSlice *ImageSlice;
+  vtkImageSlice *LastImageSlice;
 
   std::string CornerText[4];
-  
+
   int FontSize;
   vtkSmartPointer<vtkActor2D> TextActor[4];
   vtkTimeStamp   BuildTime;
@@ -181,12 +181,12 @@ protected:
 
   double LinearFontScaleFactor;
   double NonlinearFontScaleFactor;
-  
+
   int ShowSliceAndImage;
-  
+
   /** Search for replacable tokens and replace */
   virtual void TextReplace(
-    vtkImageActor*, vtkImageWindowLevel*);
+    vtkImageSlice*, vtkImageWindowLevel*);
 
   /**
    * Set text actor positions given a viewport size and justification

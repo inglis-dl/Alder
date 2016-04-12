@@ -254,6 +254,20 @@ namespace Alder
     }
 
     /**
+     * Concatenates a vector of strings by the provided separator, returning the results as string
+     */
+    inline static std::string implode( const std::vector<std::string> &vec, const std::string &separator )
+    {
+      std::string result;
+      for( std::vector<std::string>::const_iterator it=vec.begin(); it != vec.end(); ++it )
+      {
+        result += *it;
+        if( 1 + it != vec.end() ) result += separator;
+      }
+      return result;
+    }
+
+    /**
      * Removes all space characters (as defined by std::isspace) from the left side of a string
      */
     inline static std::string &ltrim( std::string &s )
@@ -283,6 +297,32 @@ namespace Alder
     inline static std::string &trim(std::string &s)
     {
       return ltrim(rtrim(s));
+    }
+
+    /**
+     * Retain n characters from the left side of a string
+     */
+    inline static std::string &left( std::string &s, const int &n )
+    {
+      if( n < 0 ) return s;
+      size_t len = std::string::npos;
+      size_t pos = s.size();
+      pos = n >= pos ? 0 :  pos - n + 1;
+      s.erase( pos, len );
+      return s;
+    }
+
+    /**
+     * Retain n characters from the right side of a string
+     */
+    inline static std::string &right( std::string &s, const int &n )
+    {
+      if( n < 0 ) return s;
+      size_t len = s.size();
+      size_t pos = 0;
+      len = n >= len ? std::string::npos : len - n - 1;
+      s.erase( pos, len );
+      return s;
     }
 
   protected:

@@ -4,7 +4,7 @@ PROJECT( Alder )
 # The major version number is incremented after major milestones are met
 SET( ALDER_VERSION_MAJOR 1 )
 # The minor version number is incremented after a development branch is merged to qa
-SET( ALDER_VERSION_MINOR 4 )
+SET( ALDER_VERSION_MINOR 5 )
 # The patch version number is incremented when changes are made to the release branch
 SET( ALDER_VERSION_PATCH 1 )
 
@@ -24,6 +24,11 @@ INCLUDE( ${VTK_USE_FILE} )
 # We need GDCM
 FIND_PACKAGE( GDCM REQUIRED )
 INCLUDE( ${GDCM_USE_FILE} )
+
+# We need vtk-dicom
+FIND_PACKAGE( DICOM REQUIRED )
+INCLUDE( ${DICOM_USE_FILE} )
+SET(VTK_DICOM_LBRARIES vtkDICOM)
 
 # We need QT4
 SET( QT_MIN_VERSION 4.0.0 )
@@ -59,7 +64,7 @@ SET( ALDER_QT_DIR         ${ALDER_SRC_DIR}/interface/qt )
 SET( ALDER_QT_GENERIC_DIR ${ALDER_QT_DIR}/generic )
 SET( ALDER_QT_MODEL_DIR   ${ALDER_QT_DIR}/model )
 SET( ALDER_VTK_DIR        ${ALDER_SRC_DIR}/vtk )
-SET( ALDER_APP_DIR        ${ALDER_SRC_DIR}/application )
+SET( ALDER_APP_DIR        ${ALDER_QT_DIR}/application )
 SET( ALDER_DOC_DIR        ${ALDER_ROOT_DIR}/doc )
 SET( ALDER_DOXY_DIR       ${PROJECT_BINARY_DIR}/doxygen )
 SET( ALDER_TESTING_DIR    ${ALDER_ROOT_DIR}/testing )
@@ -138,10 +143,10 @@ ADD_SUBDIRECTORY(
   ${ALDER_BUSINESS_DIR} ${PROJECT_BINARY_DIR}/business
 )  
 ADD_SUBDIRECTORY( 
-  ${ALDER_QT_MODEL_DIR} ${PROJECT_BINARY_DIR}/model
+  ${ALDER_QT_GENERIC_DIR} ${PROJECT_BINARY_DIR}/generic
 )  
 ADD_SUBDIRECTORY( 
-  ${ALDER_QT_GENERIC_DIR} ${PROJECT_BINARY_DIR}/generic
+  ${ALDER_QT_MODEL_DIR} ${PROJECT_BINARY_DIR}/model
 )  
 ADD_SUBDIRECTORY( 
   ${ALDER_APP_DIR} ${PROJECT_BINARY_DIR}/application
@@ -203,8 +208,8 @@ IF( BUILD_DOCUMENTATION )
     ${ALDER_BUSINESS_DIR}
     ${ALDER_COMMON_DIR}
     ${ALDER_VTK_DIR}
-    ${ALDER_QT_MODEL_DIR}
     ${ALDER_QT_GENERIC_DIR}
+    ${ALDER_QT_MODEL_DIR}
     ${ALDER_DOXY_DIR}/doc_mainpage.dox )
 
   STRING( REPLACE ";" "\" \"" ALDER_DOXY_LIST "${DOXY_INPUT_SOURCE}" )

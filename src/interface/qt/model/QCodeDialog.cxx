@@ -4,71 +4,114 @@
   Module:   QCodeDialog.cxx
   Language: C++
 
-  Author: Patrick Emond <emondpd AT mcmaster DOT ca>
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
 #include <QCodeDialog.h>
+#include <QCodeDialog_p.h>
+
+// Qt includes
 #include <QMessageBox>
-#include <ui_QCodeDialog.h>
+
+// VTK includes
 #include <vtkSmartPointer.h>
+
+// Alder includes
 #include <CodeGroup.h>
 #include <CodeType.h>
 #include <ScanType.h>
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-QCodeDialog::QCodeDialog( QWidget* parent )
-  : QDialog( parent )
+//
+// QCodeDialogPrivate methods
+//
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QCodeDialogPrivate::QCodeDialogPrivate(QCodeDialog& object)
+  : QObject(&object), q_ptr(&object)
 {
-  this->ui = new Ui_QCodeDialog;
-  this->ui->setupUi( this );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QCodeDialogPrivate::~QCodeDialogPrivate()
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QCodeDialogPrivate::setupUi( QDialog* widget )
+{
+  Q_Q(QCodeDialog);
+
+  this->Ui_QCodeDialog::setupUi( widget );
 
   QStringList tables;
   tables << "CodeType" << "CodeGroup";
   for( int i = 0; i < tables.size(); ++i )
   {
-    this->sortOrder[ tables[i].toStdString() ];
-    this->columnIndex[ tables[i].toStdString() ];
+    this->sortOrder[ tables[i] ];
+    this->columnIndex[ tables[i] ];
   }
 
   std::vector< vtkSmartPointer< Alder::ScanType > > scanTypeList;
   Alder::ScanType::GetAll( &scanTypeList );
-
-  // list of all scan types that can have a code
+  this->scanTypeMap.clear();
   for( auto it = scanTypeList.begin(); it != scanTypeList.end(); ++it )
   {
     Alder::ScanType *scanType = (*it);
-    this->ui->scanTypeComboBox->addItem(
-      scanType->Get( "Type" ).ToString().c_str(),
-      QVariant(scanType->Get( "Id" ).ToInt()) );
+    QString type = scanType->Get("Type").ToString().c_str();
+    QVariant id = scanType->Get("Id").ToInt();
+    QMap<QString,QList<QVariant>>::iterator m = this->scanTypeMap.find(type);
+    QList<QVariant> list;
+    if( m == this->scanTypeMap.end() )
+    {
+      list.push_back( id );
+    }
+    else
+    {
+      list = m.value();
+      if( !list.contains(id) )
+      {
+        list.push_back( id );
+      }
+    }
+    if( !list.isEmpty() )
+    {
+       this->scanTypeMap[type] = list;
+    }
   }
 
-  this->ui->codeGroupComboBox->addItem( "", QVariant( -1 ) );
-  this->ui->codeGroupComboBox->setCurrentIndex( 0 );
+  // list of all scan types that can have a code
+  for( auto it = this->scanTypeMap.begin(); it != this->scanTypeMap.end(); ++it )
+  {
+    this->scanTypeComboBox->addItem( it.key(), it.value() );
+  }
 
-  this->ui->groupValueSpinBox->setMinimum( -5 );
-  this->ui->groupValueSpinBox->setMaximum( 0 );
-  this->ui->groupValueSpinBox->setSingleStep( -1 );
+  this->codeGroupComboBox->addItem( "", QVariant( -1 ) );
+  this->codeGroupComboBox->setCurrentIndex( 0 );
 
-  this->ui->codeValueSpinBox->setMinimum( -5 );
-  this->ui->codeValueSpinBox->setMaximum( 0 );
-  this->ui->codeValueSpinBox->setSingleStep( -1 );
+  this->groupValueSpinBox->setMinimum( -5 );
+  this->groupValueSpinBox->setMaximum( 0 );
+  this->groupValueSpinBox->setSingleStep( -1 );
 
-  this->ui->codeTableWidget->setSelectionMode( QAbstractItemView::SingleSelection );
-  this->ui->codeTableWidget->setSelectionBehavior( QAbstractItemView::SelectRows );
+  this->codeValueSpinBox->setMinimum( -5 );
+  this->codeValueSpinBox->setMaximum( 0 );
+  this->codeValueSpinBox->setSingleStep( -1 );
 
-  this->ui->groupTableWidget->setSelectionMode( QAbstractItemView::SingleSelection );
-  this->ui->groupTableWidget->setSelectionBehavior( QAbstractItemView::SelectRows );
+  this->codeTableWidget->setSelectionMode( QAbstractItemView::SingleSelection );
+  this->codeTableWidget->setSelectionBehavior( QAbstractItemView::SelectRows );
 
-  QHeaderView* header = this->ui->codeTableWidget->horizontalHeader();
+  this->groupTableWidget->setSelectionMode( QAbstractItemView::SingleSelection );
+  this->groupTableWidget->setSelectionBehavior( QAbstractItemView::SelectRows );
+
+  QHeaderView* header = this->codeTableWidget->horizontalHeader();
   header->setClickable( true );
   header->setResizeMode( QHeaderView::ResizeToContents );
   header->setStretchLastSection( true );
 
   QObject::connect(
     header, SIGNAL( sectionDoubleClicked(int) ),
-    this, SLOT( slotHeaderClicked( int ) ) );
-  header = this->ui->groupTableWidget->horizontalHeader();
+    this, SLOT( sort( int ) ) );
+
+  header = this->groupTableWidget->horizontalHeader();
 
   header->setClickable( true );
   header->setResizeMode( QHeaderView::ResizeToContents );
@@ -76,123 +119,150 @@ QCodeDialog::QCodeDialog( QWidget* parent )
 
   QObject::connect(
     header, SIGNAL( sectionDoubleClicked( int ) ),
-    this, SLOT( slotHeaderClicked( int ) ) );
+    this, SLOT( sort( int ) ) );
 
   QObject::connect(
-    this->ui->closePushButton, SIGNAL( clicked( bool ) ),
-    this, SLOT( slotClose() ) );
+    this->closePushButton, SIGNAL( clicked( bool ) ),
+    q, SLOT( close() ) );
 
   QObject::connect(
-    this->ui->groupTableWidget, SIGNAL( itemDoubleClicked( QTableWidgetItem* ) ),
-    this, SLOT( slotTableDoubleClicked() ) );
+    this->groupTableWidget, SIGNAL( itemDoubleClicked( QTableWidgetItem* ) ),
+    this, SLOT( tableDoubleClicked(QTableWidgetItem*) ) );
 
   QObject::connect(
-    this->ui->codeTableWidget, SIGNAL( itemDoubleClicked( QTableWidgetItem* ) ),
-    this, SLOT( slotTableDoubleClicked() ) );
+    this->codeTableWidget, SIGNAL( itemDoubleClicked( QTableWidgetItem* ) ),
+    this, SLOT( tableDoubleClicked(QTableWidgetItem*) ) );
 
   QObject::connect(
-    this->ui->tabWidget, SIGNAL( currentChanged( int ) ),
-    this, SLOT( slotTabChanged() ) );
+    this->tabWidget, SIGNAL( currentChanged( int ) ),
+    this, SLOT( tabChanged() ) );
 
   QObject::connect(
-    this->ui->groupTableWidget, SIGNAL( itemSelectionChanged() ),
-    this, SLOT( slotGroupSelectionChanged() ) );
+    this->groupTableWidget, SIGNAL( itemSelectionChanged() ),
+    this, SLOT( selectedGroupChanged() ) );
 
   QObject::connect(
-    this->ui->groupAddPushButton, SIGNAL( clicked() ),
-    this, SLOT( slotGroupAdd() ) );
+    this->groupAddPushButton, SIGNAL( clicked() ),
+    this, SLOT( addGroup() ) );
 
   QObject::connect(
-    this->ui->groupEditPushButton, SIGNAL( clicked() ),
-    this, SLOT( slotGroupEdit() ) );
+    this->groupEditPushButton, SIGNAL( clicked() ),
+    this, SLOT( editGroup() ) );
 
   QObject::connect(
-    this->ui->groupRemovePushButton, SIGNAL( clicked() ),
-    this, SLOT( slotGroupRemove() ) );
+    this->groupRemovePushButton, SIGNAL( clicked() ),
+    this, SLOT( removeGroup() ) );
 
   QObject::connect(
-    this->ui->groupApplyPushButton, SIGNAL( clicked() ),
-    this, SLOT( slotGroupApply() ) );
+    this->groupApplyPushButton, SIGNAL( clicked() ),
+    this, SLOT( applyGroup() ) );
 
   QObject::connect(
-    this->ui->codeTableWidget, SIGNAL( itemSelectionChanged() ),
-    this, SLOT( slotCodeSelectionChanged() ) );
+    this->codeTableWidget, SIGNAL( itemSelectionChanged() ),
+    this, SLOT( selectedCodeChanged() ) );
 
   QObject::connect(
-    this->ui->codeAddPushButton, SIGNAL( clicked() ),
-    this, SLOT( slotCodeAdd() ) );
+    this->codeAddPushButton, SIGNAL( clicked() ),
+    this, SLOT( addCode() ) );
 
   QObject::connect(
-    this->ui->codeEditPushButton, SIGNAL( clicked() ),
-    this, SLOT( slotCodeEdit() ) );
+    this->codeEditPushButton, SIGNAL( clicked() ),
+    this, SLOT( editCode() ) );
 
   QObject::connect(
-    this->ui->codeRemovePushButton, SIGNAL( clicked() ),
-    this, SLOT( slotCodeRemove() ) );
+    this->codeRemovePushButton, SIGNAL( clicked() ),
+    this, SLOT( removeCode() ) );
 
   QObject::connect(
-    this->ui->codeApplyPushButton, SIGNAL( clicked() ),
-    this, SLOT( slotCodeApply() ) );
+    this->codeApplyPushButton, SIGNAL( clicked() ),
+    this, SLOT( applyCode() ) );
 
   QRegExp grx("\\S+");
   QValidator* gv = new QRegExpValidator( grx, this );
-  this->ui->groupLineEdit->setValidator( gv );
+  this->groupLineEdit->setValidator( gv );
 
   QRegExp crx("[A-Z,a-z]{1,3}");
   QValidator* cv = new QRegExpValidator( crx, this );
-  this->ui->codeLineEdit->setValidator( cv );
-
-  this->updateInterface();
+  this->codeLineEdit->setValidator( cv );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-QCodeDialog::~QCodeDialog()
-{
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialog::slotClose()
-{
-  this->accept();
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialog::slotHeaderClicked( int index )
+void QCodeDialogPrivate::sort( int col )
 {
   QHeaderView* header = qobject_cast<QHeaderView*>(sender());
   if( !header ) return;
   QTableWidget* table = qobject_cast<QTableWidget*>(header->parentWidget());
-  std::string name = table == this->ui->codeTableWidget ? "CodeType" : "CodeGroup";
+  QString name = table == this->codeTableWidget ? "CodeType" : "CodeGroup";
 
-  Qt::SortOrder order = this->sortOrder[name][index];
+  Qt::SortOrder order = this->sortOrder[name][col];
   order = ( Qt::AscendingOrder == order ) ? Qt::DescendingOrder : Qt::AscendingOrder;
-  table->sortByColumn( index, order );
-  this->sortOrder[name][index] = order;
+  table->sortByColumn( col, order );
+  this->sortOrder[name][col] = order;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialog::updateInterface()
+void QCodeDialogPrivate::selectedGroupChanged()
 {
-  this->updateCodeTable();
-  this->updateGroupTable();
+  QList< QTableWidgetItem* > items = this->groupTableWidget->selectedItems();
+  bool selected = !items.empty();
+  this->groupAddPushButton->setEnabled( !selected );
+  this->groupEditPushButton->setEnabled( selected );
+  this->groupApplyPushButton->setEnabled( false );
+  this->groupLineEdit->clear();
+  this->groupValueSpinBox->setValue( 0 );
+
+  if( selected )
+  {
+    int usage = items.at( this->columnIndex["CodeGroup"]["Usage"] )->data( Qt::DisplayRole ).toInt();
+    bool enabled = 0 == usage;
+    this->groupRemovePushButton->setEnabled( enabled );
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialog::updateCodeTable()
+void QCodeDialogPrivate::tableDoubleClicked(QTableWidgetItem* item)
 {
-  this->ui->codeTableWidget->blockSignals( true );
-  this->ui->codeTableWidget->setSortingEnabled( false );
-  this->ui->codeTableWidget->setRowCount( 0 );
+  QTableWidget* widget = item->tableWidget();
+  widget->clearSelection();
+  if( widget == this->codeTableWidget )
+  {
+    this->codeAddPushButton->setEnabled( true );
+    this->codeEditPushButton->setEnabled( false );
+    this->codeRemovePushButton->setEnabled( false );
+    this->codeApplyPushButton->setEnabled( false );
+  }
+  else
+  {
+    this->groupAddPushButton->setEnabled( true );
+    this->groupEditPushButton->setEnabled( false );
+    this->groupRemovePushButton->setEnabled( false );
+    this->groupApplyPushButton->setEnabled( false );
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QCodeDialogPrivate::updateUi()
+{
+  this->updateCodeUi();
+  this->updateGroupUi();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QCodeDialogPrivate::updateCodeUi()
+{
+  this->codeTableWidget->blockSignals( true );
+  this->codeTableWidget->setSortingEnabled( false );
+  this->codeTableWidget->setRowCount( 0 );
 
   QStringList columns;
-  std::string name = "CodeType";
+  QString name = "CodeType";
   columns << "Type" << "Code" << "Value" << "Usage" << "Group" << "Group Value" << "Active";
   for( int i = 0; i < columns.size(); ++i )
   {
     this->sortOrder[name][i] = Qt::AscendingOrder;
-    this->columnIndex[name][ columns.at( i ).toStdString() ] = i;
+    this->columnIndex[name][columns[i]] = i;
   }
-  this->ui->codeTableWidget->setHorizontalHeaderLabels( columns );
+  this->codeTableWidget->setHorizontalHeaderLabels( columns );
 
   // prototype for cloning center aligned cells
   QTableWidgetItem* proto = new QTableWidgetItem();
@@ -203,26 +273,22 @@ void QCodeDialog::updateCodeTable()
   vtkSmartPointer< Alder::CodeGroup > codeGroup;
 
   vtkSmartPointer< Alder::QueryModifier > modifier = vtkSmartPointer< Alder::QueryModifier >::New();
-  modifier->Join( "ScanTypeHasCodeType", "ScanType.Id", "ScanTypeHasCodeType.ScanTypeId" );
-  modifier->Group( "ScanType.Id" );
-
-  std::vector< vtkSmartPointer< Alder::ScanType > > scanTypeList;
-  Alder::ScanType::GetAll( &scanTypeList, modifier );
-
-  modifier->Reset();
   modifier->Join( "ScanType", "ScanType.Id", "ScanTypeHasCodeType.ScanTypeId" );
   std::string override = "ScanTypeHasCodeType";
 
-  for( auto it = scanTypeList.begin(); it != scanTypeList.end(); ++it )
+  for( auto it = this->scanTypeMap.begin(); it != this->scanTypeMap.end(); ++it )
   { // for every scanType, add a new row
-    Alder::ScanType *scanType = (*it);
 
-    QVariant scanTypeId = scanType->Get( "Id" ).ToInt();
-    QString type = scanType->Get( "Type" ).ToString().c_str();
+    QList<QVariant> scanTypeIdList = it.value();
+    QString type = it.key();
+    // get one of the scantype records associated with this type
+    vtkNew<Alder::ScanType> scanType;
+    if( !scanType->Load( "Id", scanTypeIdList.first().toInt() ) )
+      continue;
 
     // get all the code types associated with this scan type
     std::vector< vtkSmartPointer< Alder::CodeType > > codeTypeList;
-    (*it)->GetList( &codeTypeList, modifier, override );
+    scanType->GetList( &codeTypeList, modifier, override );
     for( auto cit = codeTypeList.begin(); cit != codeTypeList.end(); ++cit )
     {
       Alder::CodeType *codeType = (*cit);
@@ -242,35 +308,35 @@ void QCodeDialog::updateCodeTable()
         groupValue = codeGroup->Get( "Value" ).ToInt();
       }
 
-      this->ui->codeTableWidget->insertRow( 0 );
+      this->codeTableWidget->insertRow( 0 );
 
       // add Type to row
       item = new QTableWidgetItem;
       item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
       item->setText( type );
-      item->setData( Qt::UserRole, scanTypeId );
-      this->ui->codeTableWidget->setItem( 0, this->columnIndex[name]["Type"], item );
+      item->setData( Qt::UserRole, scanTypeIdList );
+      this->codeTableWidget->setItem( 0, this->columnIndex[name]["Type"], item );
 
       // add Code to row
       item = proto->clone();
       item->setText( code );
       item->setData( Qt::UserRole, codeTypeId );
-      this->ui->codeTableWidget->setItem( 0, this->columnIndex[name]["Code"], item );
+      this->codeTableWidget->setItem( 0, this->columnIndex[name]["Code"], item );
 
       // add Value to row
       item = proto->clone();
       item->setData( Qt::DisplayRole, value );
-      this->ui->codeTableWidget->setItem( 0, this->columnIndex[name]["Value"], item );
+      this->codeTableWidget->setItem( 0, this->columnIndex[name]["Value"], item );
 
       // add Active to row
       item = proto->clone();
       item->setText( active );
-      this->ui->codeTableWidget->setItem( 0, this->columnIndex[name]["Active"], item );
+      this->codeTableWidget->setItem( 0, this->columnIndex[name]["Active"], item );
 
       // add Usage to row
       item = proto->clone();
       item->setData( Qt::DisplayRole, usage );
-      this->ui->codeTableWidget->setItem( 0, this->columnIndex[name]["Usage"], item );
+      this->codeTableWidget->setItem( 0, this->columnIndex[name]["Usage"], item );
 
       if( hasGroup )
       {
@@ -279,65 +345,65 @@ void QCodeDialog::updateCodeTable()
         item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
         item->setText( groupName );
         item->setData( Qt::UserRole, groupId );
-        this->ui->codeTableWidget->setItem( 0, this->columnIndex[name]["Group"], item );
+        this->codeTableWidget->setItem( 0, this->columnIndex[name]["Group"], item );
 
         // add Group Value to row
         item = proto->clone();
         item->setData( Qt::DisplayRole, groupValue );
-        this->ui->codeTableWidget->setItem( 0, this->columnIndex[name]["Group Value"], item );
+        this->codeTableWidget->setItem( 0, this->columnIndex[name]["Group Value"], item );
       }
       else
       {
         // add Group to row
         item = new QTableWidgetItem;
         item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
-        this->ui->codeTableWidget->setItem( 0, this->columnIndex[name]["Group"], item );
+        this->codeTableWidget->setItem( 0, this->columnIndex[name]["Group"], item );
 
         // add Group Value to row
         item = proto->clone();
-        this->ui->codeTableWidget->setItem( 0, this->columnIndex[name]["Group Value"], item );
+        this->codeTableWidget->setItem( 0, this->columnIndex[name]["Group Value"], item );
       }
     }
   }
 
-  this->ui->codeAddPushButton->setEnabled( true );
-  this->ui->codeEditPushButton->setEnabled( false );
-  this->ui->codeRemovePushButton->setEnabled( false );
-  this->ui->codeApplyPushButton->setEnabled( false );
-  this->ui->codeLineEdit->clear();
-  this->ui->codeValueSpinBox->setValue( 0 );
-  this->ui->codeActiveCheckBox->setCheckState( Qt::Unchecked );
-  this->ui->scanTypeComboBox->setCurrentIndex( -1 );
-  this->ui->codeGroupComboBox->setCurrentIndex( -1 );
+  this->codeAddPushButton->setEnabled( true );
+  this->codeEditPushButton->setEnabled( false );
+  this->codeRemovePushButton->setEnabled( false );
+  this->codeApplyPushButton->setEnabled( false );
+  this->codeLineEdit->clear();
+  this->codeValueSpinBox->setValue( 0 );
+  this->codeActiveCheckBox->setCheckState( Qt::Unchecked );
+  this->scanTypeComboBox->setCurrentIndex( -1 );
+  this->codeGroupComboBox->setCurrentIndex( -1 );
 
-  this->ui->codeTableWidget->setSortingEnabled( true );
-  this->ui->codeTableWidget->blockSignals( false );
+  this->codeTableWidget->setSortingEnabled( true );
+  this->codeTableWidget->blockSignals( false );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialog::updateGroupTable()
+void QCodeDialogPrivate::updateGroupUi()
 {
-  this->ui->groupTableWidget->blockSignals( true );
-  this->ui->groupTableWidget->setSortingEnabled( false );
-  this->ui->groupTableWidget->setRowCount( 0 );
+  this->groupTableWidget->blockSignals( true );
+  this->groupTableWidget->setSortingEnabled( false );
+  this->groupTableWidget->setRowCount( 0 );
 
   QStringList columns;
   columns << "Group" << "Group Value" << "Usage";
-  std::string name = "CodeGroup";
+  QString name = "CodeGroup";
   for( int i = 0; i < columns.size(); ++i )
   {
     this->sortOrder[name][i] = Qt::AscendingOrder;
-    this->columnIndex[name][ columns.at( i ).toStdString() ] = i;
+    this->columnIndex[name][columns[i]] = i;
   }
 
   // the last column indexes a dummy column of empty cells to stretch
   // the table on
   int lastColumn = columns.size();
 
-  this->ui->groupTableWidget->setHorizontalHeaderLabels( columns );
-  this->ui->codeGroupComboBox->clear();
-  this->ui->codeGroupComboBox->addItem( "", QVariant( -1 ) );
-  this->ui->codeGroupComboBox->setCurrentIndex( 0 );
+  this->groupTableWidget->setHorizontalHeaderLabels( columns );
+  this->codeGroupComboBox->clear();
+  this->codeGroupComboBox->addItem( "", QVariant( -1 ) );
+  this->codeGroupComboBox->setCurrentIndex( 0 );
 
   // prototype for cloning center aligned cells
   QTableWidgetItem* proto = new QTableWidgetItem();
@@ -352,7 +418,7 @@ void QCodeDialog::updateGroupTable()
   {
     Alder::CodeGroup *codeGroup = (*it);
     QString groupName = codeGroup->Get( "Name" ).ToString().c_str();
-    this->ui->groupTableWidget->insertRow( 0 );
+    this->groupTableWidget->insertRow( 0 );
     QVariant id = QVariant( codeGroup->Get( "Id" ).ToInt() );
 
     // add Group to row
@@ -360,81 +426,60 @@ void QCodeDialog::updateGroupTable()
     item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
     item->setText( groupName );
     item->setData( Qt::UserRole, id );
-    this->ui->groupTableWidget->setItem( 0, this->columnIndex[name]["Group"], item );
+    this->groupTableWidget->setItem( 0, this->columnIndex[name]["Group"], item );
 
     // add Group Value to row
     item = proto->clone();
     item->setData( Qt::DisplayRole, codeGroup->Get( "Value" ).ToInt() );
-    this->ui->groupTableWidget->setItem( 0, this->columnIndex[name]["Group Value"], item );
+    this->groupTableWidget->setItem( 0, this->columnIndex[name]["Group Value"], item );
 
     // add Usage to row
     item = proto->clone();
     item->setData( Qt::DisplayRole, codeGroup->GetUsage() );
-    this->ui->groupTableWidget->setItem( 0, this->columnIndex[name]["Usage"], item );
+    this->groupTableWidget->setItem( 0, this->columnIndex[name]["Usage"], item );
 
     // add a dummy column to expand out on
     item = new QTableWidgetItem;
-    this->ui->groupTableWidget->setItem( 0, lastColumn, item );
+    this->groupTableWidget->setItem( 0, lastColumn, item );
 
-    this->ui->codeGroupComboBox->addItem( groupName, id );
+    this->codeGroupComboBox->addItem( groupName, id );
   }
 
-  this->ui->groupAddPushButton->setEnabled( true );
-  this->ui->groupEditPushButton->setEnabled( false );
-  this->ui->groupRemovePushButton->setEnabled( false );
-  this->ui->groupApplyPushButton->setEnabled( false );
-  this->ui->groupLineEdit->clear();
-  this->ui->groupValueSpinBox->setValue( 0 );
+  this->groupAddPushButton->setEnabled( true );
+  this->groupEditPushButton->setEnabled( false );
+  this->groupRemovePushButton->setEnabled( false );
+  this->groupApplyPushButton->setEnabled( false );
+  this->groupLineEdit->clear();
+  this->groupValueSpinBox->setValue( 0 );
 
-  this->ui->groupTableWidget->setSortingEnabled( true );
-  this->ui->groupTableWidget->blockSignals( false );
+  this->groupTableWidget->setSortingEnabled( true );
+  this->groupTableWidget->blockSignals( false );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialog::slotTabChanged()
+void QCodeDialogPrivate::tabChanged()
 {
-  this->ui->groupTableWidget->clearSelection();
-  this->ui->codeTableWidget->clearSelection();
+  this->groupTableWidget->clearSelection();
+  this->codeTableWidget->clearSelection();
 
-  this->ui->codeAddPushButton->setEnabled( true );
-  this->ui->codeEditPushButton->setEnabled( false );
-  this->ui->codeRemovePushButton->setEnabled( false );
-  this->ui->codeApplyPushButton->setEnabled( false );
+  this->codeAddPushButton->setEnabled( true );
+  this->codeEditPushButton->setEnabled( false );
+  this->codeRemovePushButton->setEnabled( false );
+  this->codeApplyPushButton->setEnabled( false );
 
-  this->ui->groupAddPushButton->setEnabled( true );
-  this->ui->groupEditPushButton->setEnabled( false );
-  this->ui->groupRemovePushButton->setEnabled( false );
-  this->ui->groupApplyPushButton->setEnabled( false );
+  this->groupAddPushButton->setEnabled( true );
+  this->groupEditPushButton->setEnabled( false );
+  this->groupRemovePushButton->setEnabled( false );
+  this->groupApplyPushButton->setEnabled( false );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialog::slotTableDoubleClicked()
+void QCodeDialogPrivate::addGroup()
 {
-  QTableWidget* widget = qobject_cast<QTableWidget*>( sender() );
-  if( widget && widget == this->ui->codeTableWidget )
-  {
-    this->ui->codeTableWidget->clearSelection();
-    this->ui->codeAddPushButton->setEnabled( true );
-    this->ui->codeEditPushButton->setEnabled( false );
-    this->ui->codeRemovePushButton->setEnabled( false );
-    this->ui->codeApplyPushButton->setEnabled( false );
-  }
-  else
-  {
-    this->ui->groupTableWidget->clearSelection();
-    this->ui->groupAddPushButton->setEnabled( true );
-    this->ui->groupEditPushButton->setEnabled( false );
-    this->ui->groupRemovePushButton->setEnabled( false );
-    this->ui->groupApplyPushButton->setEnabled( false );
-  }
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialog::slotGroupAdd()
-{
+  Q_Q(QCodeDialog);
   // add if group name is filled
-  int value = this->ui->groupValueSpinBox->value();
-  std::string groupName = this->ui->groupLineEdit->text().trimmed().toStdString();
+  int value = this->groupValueSpinBox->value();
+  std::string groupName = this->groupLineEdit->text().trimmed().toStdString();
   if( groupName.empty() ) return;
 
   // ensure proposed CodeGroup Name and Value are unique
@@ -445,21 +490,22 @@ void QCodeDialog::slotGroupAdd()
     codeGroup->Set( "Name", groupName );
     codeGroup->Set( "Value", value );
     codeGroup->Save();
-    this->updateGroupTable();
+    this->updateGroupUi();
   }
   else
   {
     QString title = "Invalid Code Group";
     QString text = "Name and value are not unique";
-    QMessageBox::warning( this, title, text );
+    QMessageBox::warning( q, title, text );
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialog::slotGroupRemove()
+void QCodeDialogPrivate::removeGroup()
 {
+  Q_Q(QCodeDialog);
   // a group cannot be removed if it has a non-zero usage count
-  QList< QTableWidgetItem* > items = this->ui->groupTableWidget->selectedItems();
+  QList< QTableWidgetItem* > items = this->groupTableWidget->selectedItems();
   bool selected = !items.empty();
   if( selected )
   {
@@ -471,33 +517,34 @@ void QCodeDialog::slotGroupRemove()
     QString text = "Remove ";
     text += codeGroup->Get( "Name" ).ToString().c_str();
     text += " group?";
-    QMessageBox::StandardButton reply = QMessageBox::question( this,
+    QMessageBox::StandardButton reply = QMessageBox::question( q,
       title, text, QMessageBox::Yes|QMessageBox::No );
     if( QMessageBox::Yes == reply )
     {
       codeGroup->Remove();
-      this->updateGroupTable();
+      this->updateGroupUi();
     }
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialog::slotGroupApply()
+void QCodeDialogPrivate::applyGroup()
 {
+  Q_Q(QCodeDialog);
   // get the selected item
-  QList< QTableWidgetItem* > items = this->ui->groupTableWidget->selectedItems();
+  QList< QTableWidgetItem* > items = this->groupTableWidget->selectedItems();
   bool selected = !items.empty();
-  QString groupName = this->ui->groupLineEdit->text();
+  QString groupName = this->groupLineEdit->text();
 
   if( selected && !groupName.isEmpty() )
   {
-    int value = this->ui->groupValueSpinBox->value();
+    int value = this->groupValueSpinBox->value();
 
     // ensure proposed CodeGroup Name and Value are unique
     bool unique = Alder::CodeGroup::IsUnique( groupName.toStdString(), value );
     if( unique )
     {
-      std::string name = "CodeGroup";
+      QString name = "CodeGroup";
       QTableWidgetItem* first = items.first();
       int id = first->data( Qt::UserRole ).toInt();
       vtkNew<Alder::CodeGroup> codeGroup;
@@ -531,78 +578,60 @@ void QCodeDialog::slotGroupApply()
         int usage = codeGroup->GetUsage();
         items.at( this->columnIndex[name]["Usage"] )->setData( Qt::DisplayRole, usage );
 
-        this->updateCodeTable();
+        this->updateCodeUi();
       }
     }
     else
     {
       QString title = "Invalid Code Group";
       QString text = "Name and value are not unique";
-      QMessageBox::warning( this, title, text );
+      QMessageBox::warning( q, title, text );
     }
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialog::slotGroupEdit()
+void QCodeDialogPrivate::editGroup()
 {
   // get the selected item
-  QList< QTableWidgetItem* > items = this->ui->groupTableWidget->selectedItems();
+  QList< QTableWidgetItem* > items = this->groupTableWidget->selectedItems();
   bool selected = !items.empty();
   if( selected )
   {
-    std::string name = "CodeGroup";
-    this->ui->groupLineEdit->setText( items.at( this->columnIndex[name]["Group"] )->text() );
-    this->ui->groupValueSpinBox->setValue( items.at( this->columnIndex[name]["Group Value"] )->data( Qt::DisplayRole ).toInt() );
-    this->ui->groupApplyPushButton->setEnabled( true );
+    QString name = "CodeGroup";
+    this->groupLineEdit->setText( items.at( this->columnIndex[name]["Group"] )->text() );
+    this->groupValueSpinBox->setValue( items.at( this->columnIndex[name]["Group Value"] )->data( Qt::DisplayRole ).toInt() );
+    this->groupApplyPushButton->setEnabled( true );
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialog::slotGroupSelectionChanged()
+void QCodeDialogPrivate::addCode()
 {
-  QList< QTableWidgetItem* > items = this->ui->groupTableWidget->selectedItems();
-  bool selected = !items.empty();
-  this->ui->groupAddPushButton->setEnabled( !selected );
-  this->ui->groupEditPushButton->setEnabled( selected );
-  this->ui->groupApplyPushButton->setEnabled( false );
-  this->ui->groupLineEdit->clear();
-  this->ui->groupValueSpinBox->setValue( 0 );
-
-  if( selected )
-  {
-    int usage = items.at( this->columnIndex["CodeGroup"]["Usage"] )->data( Qt::DisplayRole ).toInt();
-    bool enabled = 0 == usage;
-    this->ui->groupRemovePushButton->setEnabled( enabled );
-  }
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialog::slotCodeAdd()
-{
+  Q_Q(QCodeDialog);
   // add if code name is filled
-  std::string code = this->ui->codeLineEdit->text().trimmed().toStdString();
+  std::string code = this->codeLineEdit->text().trimmed().toStdString();
   if( code.empty() ) return;
 
-  int index = this->ui->scanTypeComboBox->currentIndex();
-  int scanTypeId = -1;
+  int index = this->scanTypeComboBox->currentIndex();
+  QList<QVariant> scanTypeIdList;
   if( -1 != index )
-    scanTypeId = this->ui->scanTypeComboBox->itemData( index ).toInt();
+    scanTypeIdList = this->scanTypeComboBox->itemData( index ).toList();
 
-  if( -1 == scanTypeId )
+  if( scanTypeIdList.empty() )
   {
     QString title = "Invalid Code";
     QString text = "A Code must be associated with a Type";
-    QMessageBox::warning( this, title, text );
+    QMessageBox::warning( q, title, text );
     return;
   }
 
-  int value = this->ui->codeValueSpinBox->value();
+  int value = this->codeValueSpinBox->value();
 
-  index = this->ui->codeGroupComboBox->currentIndex();
+  index = this->codeGroupComboBox->currentIndex();
   int groupId = -1;
   if( -1 != index )
-    groupId = this->ui->codeGroupComboBox->itemData( index ).toInt();
+    groupId = this->codeGroupComboBox->itemData( index ).toInt();
 
   // ensure proposed CodeType Name, Value and GroupId are unique
   bool unique = Alder::CodeType::IsUnique( code, value, groupId );
@@ -616,30 +645,34 @@ void QCodeDialog::slotCodeAdd()
     codeType->Save();
 
     // get the ScanType and add the CodeType to the ScanTypeHasCodeType table
-    vtkNew<Alder::ScanType> scanType;
-    scanType->Load( "Id", scanTypeId );
-    vtkSmartPointer<Alder::CodeType> ptr = codeType.GetPointer();
-    scanType->AddRecord( ptr );
+    for( auto it = scanTypeIdList.begin(); it != scanTypeIdList.end(); ++it )
+    {
+      vtkNew<Alder::ScanType> scanType;
+      scanType->Load( "Id", (*it).toInt() );
+      vtkSmartPointer<Alder::CodeType> ptr = codeType.GetPointer();
+      scanType->AddRecord( ptr );
+    }
 
-    this->updateCodeTable();
+    this->updateCodeUi();
   }
   else
   {
     QString title = "Invalid Code";
     QString text = "Code, value and group are not unique";
-    QMessageBox::warning( this, title, text );
+    QMessageBox::warning( q, title, text );
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialog::slotCodeRemove()
+void QCodeDialogPrivate::removeCode()
 {
+  Q_Q(QCodeDialog);
   // a code cannot be removed if it has a non-zero usage count
-  QList< QTableWidgetItem* > items = this->ui->codeTableWidget->selectedItems();
+  QList< QTableWidgetItem* > items = this->codeTableWidget->selectedItems();
   bool selected = !items.empty();
   if( selected )
   {
-    std::string name = "CodeType";
+    QString name = "CodeType";
     int id = items.at( this->columnIndex[name]["Code"] )->data( Qt::UserRole ).toInt();
     vtkNew<Alder::CodeType> codeType;
     codeType->Load( "Id", id );
@@ -648,45 +681,51 @@ void QCodeDialog::slotCodeRemove()
     QString text = "Remove ";
     text += codeType->Get( "Code" ).ToString().c_str();
     text += " code?";
-    QMessageBox::StandardButton reply = QMessageBox::question( this,
+    QMessageBox::StandardButton reply = QMessageBox::question( q,
       title, text, QMessageBox::Yes|QMessageBox::No );
     if( QMessageBox::Yes == reply )
     {
-      int scanTypeId = items.at( this->columnIndex[name]["Type"] )->data( Qt::UserRole ).toInt();
-      vtkNew<Alder::ScanType> scanType;
-      scanType->Load( "Id", scanTypeId );
-      vtkSmartPointer<Alder::CodeType> ptr = codeType.GetPointer();
-      scanType->RemoveRecord( ptr );
-
+      QList<QVariant> scanTypeIdList =
+        items.at( this->columnIndex[name]["Type"] )->data( Qt::UserRole ).toList();
+      for( auto it = scanTypeIdList.begin(); it != scanTypeIdList.end(); ++it )
+      {
+        vtkNew<Alder::ScanType> scanType;
+        if( scanType->Load( "Id", (*it).toInt() ) )
+        {
+          vtkSmartPointer<Alder::CodeType> ptr = codeType.GetPointer();
+          scanType->RemoveRecord( ptr );
+        }
+      }
       codeType->Remove();
-      this->updateCodeTable();
+      this->updateCodeUi();
     }
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialog::slotCodeApply()
+void QCodeDialogPrivate::applyCode()
 {
+  Q_Q(QCodeDialog);
   // get the selected item
-  QList< QTableWidgetItem* > items = this->ui->codeTableWidget->selectedItems();
+  QList< QTableWidgetItem* > items = this->codeTableWidget->selectedItems();
   bool selected = !items.empty();
-  QString code = this->ui->codeLineEdit->text();
+  QString code = this->codeLineEdit->text();
 
   if( selected && !code.isEmpty() )
   {
-    int value = this->ui->codeValueSpinBox->value();
-    int index = this->ui->codeGroupComboBox->currentIndex();
+    int value = this->codeValueSpinBox->value();
+    int index = this->codeGroupComboBox->currentIndex();
     int groupId = -1;
     if( -1 != index )
-      groupId = this->ui->codeGroupComboBox->itemData( index ).toInt();
+      groupId = this->codeGroupComboBox->itemData( index ).toInt();
     int groupValue = 0;
-    int active = Qt::Checked == this->ui->codeActiveCheckBox->checkState() ? 1 : 0;
+    int active = Qt::Checked == this->codeActiveCheckBox->checkState() ? 1 : 0;
 
     // ensure proposed Code, Value, and CodeGroupId are unique
     bool unique = Alder::CodeType::IsUnique( code.toStdString(), value, groupId );
     if( unique )
     {
-      std::string name = "CodeType";
+      QString name = "CodeType";
       int id = items.at( this->columnIndex[name]["Code"] )->data( Qt::UserRole ).toInt();
       vtkNew<Alder::CodeType> codeType;
       codeType->Load( "Id", id );
@@ -745,62 +784,83 @@ void QCodeDialog::slotCodeApply()
         int usage = codeType->GetUsage();
         items.at( this->columnIndex[name]["Usage"] )->setData( Qt::DisplayRole, usage );
 
-        this->updateCodeTable();
+        this->updateCodeUi();
       }
     }
     else
     {
       QString title = "Invalid Code";
       QString text = "Code, Value and Group are not unique";
-      QMessageBox::warning( this, title, text );
+      QMessageBox::warning( q, title, text );
     }
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialog::slotCodeEdit()
+void QCodeDialogPrivate::editCode()
 {
   // get the selected item
-  QList< QTableWidgetItem* > items = this->ui->codeTableWidget->selectedItems();
+  QList< QTableWidgetItem* > items = this->codeTableWidget->selectedItems();
   bool selected = !items.empty();
   if( selected )
   {
-    std::string name = "CodeType";
-    this->ui->codeLineEdit->setText( items.at( this->columnIndex[name]["Code"] )->text() );
-    this->ui->codeValueSpinBox->setValue( items.at( this->columnIndex[name]["Value"] )->data( Qt::DisplayRole ).toInt() );
+    QString name = "CodeType";
+    this->codeLineEdit->setText( items.at( this->columnIndex[name]["Code"] )->text() );
+    this->codeValueSpinBox->setValue( items.at( this->columnIndex[name]["Value"] )->data( Qt::DisplayRole ).toInt() );
     QString group = items.at( this->columnIndex[name]["Group"] )->text();
     if( !group.isEmpty() )
     {
-      int index = this->ui->codeGroupComboBox->findText( group );
-      this->ui->codeGroupComboBox->setCurrentIndex( index );
+      int index = this->codeGroupComboBox->findText( group );
+      this->codeGroupComboBox->setCurrentIndex( index );
     }
     QString scanType = items.at( this->columnIndex[name]["Type"] )->text();
-    int index = this->ui->scanTypeComboBox->findText( scanType );
-    this->ui->scanTypeComboBox->setCurrentIndex( index );
+    int index = this->scanTypeComboBox->findText( scanType );
+    this->scanTypeComboBox->setCurrentIndex( index );
     Qt::CheckState checked = "Yes" == items.at( this->columnIndex[name]["Active"] )->text() ? Qt::Checked : Qt::Unchecked;
-    this->ui->codeActiveCheckBox->setCheckState( checked );
-    this->ui->codeApplyPushButton->setEnabled( true );
+    this->codeActiveCheckBox->setCheckState( checked );
+    this->codeApplyPushButton->setEnabled( true );
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QCodeDialog::slotCodeSelectionChanged()
+void QCodeDialogPrivate::selectedCodeChanged()
 {
-  QList< QTableWidgetItem* > items = this->ui->codeTableWidget->selectedItems();
+  QList< QTableWidgetItem* > items = this->codeTableWidget->selectedItems();
   bool selected = !items.empty();
-  this->ui->codeAddPushButton->setEnabled( !selected );
-  this->ui->codeEditPushButton->setEnabled( selected );
-  this->ui->codeApplyPushButton->setEnabled( false );
-  this->ui->codeLineEdit->clear();
-  this->ui->codeValueSpinBox->setValue( 0 );
-  this->ui->scanTypeComboBox->setCurrentIndex( -1 );
-  this->ui->codeGroupComboBox->setCurrentIndex( -1 );
-  this->ui->codeActiveCheckBox->setCheckState( Qt::Unchecked );
+  this->codeAddPushButton->setEnabled( !selected );
+  this->codeEditPushButton->setEnabled( selected );
+  this->codeApplyPushButton->setEnabled( false );
+  this->codeLineEdit->clear();
+  this->codeValueSpinBox->setValue( 0 );
+  this->scanTypeComboBox->setCurrentIndex( -1 );
+  this->codeGroupComboBox->setCurrentIndex( -1 );
+  this->codeActiveCheckBox->setCheckState( Qt::Unchecked );
 
   if( selected )
   {
     int usage = items.at( this->columnIndex["CodeType"]["Usage"] )->data( Qt::DisplayRole ).toInt();
     bool enabled = 0 == usage;
-    this->ui->codeRemovePushButton->setEnabled( enabled );
+    this->codeRemovePushButton->setEnabled( enabled );
   }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QCodeDialog::QCodeDialog( QWidget* parent )
+  : Superclass( parent )
+  , d_ptr(new QCodeDialogPrivate(*this))
+{
+  Q_D(QCodeDialog);
+  d->setupUi(this);
+  d->updateUi();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QCodeDialog::~QCodeDialog()
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QCodeDialog::close()
+{
+  this->accept();
 }

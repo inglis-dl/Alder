@@ -8,44 +8,25 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #include <OpalService.h>
 
+// Alder includes
 #include <Application.h>
 #include <Configuration.h>
-#include <ProgressProxy.h>
 #include <Utilities.h>
 
+// VTK includes
 #include <vtkCommand.h>
 #include <vtkObjectFactory.h>
 
+// curl includes
+#include </usr/include/curl/easy.h>
+
 #include <sstream>
 #include <stdexcept>
-#include </usr/include/curl/curl.h>
-#include </usr/include/curl/stdcheaders.h>
-#include </usr/include/curl/easy.h>
 
 namespace Alder
 {
-  bool OpalService::curlProgress = false;
-
-  // this function is used by curl to send progress signals
-  int OpalService::curlProgressCallback(
-    void* clientData,
-    const double downTotal, const double downNow,
-    const double upTotal, const double upNow )
-  {
-    double progress = 0.0 == downTotal ? downTotal : downNow / downTotal;
-    ProgressProxy* proxy = static_cast<ProgressProxy*>(clientData);
-    if( 0.0 == downTotal && !proxy->GetBusyProgress() )
-    {
-      proxy->SetBusyProgressOn();
-      proxy->ConfigureProgress();
-    }
-    proxy->UpdateProgress( progress );
-    return proxy->GetAbortStatus();
-  }
-
   vtkStandardNewMacro( OpalService );
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -57,23 +38,32 @@ namespace Alder
     this->Port = 8843;
     this->Timeout = 10;
     this->Verbose = 0;
-    OpalService::curlProgress = false;
+    this->SustainConnection = 0;
+    this->CurlConnection = NULL;
+    this->CurlHeaders = NULL;
+    this->CurlCredentials = "";
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   OpalService::~OpalService()
   {
+    if( NULL != this->CurlHeaders )
+    {
+      curl_slist_free_all( this->CurlHeaders );
+    }
     curl_global_cleanup();
+    this->CurlConnection = NULL;
+    this->CurlHeaders = NULL;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void OpalService::Setup(
-    const std::string& username,
-    const std::string& password,
-    const std::string& host,
-    const int& port,
-    const int& timeout,
-    const int& verbose )
+    const std::string &username,
+    const std::string &password,
+    const std::string &host,
+    const int &port,
+    const int &timeout,
+    const int &verbose )
   {
     this->Username = username;
     this->Password = password;
@@ -87,18 +77,55 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void OpalService::SetCurlProgress( const bool state )
+  void OpalService::SetSustainConnection( int sustain )
   {
-    OpalService::curlProgress = state;
+    if( sustain == this->SustainConnection ) return;
+
+    if( 0 == sustain )
+    {
+      if( NULL != this->CurlHeaders )
+        curl_slist_free_all( this->CurlHeaders );
+      if( NULL != this->CurlConnection )
+        curl_easy_cleanup( this->CurlConnection );
+      this->CurlCredentials.clear();
+      this->CurlHeaders = NULL;
+      this->CurlConnection = NULL;
+    }
+    else
+    {
+      // encode the credentials
+      this->CurlCredentials.clear();
+      Utilities::base64String( this->Username + ":" + this->Password, this->CurlCredentials );
+      this->CurlCredentials = "Authorization:X-Opal-Auth " + this->CurlCredentials;
+
+      this->CurlConnection = curl_easy_init();
+      if( !this->CurlConnection )
+        throw std::runtime_error( "Unable to create cURL connection to Opal" );
+
+      // put the credentials in a header and the option to return data in json format
+      if( NULL != this->CurlHeaders )
+      {
+        curl_slist_free_all( this->CurlHeaders );
+        this->CurlHeaders = NULL;
+      }
+      this->CurlHeaders = curl_slist_append( this->CurlHeaders, "Accept: application/json" );
+      this->CurlHeaders = curl_slist_append( this->CurlHeaders, this->CurlCredentials.c_str() );
+
+      curl_easy_setopt( this->CurlConnection, CURLOPT_VERBOSE, this->Verbose );
+      curl_easy_setopt( this->CurlConnection, CURLOPT_SSL_VERIFYPEER, 0L );
+      curl_easy_setopt( this->CurlConnection, CURLOPT_HTTPHEADER, this->CurlHeaders );
+    }
+
+    this->SustainConnection = sustain;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   Json::Value OpalService::Read(
-    const std::string servicePath, const std::string fileName, const bool progress ) const
+    const std::string &servicePath, const std::string &fileName ) const
   {
-    bool toFile = 0 < fileName.size();
+    bool toFile = !fileName.empty();
     FILE *file;
-    CURL *curl;
+    CURL *curl = NULL;
     std::stringstream urlStream;
     std::string credentials, url, result;
     struct curl_slist *headers = NULL;
@@ -107,21 +134,32 @@ namespace Alder
     Json::Reader reader;
     Application *app = Application::GetInstance();
 
-    // encode the credentials
-    Utilities::base64String( this->Username + ":" + this->Password, credentials );
-    credentials = "Authorization:X-Opal-Auth " + credentials;
-
     urlStream << "https://" << this->Host << ":" << this->Port << "/ws" + servicePath;
     url = urlStream.str();
     app->Log( "Querying Opal: " + url );
 
-    curl = curl_easy_init();
-    if( !curl )
-      throw std::runtime_error( "Unable to create cURL connection to Opal" );
+    if( !this->SustainConnection )
+    {
+      curl = curl_easy_init();
+      if( !curl )
+        throw std::runtime_error( "Unable to create cURL connection to Opal" );
 
-    // put the credentials in a header and the option to return data in json format
-    headers = curl_slist_append( headers, "Accept: application/json" );
-    headers = curl_slist_append( headers, credentials.c_str() );
+      // encode the credentials
+      Utilities::base64String( this->Username + ":" + this->Password, credentials );
+      credentials = "Authorization:X-Opal-Auth " + credentials;
+
+      // put the credentials in a header and the option to return data in json format
+      headers = curl_slist_append( headers, "Accept: application/json" );
+      headers = curl_slist_append( headers, credentials.c_str() );
+
+      curl_easy_setopt( curl, CURLOPT_VERBOSE, this->Verbose );
+      curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, 0L );
+      curl_easy_setopt( curl, CURLOPT_HTTPHEADER, headers );
+    }
+    else
+    {
+      curl = this->CurlConnection;
+    }
 
     // if we are writing to a file, open it
     if( toFile )
@@ -143,33 +181,16 @@ namespace Alder
       curl_easy_setopt( curl, CURLOPT_WRITEDATA, &result );
     }
 
-    curl_easy_setopt( curl, CURLOPT_VERBOSE, this->Verbose );
-    curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, 0L );
-    curl_easy_setopt( curl, CURLOPT_HTTPHEADER, headers );
     curl_easy_setopt( curl, CURLOPT_URL, url.c_str() );
-
-    ProgressProxy proxy;
-    if( progress && OpalService::curlProgress )
-    {
-      proxy.SetProgressTypeLocal();
-      proxy.SetBusyProgressOn();
-      proxy.ConfigureProgress();
-      curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 0L );
-      curl_easy_setopt( curl, CURLOPT_PROGRESSDATA, (void*)(&proxy) );
-      curl_easy_setopt( curl, CURLOPT_PROGRESSFUNCTION, OpalService::curlProgressCallback );
-      proxy.StartProgress();
-    }
-
     res = curl_easy_perform( curl );
 
-    // clean up
-    curl_slist_free_all( headers );
-    curl_easy_cleanup( curl );
     if( toFile ) fclose( file );
 
-    if( progress && OpalService::curlProgress )
+    // clean up
+    if( !this->SustainConnection )
     {
-      proxy.EndProgress();
+      curl_slist_free_all( headers );
+      curl_easy_cleanup( curl );
     }
 
     if( CURLE_OK != res )
@@ -197,11 +218,18 @@ namespace Alder
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::vector< std::string > OpalService::GetIdentifiers(
-    const std::string dataSource, const std::string table ) const
+    const std::string &dataSource, const std::string &table ) const
   {
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table << "/entities";
     Json::Value root = this->Read( stream.str() );
+    try
+    {
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
 
     std::vector< std::string > list;
     for( int i = 0; i < root.size(); ++i )
@@ -217,17 +245,24 @@ namespace Alder
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::map< std::string, std::map< std::string, std::string > > OpalService::GetRows(
-    const std::string dataSource, const std::string table,
-    const int offset, const int limit ) const
+    const std::string &dataSource, const std::string &table,
+    const int &offset, const int &limit ) const
   {
-    std::map< std::string, std::map< std::string, std::string > > list;
-    std::string identifier, key, value;
     std::stringstream stream;
-
     stream << "/datasource/" << dataSource << "/table/" << table
            << "/valueSets?offset=" << offset << "&limit=" << limit;
-    Json::Value root = this->Read( stream.str() );
+    Json::Value root;
+    try
+    {
+      root = this->Read( stream.str() );
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
 
+    std::map< std::string, std::map< std::string, std::string > > list;
+    std::string identifier, key, value;
     for( int i = 0; i < root["valueSets"].size(); ++i )
     {
       identifier = root["valueSets"][i].get( "identifier", "" ).asString();
@@ -250,16 +285,23 @@ namespace Alder
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::map< std::string, std::string > OpalService::GetRow(
-    const std::string dataSource, const std::string table, const std::string identifier ) const
+    const std::string &dataSource, const std::string &table, const std::string &identifier ) const
   {
-    std::map< std::string, std::string > map;
-    std::string key, value;
     std::stringstream stream;
-
     stream << "/datasource/" << dataSource << "/table/" << table
            << "/valueSet/" << identifier;
-    Json::Value root = this->Read( stream.str(), "", false );
+    Json::Value root;
+    try
+    {
+      root = this->Read( stream.str() );
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
 
+    std::map< std::string, std::string > map;
+    std::string key, value;
     if( 0 < root["valueSets"][0].get( "identifier", "" ).asString().size() )
     {
       for( int j = 0; j < root["valueSets"][0]["values"].size(); ++j )
@@ -275,18 +317,25 @@ namespace Alder
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::map< std::string, std::string > OpalService::GetColumn(
-    const std::string dataSource, const std::string table,
-    const std::string variable, const int offset, const int limit )
+    const std::string &dataSource, const std::string &table,
+    const std::string &variable, const int &offset, const int &limit )
   {
-    std::map< std::string, std::string > map;
-    std::string identifier, value;
     std::stringstream stream;
-
     stream << "/datasource/" << dataSource << "/table/" << table
            << "/valueSets?offset=" << offset << "&limit=" << limit
            << "&select=name().eq('" << variable << "')";
-    Json::Value root = this->Read( stream.str() );
+    Json::Value root;
+    try
+    {
+      root = this->Read( stream.str() );
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
 
+    std::map< std::string, std::string > map;
+    std::string identifier, value;
     for( int i = 0; i < root["valueSets"].size(); ++i )
     {
       identifier = root["valueSets"][i].get( "identifier", "" ).asString();
@@ -303,28 +352,46 @@ namespace Alder
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::string OpalService::GetValue(
-    const std::string dataSource, const std::string table,
-    const std::string identifier, const std::string variable ) const
+    const std::string &dataSource, const std::string &table,
+    const std::string &identifier, const std::string &variable ) const
   {
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table
            << "/valueSet/" << identifier << "/variable/" << variable;
-    return this->Read( stream.str(), "", false ).get( "value", "" ).asString();
+    Json::Value root;
+    try
+    {
+      root = this->Read( stream.str() );
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
+
+    return root.get( "value", "" ).asString();
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::vector< std::string > OpalService::GetValues(
-    const std::string dataSource, const std::string table,
-    const std::string identifier, const std::string variable ) const
+    const std::string &dataSource, const std::string &table,
+    const std::string &identifier, const std::string &variable ) const
   {
-    std::vector< std::string > retValues;
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table
            << "/valueSet/" << identifier << "/variable/" << variable;
+    Json::Value root;
+    try
+    {
+      root = this->Read( stream.str() );
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
 
     // loop through the values array and get all the values
-    Json::Value values = this->Read( stream.str(), "", false ).get( "values", "" );
-
+    Json::Value values = root.get( "values", "" );
+    std::vector< std::string > retValues;
     for( int i = 0; i < values.size(); ++i )
       retValues.push_back( values[i].get( "value", "" ).asString() );
 
@@ -332,13 +399,62 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  std::vector< std::string > OpalService::GetVariables(
+    const std::string &dataSource, const std::string &table ) const
+  {
+    std::stringstream stream;
+    stream << "/datasource/" << dataSource << "/table/" << table
+           << "/variables";
+    Json::Value values;
+    try
+    {
+      values = this->Read( stream.str() );
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
+
+    // loop through the values array and get all the values
+    std::vector< std::string > retValues;
+    for( int i = 0; i < values.size(); ++i )
+      retValues.push_back( values[i].get( "name", "" ).asString() );
+
+    return retValues;
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  std::vector< std::string > OpalService::GetTables(
+    const std::string &dataSource ) const
+  {
+    std::stringstream stream;
+    stream << "/datasource/" << dataSource << "/tables";
+    Json::Value values;
+    try
+    {
+      values = this->Read( stream.str() );
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
+
+    // loop through the values array and get all the values
+    std::vector< std::string > retValues;
+    for( int i = 0; i < values.size(); ++i )
+      retValues.push_back( values[i].get( "name", "" ).asString() );
+
+    return retValues;
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void OpalService::SaveFile(
-    const std::string fileName,
-    const std::string dataSource,
-    const std::string table,
-    const std::string identifier,
-    const std::string variable,
-    const int position ) const
+    const std::string &fileName,
+    const std::string &dataSource,
+    const std::string &table,
+    const std::string &identifier,
+    const std::string &variable,
+    const int &position ) const
   {
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table
@@ -347,6 +463,13 @@ namespace Alder
     // add on the position
     if( 0 <= position ) stream << "?pos=" << position;
 
-    this->Read( stream.str(), fileName );
+    try
+    {
+      this->Read( stream.str(), fileName );
+    }
+    catch( std::runtime_error &e )
+    {
+      throw e;
+    }
   }
 }

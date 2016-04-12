@@ -26,8 +26,10 @@
 #ifndef __Configuration_h
 #define __Configuration_h
 
+// Alder includes
 #include <ModelObject.h>
 
+// VTK includes
 #include <vtkSmartPointer.h>
 
 #include <iostream>

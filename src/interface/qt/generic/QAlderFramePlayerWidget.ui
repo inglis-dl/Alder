@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>514</width>
+    <width>570</width>
     <height>34</height>
    </rect>
   </property>
@@ -23,13 +23,13 @@
       <bool>false</bool>
      </property>
      <property name="toolTip">
-      <string>Go to start</string>
+      <string>go to start</string>
      </property>
      <property name="text">
-      <string>&lt;&lt;</string>
+      <string/>
      </property>
      <property name="icon">
-      <iconset resource="resources/QAlderWidgets.qrc">
+      <iconset resource="resources/QAlderGenericWidgets.qrc">
        <normaloff>:/icons/frameToFirst.png</normaloff>:/icons/frameToFirst.png</iconset>
      </property>
      <property name="iconSize">
@@ -46,13 +46,13 @@
       <bool>false</bool>
      </property>
      <property name="toolTip">
-      <string>Step backward</string>
+      <string>reverse step</string>
      </property>
      <property name="text">
-      <string>&lt;</string>
+      <string/>
      </property>
      <property name="icon">
-      <iconset resource="resources/QAlderWidgets.qrc">
+      <iconset resource="resources/QAlderGenericWidgets.qrc">
        <normaloff>:/icons/frameBack.png</normaloff>:/icons/frameBack.png</iconset>
      </property>
      <property name="iconSize">
@@ -72,13 +72,13 @@
       <bool>false</bool>
      </property>
      <property name="toolTip">
-      <string>Play backward / Pause</string>
+      <string>play reverse / pause</string>
      </property>
      <property name="text">
       <string>PlayBack</string>
      </property>
      <property name="icon">
-      <iconset resource="resources/QAlderWidgets.qrc">
+      <iconset resource="resources/QAlderGenericWidgets.qrc">
        <normaloff>:/icons/framePlayReverse.png</normaloff>
        <normalon>:/icons/pause.png</normalon>:/icons/framePlayReverse.png</iconset>
      </property>
@@ -99,13 +99,13 @@
       <bool>false</bool>
      </property>
      <property name="toolTip">
-      <string>Play forward / Pause</string>
+      <string>play forward / pause</string>
      </property>
      <property name="text">
-      <string>Play</string>
+      <string/>
      </property>
      <property name="icon">
-      <iconset resource="resources/QAlderWidgets.qrc">
+      <iconset resource="resources/QAlderGenericWidgets.qrc">
        <normaloff>:/icons/framePlay.png</normaloff>
        <normalon>:/icons/pause.png</normalon>:/icons/framePlay.png</iconset>
      </property>
@@ -126,13 +126,13 @@
       <bool>false</bool>
      </property>
      <property name="toolTip">
-      <string>Step forward</string>
+      <string>forward step</string>
      </property>
      <property name="text">
-      <string>&gt;</string>
+      <string/>
      </property>
      <property name="icon">
-      <iconset resource="resources/QAlderWidgets.qrc">
+      <iconset resource="resources/QAlderGenericWidgets.qrc">
        <normaloff>:/icons/frameForward.png</normaloff>:/icons/frameForward.png</iconset>
      </property>
      <property name="iconSize">
@@ -152,13 +152,13 @@
       <bool>false</bool>
      </property>
      <property name="toolTip">
-      <string>Go to end</string>
+      <string>go to end</string>
      </property>
      <property name="text">
-      <string>&gt;&gt;</string>
+      <string/>
      </property>
      <property name="icon">
-      <iconset resource="resources/QAlderWidgets.qrc">
+      <iconset resource="resources/QAlderGenericWidgets.qrc">
        <normaloff>:/icons/frameToLast.png</normaloff>:/icons/frameToLast.png</iconset>
      </property>
      <property name="iconSize">
@@ -172,13 +172,13 @@
    <item>
     <widget class="QToolButton" name="repeatButton">
      <property name="toolTip">
-      <string>Repeat</string>
+      <string>repeat</string>
      </property>
      <property name="text">
-      <string>Repeat</string>
+      <string/>
      </property>
      <property name="icon">
-      <iconset resource="resources/QAlderWidgets.qrc">
+      <iconset resource="resources/QAlderGenericWidgets.qrc">
        <normaloff>:/icons/repeat.png</normaloff>:/icons/repeat.png</iconset>
      </property>
      <property name="iconSize">
@@ -198,7 +198,7 @@
    <item>
     <widget class="QDoubleSpinBox" name="speedFactorSpinBox">
      <property name="toolTip">
-      <string>Frame rate</string>
+      <string>frame rate</string>
      </property>
      <property name="prefix">
       <string>fps </string>
@@ -225,6 +225,9 @@
      <property name="enabled">
       <bool>false</bool>
      </property>
+     <property name="toolTip">
+      <string>select frame</string>
+     </property>
      <property name="decimals" stdset="0">
       <number>2</number>
      </property>
@@ -249,7 +252,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="resources/QAlderWidgets.qrc"/>
+  <include location="resources/QAlderGenericWidgets.qrc"/>
  </resources>
  <connections/>
 </ui>

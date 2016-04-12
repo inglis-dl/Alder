@@ -8,12 +8,13 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #ifndef __QMedicalImageWidget_h
 #define __QMedicalImageWidget_h
 
+// Qt includes
 #include <QWidget>
 
+// VTK includes
 #include <vtkSmartPointer.h>
 
 class vtkMedicalImageViewer;
@@ -29,17 +30,27 @@ public:
   //destructor
   ~QMedicalImageWidget();
 
-  void resetImage();
-  void loadImage( QString filename );
+  void reset();
+  void load( const QString& fileName );
+  void save( const QString& fileName );
+  vtkMedicalImageViewer* GetViewer();
 
-public slots:
+public Q_SLOTS:
+
+  void slotSelectColor();
+  void slotFlipVertical();
+  void slotFlipHorizontal();
+  void slotRotateClockwise();
+  void slotRotateCounterClockwise();
+  void slotInvertWindowLevel();
+  void slotInterpolationToggle();
 
 protected:
   void updateInterface();
 
-  vtkSmartPointer<vtkMedicalImageViewer> viewer;
+  bool eventFilter( QObject *, QEvent * );
 
-protected slots:
+  vtkSmartPointer<vtkMedicalImageViewer> viewer;
 
 private:
   // Designer form

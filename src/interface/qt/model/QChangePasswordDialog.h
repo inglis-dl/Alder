@@ -8,42 +8,39 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #ifndef __QChangePasswordDialog_h
 #define __QChangePasswordDialog_h
 
+// Qt includes
 #include <QDialog>
 
-class Ui_QChangePasswordDialog;
+class QChangePasswordDialogPrivate;
 
 class QChangePasswordDialog : public QDialog
 {
   Q_OBJECT
 
 public:
+  typedef QDialog Superclass;
   //constructor
-  QChangePasswordDialog( QString const &pwd, QWidget* parent = 0 );
+  explicit QChangePasswordDialog( QWidget* parent = 0, const QString& pwd = "" );
   //destructor
-  ~QChangePasswordDialog();
-  
+  virtual ~QChangePasswordDialog();
+
 public slots:
-  virtual void slotAccepted();
+  virtual void accepted();
 
 signals:
-  void passwordChange( QString const &pwd );
+  void passwordChanged( const QString& pwd );
 
 protected:
-  bool checkNewPassword();
-  bool confirmNewPassword();
+  QScopedPointer<QChangePasswordDialogPrivate> d_ptr;
+
   virtual bool eventFilter( QObject*, QEvent* );
 
-protected slots:
-
 private:
-  // Designer form
-  Ui_QChangePasswordDialog *ui;
-  QString originalPassword;
-  QString newPassword;
+  Q_DECLARE_PRIVATE(QChangePasswordDialog);
+  Q_DISABLE_COPY(QChangePasswordDialog);
 };
 
 #endif

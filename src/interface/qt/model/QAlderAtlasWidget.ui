@@ -216,7 +216,7 @@
     </layout>
    </item>
    <item>
-    <widget class="QVTKWidget" name="imageWidget">
+    <widget class="QAlderImageWidget" name="imageWidget">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
        <horstretch>0</horstretch>
@@ -229,9 +229,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QVTKWidget</class>
+   <class>QAlderImageWidget</class>
    <extends>QWidget</extends>
-   <header>QVTKWidget.h</header>
+   <header>QAlderImageWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

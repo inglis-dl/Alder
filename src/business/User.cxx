@@ -10,10 +10,12 @@
 =========================================================================*/
 #include <User.h>
 
+// Alder includes
 #include <Modality.h>
 #include <QueryModifier.h>
 #include <Utilities.h>
 
+// VTK includes
 #include <vtkObjectFactory.h>
 
 namespace Alder
@@ -51,7 +53,7 @@ namespace Alder
     // first hash the password argument
     std::string hashedPassword;
     Utilities::hashString( password, hashedPassword );
-    return ( hashedPassword == this->Get( "Password" ).ToString() );
+    return hashedPassword == this->Get( "Password" ).ToString();
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -60,19 +62,19 @@ namespace Alder
     if( !modifier ) return;
     modifier->Reset();
 
-    std::string modalityListStr;
-    std::vector< vtkSmartPointer< Alder::Modality > > modalityList;
-    this->GetList( &modalityList );
+    std::string idStr;
+    std::vector< vtkSmartPointer< Alder::Modality > > vecModality;
+    this->GetList( &vecModality );
 
-    for( auto it = modalityList.begin(); it != modalityList.end(); )
+    for( auto it = vecModality.begin(); it != vecModality.end(); )
     {
-      modalityListStr += (*it)->Get( "Name" ).ToString();
+      idStr += (*it)->Get( "Id" ).ToString();
       ++it;
-      modalityListStr += (it == modalityList.end()) ? "" : "','";
+      idStr += (it == vecModality.end()) ? "" : "','";
     }
 
     modifier->Join( "ScanType", "ScanType.Id", "Exam.ScanTypeId" );
     modifier->Join( "Modality", "Modality.Id", "ScanType.ModalityId" );
-    modifier->Where( "Modality.Name", "IN", vtkVariant( modalityListStr ) );
- }
+    modifier->Where( "Modality.Id", "IN", vtkVariant( idStr ) );
+  }
 }

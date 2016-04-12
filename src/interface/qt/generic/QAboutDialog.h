@@ -8,33 +8,35 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #ifndef __QAboutDialog_h
 #define __QAboutDialog_h
 
+// Qt includes
 #include <QDialog>
 
-class Ui_QAboutDialog;
+class QAboutDialogPrivate;
 
 class QAboutDialog : public QDialog
 {
   Q_OBJECT
 
 public:
+  typedef QDialog Superclass;
   //constructor
-  QAboutDialog( QWidget* parent = 0 );
+  explicit QAboutDialog( QWidget* parent = 0 );
   //destructor
-  ~QAboutDialog();
-  
+  virtual ~QAboutDialog();
+
 public slots:
 
 protected:
+  QScopedPointer<QAboutDialogPrivate> d_ptr;
 
 protected slots:
 
 private:
-  // Designer form
-  Ui_QAboutDialog *ui;
+  Q_DECLARE_PRIVATE(QAboutDialog);
+  Q_DISABLE_COPY(QAboutDialog);
 };
 
 #endif

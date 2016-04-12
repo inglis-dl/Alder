@@ -8,23 +8,29 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
+
+// Alder includes
+#include <AlderConfig.h>
 #include <Application.h>
 #include <Configuration.h>
 #include <Exam.h>
 #include <Interview.h>
+#include <Site.h>
 #include <User.h>
+#include <Wave.h>
 
+// VTK includes
 #include <vtkNew.h>
 #include <vtkSmartPointer.h>
 
-#include <stdexcept>
-
-#include <termios.h>
-#include <unistd.h>
-#include <stdio.h>
+#include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <sstream>
-#include <fstream>
+#include <stdexcept>
+#include <stdio.h>
+#include <termios.h>
+#include <unistd.h>
 
 bool ApplicationInit();
 
@@ -169,7 +175,14 @@ int main( int argc, char** argv )
     }
     if( query_site )
     {
-      modifier->Where( "Site", "=", vtkVariant( site_str ) );
+      vtkNew< Alder::Site > site;
+      std::string siteId;
+      if( site->Load( "Name", site_str ) )
+        siteId = site->Get( "Id" ).ToString();
+      else if( site->Load( "Alias", site_str ) )
+        siteId = site->Get( "Id" ).ToString();
+      if( !siteId.empty() )
+        modifier->Where( "SiteId", "=", vtkVariant( siteId ) );
     }
 
     std::cout << modifier->GetSql() << std::endl;
@@ -188,11 +201,17 @@ int main( int argc, char** argv )
     for( auto interviewIt = interviewList.begin(); interviewIt != interviewList.end(); ++interviewIt )
     {
       Alder::Interview *interview = interviewIt->GetPointer();
-      interview->UpdateExamData( true );
+      interview->UpdateExamData();
       std::cout << "-------------- PROCESSING INTERVIEW " << i++ << " of " << count << " --------------" << std::endl;
-      std::cout << "UID: " << interview->Get( "UId" ) << std::endl;
+      std::cout << "UId: " << interview->Get( "UId" ) << std::endl;
       std::cout << "VisitDate: " << interview->Get( "VisitDate" ) << std::endl;
-      std::cout << "Site: " << interview->Get( "Site" ) << std::endl;
+      vtkSmartPointer< Alder::Wave > wave;
+      vtkSmartPointer< Alder::Site > site;
+      if( interview->GetRecord( wave ) )
+        std::cout << "Wave: " << wave->Get( "Name" ) << std::endl;
+
+      if( interview->GetRecord( site ) )
+        std::cout << "Site: " << site->Get( "Name" ) << std::endl;
     }
   }
   else

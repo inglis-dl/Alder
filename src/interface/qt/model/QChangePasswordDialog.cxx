@@ -11,122 +11,104 @@
 #include <QChangePasswordDialog.h>
 #include <ui_QChangePasswordDialog.h>
 
+// Alder includes
 #include <Utilities.h>
-#include <iostream>
 
+// Qt includes
 #include <QKeyEvent>
 #include <QPushButton>
 #include <QMessageBox>
 
+#include <iostream>
+
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-QChangePasswordDialog::QChangePasswordDialog( QString const &pwd, QWidget* parent )
-  : QDialog( parent )
+class QChangePasswordDialogPrivate : public Ui_QChangePasswordDialog
 {
-  this->originalPassword = pwd; // the hashed password
+  Q_DECLARE_PUBLIC(QChangePasswordDialog);
+protected:
+  QChangePasswordDialog* const q_ptr;
+
+public:
+  explicit QChangePasswordDialogPrivate(QChangePasswordDialog& object, const QString& pwd = "");
+  virtual ~QChangePasswordDialogPrivate();
+
+  void init();
+  void setupUi(QDialog*);
+  void updateUi();
+  bool validate();
+  bool confirmChange();
+
+private:
+  QString originalPassword;
+  QString newPassword;
+};
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+//
+// QChangePasswordDialogPrivate methods
+//
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QChangePasswordDialogPrivate::QChangePasswordDialogPrivate
+(QChangePasswordDialog& object, const QString& pwd)
+  : q_ptr(&object), originalPassword( pwd )
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QChangePasswordDialogPrivate::~QChangePasswordDialogPrivate()
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QChangePasswordDialogPrivate::init()
+{
+  Q_Q(QChangePasswordDialog);
+  this->setupUi(q);
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QChangePasswordDialogPrivate::setupUi( QDialog* widget )
+{
+  Q_Q(QChangePasswordDialog);
+
+  this->Ui_QChangePasswordDialog::setupUi( widget );
   this->newPassword = "";
-
-  this->ui = new Ui_QChangePasswordDialog;
-  this->ui->setupUi( this );
+  QObject::connect(
+    this->okButton, SIGNAL( clicked() ),
+    q, SLOT( accepted() ) );
 
   QObject::connect(
-    this->ui->okButton, SIGNAL( clicked() ),
-    this, SLOT( slotAccepted() ) );
+    this->cancelButton, SIGNAL( clicked() ),
+    q, SLOT( reject() ) );
 
-  QObject::connect(
-    this->ui->cancelButton, SIGNAL( clicked() ),
-    this, SLOT( reject() ) );
+  this->newPasswordLineEdit->installEventFilter( q );
+  this->confirmPasswordLineEdit->installEventFilter( q );
 
-  this->ui->newPasswordLineEdit->installEventFilter( this );   
-  this->ui->confirmPasswordLineEdit->installEventFilter( this );   
-
-  this->ui->newPasswordLineEdit->setFocus( Qt::PopupFocusReason );
-  this->ui->newPasswordLineEdit->setEchoMode( QLineEdit::Password );
-  this->ui->confirmPasswordLineEdit->setEchoMode( QLineEdit::Password );
-  this->ui->confirmPasswordLineEdit->setDisabled( true );
-  this->setWindowTitle( QString("Set Password") );
+  this->newPasswordLineEdit->setFocus( Qt::PopupFocusReason );
+  this->newPasswordLineEdit->setEchoMode( QLineEdit::Password );
+  this->confirmPasswordLineEdit->setEchoMode( QLineEdit::Password );
+  this->confirmPasswordLineEdit->setDisabled( true );
+  q->setWindowTitle( QString("Set Password") );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-QChangePasswordDialog::~QChangePasswordDialog()
+bool QChangePasswordDialogPrivate::validate()
 {
-}
-
-bool QChangePasswordDialog::eventFilter( QObject* watched, QEvent* event )
-{
-  if( watched == this->ui->newPasswordLineEdit )
-  {
-    if( event->type() == QEvent::KeyPress ) 
-    {
-      QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
-      if( keyEvent->key() == Qt::Key_Return ||
-          keyEvent->key() == Qt::Key_Enter ||
-          keyEvent->key() == Qt::Key_Tab )
-      {
-        if( this->checkNewPassword() )
-        {
-          this->ui->confirmPasswordLineEdit->setDisabled( false );
-          this->ui->confirmPasswordLineEdit->setFocus();
-          return true;
-        }
-        else
-        {
-          this->ui->confirmPasswordLineEdit->setDisabled( true );
-          return true;
-        }  
-      }  
-      else
-      {
-        this->ui->confirmPasswordLineEdit->setDisabled( true );
-        return false;
-      }
-    }
-    else if( event->type() == QEvent::FocusIn )
-    {
-      this->ui->confirmPasswordLineEdit->setDisabled( true );
-      return false;  
-    }
-    else
-    {
-      return false;
-    }
-  }
-  else if( watched == this->ui->confirmPasswordLineEdit &&
-           event->type() == QEvent::KeyPress )
-  {
-    QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
-    if( keyEvent->key() == Qt::Key_Return ||
-        keyEvent->key() == Qt::Key_Enter ||
-        keyEvent->key() == Qt::Key_Tab )
-    {
-      if( this->confirmNewPassword() )
-      {
-        this->slotAccepted();
-      }
-      return true;
-    }
-    return false;
-  }
-  else
-    return false;
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-bool QChangePasswordDialog::checkNewPassword()
-{
-  std::string password = this->ui->newPasswordLineEdit->text().toStdString();
+  Q_Q(QChangePasswordDialog);
+  QString password = this->newPasswordLineEdit->text();
   bool noError = true;
-  std::string errStr;
-  if( password.empty() ) 
+  QString errStr;
+  if( password.isEmpty() )
   {
     errStr = "empty";
     noError = false;
   }
-  else if( password.size() < 6 )
+  else if( 6 > password.size() )
   {
     errStr = "too short";
     noError = false;
   }
-  else if( password == "password" )
+  else if( "password" == password )
   {
     errStr = "illegal";
     noError = false;
@@ -134,7 +116,7 @@ bool QChangePasswordDialog::checkNewPassword()
   else
   {
     std::string hashed;
-    Alder::Utilities::hashString( password, hashed );
+    Alder::Utilities::hashString( password.toStdString(), hashed );
 
     if( this->originalPassword.toStdString() == hashed )
     {
@@ -144,31 +126,32 @@ bool QChangePasswordDialog::checkNewPassword()
   }
   if( !noError )
   {
-    QMessageBox errorMessage( this );
+    QMessageBox errorMessage( q );
     errorMessage.setWindowModality( Qt::WindowModal );
     errorMessage.setIcon( QMessageBox::Warning );
-    std::string msg = "Ivalid password (";
+    QString msg = "Ivalid password (";
     msg += errStr;
     msg += "), please try again.";
-    errorMessage.setText( tr( msg.c_str() ) );
+    errorMessage.setText( QDialog::tr( msg.toStdString().c_str() ) );
     errorMessage.exec();
   }
   return noError;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-bool QChangePasswordDialog::confirmNewPassword()
+bool QChangePasswordDialogPrivate::confirmChange()
 {
-  QString password1 = this->ui->newPasswordLineEdit->text();
-  QString password2 = this->ui->confirmPasswordLineEdit->text();
+  Q_Q(QChangePasswordDialog);
+  QString password1 = this->newPasswordLineEdit->text();
+  QString password2 = this->confirmPasswordLineEdit->text();
   if( password1 != password2 )
   {
-    QMessageBox errorMessage( this );
+    QMessageBox errorMessage( q );
     errorMessage.setWindowModality( Qt::WindowModal );
     errorMessage.setIcon( QMessageBox::Warning );
-    errorMessage.setText( tr( "Confirmation does not match password, please try again." ) );
+    errorMessage.setText( QDialog::tr( "Confirmation does not match password, please try again." ) );
     errorMessage.exec();
-    this->ui->confirmPasswordLineEdit->setFocus();
+    this->confirmPasswordLineEdit->setFocus();
     this->newPassword = "";
     return false;
   }
@@ -180,12 +163,87 @@ bool QChangePasswordDialog::confirmNewPassword()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QChangePasswordDialog::slotAccepted()
+QChangePasswordDialog::QChangePasswordDialog( QWidget* parent, const QString& pwd )
+  : Superclass( parent )
+  , d_ptr(new QChangePasswordDialogPrivate(*this, pwd) )
 {
-  if( !this->newPassword.isEmpty() ) 
-  {
-    emit passwordChange( this->newPassword  );
-  }
-  accept();
+  Q_D(QChangePasswordDialog);
+  d->init();
 }
 
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QChangePasswordDialog::~QChangePasswordDialog()
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+bool QChangePasswordDialog::eventFilter( QObject* watched, QEvent* event )
+{
+  Q_D(QChangePasswordDialog);
+  if( watched == d->newPasswordLineEdit )
+  {
+    if( event->type() == QEvent::KeyPress )
+    {
+      QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
+      if( keyEvent->key() == Qt::Key_Return ||
+          keyEvent->key() == Qt::Key_Enter ||
+          keyEvent->key() == Qt::Key_Tab )
+      {
+        if( d->validate() )
+        {
+          d->confirmPasswordLineEdit->setDisabled( false );
+          d->confirmPasswordLineEdit->setFocus();
+          return true;
+        }
+        else
+        {
+          d->confirmPasswordLineEdit->setDisabled( true );
+          return true;
+        }
+      }
+      else
+      {
+        d->confirmPasswordLineEdit->setDisabled( true );
+        return false;
+      }
+    }
+    else if( event->type() == QEvent::FocusIn )
+    {
+      d->confirmPasswordLineEdit->setDisabled( true );
+      return false;
+    }
+    else
+    {
+      return false;
+    }
+  }
+  else if( watched == d->confirmPasswordLineEdit &&
+           event->type() == QEvent::KeyPress )
+  {
+    QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
+    if( keyEvent->key() == Qt::Key_Return ||
+        keyEvent->key() == Qt::Key_Enter ||
+        keyEvent->key() == Qt::Key_Tab )
+    {
+      if( d->confirmChange() )
+      {
+        this->accepted();
+      }
+      return true;
+    }
+    return false;
+  }
+  else
+    return false;
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QChangePasswordDialog::accepted()
+{
+  Q_D(QChangePasswordDialog);
+  if( !d->newPassword.isEmpty() )
+  {
+    emit passwordChanged( d->newPassword  );
+  }
+  this->accept();
+}

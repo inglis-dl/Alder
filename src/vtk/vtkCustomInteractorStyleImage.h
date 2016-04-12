@@ -9,7 +9,7 @@
 =========================================================================*/
 
 /**
- * @class vtkCustomInteractorStyleImage 
+ * @class vtkCustomInteractorStyleImage
  *
  * @author Patrick Emond <emondpd AT mcmaster DOT ca>
  * @author Dean Inglis <inglisd AT mcmaster DOT ca>
@@ -36,6 +36,8 @@ public:
    * window level events.
    */
   virtual void WindowLevel();
+
+  virtual void OnChar();
 
 protected:
   vtkCustomInteractorStyleImage(){};

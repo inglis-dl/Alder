@@ -17,7 +17,8 @@
 #include <vtkCamera.h>
 #include <vtkCellArray.h>
 #include <vtkHomogeneousTransform.h>
-#include <vtkImageActor.h>
+#include <vtkImageSlice.h>
+#include <vtkImageSliceMapper.h>
 #include <vtkImageData.h>
 #include <vtkMath.h>
 #include <vtkNew.h>
@@ -449,11 +450,11 @@ void vtkImageCoordinateWidget::UpdateCursor( int X, int Y )
 
   if( this->GetNumberOfProps() == 0 ) return;
 
-  // try to use the actor's image data if it is a single vtkImageActor
+  // try to use the actor's image data if it is a single vtkImageSlice
   if( !this->ImageData )
   {
-    vtkImageActor* actor = vtkImageActor::SafeDownCast( this->GetNthProp( 0 ) );
-    if( !actor ||  !(this->ImageData = actor->GetInput()) )
+    vtkImageSlice* actor = vtkImageSlice::SafeDownCast( this->GetNthProp( 0 ) );
+    if( !actor ||  !actor->GetMapper() || !(this->ImageData = actor->GetMapper()->GetInput()) )
     {
       return;
     }

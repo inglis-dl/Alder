@@ -10,28 +10,42 @@
 =========================================================================*/
 #include <Image.h>
 
+// Alder includes
 #include <Configuration.h>
 #include <Exam.h>
 #include <Interview.h>
 #include <Rating.h>
+#include <ScanType.h>
 #include <User.h>
 #include <Utilities.h>
 
+// VTK includes
 #include <vtkDirectory.h>
 #include <vtkImageData.h>
 #include <vtkImageDataReader.h>
 #include <vtkImageCanvasSource2D.h>
 #include <vtkImageFlip.h>
+#include <vtkMath.h>
+#include <vtkMatrix3x3.h>
 #include <vtkNew.h>
 #include <vtkObjectFactory.h>
+#include <vtkPointData.h>
 #include <vtkSmartPointer.h>
+#include <vtksys/SystemTools.hxx>
 
+// GDCM includes
 #include <gdcmAnonymizer.h>
 #include <gdcmDirectoryHelper.h>
 #include <gdcmImageReader.h>
 #include <gdcmReader.h>
 #include <gdcmTrace.h>
 #include <gdcmWriter.h>
+
+// vtk-dicom includes
+#include <vtkDICOMCompiler.h>
+#include <vtkDICOMMetaData.h>
+#include <vtkDICOMParser.h>
+#include <vtkDICOMReader.h>
 
 #include <stdexcept>
 
@@ -51,6 +65,7 @@ namespace Alder
 
     std::stringstream stream;
     stream << exam->GetCode() << "/" << this->Get( "Id" ).ToString();
+
     return stream.str();
   }
 
@@ -76,9 +91,44 @@ namespace Alder
   {
     // first get the path and create it if it doesn't exist
     std::string path = this->GetFilePath();
-    if( !Utilities::fileExists( path ) ) vtkDirectory::MakeDirectory( path.c_str() );
+    if( !Utilities::fileExists( path ) )
+      vtkDirectory::MakeDirectory( path.c_str() );
 
     return path + "/" + this->Get( "Id" ).ToString() + suffix;
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void Image::Remove()
+  {
+    // get the exam and set its downloaded status to false
+    vtkSmartPointer< Alder::Exam > exam;
+    if( this->GetRecord( exam ) )
+    {
+      // see if there are any child images and remove them
+      vtkNew< Image > child;
+      std::map< std::string, std::string > loader;
+      loader[ "ExamId" ] = exam->Get( "Id" ).ToString();
+      loader[ "ParentImageId" ] = this->Get( "Id" ).ToString();
+      if( child->Load( loader ) )
+      {
+        try
+        {
+          child->Remove();
+        }
+        catch( std::runtime_error &e )
+        {
+          throw( e );
+        }
+      }
+
+      if( 1 == exam->Get( "Downloaded" ).ToInt() )
+      {
+        exam->Set( "Downloaded", "0" );
+        exam->Save();
+      }
+    }
+
+    this->Superclass::Remove();
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -87,7 +137,8 @@ namespace Alder
     Application *app = Application::GetInstance();
     bool valid = false;
     std::string fileName;
-    try{
+    try
+    {
       fileName = this->GetFileName();
     }
     catch( std::runtime_error& e )
@@ -131,6 +182,8 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::string Image::GetFileName()
   {
+    this->AssertPrimaryId();
+
     // make sure the path exists
     std::string path = this->GetFilePath();
 
@@ -167,15 +220,14 @@ namespace Alder
   bool Image::IsRatedBy( User* user )
   {
     this->AssertPrimaryId();
-
     // make sure the user is not null
     if( !user ) throw std::runtime_error( "Tried to get rating for null user" );
 
-    std::map< std::string, std::string > map;
-    map["UserId"] = user->Get( "Id" ).ToString();
-    map["ImageId"] = this->Get( "Id" ).ToString();
+    std::map< std::string, std::string > loader;
+    loader[ "UserId" ] = user->Get( "Id" ).ToString();
+    loader[ "ImageId" ] = this->Get( "Id" ).ToString();
     vtkNew< Alder::Rating > rating;
-    if( !rating->Load( map ) ) return false;
+    if( !rating->Load( loader ) ) return false;
 
     // we have found a rating, make sure it is not null
     return rating->Get( "Rating" ).IsValid();
@@ -184,145 +236,308 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::string Image::GetDICOMTag( std::string const &tagName )
   {
-    this->AssertPrimaryId();
-
     // get the name of the unzipped file
     std::string fileName = this->GetFileName();
     if( ".gz" == fileName.substr( fileName.size() - 3, 3 ) )
       fileName = fileName.substr( 0, fileName.size() - 3 );
 
-    gdcm::ImageReader reader;
-    reader.SetFileName( fileName.c_str() );
-    if( !reader.Read() )
+    vtkNew<vtkDICOMMetaData> meta;
+    vtkNew<vtkDICOMParser> parser;
+    parser->SetMetaData( meta.GetPointer() );
+    parser->SetFileName( fileName.c_str() );
+    parser->Update();
+
+    std::string value;
+    if( "AcquisitionDateTime" == tagName )
     {
-      throw std::runtime_error( "Unable to read file as DICOM." );
+      vtkDICOMTag tag( 0x0008, 0x002a );
+      if( meta->HasAttribute( tag ) )
+        value = meta->GetAttributeValue( tag ).AsString();
     }
-    const gdcm::File &file = reader.GetFile();
-    const gdcm::DataSet &ds = file.GetDataSet();
+    else if( "SeriesNumber" == tagName )
+    {
+      vtkDICOMTag tag( 0x0020, 0x0011 );
+      if( meta->HasAttribute( tag ) )
+        value = meta->GetAttributeValue( tag ).AsString();
+    }
+    else if( "PatientName" == tagName )
+    {
+      vtkDICOMTag tag( 0x0010, 0x0010 );
+      if( meta->HasAttribute( tag ) )
+        value = meta->GetAttributeValue( tag ).AsString();
+    }
+    else if( "Laterality" == tagName )
+    {
+      vtkDICOMTag tag( 0x0020, 0x0060 );
+      if( meta->HasAttribute( tag ) )
+        value = meta->GetAttributeValue( tag ).AsString();
+    }
+    else if( "Manufacturer" == tagName )
+    {
+      vtkDICOMTag tag( 0x0008, 0x0070 );
+      if( meta->HasAttribute( tag ) )
+        value = meta->GetAttributeValue( tag ).AsString();
+    }
+    else if( "PhotometricInterpretation" == tagName )
+    {
+      vtkDICOMTag tag( 0x0028, 0x0004 );
+      if( meta->HasAttribute( tag ) )
+        value = meta->GetAttributeValue( tag ).AsString();
+    }
+    else
+      throw std::runtime_error( "Unknown DICOM tag name." );
 
-    // TODO: use GDCM to get the correct tags
-    gdcm::Tag tag;
-    if( "AcquisitionDateTime" == tagName ) tag = gdcm::Tag( 0x0008, 0x002a );
-    else if( "SeriesNumber" == tagName )   tag = gdcm::Tag( 0x0020, 0x0011 );
-    else if( "PatientsName" == tagName )   tag = gdcm::Tag( 0x0010, 0x0010 );
-    else if( "Laterality" == tagName )     tag = gdcm::Tag( 0x0020, 0x0060 );
-    else throw std::runtime_error( "Unknown DICOM tag name." );
-
-    if( !ds.FindDataElement( tag ) )
-      throw std::runtime_error( "Unknown DICOM tag with name " + tagName );
-
-    // suppress gdcm warnings
-    bool warn = gdcm::Trace::GetWarningFlag();
-    gdcm::Trace::WarningOff();
-    std::string value =
-      gdcm::DirectoryHelper::GetStringValueFromTag( tag, ds );
-    gdcm::Trace::SetWarning( warn );
     return value;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  std::vector<int> Image::GetDICOMDimensions()
+  std::vector< int > Image::GetDICOMDimensions()
   {
-    this->AssertPrimaryId();
-
     // get the name of the unzipped file
     std::string fileName = this->GetFileName();
     if( ".gz" == fileName.substr( fileName.size() - 3, 3 ) )
       fileName = fileName.substr( 0, fileName.size() - 3 );
 
+    std::vector< int > dims;
     gdcm::ImageReader reader;
     reader.SetFileName( fileName.c_str() );
-    if( !reader.Read() )
+    if( reader.Read() )
     {
-      throw std::runtime_error( "Unable to read file as DICOM." );
+      gdcm::Image &image = reader.GetImage();
+      for( int i = 0; i < 3; ++i )
+        dims.push_back( image.GetDimension( i ) );
     }
-    gdcm::Image &image = reader.GetImage();
-
-    std::vector<int> dims;
-    for( int i = 0; i < 3; ++i )
-      dims.push_back( image.GetDimension(i) );
-
+    else
+    {
+      Application *app = Application::GetInstance();
+      app->Log( "ERROR: failed read during get dicom dimensions" );
+    }
     return dims;
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void Image::SetDimensionalityFromDICOM()
+  {
+    this->AssertPrimaryId();
+
+    std::vector< int > dims = this->GetDICOMDimensions();
+    int dimensionality = 0;
+    for( auto it = dims.begin(); it != dims.end(); ++it )
+    {
+      if( *it > 1 ) dimensionality++;
+    }
+    if( 1 < dimensionality )
+    {
+      this->Set( "Dimensionality", dimensionality );
+      this->Save();
+    }
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Image::AnonymizeDICOM()
   {
-    this->AssertPrimaryId();
-
-    if( !this->GetDICOMTag( "PatientsName" ).empty() )
+    if( !this->GetDICOMTag( "PatientName" ).empty() )
     {
+      Application *app = Application::GetInstance();
       gdcm::Reader gdcmRead;
       std::string fileName = this->GetFileName();
       gdcmRead.SetFileName( fileName.c_str() );
-      if( !gdcmRead.Read() )
+      if( gdcmRead.Read() )
       {
-        throw std::runtime_error( "Failed to anonymize dicom data during read" );
-      }
-      gdcm::Anonymizer gdcmAnon;
-      gdcmAnon.SetFile( gdcmRead.GetFile() );
-      gdcmAnon.Empty( gdcm::Tag(0x10, 0x10) );
+        gdcm::Anonymizer gdcmAnon;
+        gdcmAnon.SetFile( gdcmRead.GetFile() );
+        gdcmAnon.Empty( gdcm::Tag( 0x10, 0x10 ) );
 
-      gdcm::Writer gdcmWriter;
-      gdcmWriter.SetFile( gdcmAnon.GetFile() );
-      gdcmWriter.SetFileName( fileName.c_str() );
-      if( !gdcmWriter.Write() )
-      {
-        throw std::runtime_error("Failed to anonymize dicom data during write" );
+        gdcm::Writer gdcmWriter;
+        gdcmWriter.SetFile( gdcmAnon.GetFile() );
+        gdcmWriter.SetFileName( fileName.c_str() );
+        if( gdcmWriter.Write() )
+        {
+          return true;
+        }
+        else
+         app->Log("ERROR: failed write during anonymize dicom file");
       }
+      else
+      {
+        app->Log("ERROR: failed read during anonymize dicom file");
+      }
+    }
+    return false;
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  bool Image::SwapExamSideFromDICOM()
+  {
+    this->AssertPrimaryId();
+
+    std::string tagStr = this->GetDICOMTag( "Laterality" );
+    if( tagStr.empty() )
+      return false;
+    tagStr = Utilities::toLower( tagStr );
+    std::string side = 0 == tagStr.compare(0, 1, "l", 0, 1) ? "left" : "right";
+
+    return this->SwapExamSideTo( side );
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  bool Image::SwapExamSideTo( const std::string &side )
+  {
+    if( side.empty() || !( "left" == side || "right" == side ) )
+    {
+      return false;
+    }
+
+    vtkSmartPointer< Exam > exam;
+    if( !this->GetRecord( exam ) )
+    {
+      return false;
+    }
+
+    Exam::SideStatus status = exam->GetSideStatus();
+    if( Exam::SideStatus::Pending == status ||
+        Exam::SideStatus::Fixed == status )
+    {
+      return false;
+    }
+
+    std::string currentSide = exam->Get( "Side" ).ToString();
+    if( side == currentSide )
+    {
+      return false;
+    }
+
+    // no sibling required
+    if( Exam::SideStatus::Changeable == status )
+    {
+      exam->Set( "Side", side );
+      exam->Save();
+      return true;
+    }
+
+    if( Exam::SideStatus::Swappable == status )
+    {
+      // get the sibling exam
+      std::map< std::string, std::string > loader;
+      loader["InterviewId"] = exam->Get( "InterviewId" ).ToString();
+      loader["ScanTypeId"] = exam->Get( "ScanTypeId" ).ToString();
+      loader["Side"] = side;
+      vtkNew< Exam > siblingExam;
+      if( !siblingExam->Load(loader) )
+      {
+        return false;
+      }
+      if( siblingExam->GetSideStatus() != status )
+      {
+        return false;
+      }
+
+      loader.clear();
+      loader["ExamId"] = siblingExam->Get("Id").ToString();
+      loader["Acquisition"] = this->Get("Acquisition").ToString();
+      vtkNew<Image> siblingImage;
+      if( !siblingImage->Load(loader) )
+      {
+        return false;
+      }
+
+      std::string rootPath = Application::GetInstance()->GetConfig()->GetValue( "Path", "ImageData" );
+      if( !Utilities::fileExists(rootPath) )
+      {
+        return false;
+      }
+      std::string swapFile = rootPath + "/temp.dat";
+
+      // are there children?
+      vtkSmartPointer<ScanType> type;
+      exam->GetRecord( type );
+      int childCount = type->Get("ChildCount").ToInt();
+      bool move = true;
+      bool isParent = !this->Get("ParentImageId").IsValid();
+      if( 0 < childCount && isParent )
+      {
+        // both sets of children must be present to prevent orphaning
+        std::vector<vtkSmartPointer<Image>> childList;
+        this->GetList( &childList, "ParentImageId" );
+        std::vector<vtkSmartPointer<Image>> siblingChildList;
+        siblingImage->GetList( &siblingChildList, "ParentImageId" );
+        if( siblingChildList.size() == childList.size() )
+        {
+          // swap the children
+          std::vector<vtkSmartPointer<Image>>::iterator cit = childList.begin();
+          std::vector<vtkSmartPointer<Image>>::iterator sit = siblingChildList.begin();
+          do
+          {
+            Image* a = *cit;
+            Image* b = *sit;
+            std::string aFile = a->GetFileName();
+            std::string bFile = b->GetFileName();
+            vtksys::SystemTools::CopyFileAlways(aFile.c_str(), swapFile.c_str());
+            vtksys::SystemTools::CopyFileAlways(bFile.c_str(), aFile.c_str());
+            vtksys::SystemTools::CopyFileAlways(swapFile.c_str(), bFile.c_str());
+            cit++;
+            sit++;
+          } while( cit != childList.end() && sit != siblingChildList.end() );
+          vtksys::SystemTools::RemoveFile( swapFile.c_str() );
+        }
+        else
+          move = false;
+      }
+
+      if(!move)
+      {
+        return false;
+      }
+
+      std::string aFile = this->GetFileName();
+      std::string bFile = siblingImage->GetFileName();
+      vtksys::SystemTools::CopyFileAlways(aFile.c_str(), swapFile.c_str());
+      vtksys::SystemTools::CopyFileAlways(bFile.c_str(), aFile.c_str());
+      vtksys::SystemTools::CopyFileAlways(swapFile.c_str(), bFile.c_str());
+      vtksys::SystemTools::RemoveFile( swapFile.c_str() );
+
       return true;
     }
     return false;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Image::SetLateralityFromDICOM()
+  bool Image::SwapExamSide()
   {
     this->AssertPrimaryId();
 
     vtkSmartPointer< Exam > exam;
-    if( this->GetRecord( exam ) )
-    {
-      std::string latStr = exam->Get( "Laterality" ).ToString();
-      if( "none" != latStr )
-      {
-        try{
-          std::string tagStr = this->GetDICOMTag( "Laterality" );
-          if( 0 < tagStr.size() )
-          {
-            tagStr = Utilities::toLower( tagStr );
-            if( 0 != tagStr.compare(0, 1, latStr, 0, 1) )
-            {
-              latStr = 0 == tagStr.compare(0, 1, "l", 0, 1) ? "left" : "right";
-              exam->Set( "Laterality", latStr );
-              exam->Save();
-            }
-          }
-        }
-        catch(...)
-        {
-        }
-      }
-    }
+    if( !this->GetRecord( exam ) )
+      return false;
+
+    std::string currentSide = exam->Get("Side").ToString();
+    std::string side = "left" == currentSide ? "right" : "left";
+
+    return this->SwapExamSideTo( side );
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Image::IsDICOM()
   {
+    this->AssertPrimaryId();
+
     vtkSmartPointer< Exam > exam;
     return this->GetRecord( exam ) ? exam->IsDICOM() : false;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  vtkSmartPointer<Image> Image::GetNeighbourAtlasImage( int const &rating, bool const &forward )
+  vtkSmartPointer<Image> Image::GetNeighbourAtlasImage(  const int &rating, const bool &forward, const int &id )
   {
     this->AssertPrimaryId();
 
     Application *app = Application::GetInstance();
-    Image *activeImage = app->GetActiveImage();
     bool hasParent = this->Get( "ParentImageId" ).IsValid();
 
+    vtkSmartPointer< Exam > exam;
+    this->GetRecord( exam );
+
     // get neighbouring image which matches this image's exam type and the given rating
+    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
     std::stringstream stream;
     stream << "SELECT Image.Id "
            << "FROM Image "
@@ -331,26 +546,20 @@ namespace Alder
            << "JOIN Interview ON Exam.InterviewId = Interview.Id "
            << "JOIN Rating ON Image.Id = Rating.ImageId "
            << "JOIN User ON Rating.UserId = User.Id "
-           << "WHERE Exam.ScanTypeId = ( "
-           <<   "SELECT Exam.ScanTypeId "
-           <<   "FROM Exam "
-           <<   "JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
-           <<   "JOIN Image ON Exam.Id = Image.ExamId "
-           <<   "WHERE Image.Id = " << this->Get( "Id" ).ToString() << " "
-           << ") "
+           << "WHERE ScanType.Type = " << query->EscapeString( exam->GetScanType() ) << " "
+           << "AND Exam.Side = " << query->EscapeString( exam->Get( "Side" ).ToString() ) << " "
            << "AND Image.ParentImageId IS " << ( hasParent ? "NOT" : "" ) << " NULL "
            << "AND Rating = " << rating << " "
            << "AND User.Expert = true ";
 
     // do not show the active image
-    if( NULL != activeImage ) stream << "AND Image.Id != " << activeImage->Get( "Id" ).ToString() << " ";
+    if( 0 != id ) stream << "AND Image.Id != " << id << " ";
 
     // order the query by UId (descending if not forward)
     stream << "ORDER BY Interview.UId ";
     if( !forward ) stream << "DESC ";
 
     app->Log( "Querying Database: " + stream.str() );
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery( stream.str().c_str() );
     query->Execute();
 
@@ -388,18 +597,18 @@ namespace Alder
       if( !found ) throw std::runtime_error( "Cannot find current atlas image in database." );
     }
 
-    vtkSmartPointer<Image> image = vtkSmartPointer<Image>::New();
+    vtkSmartPointer< Image > image = vtkSmartPointer< Image >::New();
     if( neighbourId.IsValid() ) image->Load( "Id", neighbourId.ToString() );
     return image;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  vtkSmartPointer<Image> Image::GetAtlasImage( int const &rating )
+  vtkSmartPointer< Image > Image::GetAtlasImage( const int &rating )
   {
     Application *app = Application::GetInstance();
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer< vtkAlderMySQLQuery > query = app->GetDB()->GetQuery();
 
-    vtkSmartPointer<Exam> exam;
+    vtkSmartPointer< Exam > exam;
     this->GetRecord( exam );
     bool hasParent = this->Get( "ParentImageId" ).IsValid();
 
@@ -412,6 +621,7 @@ namespace Alder
            << "JOIN Rating ON Image.Id = Rating.ImageId "
            << "JOIN User ON Rating.UserId = User.Id "
            << "WHERE ScanType.Type = " << query->EscapeString( exam->GetScanType() ) << " "
+           << "AND Exam.Side = " << query->EscapeString( exam->Get( "Side" ).ToString() ) << " "
            << "AND Image.ParentImageId IS " << ( hasParent ? "NOT" : "" ) << " NULL "
            << "AND Rating = " << rating << " "
            << "AND User.Expert = true "
@@ -428,8 +638,9 @@ namespace Alder
       throw std::runtime_error( "There was an error while trying to query the database." );
     }
 
-    vtkSmartPointer<Image> image = vtkSmartPointer<Image>::New();
-    if( query->NextRow() ) image->Load( "Id", query->DataValue( 0 ).ToString() );
+    vtkSmartPointer< Image > image = vtkSmartPointer< Image >::New();
+    if( query->NextRow() )
+      image->Load( "Id", query->DataValue( 0 ).ToString() );
     return image;
   }
 
@@ -438,11 +649,15 @@ namespace Alder
   {
     this->AssertPrimaryId();
 
-    vtkSmartPointer<Exam> exam = vtkSmartPointer<Exam>::New();
+    std::string manufacturer = this->GetDICOMTag( "Manufacturer" );
+    if( "hologic" != Alder::Utilities::toLower( manufacturer ) )
+      return false;
+
+    vtkSmartPointer< Exam > exam = vtkSmartPointer<Exam>::New();
     if( !this->GetRecord( exam ) )
       throw std::runtime_error( "ERROR: no exam record for this image." );
 
-    std::string latStr = exam->Get( "Laterality" ).ToString();
+    std::string latStr = exam->Get( "Side" ).ToString();
     std::string typeStr = exam->GetScanType();
     int examType = -1;
 
@@ -459,10 +674,14 @@ namespace Alder
       // check if the image has a parent, if so, it is a body composition file
       examType = this->Get( "ParentImageId" ).IsValid() ? 4 : 3;
     }
+    else if( "SpineBoneDensity" == typeStr )
+    {
+      examType = 5;
+    }
     else if( "LateralBoneDensity" == typeStr )
     {
       // the lateral spine scans do not have a report to clean:
-      // anoymize the PatientsName dicom tag
+      // anoymize the PatientName dicom tag
       this->AnonymizeDICOM();
       return true;
     }
@@ -470,7 +689,7 @@ namespace Alder
     if( -1 == examType ) return false;
 
     std::string fileName = this->GetFileName();
-    vtkNew<vtkImageDataReader> reader;
+    vtkNew< vtkImageDataReader > reader;
     reader->SetFileName( fileName.c_str() );
     vtkImageData* image = reader->GetOutput();
 
@@ -483,11 +702,11 @@ namespace Alder
     // increment across until the color changes to 255,255,255
 
     // left edge coordinates for each DEXA exam type
-    int x0[5] = { 168, 168, 168, 168, 193 };
+    int x0[6] = { 168, 168, 168, 168, 193, 168 };
     // bottom edge coordinates
-    int y0[5] = { 1622, 1622, 1111, 1377, 1434 };
+    int y0[6] = { 1622, 1622, 1111, 1377, 1434, 1401 };
     // top edge coordinates
-    int y1[5] = { 1648, 1648, 1138, 1403, 1456 };
+    int y1[6] = { 1648, 1648, 1138, 1403, 1456, 1427 };
 
     bool found = false;
     // start search from the middle of the left edge
@@ -508,9 +727,10 @@ namespace Alder
       return false;
     }
 
-    vtkNew<vtkImageCanvasSource2D> canvas;
+    int nComp = image->GetNumberOfScalarComponents();
+    vtkNew< vtkImageCanvasSource2D > canvas;
     // copy the image onto the canvas
-    canvas->SetNumberOfScalarComponents( image->GetNumberOfScalarComponents() );
+    canvas->SetNumberOfScalarComponents( nComp );
     canvas->SetScalarType( image->GetScalarType() );
     canvas->SetExtent( extent );
     canvas->DrawImage( 0, 0, image );
@@ -525,42 +745,137 @@ namespace Alder
     flip->SetFilteredAxis( 1 );
     flip->Update();
 
-    // byte size of the original dicom file
-    unsigned long flength = Alder::Utilities::getFileLength( fileName );
     // byte size of the image
-    unsigned long ilength = dims[0]*dims[1]*3;
-    // byte size of the dicom header
-    unsigned long hlength = flength - ilength;
+    unsigned long length = dims[0]*dims[1]*nComp;
 
-    // read in the input dicom file
-    std::ifstream infs;
-    infs.open( fileName.c_str(), std::fstream::binary );
-    if( !infs.is_open() )
-      throw std::runtime_error( "ERROR: failed to stream in dicom data" );
+    vtkNew<vtkDICOMReader> dcmReader;
+    dcmReader->SetFileName( fileName.c_str() );
+    dcmReader->UpdateInformation();
 
-    char* buffer = new char[flength];
-    infs.read( buffer, hlength );
-    infs.close();
+    vtkDICOMMetaData* meta = dcmReader->GetMetaData();
+    meta->SetAttributeValue( vtkDICOMTag( 0x0010, 0x0010 ), std::string("") );
 
-    // output the repaired dicom file
-    std::ofstream outfs;
-    outfs.open( fileName.c_str(), std::ofstream::binary | std::ofstream::trunc );
-
-    if( !outfs.is_open() )
-    {
-      delete[] buffer;
-      throw std::runtime_error( "ERROR: failed to stream out dicom data" );
-    }
-
-    outfs.write( buffer, hlength );
-    outfs.write( (char*)(flip->GetOutput()->GetScalarPointer()), ilength );
-    outfs.close();
-
-    delete[] buffer;
-
-    // anonymize the PatientsName dicom tag
-    this->AnonymizeDICOM();
+    vtkNew<vtkDICOMCompiler> dcmCompiler;
+    dcmCompiler->SetFileName( fileName.c_str() );
+    dcmCompiler->KeepOriginalPixelDataVROff();
+    dcmCompiler->SetMetaData( meta );
+    dcmCompiler->WriteHeader();
+    dcmCompiler->WritePixelData(
+      reinterpret_cast<unsigned char *>( flip->GetOutput()->GetScalarPointer() ), length );
+    dcmCompiler->Close();
 
     return true;
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  bool Image::YBRToRGB()
+  {
+    this->AssertPrimaryId();
+    bool result = false;
+
+    std::string fileName = this->GetFileName();
+    if( !Utilities::fileExists( fileName ) ||
+        0 == Utilities::getFileLength( fileName ) )
+      return result;
+
+    // read in the original image
+    vtkNew<vtkDICOMReader> reader;
+    reader->SetFileName( fileName.c_str() );
+    reader->SetMemoryRowOrderToTopDown();
+    reader->UpdateInformation();
+    reader->Update();
+
+    vtkDICOMMetaData* meta = reader->GetMetaData();
+    if( meta && "YBR_FULL_422" == meta->GetAttributeValue(vtkDICOMTag(0x0028, 0x0004)).AsString() )
+    {
+      vtkNew<vtkImageData> image;
+      image->DeepCopy( reader->GetOutput() );
+      image->UpdateInformation();
+
+      vtkNew<vtkMatrix3x3> in;
+      vtkNew<vtkMatrix3x3> out;
+
+      in->SetElement( 0, 0,  0.299 );
+      in->SetElement( 0, 1,  0.587 );
+      in->SetElement( 0, 2,  0.114 );
+      in->SetElement( 1, 0, -0.1687 );
+      in->SetElement( 1, 1, -0.3313 );
+      in->SetElement( 1, 2,  0.5 );
+      in->SetElement( 2, 0,  0.5 );
+      in->SetElement( 2, 1, -0.4187 );
+      in->SetElement( 2, 2, -0.0813 );
+      in->Invert(in.GetPointer(),out.GetPointer());
+
+      // NOTE: matrix inversion shows that A^-1 : A00, A10, A20 == 1
+      // mutliplication can therefore be expressed as:
+      // r = y0 + A01(y1 -128) + A02(y2 - 128)
+      // g = y0 + A11(y1 -128) + A12(y2 - 128)
+      // b = y0 + A21(y1 -128) + A22(y2 - 128)
+
+      vtkDataArray* data = image->GetPointData()->GetScalars();
+      double range[2] = { 0, 255 };
+      unsigned char* array = (unsigned char*)data->GetVoidPointer(0);
+      double a01 = out->GetElement(0,1);
+      double a02 = out->GetElement(0,2);
+      double a11 = out->GetElement(1,1);
+      double a12 = out->GetElement(1,2);
+      double a21 = out->GetElement(2,1);
+      double a22 = out->GetElement(2,2);
+      double rgb0;
+      double rgb1;
+      double rgb2;
+      double ybcr0;
+      double ybcr1;
+      double ybcr2;
+      int nTuple = data->GetNumberOfTuples();
+      for( int i = 0; i < nTuple; ++i )
+      {
+        unsigned char* ybcr = array + 3*i;
+        ybcr0 = ybcr[0];
+        ybcr1 = ybcr[1] - 128.;
+        ybcr2 = ybcr[2] - 128.;
+        rgb0 = ybcr0 + a01*ybcr1 + a02*ybcr2;
+        rgb1 = ybcr0 + a11*ybcr1 + a12*ybcr2;
+        rgb2 = ybcr0 + a21*ybcr1 + a22*ybcr2;
+
+        vtkMath::ClampValue( &rgb0, range );
+        vtkMath::ClampValue( &rgb1, range );
+        vtkMath::ClampValue( &rgb2, range );
+
+        *(ybcr+0)=(unsigned char)rgb0;
+        *(ybcr+1)=(unsigned char)rgb1;
+        *(ybcr+2)=(unsigned char)rgb2;
+      }
+      /*
+      for( int i = 0; i < data->GetNumberOfTuples(); ++i )
+      {
+        double *ycbcr = data->GetTuple(i);
+
+        double old[3] = { ycbcr[0],
+                          ycbcr[1] - 128.,
+                          ycbcr[2] - 128. };
+        double rgb[3];
+        out->MultiplyPoint( old, rgb );
+        vtkMath::ClampValue( &rgb[0], range );
+        vtkMath::ClampValue( &rgb[1], range );
+        vtkMath::ClampValue( &rgb[2], range );
+
+        data->SetTuple3( i, rgb[0], rgb[1], rgb[2] );
+      }
+      */
+      meta->SetAttributeValue( vtkDICOMTag( 0x0028, 0x0004 ), std::string("RGB") );
+
+      unsigned long length = 3*nTuple;
+
+      vtkNew<vtkDICOMCompiler> compiler;
+      compiler->SetFileName( fileName.c_str() );
+      compiler->KeepOriginalPixelDataVROff();
+      compiler->SetMetaData( meta );
+      compiler->WriteHeader();
+      compiler->WritePixelData((unsigned char *)(image->GetScalarPointer()), length );
+      compiler->Close();
+      result = true;
+    }
+    return result;
   }
 }

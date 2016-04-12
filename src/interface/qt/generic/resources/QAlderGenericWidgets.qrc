@@ -1,12 +1,19 @@
 <RCC>
-    <qresource prefix="/">
-        <file>icons/frameBack.png</file>
-        <file>icons/frameForward.png</file>
-        <file>icons/pause.png</file>
-        <file>icons/repeat.png</file>
-        <file>icons/framePlay.png</file>
-        <file>icons/framePlayReverse.png</file>
-        <file>icons/frameToFirst.png</file>
-        <file>icons/frameToLast.png</file>
-    </qresource>
+  <qresource prefix="/">
+    <file>icons/inverticon.png</file>
+    <file>icons/linearicon.png</file>
+    <file>icons/nearesticon.png</file>
+    <file>icons/flipVicon.png</file>
+    <file>icons/flipHicon.png</file>
+    <file>icons/ccwicon.png</file>
+    <file>icons/cwicon.png</file>
+    <file>icons/frameBack.png</file>
+    <file>icons/frameForward.png</file>
+    <file>icons/pause.png</file>
+    <file>icons/repeat.png</file>
+    <file>icons/framePlay.png</file>
+    <file>icons/framePlayReverse.png</file>
+    <file>icons/frameToFirst.png</file>
+    <file>icons/frameToLast.png</file>
+  </qresource>
 </RCC>

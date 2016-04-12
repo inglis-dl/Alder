@@ -10,6 +10,7 @@
 =========================================================================*/
 #include <Exam.h>
 
+// Alder includes
 #include <Application.h>
 #include <CodeType.h>
 #include <Image.h>
@@ -17,8 +18,8 @@
 #include <Modality.h>
 #include <OpalService.h>
 #include <ScanType.h>
-#include <Utilities.h>
 
+// VTK includes
 #include <vtkNew.h>
 #include <vtkObjectFactory.h>
 
@@ -29,11 +30,9 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::string Exam::GetCode()
   {
-    this->AssertPrimaryId();
-
     vtkSmartPointer< Interview > interview;
     if( !this->GetRecord( interview ) )
-      throw std::runtime_error( "Exam has no parent interview!" );
+      throw std::runtime_error( "Exam has no parent interview" );
 
     std::stringstream stream;
     stream << interview->Get( "Id" ).ToString() << "/" << this->Get( "Id" ).ToString();
@@ -43,435 +42,386 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Exam::HasImageData()
   {
-    // An exam has all images if it is marked as downloaded and has a Completed status.
-    // Alder does not download images from incomplete or contra-indicated exams.
-    // NOTE: it is possible that an exam with state "Ready" has valid data, but we are leaving
-    // those exams out for now since we don't know for sure whether they are always valid
-
-    bool downLoaded = 1 == this->Get( "Downloaded" ).ToInt();
-    std::string stageStatus = this->Get( "Stage" ).ToString();
-
-    return ( ( downLoaded && stageStatus == "Completed" ) ||
-             ( !downLoaded && stageStatus == "NotApplicable" ) );
+    std::string dateStr;
+    std::string stageStr;
+    std::string emptyDate = "0000-00-00 00:00:00";
+    std::string validStage = "Completed";
+    vtkVariant date = this->Get( "DatetimeAcquired" );
+    if( date.IsValid() )
+      dateStr = date.ToString();
+    if( dateStr.empty() ||  emptyDate == dateStr )
+      return false;
+    vtkVariant stage = this->Get( "Stage" );
+    if( stage.IsValid() )
+      stageStr = stage.ToString();
+    if( stageStr.empty() || validStage != stageStr )
+      return false;
+    return true;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::string Exam::GetScanType()
   {
     vtkSmartPointer< ScanType > scanType;
-    std::string type;
+    if( !this->GetRecord( scanType ) )
+      throw std::runtime_error( "Exam has no parent scantype" );
 
-    if( this->GetRecord( scanType ) )
-      type = scanType->Get( "Type" ).ToString();
-
-    return type;
+    return scanType->Get( "Type" ).ToString();
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::string Exam::GetModalityName()
   {
-    std::string modalityName;
     vtkSmartPointer< ScanType > scanType;
-    if( this->GetRecord( scanType ) )
-    {
-      vtkSmartPointer< Modality > modality;
-      if( scanType->GetRecord( modality ) )
-        modalityName = modality->Get( "Name" ).ToString();
-    }
+    if( !this->GetRecord( scanType ) )
+      throw std::runtime_error( "Exam has no parent scantype" );
 
-    return modalityName;
+    vtkSmartPointer< Modality > modality;
+    if( !scanType->GetRecord( modality ) )
+      throw std::runtime_error( "Exam has parent scantype with no modality" );
+
+    return modality->Get( "Name" ).ToString();
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Exam::UpdateImageData()
+  void Exam::UpdateImageData( const std::string &aIdentifier, const std::string &aSource )
   {
-    if( this->HasImageData() ) return;
     vtkSmartPointer< Interview > interview;
-
-    // start by getting the UId
-    this->GetRecord( interview );
-    std::string UId = interview->Get( "UId" ).ToString();
-
-    // status of download: all files of the exam are downloaded
-    bool resultAll = true;
-    bool resultAny = false;
-    // whether to clean up dicom images
-    bool clean = true;
-
-    // determine which Opal table to fetch from based on exam modality
-    std::string type = this->GetScanType();
-    std::map< std::string, vtkVariant > settings;
-    settings[ "ExamId" ] = this->Get( "Id" );
-    settings[ "Acquisition" ] = 1;
-
-    if( "CarotidIntima" == type )
+    std::string identifier = aIdentifier;
+    if( identifier.empty() )
     {
-      // write cineloops 1, 2 and 3
-      // for now, assume that the parent image id for the still image
-      // associated with one of the 3 possible cineloops is the first valid one
-      bool hasParent = false;
-      std::string suffix = ".dcm.gz";
-      std::string sideVariable = "Measure.SIDE";
-      int acquisition = 0;
-      bool repeatable = true;
+      if( !this->GetRecord( interview ) )
+        throw std::runtime_error( "Exam has no parent interview" );
 
-      for( int i = 1; i <= 3; ++i )
+      identifier = interview->Get( "UId" ).ToString();
+    }
+
+    std::string source = aSource;
+    if( source.empty() )
+    {
+      vtkSmartPointer< Wave > wave;
+      if( !aIdentifier.empty() )
       {
-        std::string variable = "Measure.CINELOOP_";
-        variable += vtkVariant( i ).ToString();
-        settings[ "Acquisition" ] = i;
-
-        bool success = this->RetrieveImage(
-          type, variable, UId, settings, suffix, repeatable, sideVariable );
-        resultAll &= success;
-
-        if( success )
-        {
-          resultAny = success;
-          hasParent = true;
-          acquisition = i;
-        }
+        if( !this->GetRecord( interview ) )
+          throw std::runtime_error( "Exam has no parent interview" );
       }
-
-      if( hasParent )
-      {
-        //TODO: SR files still need to be downloaded and processed
-
-        settings[ "Acquisition" ] = ++acquisition;
-        std::string variable = "Measure.STILL_IMAGE";
-        bool success = this->RetrieveImage(
-          type, variable, UId, settings, suffix, repeatable, sideVariable );
-        resultAll &= success;
-
-        if( success )
-        {
-          // get the list of cIMT images in this exam
-
-          std::vector< vtkSmartPointer< Alder::Image > > imageList;
-          this->GetList( &imageList );
-          if( imageList.empty() )
-            throw std::runtime_error( "Failed list load during cIMT parenting" );
-
-          // map the AcquisitionDateTimes from the dicom file headers to the images
-
-          std::map< int, std::string > acqDateTimes;
-          for( auto imageIt = imageList.cbegin(); imageIt != imageList.cend(); ++imageIt )
-          {
-            Alder::Image *image = imageIt->GetPointer();
-            acqDateTimes[ image->Get( "Id" ).ToInt() ] = image->GetDICOMTag( "AcquisitionDateTime" );
-          }
-
-          // find which cineloop has a matching datetime to the still and set the still's
-          // ParentImageId
-
-          vtkNew< Alder::Image > still;
-          int stillId = still->GetLastInsertId();
-          std::string stillAcqDateTime = acqDateTimes[ stillId ];
-
-          // in case of no matching datetime, associate the still with
-          // the group of cineloops
-
-          int parentId = -1;
-          for( auto mapIt = acqDateTimes.cbegin(); mapIt != acqDateTimes.cend(); ++mapIt )
-          {
-            if( mapIt->first == stillId ) continue;
-
-            if( mapIt->second == stillAcqDateTime )
-            {
-              parentId = mapIt->first;
-              break;
-            }
-            else
-            {
-              // use the last inserted cineloop Id in case of no match
-              parentId = mapIt->first > parentId ? mapIt->first : parentId;
-            }
-          }
-
-          if( parentId == -1 )
-            throw std::runtime_error( "Failed to parent cIMT still" );
-
-          still->Load( "Id", stillId );
-          still->Set( "ParentImageId", parentId );
-          still->Save();
-        }
-      }
-    }
-    else if( "DualHipBoneDensity" == type )
-    {
-      std::string variable = "Measure.RES_HIP_DICOM";
-      std::string sideVariable = "Measure.OUTPUT_HIP_SIDE";
-      std::string suffix = ".dcm";
-      bool repeatable = true;
-      resultAll &= this->RetrieveImage( type, variable, UId, settings, suffix, repeatable,
-        sideVariable );
-      resultAny = resultAll;
-    }
-    else if( "ForearmBoneDensity" == type )
-    {
-      std::string variable = "RES_FA_DICOM";
-      std::string sideVariable = "OUTPUT_FA_SIDE";
-      std::string suffix = ".dcm";
-      bool repeatable = false;
-      resultAll &= this->RetrieveImage( type, variable, UId, settings, suffix, repeatable,
-        sideVariable );
-      resultAny = resultAll;
-    }
-    else if( "LateralBoneDensity" == type )
-    {
-      std::string variable = "RES_SEL_DICOM_MEASURE";
-      std::string suffix = ".dcm";
-      resultAll &= this->RetrieveImage( type, variable, UId, settings, suffix );
-      resultAny = resultAll;
-    }
-    else if( "WholeBodyBoneDensity" == type )
-    {
-      std::string variable = "RES_WB_DICOM_1";
-      std::string suffix = ".dcm";
-      bool success = this->RetrieveImage( type, variable, UId, settings, suffix );
-      resultAll &= success;
-
-      if( success )
-      {
-        resultAny = true;
-        // store the previous image's id
-        vtkNew< Alder::Image > image;
-        int parentId = image->GetLastInsertId();
-
-        variable = "RES_WB_DICOM_2";
-        settings[ "Acquisition" ] = 2;
-        success = this->RetrieveImage( type, variable, UId, settings, suffix );
-        resultAll &= success;
-
-        // re-parent this image to the first one
-        int lastId = image->GetLastInsertId();
-        if( success && parentId != lastId )
-        {
-          image->Load( "Id", lastId );
-          image->Set( "ParentImageId", parentId );
-          image->Save();
-        }
-      }
-    }
-    else if( "RetinalScan" == type )
-    {
-      std::string variable = "Measure.EYE";
-      std::string sideVariable = "Measure.SIDE";
-      std::string suffix = ".jpg";
-      bool repeatable = true;
-      resultAll &= this->RetrieveImage( type, variable, UId, settings, suffix, repeatable,
-        sideVariable );
-      resultAny = resultAll;
-      clean = false;
-    }
-    else
-    {
-      std::string errStr = "Cannot retrieve images for unknown exam type: " + type;
-      throw std::runtime_error( errStr );
+      interview->GetRecord( wave );
+      source = wave->Get( "ImageDataSource" ).ToString();
     }
 
-    // now set that we have downloaded at least one of the images
-    if( resultAny )
-    {
-      this->Set( "Downloaded", 1 );
-      this->Save();
-      if( clean )
-        this->CleanImages( type );
-    }
-  }
+    // get the ScanType parameters
+    vtkSmartPointer< ScanType > scanType;
+    if( !this->GetRecord( scanType ) )
+      throw std::runtime_error( "Exam has no parent scantype" );
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool Exam::RetrieveImage(
-    const std::string type,
-    const std::string variable,
-    const std::string UId,
-    const std::map<std::string, vtkVariant> settings,
-    const std::string suffix,
-    const bool repeatable,
-    const std::string sideVariable )
-  {
+    std::string type = scanType->Get( "Type" ).ToString();
+    int sideCount    = scanType->Get( "SideCount" ).ToInt();
+    int acqCount     = scanType->Get( "AcquisitionCount" ).ToInt();
+    int childCount   = scanType->Get( "ChildCount" ).ToInt();
+    std::string acqNameFormat = scanType->Get( "AcquisitionNameFormat" ).ToString();
+
+    // get the position index within the Opal sequence of images
+    int sideIndex = -1;
+    if( 1 < sideCount )
+      sideIndex = this->Get( "SideIndex" ).ToInt();
+
+    std::string suffix = scanType->Get( "FileSuffix" ).ToString();
+    std::string examId = this->Get( "Id" ).ToString();
+    bool dicom = this->IsDICOM();
+
     Application *app = Application::GetInstance();
     OpalService *opal = app->GetOpal();
-    bool result = true;
-    int sideIndex = 0;
-    std::stringstream log;
-    std::string laterality = this->Get( "Laterality" ).ToString();
-
-    if( "none" != laterality )
+    bool sustain = opal->GetSustainConnection();
+    if( !sustain )
     {
-      std::vector< std::string > sideList;
-      if( repeatable )
+      try
       {
-        sideList = opal->GetValues( "clsa-dcs-images", type, UId, sideVariable );
-      }
-      else
-      {
-        std::string side = opal->GetValue( "clsa-dcs-images", type, UId, sideVariable );
-        if( !side.empty() ) sideList.push_back( side );
-      }
-
-      int numSides = sideList.empty() ? 0 : sideList.size();
-
-      if( numSides > 1 )
-      {
-        // sort into right, left
-        std::sort( sideList.begin(), sideList.end(), std::greater< std::string >());
-
-        // enforce unique strings
-        sideList.erase( std::unique( sideList.begin(), sideList.end() ), sideList.end() );
-
-        // remove empty strings
-        sideList.erase(
-          std::remove_if( sideList.begin(), sideList.end(), mem_fun_ref(&std::string::empty) ),
-          sideList.end() );
-
-        // if reduced to one side only, add the opposing side
-        if( sideList.size() == 1 )
-        {
-          if( "right" == Utilities::toLower( sideList[0] ) )
-          {
-            sideList.push_back( "left" );
-          }
-          else if( "left" == Utilities::toLower( sideList[0] ) )
-          {
-            sideList.insert( sideList.begin(), "right" );
-          }
-        }
-      }
-
-      bool found = false;
-
-      for( auto sideListIt = sideList.cbegin(); sideListIt != sideList.cend(); ++sideListIt )
-      {
-        if( Utilities::toLower( *sideListIt ) == laterality )
-        {
-          found = true;
-          break;
-        }
-        sideIndex++;
-      }
-
-      if( !found ) return false;
-    }
-
-    log << "Adding " << variable << " to database for UId \"" << UId << "\"";
-    app->Log( log.str() );
-
-    // add a new entry in the image table (or replace it)
-    vtkNew< Alder::Image > image;
-    for( auto it = settings.cbegin(); it != settings.cend(); ++it ) image->Set( it->first, it->second );
-
-    try{
-      image->Save( true );
-    }
-    catch( std::runtime_error& e )
-    {
-      app->Log( e.what() );
-    }
-
-    // now write the file and validate it
-    std::string fileName = image->CreateFile( suffix );
-    opal->SaveFile( fileName, "clsa-dcs-images", type, UId, variable, repeatable ? sideIndex : -1 );
-
-    if( !image->ValidateFile() )
-    {
-      log.str( "" );
-      log << "Removing " << variable << " from database (invalid)";
-      app->Log( log.str() );
-      image->Remove();
-      result = false;
-    }
-    else
-    {
-      int dimensionality = 2;
-      if( this->IsDICOM() )
-      {
-        // set the image record's Dimensionality column
-        std::vector<int> dims = image->GetDICOMDimensions();
-        // count the number of dimensions > 1
-        dimensionality = 0;
-        for( auto it = dims.begin(); it != dims.end(); ++it ) if( *it > 1 ) dimensionality++;
-      }
-      image->Set( "Dimensionality", dimensionality );
-      try {
-        image->Save();
+        opal->SustainConnectionOn();
       }
       catch( std::runtime_error& e )
       {
         app->Log( e.what() );
+        return;
       }
     }
 
-    return result;
+    // loop over the expected number of Acquisitions
+    int acqGlobal = 1;
+    std::string parentId;
+    int downloaded = 1;
+    for( int acq = 1; acq <= acqCount; ++acq )
+    {
+      vtkNew< Alder::Image > image;
+      std::map< std::string, std::string > loader;
+      loader[ "ExamId" ] = examId;
+      loader[ "Acquisition" ] = vtkVariant( acqGlobal++ ).ToString();
+      if( !image->Load( loader ) )
+      {
+        image->Set( loader );
+        image->Save();
+        if( !image->Load( loader ) )
+        {
+          if( !sustain ) opal->SustainConnectionOff();
+          std::string err = "ERROR: failed loadng image, exam Id ";
+          err += examId;
+          app->Log( err );
+          break;
+        }
+
+        std::string opalVar;
+        if( 1 < acqCount || std::string::npos != acqNameFormat.find( "%d" ) )
+        {
+          char buffer[256];
+          sprintf( buffer, acqNameFormat.c_str(), acq );
+          opalVar = buffer;
+        }
+        else
+          opalVar = acqNameFormat;
+
+        std::string fileName = image->CreateFile( suffix );
+        opal->SaveFile( fileName, source, type, identifier, opalVar, sideIndex );
+      }
+
+      if( image->ValidateFile() )
+      {
+        if( 0 < childCount )
+          parentId = image->Get( "Id" ).ToString();
+        if( dicom )
+          image->SetDimensionalityFromDICOM();
+      }
+      else
+      {
+        try
+        {
+          image->Remove();
+        }
+        catch( std::runtime_error &e )
+        {
+          app->Log( e.what() );
+        }
+        downloaded = 0;
+        break;
+      }
+    }
+
+    // loop over the expected number of child images
+    std::string childId;
+    if( downloaded && 0 < childCount && !parentId.empty() )
+    {
+      std::string childNameFormat = scanType->Get( "ChildNameFormat" ).ToString();
+      for( int acq = 1; acq <= childCount; ++acq )
+      {
+        vtkNew< Alder::Image > image;
+        std::map< std::string, std::string > loader;
+        loader[ "ExamId" ] = examId;
+        loader[ "Acquisition" ] = vtkVariant( acqGlobal++ ).ToString();
+        loader[ "ParentImageId" ] = parentId;
+        if( !image->Load( loader ) )
+        {
+          image->Set( loader );
+          image->Save();
+          if( !image->Load( loader ) )
+          {
+            if( !sustain ) opal->SustainConnectionOff();
+            std::string err = "ERROR: failed loadng child image, exam Id ";
+            err += examId;
+            app->Log( err );
+            break;
+          }
+
+          std::string opalVar;
+          if( 1 < childCount || std::string::npos != childNameFormat.find( "%d" ) )
+          {
+            char buffer[256];
+            sprintf( buffer, childNameFormat.c_str(), acq );
+            opalVar = buffer;
+          }
+          else
+            opalVar = childNameFormat;
+
+          std::string fileName = image->CreateFile( suffix );
+          opal->SaveFile( fileName, source, type, identifier, opalVar, sideIndex );
+        }
+
+        if( image->ValidateFile() )
+        {
+          childId = image->Get( "Id" ).ToString();
+          if( dicom )
+            image->SetDimensionalityFromDICOM();
+        }
+        else
+        {
+          try
+          {
+            image->Remove();
+          }
+          catch( std::runtime_error &e )
+          {
+            app->Log( e.what() );
+          }
+          downloaded = 0;
+          break;
+        }
+      }
+    }
+
+    this->Set( "Downloaded", vtkVariant( downloaded ).ToString() );
+    this->Save();
+
+    if( !sustain ) opal->SustainConnectionOff();
+
+    // parent an only child based on DatetimeAcquired
+    if( downloaded && 1 == childCount && 1 < acqCount && !childId.empty() && dicom )
+    {
+      std::vector< vtkSmartPointer< Alder::Image > > vecImage;
+      this->GetList( &vecImage );
+
+      // map AcquisitionDateTime from dicom file headers to Image Ids
+      std::map< std::string, std::string > mapTime;
+      for( auto it = vecImage.cbegin(); it != vecImage.cend(); ++it )
+      {
+        Alder::Image *image = it->GetPointer();
+        mapTime[ image->Get( "Id" ).ToString() ] = image->GetDICOMTag( "AcquisitionDateTime" );
+      }
+
+      if( mapTime.find( childId ) == mapTime.end() ) return;
+
+      std::string acqDateTime = mapTime[ childId ];
+      parentId.clear();
+      for( auto it = mapTime.cbegin(); it != mapTime.cend(); ++it )
+      {
+        if( it->first == childId ) continue;
+
+        if( it->second == acqDateTime )
+        {
+          parentId = it->first;
+          break;
+        }
+      }
+      if( !parentId.empty() )
+      {
+        vtkNew< Alder::Image > image;
+        image->Load( "Id", childId );
+        image->Set( "ParentImageId", parentId );
+        image->Save( true );
+      }
+    }
+
+    if( downloaded && dicom )
+    {
+      this->CleanImages();
+    }
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Exam::CleanImages( std::string const &type )
+  void Exam::CleanImages()
   {
-    this->AssertPrimaryId();
-
     if( !this->IsDICOM() ) return;
 
-    bool isHologic = "CarotidIntima" != type;
-    std::vector< vtkSmartPointer< Image > > imageList;
-    this->GetList( &imageList );
+    bool isHologic = "Dexa" == this->GetModalityName();
+    std::vector< vtkSmartPointer< Image > > vecImage;
+    this->GetList( &vecImage );
 
-    for( auto it = imageList.begin(); it != imageList.end(); ++it )
+    for( auto it = vecImage.begin(); it != vecImage.end(); ++it )
     {
       Image* image = *it;
       if( isHologic )
       {
-        // TODO: disable until a workaround can be found for unique index issue
-        // image->SetLateralityFromDICOM();
         image->CleanHologicDICOM();
       }
-      else image->AnonymizeDICOM();
+      image->AnonymizeDICOM();
     }
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Exam::IsDICOM()
   {
-    std::string modalityName = this->GetModalityName();
-    return ( "Dexa" == modalityName || "Ultrasound" == modalityName );
+    vtkSmartPointer< Alder::ScanType > scanType;
+    if( this->GetRecord( scanType ) )
+    {
+      std::string suffix = scanType->Get( "FileSuffix" ).ToString();
+      return std::string::npos != suffix.find( ".dcm" );
+    }
+    return false;
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool Exam::IsRatedBy( User* user )
+  bool Exam::IsRatedBy( Alder::User *user )
   {
-    this->AssertPrimaryId();
+    if( !user )
+      throw std::runtime_error( "Tried to get rating for null user" );
 
-    // make sure the user is not null
-    if( !user ) throw std::runtime_error( "Tried to get rating for null user" );
+    std::stringstream stream;
+    stream << "SELECT COUNT(*) FROM Rating "
+           << "JOIN Image ON Image.Id=Rating.ImageId "
+           << "JOIN User ON User.Id=Rating.UserId "
+           << "WHERE Image.ExamId=" << this->Get( "Id" ).ToString() << " "
+           << "AND User.Id=" << user->Get( "Id" ).ToString();
 
-    // loop through all images
-    std::vector< vtkSmartPointer< Image > > imageList;
-    this->GetList( &imageList );
-    for( auto imageIt = imageList.cbegin(); imageIt != imageList.cend(); ++imageIt )
+    Application *app = Application::GetInstance();
+    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    query->SetQuery( stream.str().c_str() );
+    query->Execute();
+
+    if( query->HasError() )
     {
-      Image *image = *(imageIt);
-      if( !image->IsRatedBy( user ) ) return false;
+      app->Log( query->GetLastErrorText() );
+      throw std::runtime_error( "There was an error while trying to query the database." );
     }
 
-    // only return true if there was at least one image rated
-    return 0 < imageList.size();
+    // only one row
+    query->NextRow();
+    return 0 < query->DataValue(0).ToInt();
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  std::map<int,std::string> Exam::GetCodeTypeData()
+  std::map< int, std::string > Exam::GetCodeTypeData()
   {
-    std::map<int,std::string> data;
+    std::map< int, std::string > data;
     vtkSmartPointer< ScanType > scanType;
-    this->GetRecord( scanType );
-    std::vector< vtkSmartPointer< Alder::CodeType > > codeTypeList;
-    scanType->GetList( &codeTypeList );
-    for( auto it = codeTypeList.cbegin(); it != codeTypeList.cend(); ++it )
+    if( !this->GetRecord( scanType ) )
+      throw std::runtime_error( "Exam missing parent ScanType" );
+
+    std::vector< vtkSmartPointer< Alder::CodeType > > vecCodeType;
+    scanType->GetList( &vecCodeType );
+    for( auto it = vecCodeType.cbegin(); it != vecCodeType.cend(); ++it )
     {
-      vtkVariant code = (*it)->Get("Code");
-      vtkVariant id = (*it)->Get("Id");
+      vtkVariant code = (*it)->Get( "Code" );
+      vtkVariant id = (*it)->Get( "Id" );
       if( code.IsValid() && id.IsValid() )
-        data[id.ToInt()] = code.ToString();
+        data[ id.ToInt() ] = code.ToString();
     }
     return data;
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  Exam::SideStatus Exam::GetSideStatus()
+  {
+    Exam::SideStatus status = Exam::SideStatus::Pending;
+    vtkSmartPointer< ScanType > type;
+    if( this->GetRecord( type ) )
+    {
+      int downloaded = this->Get("Downloaded").ToInt();
+      if( 0 == downloaded )
+        status = Exam::SideStatus::Pending;
+      else
+      {
+        std::string side = this->Get( "Side" ).ToString();
+        if( "none" == side )
+        {
+          status = Exam::SideStatus::Fixed;
+        }
+        else
+        {
+          int sideCount = type->Get("SideCount").ToInt();
+          if( 1 == sideCount )
+            status = Exam::SideStatus::Changeable;
+          else if( 2 == sideCount )
+            status = Exam::SideStatus::Swappable;
+        }
+      }
+    }
+
+    return status;
   }
 }

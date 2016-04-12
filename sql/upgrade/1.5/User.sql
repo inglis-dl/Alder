@@ -1,0 +1,32 @@
+DROP PROCEDURE IF EXISTS patch_User;
+DELIMITER //
+CREATE PROCEDURE patch_User()
+  BEGIN
+
+    SET @test = (
+      SELECT COUNT(*)
+      FROM information_schema.TABLE_CONSTRAINTS
+      WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = "User");
+
+    IF @test THEN
+      SELECT "Modifying User table referential actions" AS "";
+
+      SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+      SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+
+      ALTER TABLE User DROP FOREIGN KEY fkUserInterviewId;
+
+      ALTER TABLE User ADD CONSTRAINT fkUserInterviewId
+        FOREIGN KEY (InterviewId) REFERENCES Interview (Id)
+        ON DELETE NO ACTION ON UPDATE CASCADE;
+
+      SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+      SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+    END IF;
+
+  END //
+DELIMITER ;
+
+CALL patch_User();
+DROP PROCEDURE IF EXISTS patch_User;

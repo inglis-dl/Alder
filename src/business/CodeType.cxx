@@ -10,7 +10,6 @@
 =========================================================================*/
 #include <CodeType.h>
 #include <Rating.h>
-#include <Utilities.h>
 
 #include <vtkObjectFactory.h>
 

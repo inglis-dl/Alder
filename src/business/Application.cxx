@@ -8,23 +8,30 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #include <Application.h>
 
+// Alder includes
 #include <Code.h>
 #include <CodeType.h>
 #include <CodeGroup.h>
+#include <Common.h>
 #include <Configuration.h>
 #include <Database.h>
 #include <Exam.h>
 #include <Image.h>
+#include <ImageNote.h>
 #include <Interview.h>
 #include <Modality.h>
 #include <OpalService.h>
+#include <ParticipantData.h>
 #include <Rating.h>
 #include <ScanType.h>
+#include <Site.h>
 #include <User.h>
+#include <Utilities.h>
+#include <Wave.h>
 
+// VTK includes
 #include <vtkDirectory.h>
 #include <vtkObjectFactory.h>
 #include <vtkVariant.h>
@@ -46,9 +53,6 @@ namespace Alder
     this->DB = Database::New();
     this->Opal = OpalService::New();
     this->ActiveUser = NULL;
-    this->ActiveInterview = NULL;
-    this->ActiveImage = NULL;
-    this->ActiveAtlasImage = NULL;
 
     // populate the constructor and class name registries with all active record classes
     this->ConstructorRegistry["Exam"] = &createInstance<Exam>;
@@ -71,6 +75,12 @@ namespace Alder
     this->ClassNameRegistry["CodeGroup"] = typeid(CodeGroup).name();
     this->ConstructorRegistry["ScanType"] = &createInstance<ScanType>;
     this->ClassNameRegistry["ScanType"] = typeid(ScanType).name();
+    this->ConstructorRegistry["Site"] = &createInstance<Site>;
+    this->ClassNameRegistry["Site"] = typeid(Site).name();
+    this->ConstructorRegistry["Wave"] = &createInstance<Wave>;
+    this->ClassNameRegistry["Wave"] = typeid(Wave).name();
+    this->ConstructorRegistry["ImageNote"] = &createInstance<ImageNote>;
+    this->ClassNameRegistry["ImageNote"] = typeid(ImageNote).name();
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -100,30 +110,6 @@ namespace Alder
     {
       this->ActiveUser->Delete();
       this->ActiveUser = NULL;
-    }
-
-    if( NULL != this->ActiveInterview )
-    {
-      this->ActiveInterview->Delete();
-      this->ActiveInterview = NULL;
-    }
-
-    if( NULL != this->ActiveInterview )
-    {
-      this->ActiveInterview->Delete();
-      this->ActiveInterview = NULL;
-    }
-
-    if( NULL != this->ActiveImage )
-    {
-      this->ActiveImage->Delete();
-      this->ActiveImage = NULL;
-    }
-
-    if( NULL != this->ActiveAtlasImage )
-    {
-      this->ActiveAtlasImage->Delete();
-      this->ActiveAtlasImage = NULL;
     }
   }
 
@@ -162,7 +148,7 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Application::Log( const std::string message )
+  void Application::Log( const std::string &message )
   {
     this->LogStream << "[" << Utilities::getTime( "%y-%m-%d %T" ) << "] " << message << std::endl;
   }
@@ -184,12 +170,12 @@ namespace Alder
       if( 0 == status && NULL != demangled ) symname = demangled;
       this->LogStream << dlinfo.dli_fname << "::" << symname << std::endl;
 
-      if (demangled) free( demangled );
+      if( demangled ) free( demangled );
     }
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  std::string Application::GetUnmangledClassName( const std::string mangledName ) const
+  std::string Application::GetUnmangledClassName( const std::string &mangledName ) const
   {
     for( auto it = this->ClassNameRegistry.begin(); it != this->ClassNameRegistry.end(); ++it )
       if( mangledName == it->second ) return it->first;
@@ -199,7 +185,7 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool Application::ReadConfiguration( const std::string fileName )
+  bool Application::ReadConfiguration( const std::string &fileName )
   {
     // make sure the file exists
     ifstream ifile( fileName.c_str() );
@@ -253,12 +239,16 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void Application::UpdateDatabase()
+  {
+    std::string waveSource = this->Config->GetValue( "Opal", "WaveSource" );
+    Wave::UpdateWaveData( waveSource );
+  }
+
+  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Application::ResetApplication()
   {
     this->SetActiveUser( NULL );
-    this->SetActiveInterview( NULL );
-    this->SetActiveImage( NULL );
-    this->SetActiveAtlasImage( NULL );
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -266,76 +256,17 @@ namespace Alder
   {
     if( user != this->ActiveUser )
     {
-      if( this->ActiveUser ) this->ActiveUser->UnRegister( this );
+      if( this->ActiveUser )
+      {
+        this->ActiveUser->UnRegister( this );
+      }
       this->ActiveUser = user;
       if( this->ActiveUser )
       {
         this->ActiveUser->Register( this );
-
-        // get the user's last active interview
-        vtkSmartPointer< Interview > interview;
-        if( this->ActiveUser->GetRecord( interview ) ) this->SetActiveInterview( interview );
       }
       this->Modified();
-      this->InvokeEvent( Application::ActiveUserEvent );
+      this->InvokeEvent( Common::UserChangedEvent );
     }
-  }
-
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Application::SetActiveInterview( Interview *interview )
-  {
-    if( interview != this->ActiveInterview )
-    {
-      if( this->ActiveInterview )
-      {
-        this->ActiveInterview->UnRegister( this );
-      }
-
-      this->ActiveInterview = interview;
-
-      if( this->ActiveInterview )
-      {
-        this->ActiveInterview->Register( this );
-
-        std::string lastId;
-        if( this->ActiveImage ) lastId = this->ActiveImage->Get( "Id" ).ToString();
-        std::string similar = interview->GetSimilarImage( lastId );
-        if( !similar.empty() )
-        {
-          vtkSmartPointer<Image> image = vtkSmartPointer<Image>::New();
-          image->Load( "Id", similar );
-          this->SetActiveImage( image );
-        }
-        else
-        {
-          this->SetActiveImage( NULL );
-        }
-        this->SetActiveAtlasImage( NULL );
-      }
-
-      // if there is an active user, save the active interview
-      if( this->ActiveUser )
-      {
-        if( interview ) this->ActiveUser->Set( "InterviewId", interview->Get( "Id" ).ToInt() );
-        else this->ActiveUser->SetNull( "InterviewId" );
-        this->ActiveUser->Save();
-      }
-      this->Modified();
-      this->InvokeEvent( Application::ActiveInterviewEvent );
-    }
-  }
-
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Application::SetActiveImage( Image* image )
-  {
-    vtkSetObjectBodyMacro( ActiveImage, Image, image);
-    this->InvokeEvent( Application::ActiveImageEvent );
-  }
-
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Application::SetActiveAtlasImage( Image* image )
-  {
-    vtkSetObjectBodyMacro( ActiveAtlasImage, Image, image);
-    this->InvokeEvent( Application::ActiveAtlasImageEvent );
   }
 }
