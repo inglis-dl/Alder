@@ -364,7 +364,7 @@ namespace Alder
 
     // build a map of Alder Exam db table rows and populate with values particular to the given UId
     std::map< std::string, std::map< std::string, std::string > > examData;
-    std::vector< vtkSmartPointer< Alder::ScanType > > scanTypeList;
+    std::vector< vtkSmartPointer< ScanType > > scanTypeList;
     wave->GetList( &scanTypeList );
     for( auto it = scanTypeList.cbegin(); it != scanTypeList.cend(); ++it )
     {
@@ -380,7 +380,7 @@ namespace Alder
     {
       std::string opalVar = it->first;
       std::string opalVal = it->second;
-      std::vector< std::string > tmp = Alder::Utilities::explode( opalVar, "." );
+      std::vector< std::string > tmp = Utilities::explode( opalVar, "." );
       if( 2 != tmp.size() )
       {
         continue;
@@ -426,10 +426,10 @@ namespace Alder
             continue;
 
           std::vector< std::string > vecSide =
-            Alder::Utilities::explode( columns[ "Side" ], "," );
+            Utilities::explode( columns[ "Side" ], "," );
 
           std::vector< std::string > vecSideIndex =
-            Alder::Utilities::explode( columns[ "SideIndex" ], "," );
+            Utilities::explode( columns[ "SideIndex" ], "," );
 
           if( vecSide.size() != vecSideIndex.size() )
             continue;
@@ -685,11 +685,11 @@ namespace Alder
 
     // get a map of site ids, names and aliases
     std::vector< vtkSmartPointer< Site > > vecSite;
-    Alder::Site::GetAll( &vecSite );
+    Site::GetAll( &vecSite );
     std::map< std::string, std::string > mapSite;
     for( auto it = vecSite.cbegin(); it != vecSite.cend(); ++it )
     {
-      Alder::Site *site = *it;
+      Site *site = *it;
       std::string siteId = site->Get( "Id" ).ToString();
       mapSite[ site->Get( "Name" ).ToString() ] = siteId;
       std::string alias = site->Get( "Alias" ).ToString();
@@ -807,7 +807,7 @@ namespace Alder
   {
     // load images for Interviews already pulled from Opal via the administrator UI
     std::vector< vtkSmartPointer< Interview > > vecRevised;
-    vtkNew< Alder::Wave > wave;
+    vtkNew< Wave > wave;
     for( auto it = list.cbegin(); it != list.cend(); ++it )
     {
       std::string uidStr = it->first;
@@ -844,10 +844,10 @@ namespace Alder
     }
 
     // the active user can only load exam images they have permission for
-    Alder::User *user = app->GetActiveUser();
+    User *user = app->GetActiveUser();
 
-    vtkSmartPointer< Alder::QueryModifier > modifier =
-      vtkSmartPointer< Alder::QueryModifier >::New();
+    vtkSmartPointer< QueryModifier > modifier =
+      vtkSmartPointer< QueryModifier >::New();
     user->InitializeExamModifier( modifier );
 
     int index = 0;
