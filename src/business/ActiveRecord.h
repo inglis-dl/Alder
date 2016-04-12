@@ -22,23 +22,24 @@
  * which correspond directly to a table (and named exactly the same way) must
  * extend this class.
  */
-
 #ifndef __ActiveRecord_h
 #define __ActiveRecord_h
 
-#include <ModelObject.h>
-
+// Alder includes
 #include <Application.h>
 #include <Database.h>
+#include <ModelObject.h>
 #include <QueryModifier.h>
-
 #include <vtkAlderMySQLQuery.h>
+
+// VTK includes
 #include <vtkNew.h>
 #include <vtkSmartPointer.h>
 #include <vtkVariant.h>
 
 #include <map>
 #include <stdexcept>
+#include <sstream>
 #include <typeinfo>
 #include <vector>
 
@@ -59,7 +60,7 @@ namespace Alder
      * Returns whether this record has a particular column.
      * @param column the name of the column
      */
-    bool ColumnNameExists( const std::string column );
+    bool ColumnNameExists( const std::string &column );
 
     //@{
     /**
@@ -69,11 +70,11 @@ namespace Alder
      * @param value the value associated with the key
      * @throws      runtime_error
      */
-    bool Load( const std::string key, const int value )
+    bool Load( const std::string &key, const int &value )
     {
       return this->Load( key, vtkVariant(value).ToString() );
     }
-    bool Load( const std::string key, const std::string value )
+    bool Load( const std::string &key, const std::string &value )
     {
       return this->Load( std::pair< std::string, std::string >( key, value ) );
     }
@@ -83,7 +84,7 @@ namespace Alder
       map.insert( pair );
       return this->Load( map );
     }
-    virtual bool Load( const std::map< std::string, std::string > map );
+    virtual bool Load( const std::map< std::string, std::string > &map );
     //@}
 
     /**
@@ -91,7 +92,7 @@ namespace Alder
      * then a new record will be inserted into the database.
      * @param replace whether to replace an existing record
      */
-    virtual void Save( const bool replace = false );
+    virtual void Save( const bool &replace = false );
 
     /**
      * Removes the current record from the database.
@@ -140,6 +141,41 @@ namespace Alder
       }
     }
 
+    /**
+     * Provides a list of all column values which exist in a table.
+     * @param list     an existing vector to put all values as strings into
+     * @param column   a column in a table
+     * @parem distinct distinct select modifier
+     * @param modifier QueryModifier
+     */
+    template< class T >  static void GetAll(
+      std::vector< std::string > *list, const std::string &column,
+      const bool &distinct = true, QueryModifier *modifier = NULL )
+    { // we have to implement this here because of the template
+      Application *app = Application::GetInstance();
+      // get the class name of T, return error if not found
+      std::string type = app->GetUnmangledClassName( typeid(T).name() );
+      std::stringstream stream;
+      stream << "SELECT " << ( distinct ? "DISTINCT ": "" ) << column << "FROM " << type;
+      if( NULL != modifier ) stream << " " << modifier->GetSql();
+      vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+
+      app->Log( "Querying Database: " + stream.str() );
+      query->SetQuery( stream.str().c_str() );
+      query->Execute();
+
+      if( query->HasError() )
+      {
+        app->Log( query->GetLastErrorText() );
+        throw std::runtime_error( "There was an error while trying to query the database." );
+      }
+
+      while( query->NextRow() )
+      {
+        list->push_back( query->DataValue( 0 ).ToString() );
+      }
+    }
+
     //@{
     /**
      * Provides a list of all records which are related to this record by foreign key or
@@ -152,10 +188,10 @@ namespace Alder
       std::vector< vtkSmartPointer< T > > *list, QueryModifier *modifier = NULL )
     { this->GetList( list, modifier, "" ); }
     template< class T > void GetList(
-      std::vector< vtkSmartPointer< T > > *list, const std::string override )
+      std::vector< vtkSmartPointer< T > > *list, const std::string &override )
     { this->GetList( list, NULL, override ); }
     template< class T > void GetList(
-      std::vector< vtkSmartPointer< T > > *list, QueryModifier *modifier, const std::string override )
+      std::vector< vtkSmartPointer< T > > *list, QueryModifier *modifier, const std::string &override )
     {
       Application *app = Application::GetInstance();
       Database *db = app->GetDB();
@@ -167,8 +203,9 @@ namespace Alder
       if( NULL != modifier ) mod->Merge( modifier );
 
       // if no override is provided, figure out necessary table/column names
-      std::string joiningTable = override.empty() ? this->GetName() + "Has" + type : override;
-      std::string column = override.empty() ? this->GetName() + "Id" : override;
+      std::string name = this->GetName();
+      std::string joiningTable = override.empty() ? name + "Has" + type : override;
+      std::string column = override.empty() ? name + "Id" : override;
 
       int relationship = this->GetRelationship( type, override );
       if( ActiveRecord::ManyToMany == relationship )
@@ -176,17 +213,17 @@ namespace Alder
         stream << "SELECT " << type << ".* "
                << "FROM " << joiningTable << " "
                << "JOIN " << type << " ON " << joiningTable << "." << type << "Id = " << type << ".Id";
-        mod->Where( this->GetName() + "Id", "=", this->Get( "Id" ).ToString() );
+        mod->Where( name + "Id", "=", this->Get( "Id" ).ToString() );
       }
       else if( ActiveRecord::OneToMany == relationship )
       {
-        stream << "SELECT * FROM " << type;
+        stream << "SELECT " << type << ".* FROM " << type;
         mod->Where( column, "=", this->Get( "Id" ).ToString() );
       }
       else // no relationship (we don't support one-to-one relationships)
       {
         std::stringstream stream;
-        stream << "Cannot determine relationship between " << this->GetName() << " and " << type;
+        stream << "Cannot determine relationship between " << name << " and " << type;
         throw std::runtime_error( stream.str() );
       }
 
@@ -218,7 +255,7 @@ namespace Alder
      * @param override an alternate joining table name
      * @throws         runtime_error
      */
-    template <class T> bool Has( vtkSmartPointer< T > &record, const std::string override = "" )
+    template <class T> bool Has( vtkSmartPointer< T > &record, const std::string &override = "" )
     {
       Application *app = Application::GetInstance();
       Database *db = app->GetDB();
@@ -227,29 +264,29 @@ namespace Alder
       vtkSmartPointer<vtkAlderMySQLQuery> query = db->GetQuery();
 
       // if no override is provided, figure out necessary table/column names
-      std::string joiningTable = override.empty() ? this->GetName() + "Has" + type : override;
-      std::string column = override.empty() ? this->GetName() + "Id" : override;
-
+      std::string name = this->GetName();
       int relationship = this->GetRelationship( type, override );
       if( ActiveRecord::ManyToMany == relationship )
       {
+        std::string joiningTable = override.empty() ? name + "Has" + type : override;
         sql << "SELECT COUNT(*) FROM " << joiningTable << " "
-            << "WHERE " << this->GetName() << "Id = " << this->Get( "Id" ).ToString() << " "
+            << "WHERE " << name << "Id = " << this->Get( "Id" ).ToString() << " "
             << "AND " << type << "Id = " << record->Get( "Id" ).ToString();
       }
       else if( ActiveRecord::OneToMany == relationship )
       {
+        std::string column = override.empty() ? name + "Id" : override;
         sql << "SELECT COUNT(*) FROM " << type << " "
             << "WHERE " << column << " = " << this->Get( "Id" ).ToString();
       }
       else // no relationship (we don't support one-to-one relationships)
       {
         std::stringstream stream;
-        stream << "Cannot determine relationship between " << this->GetName() << " and " << type;
+        stream << "Cannot determine relationship between " << name << " and " << type;
         throw std::runtime_error( stream.str() );
       }
 
-      // execute the query, check for errors, put results in the list
+      // execute the query, check for errors
       app->Log( "Querying Database: " + sql.str() );
       query->SetQuery( sql.str().c_str() );
       query->Execute();
@@ -261,6 +298,64 @@ namespace Alder
 
       query->NextRow();
       return 0 < query->DataValue( 0 ).ToInt();
+    }
+
+    /**
+     * Returns the number of records which are related to this record by foreign key.
+     * @param recordType the associated table name
+     */
+    int GetCount( const std::string &recordType );
+
+    /**
+     * Returns the number of records which are related to this record by foreign key
+     * or via a many to many relationship table.
+     * @param recordType the associated table name
+     * @throws         runtime_error
+     */
+    int GetCountExplicit( const std::string &recordType )
+    {
+      Application *app = Application::GetInstance();
+      Database *db = app->GetDB();
+      std::stringstream sql;
+      vtkSmartPointer<vtkAlderMySQLQuery> query = db->GetQuery();
+
+      // figure out necessary table/column names
+      std::string name = this->GetName();
+      std::string column = name + "Id";
+
+      int relationship = this->GetRelationship( recordType );
+      if( ActiveRecord::ManyToMany == relationship )
+      {
+        std::string joiningTable = name + "Has" + recordType;
+        sql << "SELECT COUNT(*) FROM " << name
+            << "JOIN "  << joiningTable << " ON " << column << " = " << name << ".Id "
+            << "JOIN "  << recordType   << " ON " << recordType << ".Id = " << recordType << "Id"
+            << "WHERE " << name << ".Id = " << this->Get( "Id" ).ToString();
+      }
+      else if( ActiveRecord::OneToMany == relationship )
+      {
+        sql << "SELECT COUNT(*) FROM " << recordType << " "
+            << "WHERE " << column << " = " << this->Get( "Id" ).ToString();
+      }
+      else // no relationship (we don't support one-to-one relationships)
+      {
+        std::stringstream stream;
+        stream << "Cannot determine relationship between " << name << " and " << recordType;
+        throw std::runtime_error( stream.str() );
+      }
+
+      // execute the query, check for errors
+      app->Log( "Querying Database: " + sql.str() );
+      query->SetQuery( sql.str().c_str() );
+      query->Execute();
+      if( query->HasError() )
+      {
+        app->Log( query->GetLastErrorText() );
+        throw std::runtime_error( "There was an error while trying to query the database." );
+      }
+
+      query->NextRow();
+      return query->DataValue( 0 ).ToInt();
     }
 
     /**
@@ -281,8 +376,9 @@ namespace Alder
       if( ActiveRecord::ManyToMany != this->GetRelationship( type ) )
         throw std::runtime_error( "Cannot add record without many-to-many relationship." );
 
-      sql << "REPLACE INTO " << this->GetName() << "Has" << type << " ("
-          << this->GetName() << "Id, " << type << "Id) "
+      std::string name = this->GetName();
+      sql << "REPLACE INTO " << name << "Has" << type << " ("
+          << name << "Id, " << type << "Id) "
           << "VALUES (" << this->Get( "Id" ).ToInt() << ", " << record->Get( "Id" ).ToInt() << ")";
 
       // execute the query, check for errors, put results in the list
@@ -309,8 +405,9 @@ namespace Alder
       if( ActiveRecord::ManyToMany != this->GetRelationship( type ) )
         throw std::runtime_error( "Cannot remove record without many-to-many relationship." );
 
-      sql << "DELETE FROM " << this->GetName() << "Has" << type << " "
-          << "WHERE " << this->GetName() << "Id = " << this->Get( "Id" ).ToInt() << " "
+      std::string name = this->GetName();
+      sql << "DELETE FROM " << name << "Has" << type << " "
+          << "WHERE " << name << "Id = " << this->Get( "Id" ).ToInt() << " "
           << "AND " << type << "Id = " << record->Get( "Id" ).ToInt();
 
       // execute the query, check for errors, put results in the list
@@ -320,18 +417,12 @@ namespace Alder
     }
 
     /**
-     * Returns the number of records which are related to this record by foreign key.
-     * @param recordType the associated table name
-     */
-    int GetCount( const std::string recordType );
-
-    /**
      * Get the value of any column in the record.
      * @param column the name of the column
      * @return       the value of the column as a vtkVariant
      * @throws       runtime_error
      */
-    virtual vtkVariant Get( const std::string column );
+    virtual vtkVariant Get( const std::string &column );
 
     /**
      * Get the record which has a foreign key in this table.
@@ -340,12 +431,13 @@ namespace Alder
      * @return        success or fail if the record is found
      * @throws        runtime_error
      */
-    template <class T> bool GetRecord( vtkSmartPointer< T > &record, std::string column = "" )
+    template <class T> bool GetRecord( vtkSmartPointer< T > &record, const std::string &aColumn = "" )
     {
       Application *app = Application::GetInstance();
       std::string table = app->GetUnmangledClassName( typeid(T).name() );
 
       // if no column name was provided, use the default (table name followed by Id)
+      std::string column = aColumn;
       if( column.empty() ) column = table + "Id";
 
       // test to see if correct foreign key exists
@@ -374,12 +466,12 @@ namespace Alder
      * SetNull() method instead of Set().
      * @param map a collection of column names and native values
      */
-    template <class T> void Set( const std::map< std::string, T > map )
+    template <class T> void Set( const std::map< std::string, T > &map )
     {
       for( auto it = map.cbegin(); it != map.cend(); ++it )
         this->SetVariant( it->first, vtkVariant( it->second ) );
     }
-    template <class T> void Set( const std::string column, const T value )
+    template <class T> void Set( const std::string &column, const T &value )
     { this->SetVariant( column, vtkVariant( value ) ); }
     void SetNull( const std::string column )
     { this->SetVariant( column, vtkVariant() ); }
@@ -397,6 +489,34 @@ namespace Alder
      * @param query a mysql query object
      */
     void LoadFromQuery( vtkAlderMySQLQuery *query );
+
+    bool operator == ( const ActiveRecord& rhs ) const
+    {
+      bool equal = this->Initialized == rhs.Initialized &&
+                   this->ColumnValues.size() == rhs.ColumnValues.size();
+      if( equal )
+      {
+        auto rit = rhs.ColumnValues.begin();
+        auto lit = this->ColumnValues.begin();
+        while( lit != this->ColumnValues.end() &&
+               rit != rhs.ColumnValues.end() )
+        {
+          if( lit->first != rit->first || lit->second != rit->second )
+          {
+            equal = false;
+            break;
+          }
+          lit++;
+          rit++;
+        }
+      }
+      return equal;
+    }
+
+    bool operator != ( const ActiveRecord& rhs ) const
+    {
+      return !( *this == rhs );
+    }
 
   protected:
     ActiveRecord();
@@ -443,7 +563,7 @@ namespace Alder
      * @param table
      * @param override
      */
-    int GetRelationship( const std::string table, const std::string override = "" ) const;
+    int GetRelationship( const std::string &table, const std::string &override = "" ) const;
 
     std::map<std::string,vtkVariant> ColumnValues;
     bool Initialized;
@@ -451,7 +571,6 @@ namespace Alder
   private:
     ActiveRecord( const ActiveRecord& ); // Not implemented
     void operator=( const ActiveRecord& ); // Not implemented
-    void DeleteColumnValues();
   };
 }
 

@@ -8,21 +8,24 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
+
+// Alder includes
+#include <AlderConfig.h>
 #include <Application.h>
 #include <Configuration.h>
 #include <Exam.h>
 #include <Interview.h>
 #include <User.h>
 
+// VTK includes
 #include <vtkNew.h>
 #include <vtkSmartPointer.h>
 
+#include <iostream>
 #include <stdexcept>
-
+#include <stdio.h>
 #include <termios.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <iostream>
 
 bool ApplicationInit();
 
@@ -85,7 +88,7 @@ int main( int argc, char** argv )
   if( !ApplicationInit() )
   {
     return EXIT_FAILURE;
-  } 
+  }
 
   vtkNew< Alder::User > user;
   user->Load( "Name", "administrator" );
@@ -105,7 +108,7 @@ int main( int argc, char** argv )
   std::vector< vtkSmartPointer< Alder::Interview > > interviewList;
   Alder::Interview::GetAll( &interviewList );
   if( !interviewList.empty() )
-  {    
+  {
     for( auto interviewIt = interviewList.begin(); interviewIt != interviewList.end(); ++interviewIt )
     {
       Alder::Interview *interview = interviewIt->GetPointer();
@@ -122,13 +125,17 @@ int main( int argc, char** argv )
         if( modStr != "Dexa" ) continue;
 
         std::string typeStr = exam->GetScanType();
-        std::string latStr = exam->Get( "Laterality" ).ToString();
 
         std::vector< vtkSmartPointer< Alder::Image > > imageList;
         exam->GetList( &imageList );
         for( auto imageIt = imageList.begin(); imageIt != imageList.end(); ++imageIt )
         {
           Alder::Image *image = imageIt->GetPointer();
+
+          //check and set the laterality correctly from the dicom tag
+          image->SwapExamSideFromDICOM();
+          std::string sideStr = exam->Get( "Side" ).ToString();
+
           std::string fileName = image->GetFileName();
           std::cout << "-------------- PROCESSING IMAGE --------------" << std::endl
            << "Path: "        << fileName << std::endl
@@ -137,15 +144,12 @@ int main( int argc, char** argv )
            << "Datetime: "    << exam->Get( "DatetimeAcquired" ).ToString() << std::endl
            << "Modality: "    << modStr << std::endl
            << "Type: "        << typeStr << std::endl
-           << "Laterality: "  << latStr << std::endl
+           << "Side: "        << sideStr << std::endl
            << "Downloaded: "  << exam->Get( "Downloaded" ).ToInt() << std::endl;
 
-          //check and set the laterality correctly from the dicom tag
-          image->SetLateralityFromDICOM();
-
           //check the dicom tag for a patient name
-          std::string nameStr = image->GetDICOMTag( "PatientsName" );
-          if( !nameStr.empty() ) 
+          std::string nameStr = image->GetDICOMTag( "PatientName" );
+          if( !nameStr.empty() )
           {
             std::cout << "CONFIDENTIALITY BREECH! " << nameStr << std::endl;
             try{
@@ -169,30 +173,30 @@ bool ApplicationInit()
 {
   bool status = true;
   Alder::Application *app = Alder::Application::GetInstance();
-  if( !app->ReadConfiguration( ALDER_CONFIG_FILE ) ) 
-  {   
-    std::cout << "ERROR: error while reading configuration file \"" 
+  if( !app->ReadConfiguration( ALDER_CONFIG_FILE ) )
+  {
+    std::cout << "ERROR: error while reading configuration file \""
               << ALDER_CONFIG_FILE << "\"" << std::endl;
-    status = false;          
-  }   
+    status = false;
+  }
   else if( !app->OpenLogFile() )
-  {   
+  {
     std::string logPath = app->GetConfig()->GetValue( "Path", "Log" );
-    std::cout << "ERROR: unable to open log file \"" 
+    std::cout << "ERROR: unable to open log file \""
               << logPath << "\"" << std::endl;
-    status = false;          
-  }   
+    status = false;
+  }
   else if( !app->TestImageDataPath() )
-  {   
+  {
     std::string imageDataPath = app->GetConfig()->GetValue( "Path", "ImageData" );
-    std::cout << "ERROR: no write access to image data directory \"" 
+    std::cout << "ERROR: no write access to image data directory \""
               << imageDataPath << "\"" << std::endl;
-    status = false;          
-  }   
+    status = false;
+  }
   else if( !app->ConnectToDatabase() )
-  {   
+  {
     std::cout << "ERROR: error while connecting to the database" << std::endl;
-    status = false;          
+    status = false;
   }
   if( !status )
   {

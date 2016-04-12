@@ -1,6 +1,7 @@
 PROJECT( AlderCommon )
 
 SET( AlderCommon_SRCS
+  Common.cxx
   Utilities.cxx
 )
 

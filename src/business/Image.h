@@ -40,6 +40,11 @@ namespace Alder
     std::string GetName() const { return "Image"; }
 
     /**
+     * Override parent class method.
+     */
+    void Remove();
+
+    /**
      * Returns the image's code (used to determine the image's path in the image data directory).
      * @return the InterviewId/ExamId/ImageId code
      * @throw  runtime_error
@@ -52,6 +57,15 @@ namespace Alder
      * @throw  runtime_error
      */
     std::string GetFilePath();
+
+    /**
+     * Get the file name that this record represents (including path).
+     * NOTE: this method depends on the file already existing: if it doesn't already
+     * exist, an exception is thrown.
+     * @return the full path and file name of this image
+     * @throw  runtime_error
+     */
+    std::string GetFileName();
 
     /**
      * Create the path to the file name that this record represents (including path and provided
@@ -71,13 +85,9 @@ namespace Alder
     bool ValidateFile();
 
     /**
-     * Get the file name that this record represents (including path).
-     * NOTE: this method depends on the file already existing: if it doesn't already
-     * exist, an exception is thrown.
-     * @return the full path and file name of this image
-     * @throw  runtime_error
+     * Set the dimensionality from dicom tag data.
      */
-    std::string GetFileName();
+    void SetDimensionalityFromDICOM();
 
     /**
      * Get whether a particular user has rated this image.
@@ -94,12 +104,17 @@ namespace Alder
      */
     bool IsDICOM();
 
+    // TODO: add method to deal with color palette compression schemes
+    // used in GE dicom images
+
     /**
      * Get a DICOM tag value. Accepted tag names are:
      *   AcquisitionDateTime - 0x0008, 0x002a
-     *   SeriesNumber        - 0x0020,0x0011
-     *   PatientsName        - 0x0010, 0x0010
+     *   SeriesNumber        - 0x0020, 0x0011
+     *   PatientName         - 0x0010, 0x0010
      *   Laterality          - 0x0020, 0x0060
+     *   Manufacturer        - 0x0008, 0x0070
+     *   PhotometricInterpretation - 0x0028, 0x0004
      * No checking is done to ensure this is a dicom image: use
      * IsDICOM() method to check first.
      * @param tagName the name of the dicom tag
@@ -123,17 +138,24 @@ namespace Alder
      * @return vector of dimensions in x, y, z: x, y only if 2D
      * @throw  runtime_error
      */
-    std::vector<int> GetDICOMDimensions();
+    std::vector< int > GetDICOMDimensions();
 
     /**
-     * Set the laterality of the image's parent exam from its dicom tag if available.
+     * Set the side of the image's parent exam from its dicom tag (laterality) if available.
      * No checking is done to ensure this is a dicom image: use
      * IsDICOM() method to check first.
+     * @return whether the exam side was changed
      */
-    void SetLateralityFromDICOM();
+    bool SwapExamSideFromDICOM();
 
     /**
-     * Anonymize a dicom image by clearing the PatientsName tag.
+     * Swap the side of the images' parent exam with the parent exam's sibling.
+     * @return whether the exam side was changed
+     */
+    bool SwapExamSide();
+
+    /**
+     * Anonymize a dicom image by clearing the PatientName tag.
      * No checking is done to ensure this is a dicom image: use
      * IsDICOM() method to check first.
      * @return whether the file was anonymized
@@ -152,20 +174,31 @@ namespace Alder
      */
     bool CleanHologicDICOM();
 
+    /**
+     * Convert photometric interpretation from YBR_FULL_422 to RGB.
+     * No checking is done to ensure this is a dicom image: use
+     * IsDICOM() method to check first.
+     * @return success or fail status of the conversion
+     * @throw  runtime_error
+     */
+    bool YBRToRGB();
+
+
     //@{
     /**
      * Returns the neighbouring interview in UId/VisitDate order.
      * A rating must be provided since an image may have more than one rating.
      * @param rating  the rating of the atlas image that matches this one
      * @param forward the order ASC (forward=true) or DESC to search by Interview.UId
+     * @param id      the id of the root image that this atlas is for
      * @return        a neigbouring atlas image
      * @throw         runtime_error
      */
-    vtkSmartPointer<Image> GetNeighbourAtlasImage( int const &rating, bool const &forward );
-    vtkSmartPointer<Image> GetNextAtlasImage( int const &rating )
-    { return this->GetNeighbourAtlasImage( rating, true ); }
-    vtkSmartPointer<Image> GetPreviousAtlasImage( int const &rating )
-    { return this->GetNeighbourAtlasImage( rating, false ); }
+    vtkSmartPointer<Image> GetNeighbourAtlasImage( const int &rating, const bool &forward, const int &id=0 );
+    vtkSmartPointer<Image> GetNextAtlasImage( const int &rating, const int &id=0 )
+    { return this->GetNeighbourAtlasImage( rating, true, id ); }
+    vtkSmartPointer<Image> GetPreviousAtlasImage( int const &rating, const int &id=0 )
+    { return this->GetNeighbourAtlasImage( rating, false, id ); }
     //@}
 
     /**
@@ -174,11 +207,13 @@ namespace Alder
      * @return       an atlas image matching this image
      * @throw        runtime_error
      */
-    vtkSmartPointer<Image> GetAtlasImage( int const &rating );
+    vtkSmartPointer< Image > GetAtlasImage( const int &rating );
 
   protected:
     Image() {}
     ~Image() {}
+
+    bool SwapExamSideTo( const std::string &side );
 
   private:
     Image( const Image& ); // Not implemented

@@ -8,10 +8,10 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #ifndef __QAlderDicomTagWidget_h
 #define __QAlderDicomTagWidget_h
 
+// Qt includes
 #include <QWidget>
 
 class QAlderDicomTagWidgetPrivate;
@@ -22,11 +22,11 @@ class QAlderDicomTagWidget : public QWidget
 
 public:
   typedef QWidget Superclass;
-  QAlderDicomTagWidget( QWidget* parent = 0 );
+  explicit QAlderDicomTagWidget( QWidget* parent = 0 );
   virtual ~QAlderDicomTagWidget();
 
 public Q_SLOTS:
-  virtual void updateTableWidget( QString );
+  virtual void load( const QString& fileName );
 
 protected:
   QScopedPointer<QAlderDicomTagWidgetPrivate> d_ptr;

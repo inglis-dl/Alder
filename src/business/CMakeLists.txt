@@ -10,15 +10,18 @@ SET( AlderBusiness_SRCS
   Database.cxx
   Exam.cxx
   Image.cxx
+  ImageNote.cxx
   Interview.cxx
   Modality.cxx
   ModelObject.cxx
   OpalService.cxx
-  ProgressProxy.cxx
+  ParticipantData.cxx
   QueryModifier.cxx
   Rating.cxx
   ScanType.cxx
+  Site.cxx
   User.cxx
+  Wave.cxx
 )
 
 SET_SOURCE_FILES_PROPERTIES(
@@ -42,6 +45,7 @@ TARGET_LINK_LIBRARIES( AlderBusiness
   AlderVTK
   ${CURL_LIBRARY}
   ${JSONCPP_LIBRARIES}
+  vtkDICOM
 )
 
 INSTALL( TARGETS AlderBusiness

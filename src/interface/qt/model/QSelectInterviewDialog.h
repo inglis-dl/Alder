@@ -8,48 +8,37 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #ifndef __QSelectInterviewDialog_h
 #define __QSelectInterviewDialog_h
 
+// Qt includes
 #include <QDialog>
 
-#include <map>
-#include <string>
-
-namespace Alder { class Interview; };
-class Ui_QSelectInterviewDialog;
+class QSelectInterviewDialogPrivate;
 
 class QSelectInterviewDialog : public QDialog
 {
   Q_OBJECT
 
 public:
+  typedef QDialog Superclass;
   //constructor
-  QSelectInterviewDialog( QWidget* parent = 0 );
+  explicit QSelectInterviewDialog( QWidget* parent = 0 );
   //destructor
-  ~QSelectInterviewDialog();
+  virtual ~QSelectInterviewDialog();
   
 public slots:
-  virtual void slotSearch();
-  virtual void slotAccepted();
-  virtual void slotSelectionChanged();
-  virtual void slotHeaderClicked( int index );
+  virtual void accepted();
+
+signals:
+  void interviewSelected( int );
 
 protected:
-  void updateRow( const int, Alder::Interview* );
-  void updateInterface();
-  bool searchTextInUId( const QString );
-  QStringList searchText;
-  int sortColumn;
-  Qt::SortOrder sortOrder;
-  std::map< std::string, int > columnIndex;
-
-protected slots:
+  QScopedPointer<QSelectInterviewDialogPrivate> d_ptr;
 
 private:
-  // Designer form
-  Ui_QSelectInterviewDialog *ui;
+  Q_DECLARE_PRIVATE(QSelectInterviewDialog);
+  Q_DISABLE_COPY(QSelectInterviewDialog);
 };
 
 #endif

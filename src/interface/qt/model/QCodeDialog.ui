@@ -467,13 +467,5 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../../../../../qt/src/gui/styles/qstyle.qrc"/>
-  <include location="../../../../../qt/src/plugins/platforms/openkode/resources.qrc"/>
-  <include location="../../../../../qt/src/gui/dialogs/qprintdialog.qrc"/>
-  <include location="../../../../../qt/src/gui/dialogs/qmessagebox.qrc"/>
-  <include location="../../../../../qt/src/gui/styles/qstyle_wince.qrc"/>
-  <include location="../../../../../qt/src/gui/styles/qstyle_s60.qrc"/>
- </resources>
  <connections/>
 </ui>

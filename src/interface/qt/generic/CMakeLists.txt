@@ -7,6 +7,11 @@ SET( AlderQtGenericLib_SRC
   QAlderFramePlayerWidget.cxx
   QAlderSliderWidget.cxx
   QMedicalImageWidget.cxx
+  QAlderImageWidget.cxx
+  QAlderAbstractView.cxx
+  QAlderSliceView.cxx
+  QAlderImageControl.cxx
+  QMailSender.cxx
 )
 
 SET( AlderQtGeneric_Uis
@@ -15,6 +20,8 @@ SET( AlderQtGeneric_Uis
   QAlderFramePlayerWidget.ui
   QAlderSliderWidget.ui
   QMedicalImageWidget.ui
+  QAlderImageWidget.ui
+  QAlderImageControl.ui
 )
 
 SET( AlderQtGeneric_MocHeaders
@@ -24,6 +31,13 @@ SET( AlderQtGeneric_MocHeaders
   QAlderFramePlayerWidget.h
   QAlderSliderWidget.h
   QMedicalImageWidget.h
+  QAlderImageWidget.h
+  QAlderAbstractView.h
+  QAlderAbstractView_p.h
+  QAlderSliceView.h
+  QAlderSliceView_p.h
+  QAlderImageControl.h
+  QMailSender.h
 )
 
 SET( AlderQtGeneric_Resources
@@ -31,6 +45,7 @@ SET( AlderQtGeneric_Resources
 )
 
 INCLUDE_DIRECTORIES(
+  ${ALDER_COMMON_DIR}
   ${ALDER_VTK_DIR}
 )
 
@@ -45,6 +60,10 @@ ADD_LIBRARY( AlderQtGeneric
   ${AlderQtGenericLib_MOC}
   ${AlderQtGenericLib_QRC}
 )
+
+TARGET_LINK_LIBRARIES( AlderQtGeneric
+ Qt4::QtNetwork
+) 
 
 INSTALL( TARGETS AlderQtGeneric 
   DESTINATION lib

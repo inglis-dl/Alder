@@ -18,9 +18,12 @@
   the U.S. Government retains certain rights in this software.
 -------------------------------------------------------------------------*/
 #include <vtkAlderMySQLDatabase.h>
+
+// Alder includes
 #include <vtkAlderMySQLDatabasePrivate.h>
 #include <vtkAlderMySQLQuery.h>
 
+// VTK includes
 #include <vtkObjectFactory.h>
 #include <vtkSQLDatabaseSchema.h>
 #include <vtkStringArray.h>

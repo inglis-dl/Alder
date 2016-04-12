@@ -24,17 +24,16 @@
  * to Opal and tracks the state of the application such as active user and
  * study.
  */
-
 #ifndef __Application_h
 #define __Application_h
 
+// Alder includes
 #include <ModelObject.h>
-#include <Utilities.h>
-
-#include <vtkCommand.h>
 
 #include <iostream>
+#include <map>
 #include <ostream>
+#include <sstream>
 #include <stdexcept>
 
 /**
@@ -46,8 +45,6 @@ namespace Alder
 {
   class Configuration;
   class Database;
-  class Image;
-  class Interview;
   class OpalService;
   class User;
   class Application : public ModelObject
@@ -57,21 +54,12 @@ namespace Alder
     static Application *GetInstance();
     static void DeleteInstance();
 
-    enum CustomEvents
-    {
-      ActiveUserEvent = vtkCommand::UserEvent + 100,
-      ActiveInterviewEvent,
-      ActiveInterviewUpdateImageDataEvent,
-      ActiveImageEvent,
-      ActiveAtlasImageEvent
-    };
-
     //@{
     /**
      * Logging functions.
      */
     bool OpenLogFile();
-    void Log( const std::string message );
+    void Log( const std::string &message );
     void LogBacktrace();
     //@}
 
@@ -79,7 +67,7 @@ namespace Alder
      * Reads configuration variables from a given file.
      * @param filename the file to read the configuration from.
      */
-    bool ReadConfiguration( const std::string fileName );
+    bool ReadConfiguration( const std::string &fileName );
 
     /**
      * Uses database values in the configuration to connect to a database.
@@ -97,6 +85,11 @@ namespace Alder
     void SetupOpalService();
 
     /**
+     * Uses an opal datasource to update alder db tables.
+     */
+    void UpdateDatabase();
+
+    /**
      * Resets the state of the application to its initial state.
      */
     void ResetApplication();
@@ -105,35 +98,13 @@ namespace Alder
     vtkGetObjectMacro( DB, Database );
     vtkGetObjectMacro( Opal, OpalService );
     vtkGetObjectMacro( ActiveUser, User );
-    vtkGetObjectMacro( ActiveInterview, Interview );
-    vtkGetObjectMacro( ActiveImage, Image );
-    vtkGetObjectMacro( ActiveAtlasImage, Image );
 
     /**
      * When setting the active user the active interview will be set to the interview stored in the user's
      * record if the user being set is not null.
      * @param user a User record object
      */
-    virtual void SetActiveUser( User *user );
-
-    /**
-     * When setting the active interview the active image is automatically removed and,
-     * if there is an active user, the active interview is stored in the user's record.
-     * @param interview an Interview record object
-     */
-    virtual void SetActiveInterview( Interview *interview );
-
-    /**
-     * Sets the active image.
-     * @param image an Image record object
-     */
-    virtual void SetActiveImage( Image *image );
-
-    /**
-     * Sets the active atlas image.
-     * @param image an Image record object
-     */
-    virtual void SetActiveAtlasImage( Image *image );
+    void SetActiveUser( User *user );
 
     /**
      * Creates a new instance of a model object given its class name.
@@ -141,7 +112,7 @@ namespace Alder
      * @return           a model object
      * @throws           runtime_error
      */
-    ModelObject* Create( const std::string className ) const
+    ModelObject* Create( const std::string &className ) const
     {
       // make sure the constructor registry has the class name being asked for
       auto pair = this->ConstructorRegistry.find( className );
@@ -163,7 +134,7 @@ namespace Alder
      * @return             the unmangled class name
      * @throws             runtime_error
      */
-    std::string GetUnmangledClassName( const std::string mangledName ) const;
+    std::string GetUnmangledClassName( const std::string &mangledName ) const;
 
     vtkSetMacro( AbortFlag, bool );
     vtkGetMacro( AbortFlag, bool );
@@ -179,10 +150,7 @@ namespace Alder
     Database *DB;
     OpalService *Opal;
     User *ActiveUser;
-    Interview *ActiveInterview;
-    Image *ActiveImage;
-    Image *ActiveAtlasImage;
-    bool AbortFlag;
+    volatile bool AbortFlag;
 
   private:
     Application( const Application& );  // Not implemented.

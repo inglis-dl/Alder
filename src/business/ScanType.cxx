@@ -10,8 +10,6 @@
 =========================================================================*/
 #include <ScanType.h>
 
-#include <Utilities.h>
-
 #include <vtkObjectFactory.h>
 
 namespace Alder

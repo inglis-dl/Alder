@@ -8,50 +8,41 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #ifndef __QUserListDialog_h
 #define __QUserListDialog_h
 
+// Qt includes
 #include <QDialog>
 
-#include <map>
-
 class QTableWidgetItem;
-class Ui_QUserListDialog;
+class QUserListDialogPrivate;
 
 class QUserListDialog : public QDialog
 {
   Q_OBJECT
 
 public:
+  typedef QDialog Superclass;
   //constructor
-  QUserListDialog( QWidget* parent = 0 );
+  explicit QUserListDialog( QWidget* parent = 0 );
   //destructor
-  ~QUserListDialog();
+  virtual ~QUserListDialog();
 
 signals:
-  void userModalityChanged();
+  void permissionChanged();
 
 public slots:
-  virtual void slotAdd();
-  virtual void slotRemove();
-  virtual void slotResetPassword();
-  virtual void slotClose();
-  virtual void slotSelectionChanged();
-  virtual void slotHeaderClicked( int index );
-  virtual void slotItemChanged( QTableWidgetItem* );
+  virtual void close();
+  virtual void add();
+  virtual void remove();
+  virtual void resetPassword();
 
 protected:
-  void updateInterface();
-  int sortColumn;
-  Qt::SortOrder sortOrder;
-  std::map< std::string, int > columnIndex;
-
-protected slots:
+  QScopedPointer<QUserListDialogPrivate> d_ptr;
 
 private:
-  // Designer form
-  Ui_QUserListDialog *ui;
+  Q_DECLARE_PRIVATE(QUserListDialog);
+  Q_DISABLE_COPY(QUserListDialog);
 };
 
 #endif

@@ -8,50 +8,38 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #ifndef __QAlderAtlasWidget_h
 #define __QAlderAtlasWidget_h
 
+// Qt includes
 #include <QWidget>
 
-#include <vtkSmartPointer.h>
-
-class vtkEventQtSlotConnect;
-class vtkMedicalImageViewer;
-class Ui_QAlderAtlasWidget;
+class QAlderAtlasWidgetPrivate;
 
 class QAlderAtlasWidget : public QWidget
 {
   Q_OBJECT
 
 public:
-  QAlderAtlasWidget( QWidget* parent = 0 );
-  ~QAlderAtlasWidget();
+  typedef QWidget Superclass;
+  explicit QAlderAtlasWidget( QWidget* parent = 0 );
+  virtual ~QAlderAtlasWidget();
 
-  vtkMedicalImageViewer *GetViewer();
   virtual void showEvent( QShowEvent* );
   virtual void hideEvent( QHideEvent* );
 
 signals:
   void showing( bool );
-  
-public slots:
-  virtual void slotPrevious();
-  virtual void slotNext();
-  virtual void slotRatingChanged( int );
-  virtual void updateInfo();
-  virtual void updateViewer();
-  virtual void updateAtlasImage();
-  virtual void updateEnabled();
 
-protected slots:
+public slots:
+  virtual void loadImage( int id );
+
+protected:
+  QScopedPointer<QAlderAtlasWidgetPrivate> d_ptr;
 
 private:
-  // Designer form
-  Ui_QAlderAtlasWidget *ui;
-
-  vtkSmartPointer<vtkMedicalImageViewer> Viewer;
-  vtkSmartPointer<vtkEventQtSlotConnect> Connections;
+  Q_DECLARE_PRIVATE(QAlderAtlasWidget);
+  Q_DISABLE_COPY(QAlderAtlasWidget);
 };
 
 #endif

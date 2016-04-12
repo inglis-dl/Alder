@@ -9,22 +9,27 @@
 
 =========================================================================*/
 #include <QSelectInterviewDialog.h>
-#include <ui_QSelectInterviewDialog.h>
+#include <QSelectInterviewDialog_p.h>
 
+// Alder includes
 #include <Application.h>
+#include <Common.h>
 #include <Database.h>
 #include <Exam.h>
 #include <Interview.h>
 #include <Modality.h>
 #include <QueryModifier.h>
+#include <Site.h>
 #include <User.h>
+#include <Wave.h>
 
-#include <QVTKProgressDialog.h>
-
+// VTK includes
 #include <vtkSmartPointer.h>
 
+// Qt includes
 #include <QInputDialog>
 #include <QList>
+#include <QMap>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QTableWidget>
@@ -33,81 +38,90 @@
 #include <vector>
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-QSelectInterviewDialog::QSelectInterviewDialog( QWidget* parent )
-  : QDialog( parent )
+//
+// QSelectInterviewDialogPrivate methods
+//
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QSelectInterviewDialogPrivate::QSelectInterviewDialogPrivate(QSelectInterviewDialog& object)
+  : QObject(&object), q_ptr(&object)
 {
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QSelectInterviewDialogPrivate::~QSelectInterviewDialogPrivate()
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QSelectInterviewDialogPrivate::setupUi( QWidget* widget )
+{
+  Q_Q(QSelectInterviewDialog);
+
+  this->Ui_QSelectInterviewDialog::setupUi( widget );
+
   int index = 0;
-  this->ui = new Ui_QSelectInterviewDialog;
-  this->ui->setupUi( this );
   QStringList labels;
 
   labels << "Site";
-  this->columnIndex["Site"] = index++;
+  this->columnIndex.insert(labels.last(),index++);
 
-  labels << "UID";
-  this->columnIndex["UId"] = index++;
+  labels << "UId";
+  this->columnIndex.insert(labels.last(),index++);
 
-  labels << "Visit Date";
-  this->columnIndex["VisitDate"] = index++;
+  labels << "VisitDate";
+  this->columnIndex.insert(labels.last(),index++);
 
-  // all modalities will fill up the remainder of the table
-  std::vector< vtkSmartPointer< Alder::Modality > > modalityList;
+  labels << "Wave";
+  this->columnIndex.insert(labels.last(),index++);
+
+  // user allowed modalities will fill up the remainder of the table
+  std::vector< vtkSmartPointer< Alder::Modality > > vecModality;
   Alder::User *user = Alder::Application::GetInstance()->GetActiveUser();
-  user->GetList( &modalityList );
+  user->GetList( &vecModality );
 
   // make enough columns for all modalities and set their names
-  this->ui->interviewTableWidget->setColumnCount( index + modalityList.size() );
-  for( auto modalityListIt = modalityList.begin(); modalityListIt != modalityList.end(); ++modalityListIt )
+  this->interviewTableWidget->setColumnCount( index + vecModality.size() );
+  for( auto it = vecModality.begin(); it != vecModality.end(); ++it )
   {
-    std::string name = (*modalityListIt)->Get( "Name" ).ToString();
-    labels << name.c_str();
-    this->ui->interviewTableWidget->setVerticalHeaderItem( index, new QTableWidgetItem( name.c_str() ) );
-    this->columnIndex[name] = index++;
+    labels << (*it)->Get( "Name" ).ToString().c_str();
+    this->columnIndex.insert(labels.last(),index++);
   }
 
-  this->ui->interviewTableWidget->setHorizontalHeaderLabels( labels );
-  this->ui->interviewTableWidget->horizontalHeader()->setResizeMode( QHeaderView::Stretch );
-  this->ui->interviewTableWidget->horizontalHeader()->setClickable( true );
-  this->ui->interviewTableWidget->verticalHeader()->setVisible( false );
-  this->ui->interviewTableWidget->setSelectionBehavior( QAbstractItemView::SelectRows );
-  this->ui->interviewTableWidget->setSelectionMode( QAbstractItemView::ExtendedSelection );
+  this->interviewTableWidget->setHorizontalHeaderLabels( labels );
+  this->interviewTableWidget->horizontalHeader()->setResizeMode( QHeaderView::Stretch );
+  this->interviewTableWidget->horizontalHeader()->setClickable( true );
+  this->interviewTableWidget->verticalHeader()->setVisible( false );
+  this->interviewTableWidget->setSelectionBehavior( QAbstractItemView::SelectRows );
+  this->interviewTableWidget->setSelectionMode( QAbstractItemView::ExtendedSelection );
 
   this->sortColumn = 1;
   this->sortOrder = Qt::AscendingOrder;
 
   QObject::connect(
-    this->ui->searchPushButton, SIGNAL( clicked( bool ) ),
-    this, SLOT( slotSearch() ) );
+    this->searchPushButton, SIGNAL( clicked( bool ) ),
+    this, SLOT( search() ) );
   QObject::connect(
-    this->ui->buttonBox, SIGNAL( accepted() ),
-    this, SLOT( slotAccepted() ) );
+    this->buttonBox, SIGNAL( accepted() ),
+    q, SLOT( accepted() ) );
   QObject::connect(
-    this->ui->interviewTableWidget, SIGNAL( itemSelectionChanged() ),
-    this, SLOT( slotSelectionChanged() ) );
+    this->interviewTableWidget, SIGNAL( itemSelectionChanged() ),
+    this, SLOT( selectionChanged() ) );
   QObject::connect(
-    this->ui->interviewTableWidget->horizontalHeader(), SIGNAL( sectionClicked( int ) ),
-    this, SLOT( slotHeaderClicked( int ) ) );
-
-  this->updateInterface();
+    this->interviewTableWidget->horizontalHeader(), SIGNAL( sectionClicked( int ) ),
+    this, SLOT( sort( int ) ) );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-QSelectInterviewDialog::~QSelectInterviewDialog()
+void QSelectInterviewDialogPrivate::search()
 {
-}
+  Q_Q(QSelectInterviewDialog);
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QSelectInterviewDialog::slotSearch()
-{
   bool ok;
   QString text = QInputDialog::getText(
-    this,
-    QObject::tr( "Search Term" ),
-    QObject::tr(
+    q, QDialog::tr( "Search Term" ),
+    QDialog::tr(
       "Provide some or all of the interviews to search for,\nusing commas to separate terms:" ),
-    QLineEdit::Normal,
-    QString(),
-    &ok );
+    QLineEdit::Normal, QString(), &ok );
 
   if( ok )
   {
@@ -122,260 +136,151 @@ void QSelectInterviewDialog::slotSearch()
     {
       this->searchText << text;
     }
-    this->updateInterface();
+    this->updateUi();
     QApplication::restoreOverrideCursor();
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QSelectInterviewDialog::slotAccepted()
-{
-  QList< QTableWidgetSelectionRange > ranges = this->ui->interviewTableWidget->selectedRanges();
-
-   // TODO: warn the user that multiple interviews are about to be downloaded
-   // and could take time ... allow for and respond to abort signals
-   // for multi selection, the first loaded interview will be set to the active
-   // interview
-
-  if( !ranges.empty() )
-  {
-    Alder::Application *app = Alder::Application::GetInstance();
-    int uidCol = this->columnIndex["UId"];
-    int dateCol = this->columnIndex["VisitDate"];
-    bool first = true;
-
-    vtkSmartPointer< Alder::Interview > interview =
-      vtkSmartPointer< Alder::Interview >::New();
-
-    std::vector< std::string > uidList;
-    std::map< std::string, std::string > map;
-    std::vector< std::map< std::string, std::string > > uidDateList;
-
-    Alder::User *user = app->GetActiveUser();
-
-    // only worry about the modalities the user is allowed to access
-    vtkSmartPointer< Alder::QueryModifier > modifier =
-      vtkSmartPointer< Alder::QueryModifier >::New();
-    user->InitializeExamModifier( modifier );
-
-    for( QList< QTableWidgetSelectionRange >::const_iterator it =
-         ranges.constBegin(); it != ranges.constEnd(); ++it )
-    {
-      for( int row = (*it).topRow(); row <= (*it).bottomRow(); ++row )
-      {
-        QTableWidgetItem* item = this->ui->interviewTableWidget->item( row, uidCol );
-        std::string uid = item->text().toStdString();
-        item = this->ui->interviewTableWidget->item( row, dateCol );
-        std::string visitDate = item->text().toStdString();
-
-        map["UId"] = uid;
-        map["VisitDate"] = visitDate;
-        interview->Load( map );
-        if( !interview->HasImageData( modifier ) )
-        {
-          uidList.push_back( uid );
-          uidDateList.push_back( map );
-         }
-        else
-        {
-          if( first )
-          {
-            app->SetActiveInterview( interview );
-            first = false;
-          }
-        }
-      }
-    }
-
-    if( !uidList.empty() )
-    {
-      QVTKProgressDialog dialog( this->parentWidget() );
-      Alder::ListInterviewProgressFunc func( uidList );
-      this->hide();
-      dialog.Run(
-        "Downloading Images",
-        "Please wait while the images are downloaded.",
-        func );
-      if( first )
-      {
-        for( auto it = uidDateList.begin(); it != uidDateList.end(); ++it )
-        {
-          interview->Load( *it );
-          if( interview->HasImageData( modifier ) )
-          {
-            app->SetActiveInterview( interview );
-            break;
-          }
-        }
-      }
-    }
-  }
-
-  this->accept();
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QSelectInterviewDialog::slotSelectionChanged()
-{
-  QList< QTableWidgetSelectionRange > ranges = this->ui->interviewTableWidget->selectedRanges();
-  this->ui->buttonBox->button( QDialogButtonBox::Ok )->setEnabled( !ranges.empty() );
-
-  if( !ranges.empty() )
-  {
-    QApplication::setOverrideCursor( QCursor( Qt::WaitCursor ) );
-
-    int uiCol = this->columnIndex["UId"];
-    int dateCol = this->columnIndex["VisitDate"];
-
-    vtkSmartPointer< Alder::Interview > interview =
-      vtkSmartPointer< Alder::Interview >::New();
-
-    std::map< std::string, std::string > map;
-
-    for( QList< QTableWidgetSelectionRange >::const_iterator it =
-         ranges.constBegin(); it != ranges.constEnd(); ++it )
-    {
-      for( int row = (*it).topRow(); row <= (*it).bottomRow(); ++row )
-      {
-        QTableWidgetItem* item = this->ui->interviewTableWidget->item( row, uiCol );
-        map["UId"] = item->text().toStdString();
-
-        item = this->ui->interviewTableWidget->item( row, dateCol );
-        map["VisitDate"] = item->text().toStdString();
-
-        interview->Load( map );
-
-        if( !interview->HasExamData() )
-        {
-          try
-          {
-            interview->UpdateExamData();
-          }
-          catch( std::runtime_error& e )
-          {
-            QApplication::restoreOverrideCursor();
-            throw e;
-          }
-        }
-        this->updateRow( row, interview );
-      }
-    }
-    QApplication::restoreOverrideCursor();
-  }
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QSelectInterviewDialog::slotHeaderClicked( int index )
+void QSelectInterviewDialogPrivate::sort( int col )
 {
   // reverse order if already sorted
-  if( this->sortColumn == index )
+  if( col == this->sortColumn )
   {
     this->sortOrder =
       Qt::AscendingOrder == this->sortOrder ? Qt::DescendingOrder : Qt::AscendingOrder;
   }
 
-  this->sortColumn = index;
-  this->updateInterface();
+  this->sortColumn = col;
+  this->updateUi();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QSelectInterviewDialog::updateRow( const int row, Alder::Interview *interview )
+void QSelectInterviewDialogPrivate::updateRow( const int &row, Alder::Interview *interview )
 {
-  std::vector< vtkSmartPointer< Alder::Exam > > examList;
-  Alder::Exam *exam;
+  // interview meta data
+  QString strUId = QString( interview->Get( "UId" ).ToString().c_str() );
+  QVariant vId = QVariant( interview->Get( "Id" ).ToInt() );
+
+  QString strSite = "N/A";
+  vtkSmartPointer< Alder::Site > site;
+  if( interview->GetRecord( site ) )
+    strSite = QString( site->Get( "Name" ).ToString().c_str() );
+
+  QString strVisitDate = QString( interview->Get( "VisitDate" ).ToString().c_str() );
+  QString strWave = "N/A";
+  vtkSmartPointer< Alder::Wave > wave;
+  if( interview->GetRecord( wave ) )
+    strWave = QString( wave->Get( "Name" ).ToString().c_str() );
+
+  // exam meta data by modality
+  QMap< QString, bool > updateItemText;
+  QMap< QString, int > examCount;
+  QMap< QString, int > ratedCount;
+  QMap< QString, int > downloadCount;
+  QMap< QString, QString > itemText;
+
   Alder::User *user = Alder::Application::GetInstance()->GetActiveUser();
-  QString UId = QString( interview->Get( "UId" ).ToString().c_str() );
+  std::vector< vtkSmartPointer< Alder::Modality > > vecModality;
+  user->GetList( &vecModality );
 
-  std::map< std::string, bool > updateItemText;
-  std::map< std::string, int > examCount;
-  std::map< std::string, int > ratedCount;
-  std::map< std::string, int > downloadCount;
-  std::map< std::string, QString > itemText;
-  std::string modalityName;
-  std::vector< vtkSmartPointer< Alder::Modality > > modalityList;
-  user->GetList( &modalityList );
-
-  for( auto modalityListIt = modalityList.begin(); modalityListIt != modalityList.end(); ++modalityListIt )
+  for( auto it = vecModality.begin(); it != vecModality.end(); ++it )
   {
-    modalityName = (*modalityListIt)->Get( "Name" ).ToString();
-    updateItemText[modalityName] = false;
-    examCount[modalityName] = 0;
-    ratedCount[modalityName] = 0;
-    downloadCount[modalityName] = 0;
-    itemText[modalityName] = "?";
+    QString name( (*it)->Get( "Name" ).ToString().c_str() );
+    updateItemText.insert(name, false);
+    examCount.insert(name, 0);
+    ratedCount.insert(name, 0) ;
+    downloadCount.insert( name, 0);
+    itemText.insert(name, "?");
   }
 
   QString date = tr( "N/A" );
-  interview->GetList( &examList );
+  std::vector< vtkSmartPointer< Alder::Exam > > vecExam;
+  interview->GetList( &vecExam );
 
   // examCount the number of exams of each modality and whether they have been rated
-  for( auto examIt = examList.begin(); examIt != examList.end(); ++examIt )
+  for( auto it = vecExam.begin(); it != vecExam.end(); ++it )
   {
-    exam = examIt->GetPointer();
-    modalityName = exam->GetModalityName();
-
-    // NOTE: it is possible that an exam with state "Ready" has valid data, but we are leaving
-    // those exams out for now since we don't know for sure whether they are always valid
+    Alder::Exam *exam = it->GetPointer();
+    QString name = exam->GetModalityName().c_str();
 
     // the modalities and hence exams permitted to this user has already been determined
-    if( updateItemText.end() == updateItemText.find(modalityName) ) continue;
+    if( !updateItemText.contains(name) )
+      continue;
 
-    updateItemText[modalityName] = true;
-    if( "Completed" == exam->Get( "Stage" ).ToString() ) examCount[modalityName]++;
-    if( exam->HasImageData() ) downloadCount[modalityName]++;
-    if( exam->IsRatedBy( user ) ) ratedCount[modalityName]++;
-  }
-
-  // set the text, if updated
-  for( auto updateItemTextIt = updateItemText.begin();
-       updateItemTextIt != updateItemText.end();
-       ++updateItemTextIt )
-  {
-    modalityName = updateItemTextIt->first;
-    if( updateItemTextIt->second )
+    updateItemText.insert(name, true);
+    if( exam->HasImageData() )
     {
-      itemText[modalityName] = QString::number( downloadCount[modalityName] );
-      itemText[modalityName] += tr( " of " );
-      itemText[modalityName] += QString::number( examCount[modalityName] );
-      itemText[modalityName] += tr( ", " );
-      itemText[modalityName] += QString::number( ratedCount[modalityName] );
-      itemText[modalityName] += tr( " rated" );
+      examCount[name]++;
+      if( 1 == exam->Get( "Downloaded" ).ToInt() )
+      {
+        downloadCount[name]++;
+        if( exam->IsRatedBy( user ) )
+          ratedCount[name]++;
+      }
     }
   }
 
-  if( this->searchText.empty() || this->searchTextInUId( UId ) )
+  // set the text, if updated
+  for(QMap<QString,bool>::iterator it = updateItemText.begin(); it != updateItemText.end(); ++it )
+  {
+    if( it.value() )
+    {
+      QString name = it.key();
+      QString s = QString::number( downloadCount.value(name) );
+      s += QWidget::tr( " of " );
+      s += QString::number( examCount.value(name) );
+      s += QWidget::tr( ", " );
+      s += QString::number( ratedCount.value(name) );
+      s += QWidget::tr( " rated" );
+      itemText.insert(name, s);
+    }
+  }
+
+  if( this->searchText.isEmpty() || this->searchTextInUId( strUId ) )
   {
     QTableWidgetItem *item;
-    item = this->ui->interviewTableWidget->item( row, this->columnIndex["Site"] );
-    if( item ) item->setText( interview->Get( "Site" ).ToString().c_str() );
-    item = this->ui->interviewTableWidget->item( row, this->columnIndex["UId"] );
-    if( item ) item->setText( UId );
-    item = this->ui->interviewTableWidget->item( row, this->columnIndex["VisitDate"] );
-    if( item ) item->setText( QString( interview->Get( "VisitDate" ).ToString().c_str() ) );
+    item = this->interviewTableWidget->item( row, this->columnIndex.value("Site") );
+    if( item ) item->setText( strSite );
+    item = this->interviewTableWidget->item( row, this->columnIndex.value("UId") );
+    if( item )
+    {
+      item->setText( strUId );
+      item->setData( Qt::UserRole, vId );
+    }
+    item = this->interviewTableWidget->item( row, this->columnIndex.value("VisitDate") );
+    if( item )
+      item->setText( strVisitDate );
+    item = this->interviewTableWidget->item( row, this->columnIndex.value("Wave") );
+    if( item )
+      item->setText( strWave );
 
     // add all modalities to the table
-    for( auto itemTextIt = itemText.begin(); itemTextIt != itemText.end(); ++itemTextIt )
+    for(QMap<QString,QString>::iterator it = itemText.begin(); it != itemText.end(); ++it )
     {
-      item = this->ui->interviewTableWidget->item( row, this->columnIndex[itemTextIt->first] );
-      if( item ) item->setText( itemTextIt->second );
+      item = this->interviewTableWidget->item( row, this->columnIndex.value(it.key()) );
+      if( item )
+        item->setText( it.value() );
     }
   }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-bool QSelectInterviewDialog::searchTextInUId( const QString UId )
+bool QSelectInterviewDialogPrivate::searchTextInUId( const QString &UId )
 {
   for( QStringList::const_iterator it = this->searchText.constBegin();
        it != this->searchText.constEnd(); ++it )
   {
-    if( UId.contains( (*it), Qt::CaseInsensitive ) ) return true;
+    if( UId.contains( (*it), Qt::CaseInsensitive ) )
+      return true;
   }
   return false;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QSelectInterviewDialog::updateInterface()
+void QSelectInterviewDialogPrivate::updateUi()
 {
+  Q_Q(QSelectInterviewDialog);
   if( this->searchText.empty() ) return;
 
   vtkSmartPointer< Alder::QueryModifier > modifier = vtkSmartPointer< Alder::QueryModifier >::New();
@@ -390,66 +295,204 @@ void QSelectInterviewDialog::updateInterface()
   }
 
   // get all the interviews given the search text
-  std::vector< vtkSmartPointer< Alder::Interview > > interviewList;
-  Alder::Interview::GetAll( &interviewList, modifier );
+  std::vector< vtkSmartPointer< Alder::Interview > > vecInterview;
+  Alder::Interview::GetAll( &vecInterview, modifier );
 
   // if the search fails to find any UId's, inform the user and return
-  if( interviewList.empty() )
+  if( vecInterview.empty() )
   {
-    QMessageBox messageBox( this );
+    QMessageBox messageBox( q );
     messageBox.setWindowModality( Qt::WindowModal );
     messageBox.setIcon( QMessageBox::Information );
-    std::string s = "No matches for search criteria ";
-    s += modifier->GetSql();
-    s += ", please try again.";
-    messageBox.setText( tr( s.c_str() ) );
+    QString s = QDialog::tr("No matches for search criteria ");
+    s += modifier->GetSql().c_str();
+    s += QDialog::tr(", please try again.");
+    messageBox.setText( s );
     messageBox.exec();
     return;
   }
 
-  this->ui->interviewTableWidget->setRowCount( 0 );
+  this->interviewTableWidget->setRowCount( 0 );
   QTableWidgetItem *item;
+  Alder::User *user = Alder::Application::GetInstance()->GetActiveUser();
+  std::vector< vtkSmartPointer< Alder::Modality > > vecModality;
+  user->GetList( &vecModality );
 
-  for( auto it = interviewList.begin(); it != interviewList.end(); ++it )
+  for( auto it = vecInterview.begin(); it != vecInterview.end(); ++it )
   { // for every interview, add a new row
     Alder::Interview *interview = *it;
-    QString UId = QString( interview->Get( "UId" ).ToString().c_str() );
+    QString UId = interview->Get( "UId" ).ToString().c_str();
 
     if( this->searchText.empty() || this->searchTextInUId( UId ) )
     {
-      this->ui->interviewTableWidget->insertRow( 0 );
+      this->interviewTableWidget->insertRow( 0 );
 
       // add site to row
       item = new QTableWidgetItem;
       item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
-      this->ui->interviewTableWidget->setItem( 0, this->columnIndex["Site"], item );
+      this->interviewTableWidget->setItem( 0, this->columnIndex.value("Site"), item );
 
       // add UId to row
       item = new QTableWidgetItem;
       item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
-      this->ui->interviewTableWidget->setItem( 0, this->columnIndex["UId"], item );
+      this->interviewTableWidget->setItem( 0, this->columnIndex.value("UId"), item );
 
       // add visit date to row
       item = new QTableWidgetItem;
       item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
-      this->ui->interviewTableWidget->setItem( 0, this->columnIndex["VisitDate"], item );
+      this->interviewTableWidget->setItem( 0, this->columnIndex.value("VisitDate"), item );
+
+      // add wave to row
+      item = new QTableWidgetItem;
+      item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
+      this->interviewTableWidget->setItem( 0, this->columnIndex.value("Wave"), item );
 
       // add all modalities (one per column)
-      std::vector< vtkSmartPointer< Alder::Modality > > modalityList;
-      Alder::Modality::GetAll( &modalityList );
-      for( auto modalityListIt = modalityList.begin();
-           modalityListIt != modalityList.end();
-           ++modalityListIt )
+      for( auto vit = vecModality.begin(); vit != vecModality.end(); ++vit )
       {
+        QString name = (*vit)->Get( "Name" ).ToString().c_str();
         item = new QTableWidgetItem;
         item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEnabled );
-        this->ui->interviewTableWidget->setItem(
-          0, this->columnIndex[(*modalityListIt)->Get( "Name" ).ToString()], item );
+        this->interviewTableWidget->setItem(
+          0, this->columnIndex.value(name), item );
       }
 
       this->updateRow( 0, interview );
     }
   }
 
-  this->ui->interviewTableWidget->sortItems( this->sortColumn, this->sortOrder );
+  this->interviewTableWidget->sortItems( this->sortColumn, this->sortOrder );
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QSelectInterviewDialogPrivate::selectionChanged()
+{
+  QList< QTableWidgetSelectionRange > ranges = this->interviewTableWidget->selectedRanges();
+  this->buttonBox->button( QDialogButtonBox::Ok )->setEnabled( !ranges.empty() );
+
+  if( !ranges.empty() )
+  {
+    QApplication::setOverrideCursor( QCursor( Qt::WaitCursor ) );
+
+    int col = this->columnIndex.value("UId");
+
+    vtkSmartPointer< Alder::Interview > interview =
+      vtkSmartPointer< Alder::Interview >::New();
+
+    for( QList< QTableWidgetSelectionRange >::const_iterator it =
+         ranges.constBegin(); it != ranges.constEnd(); ++it )
+    {
+      for( int row = (*it).topRow(); row <= (*it).bottomRow(); ++row )
+      {
+        QTableWidgetItem* item = this->interviewTableWidget->item( row, col );
+        QVariant vId = item->data( Qt::UserRole );
+        if( vId.isValid() && !vId.isNull() && interview->Load( "Id", vId.toInt() ) )
+        {
+          if( !interview->HasExamData() )
+          {
+            try
+            {
+              interview->UpdateExamData();
+            }
+            catch( std::runtime_error& e )
+            {
+              QApplication::restoreOverrideCursor();
+              throw e;
+            }
+          }
+          this->updateRow( row, interview );
+        }
+      }
+    }
+    QApplication::restoreOverrideCursor();
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QSelectInterviewDialog::QSelectInterviewDialog( QWidget* parent )
+  : Superclass( parent )
+  , d_ptr(new QSelectInterviewDialogPrivate(*this))
+{
+  Q_D(QSelectInterviewDialog);
+  d->setupUi(this);
+  d->updateUi();
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QSelectInterviewDialog::~QSelectInterviewDialog()
+{
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QSelectInterviewDialog::accepted()
+{
+  Q_D(QSelectInterviewDialog);
+  QList< QTableWidgetSelectionRange > ranges = d->interviewTableWidget->selectedRanges();
+
+  if( !ranges.empty() )
+  {
+    Alder::Application *app = Alder::Application::GetInstance();
+    int col = d->columnIndex.value("UId");
+    int lastId = -1;
+    std::vector< vtkSmartPointer< Alder::Interview > > vecInterview;
+
+    // handle modalities the user is permitted access to
+    vtkSmartPointer< Alder::QueryModifier > modifier = vtkSmartPointer< Alder::QueryModifier >::New();
+    Alder::User *user = app->GetActiveUser();
+    user->InitializeExamModifier( modifier );
+
+    for( QList< QTableWidgetSelectionRange >::const_iterator it =
+         ranges.constBegin(); it != ranges.constEnd(); ++it )
+    {
+      for( int row = (*it).topRow(); row <= (*it).bottomRow(); ++row )
+      {
+        QTableWidgetItem* item = d->interviewTableWidget->item( row, col );
+        QVariant vId = item->data( Qt::UserRole );
+        vtkSmartPointer<Alder::Interview> interview = vtkSmartPointer<Alder::Interview>::New();
+        if( vId.isValid() && !vId.isNull() && interview->Load( "Id", vId.toInt() ) )
+        {
+          if( Alder::Interview::ImageStatus::Complete == interview->GetImageStatus( modifier ) )
+          {
+            lastId = interview->Get("Id").ToInt();
+          }
+          else
+          {
+            vecInterview.push_back( interview );
+          }
+        }
+      }
+    }
+
+    if( !vecInterview.empty() )
+    {
+      QString title = "Confirm Image Download";
+      QString text = "There are ";
+      text += QString::number(vecInterview.size());
+      text += " interviews requiring download of images. ";
+      if( 1 < vecInterview.size() )
+        text += "This could take some time to do. ";
+      text += "Proceed with downloading?";
+      QMessageBox::StandardButton reply = QMessageBox::question( this,
+        title, text, QMessageBox::Yes|QMessageBox::No );
+      if( QMessageBox::Yes == reply )
+      {
+        for( auto it = vecInterview.cbegin(); it != vecInterview.cend(); ++it )
+        {
+          // the interview will activate displaying progress of image downloads
+          Alder::Interview *interview = *it;
+          interview->UpdateImageData();
+          if( Alder::Interview::ImageStatus::Complete == interview->GetImageStatus( modifier ) )
+          {
+            lastId = interview->Get("Id").ToInt();
+          }
+        }
+      }
+    }
+    if( -1 != lastId )
+    {
+      emit interviewSelected( lastId );
+    }
+  }
+
+  this->accept();
 }

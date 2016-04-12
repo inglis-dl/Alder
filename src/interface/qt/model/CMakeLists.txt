@@ -8,9 +8,8 @@ SET( AlderQtModelLib_SRC
   QChangePasswordDialog.cxx
   QReportDialog.cxx
   QSelectInterviewDialog.cxx
+  QSelectWaveDialog.cxx
   QUserListDialog.cxx
-  QMailSender.cxx
-  QVTKProgressDialog.cxx
 )
 
 SET( AlderQtModel_Uis
@@ -21,21 +20,27 @@ SET( AlderQtModel_Uis
   QLoginDialog.ui
   QReportDialog.ui
   QSelectInterviewDialog.ui
+  QSelectWaveDialog.ui
   QUserListDialog.ui
-  QVTKProgressDialog.ui
 )
 
 SET( AlderQtModel_MocHeaders
   QAlderAtlasWidget.h
+  QAlderAtlasWidget_p.h
   QAlderInterviewWidget.h
+  QAlderInterviewWidget_p.h
   QChangePasswordDialog.h
   QCodeDialog.h
+  QCodeDialog_p.h
   QLoginDialog.h
   QReportDialog.h
+  QReportDialog_p.h
   QSelectInterviewDialog.h
+  QSelectInterviewDialog_p.h
+  QSelectWaveDialog.h
+  QSelectWaveDialog_p.h
   QUserListDialog.h
-  QMailSender.h
-  QVTKProgressDialog.h
+  QUserListDialog_p.h
 )
 
 SET( AlderQtModel_Resources
@@ -51,6 +56,7 @@ INCLUDE_DIRECTORIES(
   ${ALDER_COMMON_DIR}
   ${ALDER_BUSINESS_DIR}
   ${ALDER_VTK_DIR}
+  ${ALDER_QT_GENERIC_DIR}
   ${CRYPTO++_INCLUDE_DIR}
 )
 
@@ -64,7 +70,7 @@ ADD_LIBRARY( AlderQtModel
 TARGET_LINK_LIBRARIES( AlderQtModel
   AlderVTK
   QVTK
-  Qt4::QtNetwork
+  AlderQtGeneric
 )
 
 INSTALL( TARGETS AlderQtModel

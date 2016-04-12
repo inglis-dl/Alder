@@ -46,17 +46,22 @@
      </attribute>
      <column>
       <property name="text">
-       <string>Site</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
        <string>UId</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>Date</string>
+       <string>Site</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>VisitDate</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Wave</string>
       </property>
      </column>
     </widget>
