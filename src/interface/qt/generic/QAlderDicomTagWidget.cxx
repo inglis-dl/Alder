@@ -4,35 +4,37 @@
   Module:   QAlderDicomTagWidget.cxx
   Language: C++
 
-  Author: Patrick Emond <emondpd AT mcmaster DOT ca>
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
 #include <QAlderDicomTagWidget.h>
 #include <ui_QAlderDicomTagWidget.h>
 
-// GDCM includes
-#include <gdcmDataSet.h>
-#include <gdcmDict.h>
-#include <gdcmDicts.h>
-#include <gdcmElement.h>
-#include <gdcmGlobal.h>
-#include <gdcmGroupDict.h>
-#include <gdcmReader.h>
-#include <gdcmSequenceOfItems.h>
-#include <gdcmVR.h>
-
 // Qt includes
 #include <QTableWidgetItem>
 
-#include <map>
+// vtk-dicom includes
+#include "vtkDICOMConfig.h"
+#include "vtkDICOMParser.h"
+#include "vtkDICOMDictionary.h"
+#include "vtkDICOMMetaData.h"
+#include "vtkDICOMItem.h"
+#include "vtkDICOMUtilities.h"
+
+// VTK includes
+#include <vtkSmartPointer.h>
+#include <vtkVariant.h>
+
 #include <sstream>
 #include <stdexcept>
 #include <vector>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 class QAlderDicomTagWidgetPrivate : public Ui_QAlderDicomTagWidget
 {
-  Q_DECLARE_PUBLIC(QAlderDicomTagWidget);  
+  Q_DECLARE_PUBLIC(QAlderDicomTagWidget);
 
 protected:
   QAlderDicomTagWidget* const q_ptr;
@@ -45,27 +47,21 @@ public:
   virtual void updateUi();
   virtual void setFileName( const QString& );
   virtual void buildDicomStrings();
-  
+
 private:
   std::vector< std::vector< std::string > > dicomStrings;
   QString fileName;
-
-  std::string getTagString( const gdcm::Tag& t, const int& item = 0 );
-  void dumpElements( const std::vector< std::pair< std::string, gdcm::DataElement > >& elemMap,
-                     const gdcm::DataSet ds );
-  gdcm::VR getReferenceVR( const gdcm::DataElement& de,
-                           const gdcm::DictEntry& entry );
-  void getElementString( std::vector< std::string >& vec, gdcm::VR& vr,
-                         const gdcm::DataElement& de, 
-                         const gdcm::DictEntry& entry );
-  void getDataSetElements( std::vector< std::pair< std::string, gdcm::DataElement > >& elemMap,
-                           const gdcm::DataSet &ds );
+  vtkSmartPointer<vtkDICOMParser> parser;
+  vtkSmartPointer<vtkDICOMMetaData> data;
 };
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QAlderDicomTagWidgetPrivate::QAlderDicomTagWidgetPrivate(
   QAlderDicomTagWidget& object ) : q_ptr(&object)
 {
+  this->parser = vtkSmartPointer<vtkDICOMParser>::New();
+  this->data = vtkSmartPointer<vtkDICOMMetaData>::New();
+  this->parser->SetMetaData(data);
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -83,30 +79,258 @@ void QAlderDicomTagWidgetPrivate::setFileName( const QString& fileName )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// The following recursion function was adapted from vtk-dicom
+// Programs/dicomcump.cxx
+//
+#define MAX_INDENT 24
+#define INDENT_SIZE 2
+#define MAX_LENGTH 120
+
+void printElement( vtkDICOMMetaData *meta, const vtkDICOMItem *item,
+  const vtkDICOMDataElementIterator &iter, int depth,
+  unsigned int pixelDataVL, std::vector<std::vector<std::string>>* collection )
+{
+  vtkDICOMTag tag = iter->GetTag();
+  int g = tag.GetGroup();
+  int e = tag.GetElement();
+  vtkDICOMVR vr = iter->GetVR();
+  const char *name = "";
+  vtkDICOMDictEntry d;
+  if(item)
+  {
+    d = item->FindDictEntry(tag);
+  }
+  else if(meta)
+  {
+    d = meta->FindDictEntry(tag);
+  }
+  if(d.IsValid())
+  {
+    name = d.GetName();
+  }
+  else if((tag.GetGroup() & 0xFFFE) != 0 && tag.GetElement() == 0)
+  {
+    // group is even, element is zero
+    name = "GroupLength";
+  }
+  else if((tag.GetGroup() & 0x0001) != 0 &&
+          (tag.GetElement() & 0xFF00) == 0)
+  {
+    // group is odd, element is a creator element
+    name = "PrivateCreator";
+  }
+  // allow multiple values (i.e. for each image in series)
+  vtkDICOMValue v = iter->GetValue();
+  unsigned int vn = v.GetNumberOfValues();
+  const vtkDICOMValue *vp = v.GetMultiplexData();
+  if(vp == 0)
+  {
+    vp = &v;
+    vn = 1;
+  }
+  if(MAX_INDENT < INDENT_SIZE*depth)
+  {
+    depth = MAX_INDENT/INDENT_SIZE;
+  }
+
+  for(unsigned int vi = 0; vi < vn; vi++)
+  {
+    v = vp[vi];
+    unsigned int vl = v.GetVL();
+    if(tag == DC::PixelData ||
+       tag == DC::FloatPixelData ||
+       tag == DC::DoubleFloatPixelData)
+    {
+      vl = (0 == depth && 0 == vl ? pixelDataVL : v.GetVL());
+    }
+    std::string s;
+    if(vr == vtkDICOMVR::UN ||
+       vr == vtkDICOMVR::SQ)
+    {
+      // sequences are printed later
+      s = (vl > 0 ? "..." : "");
+    }
+    else if(vr == vtkDICOMVR::LT ||
+            vr == vtkDICOMVR::ST ||
+            vr == vtkDICOMVR::UT)
+    {
+      // replace breaks with "\\", cap length to MAX_LENGTH
+      size_t l = (MAX_LENGTH < vl ? MAX_LENGTH-4 : vl);
+      const char *cp = v.GetCharData();
+      std::string utf8;
+      if(v.GetCharacterSet() != vtkDICOMCharacterSet::ISO_IR_6)
+      {
+        utf8 = v.GetCharacterSet().ConvertToUTF8(cp, l);
+        l = utf8.length();
+        cp = utf8.data();
+      }
+      size_t j = 0;
+      while(j < l && cp[j] != '\0')
+      {
+        size_t k = j;
+        size_t m = j;
+        for(; j < l && cp[j] != '\0'; j++)
+        {
+          m = j;
+          if(cp[j] == '\r' || cp[j] == '\n' || cp[j] == '\f')
+          {
+            do { j++; }
+            while (j < l && (cp[j] == '\r' || cp[j] == '\n' || cp[j] == '\f'));
+            break;
+          }
+          m++;
+        }
+        if(j == l)
+        {
+          while (m > 0 && cp[m-1] == ' ') { m--; }
+        }
+        if(k != 0)
+        {
+          s.append("\\\\");
+        }
+        s.append(&cp[k], m-k);
+        if(MAX_LENGTH < vl)
+        {
+          s.append("...");
+          break;
+        }
+      }
+    }
+    else
+    {
+      // print any other VR via conversion to string
+      unsigned int n = v.GetNumberOfValues();
+      size_t pos = 0;
+      for(unsigned int i = 0; i < n; i++)
+      {
+        v.AppendValueToUTF8String(s, i);
+        if((n - 1) > i)
+        {
+          s.append("\\");
+        }
+        if((MAX_LENGTH-4) < s.size())
+        {
+          s.resize(pos);
+          s.append("...");
+          break;
+        }
+        pos = s.size();
+      }
+    }
+
+    std::vector<std::string> current;
+    std::string value;
+    std::string quantity;
+    if(meta && 0 == vi)
+    {
+      char buffer[8];
+      sprintf(buffer,"%04X", g);
+      current.push_back( buffer );
+      sprintf(buffer,"%04X", e);
+      current.push_back( buffer );
+      current.push_back( vr.GetText() );
+      current.push_back( name );
+    }
+    if(meta && 1 < vn)
+    {
+      if(0 == vi)
+        quantity = "multiple values";
+    }
+    if(vr == vtkDICOMVR::SQ)
+    {
+      size_t m = v.GetNumberOfValues();
+      const vtkDICOMItem *items = v.GetSequenceData();
+      quantity = vtkVariant(m).ToString() + (1 == m ? "item" : "items");
+      current.push_back(value);
+      current.push_back(quantity);
+      if(collection)
+        collection->push_back(current);
+      for(size_t j = 0; j < m; j++)
+      {
+        vtkDICOMDataElementIterator siter = items[j].Begin();
+        vtkDICOMDataElementIterator siterEnd = items[j].End();
+        for(; siter != siterEnd; ++siter)
+        {
+          printElement(meta, &items[j], siter, depth+1, pixelDataVL, collection);
+        }
+      }
+    }
+    else if(vl == 0xffffffffu)
+    {
+      value = "...";
+      if(tag == DC::PixelData ||
+         tag == DC::FloatPixelData ||
+         tag == DC::DoubleFloatPixelData)
+      {
+        quantity= "compressed";
+      }
+      else
+      {
+        quantity = "delimited";
+      }
+      current.push_back(value);
+      current.push_back(quantity);
+      if(collection)
+        collection->push_back(current);
+    }
+    else
+    {
+      const char *uidName = "";
+      if(vr == vtkDICOMVR::UI)
+      {
+        uidName = vtkDICOMUtilities::GetUIDName(s.c_str());
+      }
+      if('\0' != uidName[0])
+      {
+        value = s.c_str();
+        value += " {";
+        value += uidName;
+        value += "}";
+        quantity = vtkVariant(vl).ToString();
+        quantity += " bytes";
+      }
+      else if(vr == vtkDICOMVR::OB ||
+              vr == vtkDICOMVR::OW ||
+              vr == vtkDICOMVR::OF ||
+              vr == vtkDICOMVR::OD )
+      {
+        value = (0 == vl ? "" : "...");
+        quantity = vtkVariant(vl).ToString();
+        quantity += " bytes";
+      }
+      else
+      {
+        value = s;
+        quantity = vtkVariant(vl).ToString();
+        quantity += " bytes";
+      }
+      current.push_back(value);
+      current.push_back(quantity);
+      if(collection)
+        collection->push_back(current);
+    }
+  }
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderDicomTagWidgetPrivate::buildDicomStrings()
 {
   if( this->fileName.isEmpty() || this->fileName.isNull() )
   {
     return;
   }
-  gdcm::Reader reader;
-  reader.SetFileName( this->fileName.toStdString().c_str() );
-  bool success = reader.Read();
-  if( !success )
-  {
-    return;
-  }
-  const gdcm::File &file = reader.GetFile();
-  const gdcm::DataSet &ds = file.GetDataSet();
-  const gdcm::FileMetaInformation &meta = file.GetHeader();
 
-  std::vector< std::pair< std::string, gdcm::DataElement > > elementMap1;
-  std::vector< std::pair< std::string, gdcm::DataElement > > elementMap2;
-  
-  this->getDataSetElements( elementMap1, meta );
-  this->getDataSetElements( elementMap2, ds );
-  this->dumpElements( elementMap1, meta );
-  this->dumpElements( elementMap2, ds );  
+  this->data->Clear();
+  this->data->SetNumberOfInstances(1);
+  this->parser->SetFileName(this->fileName.toStdString().c_str());
+  this->parser->Update();
+  vtkDICOMDataElementIterator iter = this->data->Begin();
+  vtkDICOMDataElementIterator iterEnd = this->data->End();
+  unsigned int pixelDataVL = parser->GetPixelDataVL();
+  for(; iter != iterEnd; ++iter)
+  {
+    printElement(this->data, 0, iter, 0, pixelDataVL, &this->dicomStrings);
+  }
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -118,9 +342,10 @@ void QAlderDicomTagWidgetPrivate::updateUi()
   labels << "VR";
   labels << "Description";
   labels << "Value";
+  labels << "Size";
   this->tableWidget->setHorizontalHeaderLabels(labels);
   this->tableWidget->setColumnCount( labels.size() );
-  
+
   this->dicomStrings.clear();
   this->buildDicomStrings();
 
@@ -128,26 +353,26 @@ void QAlderDicomTagWidgetPrivate::updateUi()
   {
     this->tableWidget->setRowCount( this->dicomStrings.size() );
     int row = 0;
-    for( auto it = this->dicomStrings.begin(); it != this->dicomStrings.end(); ++it )
+    for(auto it = this->dicomStrings.begin(); it != this->dicomStrings.end(); ++it)
     {
-      std::stringstream tag;        
+      std::stringstream tag;
       int i = 0;
       int col = 0;
-      for( auto vIt = (*it).begin(); vIt != (*it).end(); ++vIt )
+      for(auto vIt = (*it).begin(); vIt != (*it).end(); ++vIt)
       {
-        if(i==0) tag << "(" << *vIt << ",";
-        else if(i==1) 
+        if(0 == i) tag << "(" << *vIt << ",";
+        else if(1 == i)
         {
           tag << *vIt << ")";
           QTableWidgetItem* item = new QTableWidgetItem();
           item->setText( tag.str().c_str() );
-          this->tableWidget->setItem( row, col++, item );   
+          this->tableWidget->setItem( row, col++, item );
         }
         else
-        { 
+        {
           QTableWidgetItem* item = new QTableWidgetItem();
           item->setText( (*vIt).c_str() );
-          this->tableWidget->setItem( row, col++, item );   
+          this->tableWidget->setItem( row, col++, item );
         }
         i++;
       }
@@ -155,216 +380,6 @@ void QAlderDicomTagWidgetPrivate::updateUi()
     }
     this->tableWidget->resizeColumnsToContents();
   }
-}
-
-// NOTE: this code is based on class gdcm/Source/MediaStorageAndFileFormat/gdcmPrinter
-
-// given a gdcm::Tag, return either the group or the element 4 digit code as a string
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-std::string QAlderDicomTagWidgetPrivate::getTagString( const gdcm::Tag& t, const int& item )
-{
-  std::stringstream str;
-  str.setf( std::ios::right );
-  str << std::hex << std::setw( 4 ) << std::setfill( '0' ) <<
-   t[ (item == 0 ? 0 : 1) ];
-  return str.str();
-}
-
-// recover a vector of gdcm::DataSet elements paired to their gdcm::Tag group
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderDicomTagWidgetPrivate::getDataSetElements( 
-  std::vector< std::pair< std::string, gdcm::DataElement > >& elemMap,
-  const gdcm::DataSet &ds )
-{
-  for( gdcm::DataSet::ConstIterator it = ds.Begin();
-       it != ds.End(); ++it )
-  {   
-    const gdcm::DataElement& de = *it;
-    const gdcm::Tag& t = de.GetTag();
-
-    std::string group = this->getTagString( t );
-    elemMap.push_back( std::make_pair( group, de ) );
-  }
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderDicomTagWidgetPrivate::dumpElements( 
-  const std::vector< std::pair< std::string, gdcm::DataElement > >& elemMap,
-  const gdcm::DataSet ds )
-{
-  if( elemMap.empty() ) return;
-  const gdcm::Global& g = gdcm::GlobalInstance;
-  const gdcm::Dicts &dicts = g.GetDicts();
-
-  for( auto it = elemMap.begin(); it != elemMap.end(); ++it )
-  {
-    gdcm::DataElement de = it->second;
-    gdcm::Tag t = de.GetTag();
-    const char* owner = 0;
-    if( t.IsPrivate() && !t.IsPrivateCreator() )
-    {
-      owner = ds.GetPrivateCreator( t ).c_str();
-    }
-
-    const gdcm::DictEntry& entry = dicts.GetDictEntry( t, owner );
-
-    std::vector< std::string > vstr;
-
-    gdcm::VR vr;
-    this->getElementString( vstr, vr, de, entry );
-
-    this->dicomStrings.push_back( vstr );
-
-    // if we found an SQ element, recurse
-    if( vr & gdcm::VR::SQ )
-    {
-      const gdcm::Value& value = de.GetValue();
-      const gdcm::SequenceOfItems *sqi =
-        dynamic_cast< const gdcm::SequenceOfItems* >( &value );
-
-      if( sqi )
-      {
-        for( auto sIt = sqi->Items.begin(); sIt != sqi->Items.end(); ++sIt )
-        {
-          const gdcm::Item& item = *sIt;
-
-          const gdcm::DataSet& nds = item.GetNestedDataSet();
-
-          std::vector< std::pair< std::string, gdcm::DataElement > > elementMap;
-          this->getDataSetElements( elementMap, nds );
-
-          if( !elementMap.empty() )
-          {
-            this->dumpElements( elementMap, nds );
-          }
-        }
-      }
-    }
-  }
-}
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-gdcm::VR QAlderDicomTagWidgetPrivate::getReferenceVR( const gdcm::DataElement& de, 
-                                               const gdcm::DictEntry& entry )
-{
-  const gdcm::Value& value = de.GetValue();
-  const gdcm::VR& vr = entry.GetVR();
-  const gdcm::VR& vr_read = de.GetVR();
-
-  gdcm::VR refvr = vr_read;
-
-  if(  vr_read == gdcm::VR::INVALID ||
-     ( vr_read == gdcm::VR::UN && vr != gdcm::VR::INVALID ) )
-  {
-    refvr = vr;
-  }
-
-  if( refvr.IsDual() )
-  {
-    refvr = gdcm::VR::UN;
-  }
-
-  if( dynamic_cast<const gdcm::SequenceOfItems*>( &value ) )
-  {
-    refvr = gdcm::VR::SQ;
-  }
-
-  if( refvr == gdcm::VR::INVALID )
-  {
-    refvr = gdcm::VR::UN;
-  }
-
-  return refvr;
-}
-
-// switch case macro used in GetElementString
-#define StringFilterCase(type) \
-  case gdcm::VR::type: \
-  { \
-    gdcm::Element< gdcm::VR::type, gdcm::VM::VM1_n > el; \
-    if( !de.IsEmpty() ) \
-    { \
-      el.Set( de.GetValue() ); \
-      if( el.GetLength() ) \
-      { \
-        os << el.GetValue(); \
-        long l = (long) el.GetLength(); \
-        for( long i = 1; i < l; ++i ) \
-        { \
-          os << "\\" << el.GetValue((unsigned int)i); \
-        } \
-      } \
-      else \
-      { \
-        os << "(no value)"; \
-      } \
-    } \
-  } break
-
-// get the data element as a string: 
-// tag group, tag element, VR code, dictionary name, element value
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderDicomTagWidgetPrivate::getElementString( std::vector< std::string >& vec, gdcm::VR& vr,
-                       const gdcm::DataElement& de, const gdcm::DictEntry& entry )
-{
-  const gdcm::Value& value = de.GetValue();
-  const gdcm::ByteValue *bv = de.GetByteValue();
-  const gdcm::SequenceOfItems *sqi = NULL;
-  const gdcm::Tag& t = de.GetTag();
-
-  vec.push_back( this->getTagString( t ) );
-  vec.push_back( this->getTagString( t, 1 ) );
-
-  vr = this->getReferenceVR( de, entry );
-  std::string vrStr = gdcm::VR::GetVRString( vr );
-  vec.push_back( vrStr );
-
-  std::string nameStr = entry.GetName();
-  if( nameStr.empty() ) nameStr = "unknown";
-  vec.push_back( nameStr );
-
-  std::string valueStr = "no value";
-  std::ostringstream os; 
-  if( vr & gdcm::VR::VRASCII )
-  {
-    if( bv )
-    {   
-      bv->PrintASCII( os, bv->GetLength() );
-    }   
-  }
-  else if( (vr & gdcm::VR::SQ) &&  
-           ( sqi = dynamic_cast<const gdcm::SequenceOfItems*>( &value ) ) ) 
-  {
-    vec.push_back( valueStr );
-    return;
-  }
-  else
-  {
-    switch( vr )
-    {   
-      StringFilterCase(AT);
-      StringFilterCase(FL);
-      StringFilterCase(FD);
-      StringFilterCase(OF);
-      StringFilterCase(SL);
-      StringFilterCase(SS);
-      StringFilterCase(UL);
-      StringFilterCase(US);
-      case gdcm::VR::INVALID:
-      {   
-        if( bv )
-        {   
-          bv->PrintASCII( os, bv->GetLength() );  
-        }
-      }
-      default:
-        os << "no value";
-        break;
-    }
-  }
-
-  if( !os.str().empty() ) valueStr = os.str();
-  vec.push_back( valueStr );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

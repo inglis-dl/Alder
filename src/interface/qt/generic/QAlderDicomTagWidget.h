@@ -4,7 +4,6 @@
   Module:   QAlderDicomTagWidget.h
   Language: C++
 
-  Author: Patrick Emond <emondpd AT mcmaster DOT ca>
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
