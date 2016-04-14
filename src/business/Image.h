@@ -104,17 +104,17 @@ namespace Alder
      */
     bool IsDICOM();
 
-    // TODO: add method to deal with color palette compression schemes
-    // used in GE dicom images
-
     /**
-     * Get a DICOM tag value. Accepted tag names are:
-     *   AcquisitionDateTime - 0x0008, 0x002a
-     *   SeriesNumber        - 0x0020, 0x0011
-     *   PatientName         - 0x0010, 0x0010
-     *   Laterality          - 0x0020, 0x0060
-     *   Manufacturer        - 0x0008, 0x0070
-     *   PhotometricInterpretation - 0x0028, 0x0004
+     * Convenience method to get a DICOM tag value by its description string.
+     * Accepted tag names are:
+     *   AcquisitionDateTime         - 0x0008, 0x002a
+     *   SeriesNumber                - 0x0020, 0x0011
+     *   PatientName                 - 0x0010, 0x0010
+     *   Laterality                  - 0x0020, 0x0060
+     *   Manufacturer                - 0x0008, 0x0070
+     *   PhotometricInterpretation   - 0x0028, 0x0004
+     *   RecommendedDisplayFrameRate - 0x0008, 0x2144
+     *   CineRate                    - 0x0018, 0x0040
      * No checking is done to ensure this is a dicom image: use
      * IsDICOM() method to check first.
      * @param tagName the name of the dicom tag

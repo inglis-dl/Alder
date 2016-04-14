@@ -68,6 +68,7 @@ public:
   QAlderSliceView::Orientation orientation;
   int dimensionality;
   int interpolation;
+  int frameRate;
 
 private:
   int lastSlice[3];

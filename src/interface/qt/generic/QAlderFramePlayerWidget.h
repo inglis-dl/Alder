@@ -148,9 +148,9 @@ class QAlderFramePlayerWidget : public QWidget
   /**
    * This property holds the number of the higher frame per seconds rate the
    * the player will be willing to handle.
-   * @see maxFramerate(), setMaxFramerate()
+   * @see maxFrameRate(), setMaxFrameRate()
    */
-  Q_PROPERTY(double maxFramerate READ maxFramerate WRITE setMaxFramerate)
+  Q_PROPERTY(double maxFrameRate READ maxFrameRate WRITE setMaxFrameRate)
 
   /**
    * This property holds the direction on which the widget will do the
@@ -166,7 +166,7 @@ class QAlderFramePlayerWidget : public QWidget
   Q_PROPERTY(bool repeat READ repeat WRITE setRepeat)
 
   /**
-   * This property holds the speed factor of the animation.
+   * This property holds the speed in frames per second of the animation.
    * @see playSpeed(), setPlaySpeed()
    */
   Q_PROPERTY(double playSpeed READ playSpeed WRITE setPlaySpeed)
@@ -286,9 +286,9 @@ public:
   //@}
 
   //@{
-  /** Set/Get maxFramerate in frames per second */
-  void setMaxFramerate(double);
-  double maxFramerate() const;
+  /** Set/Get maxFrameRate in frames per second */
+  void setMaxFrameRate(double);
+  double maxFrameRate() const;
   //@}
 
   /** Set currentFrame */
@@ -301,8 +301,8 @@ public slots:
   /** Set currentFrame */
   virtual void setCurrentFrame(double frame);
 
-  /** Set playSpeed */
-  virtual void setPlaySpeed(double speedCoef);
+  /** Set playSpeed in frames per second */
+  virtual void setPlaySpeed(double speed);
 
   /**
    * Set the current frame to the current frame provided by the source.
@@ -371,7 +371,7 @@ public slots:
   void stop();
 
   /**
-   * force and update to the widget's UI elements
+   * force an update to the widget's UI elements
    */
   virtual void update();
 
