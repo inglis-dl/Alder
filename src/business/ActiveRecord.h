@@ -30,7 +30,7 @@
 #include <Database.h>
 #include <ModelObject.h>
 #include <QueryModifier.h>
-#include <vtkAlderMySQLQuery.h>
+#include <vtkMySQLQuery.h>
 
 // VTK includes
 #include <vtkNew.h>
@@ -120,7 +120,7 @@ namespace Alder
       std::stringstream stream;
       stream << "SELECT * FROM " << type;
       if( NULL != modifier ) stream << " " << modifier->GetSql();
-      vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+      vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
 
       app->Log( "Querying Database: " + stream.str() );
       query->SetQuery( stream.str().c_str() );
@@ -158,7 +158,7 @@ namespace Alder
       std::stringstream stream;
       stream << "SELECT " << ( distinct ? "DISTINCT ": "" ) << column << "FROM " << type;
       if( NULL != modifier ) stream << " " << modifier->GetSql();
-      vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+      vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
 
       app->Log( "Querying Database: " + stream.str() );
       query->SetQuery( stream.str().c_str() );
@@ -197,7 +197,7 @@ namespace Alder
       Database *db = app->GetDB();
       std::stringstream stream;
       std::string type = app->GetUnmangledClassName( typeid(T).name() );
-      vtkSmartPointer<vtkAlderMySQLQuery> query = db->GetQuery();
+      vtkSmartPointer<vtkMySQLQuery> query = db->GetQuery();
 
       vtkNew<QueryModifier> mod;
       if( NULL != modifier ) mod->Merge( modifier );
@@ -261,7 +261,7 @@ namespace Alder
       Database *db = app->GetDB();
       std::stringstream sql;
       std::string type = app->GetUnmangledClassName( typeid(T).name() );
-      vtkSmartPointer<vtkAlderMySQLQuery> query = db->GetQuery();
+      vtkSmartPointer<vtkMySQLQuery> query = db->GetQuery();
 
       // if no override is provided, figure out necessary table/column names
       std::string name = this->GetName();
@@ -317,7 +317,7 @@ namespace Alder
       Application *app = Application::GetInstance();
       Database *db = app->GetDB();
       std::stringstream sql;
-      vtkSmartPointer<vtkAlderMySQLQuery> query = db->GetQuery();
+      vtkSmartPointer<vtkMySQLQuery> query = db->GetQuery();
 
       // figure out necessary table/column names
       std::string name = this->GetName();
@@ -370,7 +370,7 @@ namespace Alder
       Database *db = app->GetDB();
       std::stringstream sql;
       std::string type = app->GetUnmangledClassName( typeid(T).name() );
-      vtkSmartPointer<vtkAlderMySQLQuery> query = db->GetQuery();
+      vtkSmartPointer<vtkMySQLQuery> query = db->GetQuery();
 
       // first make sure we have the correct relationship with the given record
       if( ActiveRecord::ManyToMany != this->GetRelationship( type ) )
@@ -399,7 +399,7 @@ namespace Alder
       Database *db = app->GetDB();
       std::stringstream sql;
       std::string type = app->GetUnmangledClassName( typeid(T).name() );
-      vtkSmartPointer<vtkAlderMySQLQuery> query = db->GetQuery();
+      vtkSmartPointer<vtkMySQLQuery> query = db->GetQuery();
 
       // first make sure we have the correct relationship with the given record
       if( ActiveRecord::ManyToMany != this->GetRelationship( type ) )
@@ -488,7 +488,7 @@ namespace Alder
      * Loads values into the record from a query's current row.
      * @param query a mysql query object
      */
-    void LoadFromQuery( vtkAlderMySQLQuery *query );
+    void LoadFromQuery( vtkMySQLQuery *query );
 
     bool operator == ( const ActiveRecord& rhs ) const
     {

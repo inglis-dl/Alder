@@ -240,7 +240,7 @@ namespace Alder
            << "FROM Interview "
            << "WHERE WaveId=" << this->Get( "Id" ).ToString();
     app->Log( "Querying Database: " + stream.str() );
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery( stream.str().c_str() );
     query->Execute();
 
@@ -264,7 +264,7 @@ namespace Alder
            << "FROM ScanType "
            << "WHERE WaveId=" << this->Get( "Id" ).ToString();
     app->Log( "Querying Database: " + stream.str() );
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery( stream.str().c_str() );
     query->Execute();
 

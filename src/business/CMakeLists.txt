@@ -43,11 +43,10 @@ ADD_LIBRARY( AlderBusiness ${AlderBusiness_SRCS} )
 
 TARGET_LINK_LIBRARIES( AlderBusiness
   AlderVTK
+  vtkIOMySQL
   ${CURL_LIBRARY}
   ${JSONCPP_LIBRARIES}
   vtkDICOM
 )
 
-INSTALL( TARGETS AlderBusiness
- DESTINATION lib
-)
+INSTALL( TARGETS AlderBusiness DESTINATION lib )

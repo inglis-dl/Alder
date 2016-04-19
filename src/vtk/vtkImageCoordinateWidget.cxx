@@ -61,7 +61,7 @@ vtkImageCoordinateWidget::~vtkImageCoordinateWidget()
   this->RemoveAllProps();
   this->SetEnabled(0);
   this->SetUserTransform(0);
-  this->SetInput(0);
+  this->SetInputData(0);
   this->SetPicker(0);
 }
 
@@ -158,7 +158,7 @@ void vtkImageCoordinateWidget::SetCursoringMode( int mode )
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkImageCoordinateWidget::SetInput( vtkDataSet* input )
+void vtkImageCoordinateWidget::SetInputData( vtkDataSet* input )
 {
   this->ImageData = vtkImageData::SafeDownCast( input );
 }
@@ -458,6 +458,7 @@ void vtkImageCoordinateWidget::UpdateCursor( int X, int Y )
     {
       return;
     }
+    actor->GetMapper()->Update();
   }
 
   // We're going to be extracting values with GetScalarComponentAsDouble(),
@@ -465,8 +466,6 @@ void vtkImageCoordinateWidget::UpdateCursor( int X, int Y )
   // up to date already, this call doesn't cost very much.  If we don't make
   // this call and the data is not up to date, the GetScalar() call will
   // cause a segfault.
-  this->ImageData->Update();
-
   this->Picker->Pick( X, Y, 0.0, this->CurrentRenderer );
   vtkAssemblyPath* path = this->Picker->GetPath();
 

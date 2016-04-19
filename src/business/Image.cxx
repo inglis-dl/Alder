@@ -20,6 +20,7 @@
 #include <Utilities.h>
 
 // VTK includes
+#include <vtkDataArray.h>
 #include <vtkDirectory.h>
 #include <vtkImageData.h>
 #include <vtkImageDataReader.h>
@@ -549,7 +550,7 @@ namespace Alder
     this->GetRecord( exam );
 
     // get neighbouring image which matches this image's exam type and the given rating
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     std::stringstream stream;
     stream << "SELECT Image.Id "
            << "FROM Image "
@@ -618,7 +619,7 @@ namespace Alder
   vtkSmartPointer< Image > Image::GetAtlasImage( const int &rating )
   {
     Application *app = Application::GetInstance();
-    vtkSmartPointer< vtkAlderMySQLQuery > query = app->GetDB()->GetQuery();
+    vtkSmartPointer< vtkMySQLQuery > query = app->GetDB()->GetQuery();
 
     vtkSmartPointer< Exam > exam;
     this->GetRecord( exam );
@@ -753,7 +754,7 @@ namespace Alder
 
     // flip the canvas vertically
     vtkNew< vtkImageFlip > flip;
-    flip->SetInput( canvas->GetOutput() );
+    flip->SetInputConnection( canvas->GetOutputPort() );
     flip->SetFilteredAxis( 1 );
     flip->Update();
 
@@ -794,7 +795,6 @@ namespace Alder
     vtkNew<vtkDICOMReader> reader;
     reader->SetFileName( fileName.c_str() );
     reader->SetMemoryRowOrderToTopDown();
-    reader->UpdateInformation();
     reader->Update();
 
     vtkDICOMMetaData* meta = reader->GetMetaData();
@@ -802,7 +802,6 @@ namespace Alder
     {
       vtkNew<vtkImageData> image;
       image->DeepCopy( reader->GetOutput() );
-      image->UpdateInformation();
 
       vtkNew<vtkMatrix3x3> in;
       vtkNew<vtkMatrix3x3> out;

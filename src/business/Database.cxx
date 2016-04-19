@@ -14,10 +14,10 @@
 #include <Configuration.h>
 #include <User.h>
 
-#include <vtkAlderMySQLDatabase.h>
+#include <vtkMySQLDatabase.h>
 #include <vtkObjectFactory.h>
 #include <vtkSmartPointer.h>
-#include <vtkAlderMySQLQuery.h>
+#include <vtkMySQLQuery.h>
 #include <vtkTable.h>
 #include <vtkVariant.h>
 
@@ -31,7 +31,7 @@ namespace Alder
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   Database::Database()
   {
-    this->MySQLDatabase = vtkSmartPointer<vtkAlderMySQLDatabase>::New();
+    this->MySQLDatabase = vtkSmartPointer<vtkMySQLDatabase>::New();
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -57,7 +57,7 @@ namespace Alder
   void Database::ReadInformationSchema()
   {
     Application *app = Application::GetInstance();
-    vtkSmartPointer<vtkAlderMySQLQuery> query = this->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = this->GetQuery();
 
     std::stringstream stream;
     // the following query's first column MUST be table_name (index 0) and second column
@@ -219,9 +219,9 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  vtkSmartPointer<vtkAlderMySQLQuery> Database::GetQuery() const
+  vtkSmartPointer<vtkMySQLQuery> Database::GetQuery() const
   {
-    return vtkSmartPointer<vtkAlderMySQLQuery>::Take(
-      vtkAlderMySQLQuery::SafeDownCast( this->MySQLDatabase->GetQueryInstance() ) );
+    return vtkSmartPointer<vtkMySQLQuery>::Take(
+      vtkMySQLQuery::SafeDownCast( this->MySQLDatabase->GetQueryInstance() ) );
   }
 }

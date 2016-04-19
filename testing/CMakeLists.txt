@@ -21,7 +21,7 @@ INSTALL( TARGETS BackTrace RUNTIME DESTINATION bin )
 ADD_EXECUTABLE( DemangledBackTrace DemangledBackTrace.cxx )
 
 TARGET_LINK_LIBRARIES( DemangledBackTrace
-  vtkCommon # we need this for dladdr to work (magic!)
+  vtksys # we need this for dladdr to work due to name mangling
 )
 
 INSTALL( TARGETS DemangledBackTrace RUNTIME DESTINATION bin )

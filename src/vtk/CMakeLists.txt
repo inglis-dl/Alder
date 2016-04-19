@@ -2,8 +2,8 @@ PROJECT( AlderVTK )
 
 SET( AlderVTK_SRCS
   vtkAnimationPlayer.cxx
-  vtkAlderMySQLDatabase.cxx
-  vtkAlderMySQLQuery.cxx
+#  vtkAlderMySQLDatabase.cxx
+#  vtkAlderMySQLQuery.cxx
   vtkCenteredAxesActor.cxx
   vtkCustomCornerAnnotation.cxx
   vtkCustomInteractorStyleImage.cxx
@@ -34,18 +34,25 @@ INCLUDE_DIRECTORIES(
 
 ADD_LIBRARY( AlderVTK ${AlderVTK_SRCS} )
 
+SET(VTK_LIBS
+  vtkCommonCore
+  vtkCommonMath
+  vtkInteractionStyle
+  vtkInteractionWidgets
+  vtkIOCore
+  vtkIOMINC
+  vtkIOXML
+  vtkRenderingFreeTypeOpenGL
+  vtkRenderingImage
+  vtkRenderingVolumeOpenGL
+)
+
 TARGET_LINK_LIBRARIES( AlderVTK
   AlderCommon
-  vtkCommon
-  vtkIO
-  vtkRendering
+  ${VTK_LIBS}
   vtkgdcm
-  vtkWidgets
-  ${MYSQL_LIBRARY}
   ${CRYPTO++_LIBRARIES}
   ${LIBXML2_LIBRARIES}
 )
 
-INSTALL( TARGETS AlderVTK
-  DESTINATION lib
-)
+INSTALL( TARGETS AlderVTK DESTINATION lib )

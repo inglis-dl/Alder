@@ -200,8 +200,8 @@ int* QAlderSliceViewPrivate::sliceRange()
   vtkImageData* input = vtkImageData::SafeDownCast(this->WindowLevel->GetInput());
   if( input )
   {
-    input->UpdateInformation();
-    return input->GetWholeExtent() + this->orientation * 2;
+    this->WindowLevel->Update();
+    return input->GetExtent() + this->orientation * 2;
   }
   return 0;
 }
@@ -273,7 +273,6 @@ void QAlderSliceViewPrivate::setImageData( vtkImageData* input )
   this->frameRate = 25;
   if( input )
   {
-    input->Update();
     int dims[3];
     input->GetDimensions(dims);
     this->dimensionality = 3;
@@ -296,8 +295,8 @@ void QAlderSliceViewPrivate::setImageData( vtkImageData* input )
       double *spacing = input->GetSpacing();
       double *lastOrigin = lastInput->GetOrigin();
       double *origin = input->GetOrigin();
-      int *lastExtent = lastInput->GetWholeExtent();
-      int *extent = input->GetWholeExtent();
+      int *lastExtent = lastInput->GetExtent();
+      int *extent = input->GetExtent();
       initCamera = false;
       for( int i = 0; i < 3; ++i )
       {
@@ -312,8 +311,8 @@ void QAlderSliceViewPrivate::setImageData( vtkImageData* input )
       }
     }
 
-    this->WindowLevel->SetInput( input );
-    this->ImageSliceMapper->SetInput( this->WindowLevel->GetOutput() );
+    this->WindowLevel->SetInputData( input );
+    this->ImageSliceMapper->SetInputConnection( this->WindowLevel->GetOutputPort() );
     int components = input->GetNumberOfScalarComponents();
     switch( components )
     {
@@ -522,11 +521,12 @@ void QAlderSliceViewPrivate::doWindowLevelEvent()
 void QAlderSliceViewPrivate::initializeCameraViews()
 {
   vtkImageData* input = vtkImageData::SafeDownCast(this->WindowLevel->GetInput());
-  if( !input ) return;
-  input->UpdateInformation();
+  if( !input ) 
+    return;
+  this->WindowLevel->Update();  
   double* origin = input->GetOrigin();
   double* spacing = input->GetSpacing();
-  int* extent = input->GetWholeExtent();
+  int* extent = input->GetExtent();
   int u, v;
   double fpt[3];
   double pos[3];
@@ -604,8 +604,7 @@ void QAlderSliceViewPrivate::initializeWindowLevel()
 {
   vtkImageData* input = vtkImageData::SafeDownCast(this->WindowLevel->GetInput());
   if( !input ) return;
-  input->UpdateInformation();
-  input->Update();
+  this->WindowLevel->Update();
 
   int components = input->GetNumberOfScalarComponents();
   double dataMin = input->GetScalarTypeMax();
@@ -730,7 +729,7 @@ void QAlderSliceViewPrivate::computeCameraFromCurrentSlice( const bool& useCamer
 
     double* origin = input->GetOrigin();
     double* spacing = input->GetSpacing();
-    int* extent = input->GetWholeExtent();
+    int* extent = input->GetExtent();
     double fpt[3];
     fpt[u] = origin[u] + 0.5 * spacing[u] * ( extent[2*u] + extent[2*u+1] );
     fpt[v] = origin[v] + 0.5 * spacing[v] * ( extent[2*v] + extent[2*v+1] );
@@ -816,7 +815,7 @@ void QAlderSliceViewPrivate::setupCoordinateWidget()
   {
     this->CoordinateWidget->SetDefaultRenderer( this->Renderer );
     this->CoordinateWidget->SetInteractor( this->RenderWindow->GetInteractor() );
-    this->CoordinateWidget->SetInput( image );
+    this->CoordinateWidget->SetInputData( image );
     this->CoordinateWidget->AddViewProp( this->ImageSlice );
 
     if( this->annotateOverView && this->CornerAnnotation->GetVisibility() )
@@ -835,7 +834,7 @@ void QAlderSliceViewPrivate::setupCoordinateWidget()
     if( this->CoordinateWidget->GetEnabled() )
       this->CoordinateWidget->Off();
     this->CoordinateWidget->RemoveAllProps();
-    this->CoordinateWidget->SetInput( 0 );
+    this->CoordinateWidget->SetInputData( 0 );
     std::map<std::string,unsigned long>::iterator it;
     it = this->callbackTags.find(vtkCommand::GetStringFromEventId(vtkCommand::InteractionEvent));
     if( it != this->callbackTags.end() )
@@ -1135,7 +1134,7 @@ void QAlderSliceView::writeSlice( const QString& fileName )
       case 1: u = 0; v = 2; break;
       case 2: u = 0; v = 1; break;
     }
-    int *w_ext = input->GetWholeExtent();
+    int *w_ext = input->GetExtent();
     extent[2*u] = w_ext[2*u];
     extent[2*u+1] = w_ext[2*u+1];
     extent[2*v] = w_ext[2*v];
@@ -1145,11 +1144,11 @@ void QAlderSliceView::writeSlice( const QString& fileName )
 
     clip->SetOutputWholeExtent( extent );
     clip->ClipDataOn();
-    clip->SetInput( input );
+    clip->SetInputData( input );
     clip->Update();
 
     int ec[6];
-    clip->GetOutput()->GetWholeExtent(ec);
+    clip->GetOutput()->GetExtent(ec);
 
     int et[] = {0,0,0};     // extent translation
     int op[] = {0,1,2};     // output axes permutation
@@ -1171,13 +1170,13 @@ void QAlderSliceView::writeSlice( const QString& fileName )
 
     vtkNew< vtkImageChangeInformation > change;
     change->SetExtentTranslation( et );
-    change->SetInput( clip->GetOutput() );
+    change->SetInputConnection( clip->GetOutputPort() );
 
     vtkNew< vtkImagePermute > permute;
     permute->SetFilteredAxes( op );
-    permute->SetInput( change->GetOutput() );
+    permute->SetInputConnection( change->GetOutputPort() );
 
-    writer->SetInput( permute->GetOutput() );
+    writer->SetInputData( permute->GetOutput() );
     writer->Write();
   }
 }
@@ -1231,8 +1230,7 @@ void QAlderSliceView::setImageToSinusoid()
   sinusoid->SetAmplitude( 255 );
   sinusoid->SetWholeExtent( 0, 127, 0, 127, 0, 31 );
   sinusoid->SetDirection( 0.5, -0.5, 1.0 / sqrt( 2.0 ) );
-  sinusoid->GetOutput()->UpdateInformation();
-  sinusoid->GetOutput()->Update();
+  sinusoid->Update();
 
   d->setImageData( sinusoid->GetOutput() );
   d->setSlice( 15 );

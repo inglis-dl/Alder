@@ -259,7 +259,7 @@ void vtkImageDataWriter::SetFileName( const char* fileName )
 }
 
 //----------------------------------------------------------------------------
-void vtkImageDataWriter::SetInput(vtkImageData* input)
+void vtkImageDataWriter::SetInputData(vtkImageData* input)
 {
   if( this->ImageData == input ) return;
 
@@ -284,15 +284,13 @@ void vtkImageDataWriter::Write()
   }
 
   vtkImageData* image = this->ImageData;
-  image->Update();
   vtkNew< vtkImageCast > castFilter;
 
   if( this->AutoDownCast )
   {
     double range[2];
-    this->ImageData->UpdateInformation();
     this->ImageData->GetScalarRange(range);
-    castFilter->SetInput( this->ImageData );
+    castFilter->SetInputData( this->ImageData );
 
     int type = this->ImageData->GetScalarType();
     castFilter->SetOutputScalarType( type );
@@ -363,7 +361,7 @@ void vtkImageDataWriter::Write()
     vtkXMLImageDataWriter* XMLWriter =
       vtkXMLImageDataWriter::SafeDownCast( this->Writer );
     XMLWriter->SetFileName( this->FileName.c_str() );
-    XMLWriter->SetInput( image );
+    XMLWriter->SetInputData( image );
     XMLWriter->Write();
   }
   else // if we get here then the reader is some form of vtkImageWriter
@@ -394,8 +392,8 @@ void vtkImageDataWriter::Write()
       {
         vtkNew< vtkImageCast > convertFilter;
         convertFilter->SetOutputScalarTypeToUnsignedChar();
-        convertFilter->SetInput( image );
-        imageWriter->SetInput( convertFilter->GetOutput() );
+        convertFilter->SetInputData( image );
+        imageWriter->SetInputConnection( convertFilter->GetOutputPort() );
       }
       else
       {
@@ -410,8 +408,8 @@ void vtkImageDataWriter::Write()
         {
           convertFilter->SetScale( VTK_UNSIGNED_CHAR_MAX / ( range[1] - range[0] ) );
        }
-        convertFilter->SetInput( image );
-        imageWriter->SetInput( convertFilter->GetOutput() );
+        convertFilter->SetInputData( image );
+        imageWriter->SetInputConnection( convertFilter->GetOutputPort() );
       }
     }
     // TIFF supports float, so if we have doubles convert to float
@@ -420,8 +418,8 @@ void vtkImageDataWriter::Write()
     {
       vtkNew< vtkImageCast > convertFilter;
       convertFilter->SetOutputScalarTypeToFloat();
-      convertFilter->SetInput( image );
-      imageWriter->SetInput( convertFilter->GetOutput() );
+      convertFilter->SetInputData( image );
+      imageWriter->SetInputConnection( convertFilter->GetOutputPort() );
     }
     // IMG, PNG and TIFF support unsigned shorts, so convert to that but only
     // if the scalar type isn't supported
@@ -439,8 +437,8 @@ void vtkImageDataWriter::Write()
       {
         vtkNew< vtkImageCast > convertFilter;
         convertFilter->SetOutputScalarTypeToUnsignedShort();
-        convertFilter->SetInput( image );
-        imageWriter->SetInput( convertFilter->GetOutput() );
+        convertFilter->SetInputData( image );
+        imageWriter->SetInputConnection( convertFilter->GetOutputPort() );
       }
       else
       {
@@ -455,14 +453,14 @@ void vtkImageDataWriter::Write()
         {
           convertFilter->SetScale( VTK_UNSIGNED_SHORT_MAX / ( range[1] - range[0] ) );
         }
-        convertFilter->SetInput( image );
-        imageWriter->SetInput( convertFilter->GetOutput() );
+        convertFilter->SetInputData( image );
+        imageWriter->SetInputConnection( convertFilter->GetOutputPort() );
       }
     }
     // otherwise leave the type alone
     else
     {
-      imageWriter->SetInput( image );
+      imageWriter->SetInputData( image );
     }
 
     imageWriter->Write();
