@@ -19,9 +19,11 @@
 #include "vtkDICOMDictionary.h"
 #include "vtkDICOMMetaData.h"
 #include "vtkDICOMItem.h"
+#include "vtkDICOMReader.h"
 #include "vtkDICOMUtilities.h"
 
 // VTK includes
+#include <vtkNew.h>
 #include <vtkSmartPointer.h>
 #include <vtkVariant.h>
 
@@ -322,7 +324,13 @@ void QAlderDicomTagWidgetPrivate::buildDicomStrings()
 
   this->data->Clear();
   this->data->SetNumberOfInstances(1);
-  this->parser->SetFileName(this->fileName.toStdString().c_str());
+  const char* name = this->fileName.toStdString().c_str();
+
+  // make sure we can read the file
+  vtkNew<vtkDICOMReader> reader;
+  if(!reader->CanReadFile(name)) return;
+
+  this->parser->SetFileName(name);
   this->parser->Update();
   vtkDICOMDataElementIterator iter = this->data->Begin();
   vtkDICOMDataElementIterator iterEnd = this->data->End();
