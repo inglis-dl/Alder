@@ -954,12 +954,13 @@ void QAlderInterviewWidgetPrivate::ratingChanged( int value )
     vtkNew< Alder::Rating > rating;
     if( !rating->Load( map ) )
     { // no record exists, set the user and image ids
-      rating->Set( "UserId", user->Get( "Id" ).ToInt() );
-      rating->Set( "ImageId", image->Get( "Id" ).ToInt() );
+      rating->Set( map );
     }
 
-    if( 0 == value ) rating->SetNull( "Rating" );
-    else rating->Set( "Rating", value );
+    if( 0 == value )
+      rating->SetNull( "Rating" );
+    else
+      rating->Set( "Rating", value );
 
     rating->Save();
   }
@@ -1035,7 +1036,7 @@ void QAlderInterviewWidgetPrivate::codeSelected()
   {
     int column = box->property("column").toInt();
     int row = box->property("row").toInt();
-    int codeTypeId = box->property("codeTypeId").toInt();
+    std::string codeTypeId = box->property("codeTypeId").toString().toStdString();
     bool codeSelected = box->isChecked();
     std::string codeStr = box->text().toStdString();
     // update the rating, the string of codes, and the slider
@@ -1053,15 +1054,12 @@ void QAlderInterviewWidgetPrivate::codeSelected()
       if( codeType->Load( "Id", codeTypeId ) )
       {
         std::map< std::string, std::string > map;
-        vtkVariant userId = user->Get( "Id" );
-        vtkVariant imageId = image->Get( "Id" );
-        map["UserId"] = userId.ToString();
-        map["ImageId"] = imageId.ToString();
+        map["UserId"] = user->Get( "Id" ).ToString();
+        map["ImageId"] = image->Get( "Id" ).ToString();
         vtkNew< Alder::Rating > rating;
         if( !rating->Load( map ) )
         { // no record exists, set the user and image ids
-          rating->Set( "UserId", userId.ToInt() );
-          rating->Set( "ImageId", imageId.ToInt() );
+          rating->Set( map );
           rating->Save();
         }
 
@@ -1071,9 +1069,7 @@ void QAlderInterviewWidgetPrivate::codeSelected()
         {
           if( !code->Load( map ) )
           {
-            code->Set( "UserId", userId.ToInt() );
-            code->Set( "ImageId", imageId.ToInt() );
-            code->Set( "CodeTypeId", codeTypeId );
+            code->Set( map );
             code->Save();
           }
         }
@@ -1131,6 +1127,7 @@ void QAlderInterviewWidgetPrivate::noteChanged()
       if( !noteStr.empty() )
       {
         map[ "Note" ] = noteStr;
+        note->Set( map );
         note->Save();
       }
     }
