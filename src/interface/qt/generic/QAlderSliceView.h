@@ -65,9 +65,9 @@ public:
 
   vtkImageData* imageData();
 
-public slots:
+  int frameRate() const;
 
-  void setImageData( vtkImageData* newImageData );
+public slots:
 
   void setColorLevel( double newColorLevel );
 

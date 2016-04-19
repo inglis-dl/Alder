@@ -284,6 +284,18 @@ namespace Alder
       if( meta->HasAttribute( tag ) )
         value = meta->GetAttributeValue( tag ).AsString();
     }
+    else if( "RecommendedDisplayFramRate" == tagName )
+    {
+      vtkDICOMTag tag( 0x0008, 0x2144 );
+      if( meta->HasAttribute( tag ) )
+        value = meta->GetAttributeValue( tag ).AsString();
+    }
+    else if( "CineRate" == tagName )
+    {
+      vtkDICOMTag tag( 0x0018, 0x0040 );
+      if( meta->HasAttribute( tag ) )
+        value = meta->GetAttributeValue( tag ).AsString();
+    }
     else
       throw std::runtime_error( "Unknown DICOM tag name." );
 
