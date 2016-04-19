@@ -32,7 +32,7 @@ namespace Alder
            << "WHERE CodeType.Id=" << this->Get("Id").ToString();
 
     app->Log( "Querying Database: " + stream.str() );
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery( stream.str().c_str() );
     query->Execute();
     if( query->HasError() )
@@ -60,7 +60,7 @@ namespace Alder
            << "GROUP BY CodeType.Id";
 
     app->Log( "Querying Database: " + stream.str() );
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery( stream.str().c_str() );
     query->Execute();
     if( query->HasError() )
@@ -92,7 +92,7 @@ namespace Alder
       stream << "AND CodeGroupId=" << vtkVariant(groupId).ToString();
 
     app->Log( "Querying Database: " + stream.str() );
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery( stream.str().c_str() );
     query->Execute();
     if( query->HasError() )
@@ -172,7 +172,7 @@ namespace Alder
             << "WHERE x3.Newderived!=Rating.DerivedRating";
 
     app->Log( "Querying Database: " + stream.str() );
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery( stream.str().c_str() );
     query->Execute();
     if( query->HasError() )

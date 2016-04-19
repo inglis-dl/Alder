@@ -69,10 +69,8 @@ ADD_LIBRARY( AlderQtModel
 
 TARGET_LINK_LIBRARIES( AlderQtModel
   AlderVTK
-  QVTK
+  vtkGUISupportQt
   AlderQtGeneric
 )
 
-INSTALL( TARGETS AlderQtModel
-  DESTINATION lib
-)
+INSTALL( TARGETS AlderQtModel DESTINATION lib )

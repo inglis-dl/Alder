@@ -29,7 +29,7 @@
 
 #include <ModelObject.h>
 
-#include <vtkAlderMySQLQuery.h>
+#include <vtkMySQLQuery.h>
 #include <vtkSmartPointer.h>
 #include <vtkVariant.h>
 
@@ -37,7 +37,7 @@
 #include <map>
 #include <vector>
 
-class vtkAlderMySQLDatabase;
+class vtkMySQLDatabase;
 
 /**
  * @addtogroup Alder
@@ -69,10 +69,10 @@ namespace Alder
       const int &port );
 
     /**
-     * Returns a vtkAlderMySQLQuery object for performing queries.
+     * Returns a vtkMySQLQuery object for performing queries.
      * This method should only be used by Model objects.
      */
-    vtkSmartPointer<vtkAlderMySQLQuery> GetQuery() const;
+    vtkSmartPointer<vtkMySQLQuery> GetQuery() const;
 
     /**
      * Returns a list of column names for a given table
@@ -131,7 +131,7 @@ namespace Alder
      */
     void ReadInformationSchema();
 
-    vtkSmartPointer<vtkAlderMySQLDatabase> MySQLDatabase;
+    vtkSmartPointer<vtkMySQLDatabase> MySQLDatabase;
     std::map< std::string,std::map< std::string,std::map< std::string, vtkVariant > > > Columns;
 
   private:

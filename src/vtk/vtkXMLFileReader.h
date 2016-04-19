@@ -28,9 +28,12 @@
 #ifndef __vtkXMLFileReader_h
 #define __vtkXMLFileReader_h
 
+// VTK includes
 #include <vtkAlgorithm.h>
 #include <vtkVariant.h>
 
+// libxml includes
+// NOTE: to avoid name mangling in vtk 6, build vtk with system libxml
 #include <libxml/xmlreader.h>
 
 #include <stdexcept>

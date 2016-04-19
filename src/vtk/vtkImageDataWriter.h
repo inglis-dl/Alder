@@ -45,7 +45,7 @@ public:
 
   // Description:
   // Set the input to the writer.
-  void SetInput(vtkImageData*);
+  void SetInputData(vtkImageData*);
 
   // Description:
   // Get the reader so we can query what type it was among other things.
