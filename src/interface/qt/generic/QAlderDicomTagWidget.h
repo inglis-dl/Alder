@@ -25,7 +25,7 @@ public:
   virtual ~QAlderDicomTagWidget();
 
 public Q_SLOTS:
-  virtual void load( const QString& fileName );
+  virtual void load( const QString& aFileName );
 
 protected:
   QScopedPointer<QAlderDicomTagWidgetPrivate> d_ptr;

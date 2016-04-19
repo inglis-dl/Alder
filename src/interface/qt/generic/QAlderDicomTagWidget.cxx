@@ -74,9 +74,9 @@ void QAlderDicomTagWidgetPrivate::setupUi(QWidget* widget)
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderDicomTagWidgetPrivate::setFileName( const QString& fileName )
+void QAlderDicomTagWidgetPrivate::setFileName( const QString& aFileName )
 {
-  this->fileName = fileName;
+  this->fileName = aFileName;
   this->updateUi();
 }
 
@@ -324,13 +324,13 @@ void QAlderDicomTagWidgetPrivate::buildDicomStrings()
 
   this->data->Clear();
   this->data->SetNumberOfInstances(1);
-  const char* name = this->fileName.toStdString().c_str();
+  std::string name = this->fileName.toStdString();
 
   // make sure we can read the file
   vtkNew<vtkDICOMReader> reader;
-  if(!reader->CanReadFile(name)) return;
+  if(!reader->CanReadFile(name.c_str())) return;
 
-  this->parser->SetFileName(name);
+  this->parser->SetFileName(name.c_str());
   this->parser->Update();
   vtkDICOMDataElementIterator iter = this->data->Begin();
   vtkDICOMDataElementIterator iterEnd = this->data->End();
