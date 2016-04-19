@@ -26,6 +26,7 @@
 #include <vtkImagePermute.h>
 #include <vtkImageProperty.h>
 #include <vtkImageSinusoidSource.h>
+#include <vtkMedicalImageProperties.h>
 #include <vtkNew.h>
 #include <vtkPointData.h>
 #include <vtkRenderWindowInteractor.h>
@@ -168,6 +169,7 @@ QAlderSliceViewPrivate::QAlderSliceViewPrivate(QAlderSliceView& object)
   this->initialColorLevel = 127.5;
   this->orientation = QAlderSliceView::OrientationXY;
   this->dimensionality = 0;
+  this->frameRate = 25;
   this->annotateOverView = true;
   this->cursorOverView = true;
 
@@ -268,6 +270,7 @@ void QAlderSliceViewPrivate::setImageData( vtkImageData* input )
 {
   this->setupRendering( false );
   this->dimensionality = 0;
+  this->frameRate = 25;
   if( input )
   {
     int dims[3];
@@ -916,6 +919,7 @@ QAlderSliceView::~QAlderSliceView()
   d->setupRendering( false );
 }
 
+/*
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliceView::setImageData( vtkImageData* newImageData )
 {
@@ -923,7 +927,7 @@ void QAlderSliceView::setImageData( vtkImageData* newImageData )
   d->setImageData( newImageData );
   Q_EMIT imageDataChanged();
 }
-
+*/
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 bool QAlderSliceView::hasImageData() const
 {
@@ -1070,6 +1074,13 @@ int QAlderSliceView::dimensionality() const
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+int QAlderSliceView::frameRate() const
+{
+  Q_D(const QAlderSliceView);
+  return d->frameRate;
+}
+
+//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliceView::rotateCamera( double angle )
 {
   Q_D(QAlderSliceView);
@@ -1173,6 +1184,7 @@ void QAlderSliceView::writeSlice( const QString& fileName )
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 bool QAlderSliceView::load( const QString& fileName )
 {
+  Q_D(QAlderSliceView);
   bool success = false;
   if( vtkImageDataReader::IsValidFileName( fileName.toStdString().c_str() ) )
   {
@@ -1181,23 +1193,19 @@ bool QAlderSliceView::load( const QString& fileName )
     vtkImageData* image = reader->GetOutput();
     if( image )
     {
-      this->setImageData( image );
-      success = true;
-      /*
-      vtkMedicalImageProperties* properties = reader->GetMedicalImageProperties();
-
-      // vtkMedicalImageProperties has a bug which crashes if the CineRate is checked for
-      // images with no 3rd dimension, so only set the frame rate for 3D images
+      d->setImageData( image );
       if( 3 == d->dimensionality )
       {
-        if( NULL != properties->GetUserDefinedValue( "CineRate" ) )
+        vtkMedicalImageProperties* properties = reader->GetMedicalImageProperties();
+        if( properties && NULL != properties->GetUserDefinedValue( "CineRate" ) )
         {
-          this->SetMaxFrameRate(
-            vtkVariant( properties->GetUserDefinedValue( "CineRate" ) ).ToInt() );
-          this->SetFrameRate( this->MaxFrameRate );
+          std::string s = properties->GetUserDefinedValue( "CineRate" );
+          int rate = vtkVariant(s.c_str()).ToInt();
+          d->frameRate = rate;
         }
       }
-      */
+      emit imageDataChanged();
+      success = true;
     }
   }
 
@@ -1214,6 +1222,7 @@ vtkImageData* QAlderSliceView::imageData()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliceView::setImageToSinusoid()
 {
+  Q_D(QAlderSliceView);
   // Create the sinusoid default image like MicroView does
   vtkNew< vtkImageSinusoidSource > sinusoid;
   sinusoid->SetPeriod( 32 );
@@ -1223,8 +1232,9 @@ void QAlderSliceView::setImageToSinusoid()
   sinusoid->SetDirection( 0.5, -0.5, 1.0 / sqrt( 2.0 ) );
   sinusoid->Update();
 
-  this->setImageData( sinusoid->GetOutput() );
-  this->setSlice( 15 );
+  d->setImageData( sinusoid->GetOutput() );
+  d->setSlice( 15 );
+  emit imageDataChanged();
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---

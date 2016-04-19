@@ -9,8 +9,10 @@
 =========================================================================*/
 #include <vtkImageDataReader.h>
 
+// Alder inludes
 #include <Utilities.h>
 
+// VTK includes
 #include <vtkBMPReader.h>
 #include <vtkGDCMImageReader.h>
 #include <vtkGESignaReader.h>
@@ -28,6 +30,7 @@
 #include <vtkTIFFReader.h>
 #include <vtkXMLImageDataReader.h>
 
+// GDCM includes
 #include <gdcmDirectoryHelper.h>
 #include <gdcmImageReader.h>
 
@@ -49,7 +52,7 @@ vtkImageDataReader::~vtkImageDataReader()
 {
   this->SetReader( NULL );
 }
-  
+
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 vtkMedicalImageProperties* vtkImageDataReader::GetMedicalImageProperties()
 {
@@ -59,7 +62,7 @@ vtkMedicalImageProperties* vtkImageDataReader::GetMedicalImageProperties()
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkImageDataReader::SetFileName( const char* fileName )
 {
-  std::string fileExtension, filePath, fileNameOnly, 
+  std::string fileExtension, filePath, fileNameOnly,
     fileNameStr( fileName );
 
   if( this->FileName.empty() && fileName == NULL )
@@ -67,9 +70,9 @@ void vtkImageDataReader::SetFileName( const char* fileName )
     return;
   }
 
-  if( !this->FileName.empty() && 
-      !fileNameStr.empty() && 
-      ( this->FileName == fileNameStr ) ) 
+  if( !this->FileName.empty() &&
+      !fileNameStr.empty() &&
+      ( this->FileName == fileNameStr ) )
   {
     return;
   }
@@ -101,7 +104,7 @@ void vtkImageDataReader::SetFileName( const char* fileName )
 
   fileExtension = Alder::Utilities::getFileExtension( this->FileName );
   fileNameOnly = Alder::Utilities::getFilenameName( this->FileName );
-  
+
   // need an instance of all readers to scan valid extensions
   vtkSmartPointer< vtkBMPReader > BMPReader = vtkSmartPointer< vtkBMPReader >::New();
   vtkSmartPointer< vtkGDCMImageReader > GDCMImageReader = vtkSmartPointer< vtkGDCMImageReader >::New();
@@ -251,7 +254,7 @@ bool vtkImageDataReader::IsValidFileName( const char* fileName )
     if( GDCMImageReader->CanReadFile( fileName ) )
     {
       knownFileType = true;
-    }  
+    }
   }
   else if( std::string::npos != Alder::Utilities::toLower(
     BMPReader->GetFileExtensions() ).find( fileExtension ) )
@@ -466,7 +469,7 @@ vtkImageData* vtkImageDataReader::GetOutput()
   {
     vtkIdType nCells = image->GetNumberOfCells();
     if( nCells == 0 )
-    {    
+    {
       return NULL;
     }
   }
@@ -481,27 +484,32 @@ vtkImageData* vtkImageDataReader::GetOutput()
   {
     vtkGDCMImageReader* imageReader = vtkGDCMImageReader::SafeDownCast( this->Reader );
     this->MedicalImageProperties->DeepCopy( imageReader->GetMedicalImageProperties() );
-    
+
     gdcm::ImageReader reader;
     reader.SetFileName( imageReader->GetFileName() );
     reader.Read();
     const gdcm::File &file = reader.GetFile();
     const gdcm::DataSet &ds = file.GetDataSet();
-    
+
     std::map< std::string, gdcm::Tag > dicomMap;
     dicomMap["AcquisitionDateTime"] = gdcm::Tag( 0x0008, 0x002a );
     dicomMap["SeriesNumber"] = gdcm::Tag( 0x0020, 0x0011 );
     dicomMap["CineRate"] = gdcm::Tag( 0x0018, 0x0040 );
     dicomMap["RecommendedDisplayFrameRate"] = gdcm::Tag( 0x0008, 0x2114 );
-    
+
     for( auto it = dicomMap.cbegin(); it != dicomMap.cend(); ++it )
     {
       if( ds.FindDataElement( it->second ) )
       {
-        this->MedicalImageProperties->AddUserDefinedValue( it->first.c_str(),
-          gdcm::DirectoryHelper::GetStringValueFromTag( it->second, ds ).c_str() );
+        std::string name = it->first;
+        std::string value =
+          gdcm::DirectoryHelper::GetStringValueFromTag( it->second, ds );
+        if( !value.empty() )
+          value = Alder::Utilities::trim( value );
+        this->MedicalImageProperties->AddUserDefinedValue(
+          name.c_str(), value.c_str() );
       }
-    }  
+    }
   }
 
   this->ReadMTime.Modified();
