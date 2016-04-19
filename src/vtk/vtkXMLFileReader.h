@@ -32,9 +32,9 @@
 #include <vtkAlgorithm.h>
 #include <vtkVariant.h>
 
+// libxml includes
+// NOTE: to avoid name mangling in vtk 6, build vtk with system libxml
 #include <libxml/xmlreader.h>
-//#include <vtk_libxml2.h>
-//VTKLIBXML2_HEADER(xmlreader.h)
 
 #include <stdexcept>
 #include <sstream>
