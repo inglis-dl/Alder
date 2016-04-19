@@ -359,7 +359,7 @@ namespace Alder
            << "AND User.Id=" << user->Get( "Id" ).ToString();
 
     Application *app = Application::GetInstance();
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery( stream.str().c_str() );
     query->Execute();
 

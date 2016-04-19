@@ -218,7 +218,7 @@ vtkMedicalImageViewer::vtkMedicalImageViewer()
 
   vtkSmartPointer<vtkPolyDataMapper>
     boxOutlineMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-  boxOutlineMapper->SetInput( this->BoxOutline->GetOutput() );
+  boxOutlineMapper->SetInputConnection( this->BoxOutline->GetOutputPort() );
   vtkSmartPointer<vtkActor>
     boxOutlineActor = vtkSmartPointer<vtkActor>::New();
   boxOutlineActor->SetMapper( boxOutlineMapper );
@@ -246,7 +246,7 @@ vtkMedicalImageViewer::vtkMedicalImageViewer()
   boxAxesMapper->SetColorModeToMapScalars();
   boxAxesMapper->UseLookupTableScalarRangeOn();
   boxAxesMapper->SetLookupTable( lut );
-  boxAxesMapper->SetInput( this->BoxAxes->GetOutput() );
+  boxAxesMapper->SetInputConnection( this->BoxAxes->GetOutputPort() );
   vtkSmartPointer<vtkActor>
     boxAxesActor = vtkSmartPointer<vtkActor>::New();
   boxAxesActor->SetMapper( boxAxesMapper );
@@ -357,11 +357,10 @@ vtkMedicalImageViewer::~vtkMedicalImageViewer()
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkMedicalImageViewer::SetInput( vtkImageData* input )
+void vtkMedicalImageViewer::SetInputData( vtkImageData* input )
 {
   this->UnInstallPipeline();
   if( !input ) return;
-  input->Update();
 
   vtkImageData* lastInput = this->GetInput();
   int initCamera = 1;
@@ -371,8 +370,8 @@ void vtkMedicalImageViewer::SetInput( vtkImageData* input )
     double *spacing = input->GetSpacing();
     double *lastOrigin = lastInput->GetOrigin();
     double *origin = input->GetOrigin();
-    int *lastExtent = lastInput->GetWholeExtent();
-    int *extent = input->GetWholeExtent();
+    int *lastExtent = lastInput->GetExtent();
+    int *extent = input->GetExtent();
     initCamera = 0;
     for( int i = 0; i < 3; ++i )
     {
@@ -387,8 +386,8 @@ void vtkMedicalImageViewer::SetInput( vtkImageData* input )
     }
   }
 
-  this->WindowLevel->SetInput( input );
-  this->ImageSliceMapper->SetInput( this->WindowLevel->GetOutput() );
+  this->WindowLevel->SetInputData( input );
+  this->ImageSliceMapper->SetInputConnection( this->WindowLevel->GetOutputPort() );
 
   int components = input->GetNumberOfScalarComponents();
   switch( components )
@@ -417,7 +416,7 @@ bool vtkMedicalImageViewer::Load( const std::string& fileName )
     vtkImageData* image = reader->GetOutput();
     if( image )
     {
-      this->SetInput( image );
+      this->SetInputData( image );
       success = true;
       vtkMedicalImageProperties* properties = reader->GetMedicalImageProperties();
 
@@ -468,7 +467,7 @@ void vtkMedicalImageViewer::WriteSlice( const std::string& fileName )
       case 1: u = 0; v = 2; break;
       case 2: u = 0; v = 1; break;
     }
-    int *w_ext = input->GetWholeExtent();
+    int *w_ext = input->GetExtent();
     extent[2*u] = w_ext[2*u];
     extent[2*u+1] = w_ext[2*u+1];
     extent[2*v] = w_ext[2*v];
@@ -478,11 +477,11 @@ void vtkMedicalImageViewer::WriteSlice( const std::string& fileName )
 
     clip->SetOutputWholeExtent( extent );
     clip->ClipDataOn();
-    clip->SetInput( input );
+    clip->SetInputData( input );
     clip->Update();
 
     int ec[6];
-    clip->GetOutput()->GetWholeExtent(ec);
+    clip->GetOutput()->GetExtent(ec);
 
     int et[] = {0,0,0};     // extent translation
     int op[] = {0,1,2};     // output axes permutation
@@ -504,13 +503,13 @@ void vtkMedicalImageViewer::WriteSlice( const std::string& fileName )
 
     vtkNew< vtkImageChangeInformation > change;
     change->SetExtentTranslation( et );
-    change->SetInput( clip->GetOutput() );
+    change->SetInputConnection( clip->GetOutputPort() );
 
     vtkNew< vtkImagePermute > permute;
     permute->SetFilteredAxes( op );
-    permute->SetInput( change->GetOutput() );
+    permute->SetInputConnection( change->GetOutputPort() );
 
-    writer->SetInput( permute->GetOutput() );
+    writer->SetInputData( permute->GetOutput() );
     writer->Write();
   }
 }
@@ -705,11 +704,7 @@ void vtkMedicalImageViewer::InitializeWindowLevel()
   vtkImageData* input = this->GetInput();
   if( !input ) return;
 
-  input->UpdateInformation();
-  input->Update();
-
   int components = input->GetNumberOfScalarComponents();
-
   double dataMin = input->GetScalarTypeMax();
   double dataMax = input->GetScalarTypeMin();
 
@@ -769,10 +764,11 @@ void vtkMedicalImageViewer::InitializeWindowLevel()
 void vtkMedicalImageViewer::InitializeCameraViews()
 {
   vtkImageData* input = this->GetInput();
-  input->UpdateInformation();
+  if(!input) return;
+  this->WindowLevel->Update();
   double* origin = input->GetOrigin();
   double* spacing = input->GetSpacing();
-  int* extent = input->GetWholeExtent();
+  int* extent = input->GetExtent();
   int u, v;
   double fpt[3];
   double pos[3];
@@ -893,10 +889,9 @@ void vtkMedicalImageViewer::SetImageToSinusoid()
   sinusoid->SetAmplitude( 255 );
   sinusoid->SetWholeExtent( 0, 127, 0, 127, 0, 31 );
   sinusoid->SetDirection( 0.5, -0.5, 1.0 / sqrt( 2.0 ) );
-  sinusoid->GetOutput()->UpdateInformation();
-  sinusoid->GetOutput()->Update();
+  sinusoid->Update();
 
-  this->SetInput( sinusoid->GetOutput() );
+  this->SetInputData( sinusoid->GetOutput() );
   this->SetSlice( 15 );
 }
 
@@ -906,8 +901,8 @@ void vtkMedicalImageViewer::GetSliceRange( int &min, int &max )
   vtkImageData *input = this->GetInput();
   if( input )
   {
-    input->UpdateInformation();
-    int *w_ext = input->GetWholeExtent();
+    this->WindowLevel->Update();
+    int *w_ext = input->GetExtent();
     min = w_ext[this->ViewOrientation * 2];
     max = w_ext[this->ViewOrientation * 2 + 1];
   }
@@ -919,8 +914,8 @@ int* vtkMedicalImageViewer::GetSliceRange()
   vtkImageData *input = this->GetInput();
   if( input )
   {
-    input->UpdateInformation();
-    return input->GetWholeExtent() + this->ViewOrientation * 2;
+    this->WindowLevel->Update();
+    return input->GetExtent() + this->ViewOrientation * 2;
   }
   return 0;
 }
@@ -966,7 +961,7 @@ void vtkMedicalImageViewer::ComputeCameraFromCurrentSlice( bool useCamera )
 
     double* origin = image->GetOrigin();
     double* spacing = image->GetSpacing();
-    int* extent = image->GetWholeExtent();
+    int* extent = image->GetExtent();
     double fpt[3];
     fpt[u] = origin[u] + 0.5 * spacing[u] * ( extent[2*u] + extent[2*u+1] );
     fpt[v] = origin[v] + 0.5 * spacing[v] * ( extent[2*v] + extent[2*v+1] );
@@ -1264,7 +1259,7 @@ void vtkMedicalImageViewer::InstallCursor()
   {
     this->CursorWidget->SetDefaultRenderer( this->Renderer );
     this->CursorWidget->SetInteractor( this->Interactor );
-    this->CursorWidget->SetInput( this->GetInput() );
+    this->CursorWidget->SetInputData( this->GetInput() );
     this->CursorWidget->AddViewProp( this->ImageSlice );
 
     if( this->Annotate )
@@ -1286,7 +1281,7 @@ void vtkMedicalImageViewer::UnInstallCursor()
     this->CursorWidget->Off();
   }
   this->CursorWidget->RemoveAllProps( );
-  this->CursorWidget->SetInput( 0 );
+  this->CursorWidget->SetInputData( 0 );
   this->CursorWidget->RemoveObservers( vtkCommand::InteractionEvent );
 }
 

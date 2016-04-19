@@ -14,7 +14,7 @@
 #include <Application.h>
 #include <Database.h>
 
-#include <vtkAlderMySQLQuery.h>
+#include <vtkMySQLQuery.h>
 #include <vtkObjectFactory.h>
 #include <vtkSmartPointer.h>
 
@@ -166,7 +166,7 @@ namespace Alder
         if( it->format && value.IsValid() )
         {
           // we need a query object to escape the sql :(
-          vtkSmartPointer<vtkAlderMySQLQuery> query = Application::GetInstance()->GetDB()->GetQuery();
+          vtkSmartPointer<vtkMySQLQuery> query = Application::GetInstance()->GetDB()->GetQuery();
           value = query->EscapeString( value.ToString() );
         }
 

@@ -35,7 +35,7 @@
  * InteractorStyle member.
  *
  * It is possible to mix images and geometry, using the methods:
- * viewer->SetInput( myImage );
+ * viewer->SetInputData( myImage );
  * viewer->GetRenderer()->AddActor( myActor );
  *
  * This can be used to annotate an image with a PolyData of "edges" or
@@ -99,7 +99,7 @@ public:
    * Set/Get the input image to the viewer.
    * @param input vtkImageData from the output of a reader
    */
-  virtual void SetInput( vtkImageData* input );
+  virtual void SetInputData( vtkImageData* input );
   virtual vtkImageData* GetInput();
   //@}
 

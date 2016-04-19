@@ -22,8 +22,8 @@
 #ifndef __vtkXMLConfigurationFileReader_h
 #define __vtkXMLConfigurationFileReader_h
 
+// Alder includes
 #include <vtkXMLFileReader.h>
-
 #include <Utilities.h>
 
 class vtkXMLConfigurationFileReader : public vtkXMLFileReader

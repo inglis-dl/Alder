@@ -28,10 +28,13 @@
 #ifndef __vtkXMLFileReader_h
 #define __vtkXMLFileReader_h
 
+// VTK includes
 #include <vtkAlgorithm.h>
 #include <vtkVariant.h>
 
 #include <libxml/xmlreader.h>
+//#include <vtk_libxml2.h>
+//VTKLIBXML2_HEADER(xmlreader.h)
 
 #include <stdexcept>
 #include <sstream>

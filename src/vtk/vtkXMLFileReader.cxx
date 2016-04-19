@@ -10,6 +10,7 @@
 =========================================================================*/
 #include <vtkXMLFileReader.h>
 
+// VTK inludes
 #include <vtkInformation.h>
 #include <vtkInformationVector.h>
 #include <vtkObjectFactory.h>

@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED( VERSION 2.6 )
+CMAKE_MINIMUM_REQUIRED( VERSION 2.8.7 )
 PROJECT( Alder )
 
 # The major version number is incremented after major milestones are met
@@ -20,6 +20,9 @@ SET( CMAKE_CXX_FLAGS "-std=c++0x -Wno-deprecated" )
 # We need VTK
 FIND_PACKAGE( VTK REQUIRED )
 INCLUDE( ${VTK_USE_FILE} )
+IF("${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}" VERSION_LESS 6.0)
+  MESSAGE(FATAL_ERROR "VTK 6.0 or later is required.")
+ENDIF()
 
 # We need GDCM
 FIND_PACKAGE( GDCM REQUIRED )
@@ -130,25 +133,25 @@ SET( ALDER_LIBRARIES
   AlderVTK
   AlderBusiness
   AlderCommon
-)  
+)
 
 # Alder libraries for use in other applications
-ADD_SUBDIRECTORY( 
+ADD_SUBDIRECTORY(
   ${ALDER_COMMON_DIR} ${PROJECT_BINARY_DIR}/common
-)  
-ADD_SUBDIRECTORY( 
+)
+ADD_SUBDIRECTORY(
   ${ALDER_VTK_DIR} ${PROJECT_BINARY_DIR}/vtk
-)  
-ADD_SUBDIRECTORY( 
+)
+ADD_SUBDIRECTORY(
   ${ALDER_BUSINESS_DIR} ${PROJECT_BINARY_DIR}/business
-)  
-ADD_SUBDIRECTORY( 
+)
+ADD_SUBDIRECTORY(
   ${ALDER_QT_GENERIC_DIR} ${PROJECT_BINARY_DIR}/generic
-)  
-ADD_SUBDIRECTORY( 
+)
+ADD_SUBDIRECTORY(
   ${ALDER_QT_MODEL_DIR} ${PROJECT_BINARY_DIR}/model
-)  
-ADD_SUBDIRECTORY( 
+)
+ADD_SUBDIRECTORY(
   ${ALDER_APP_DIR} ${PROJECT_BINARY_DIR}/application
 )
 
@@ -198,12 +201,12 @@ IF( BUILD_DOCUMENTATION )
     ${ALDER_DOC_DIR}/doc_makeall.cmake.in
     ${ALDER_DOXY_DIR}/doc_makeall.cmake
     @ONLY )
-  
+
   CONFIGURE_FILE(
     ${ALDER_DOC_DIR}/doc_mainpage.dox.in
     ${ALDER_DOXY_DIR}/doc_mainpage.dox )
 
-  SET( DOXY_INPUT_SOURCE 
+  SET( DOXY_INPUT_SOURCE
     ${ALDER_SRC_DIR}
     ${ALDER_BUSINESS_DIR}
     ${ALDER_COMMON_DIR}
@@ -213,23 +216,23 @@ IF( BUILD_DOCUMENTATION )
     ${ALDER_DOXY_DIR}/doc_mainpage.dox )
 
   STRING( REPLACE ";" "\" \"" ALDER_DOXY_LIST "${DOXY_INPUT_SOURCE}" )
-  
+
   CONFIGURE_FILE(
     ${ALDER_DOC_DIR}/config.dox.in
     ${ALDER_DOXY_DIR}/config.dox )
 
 # Uncommenting this block will force a build of the documentation
 # every time cmake is run in the build directory
-# 
-#  execute_process(COMMAND 
+#
+#  execute_process(COMMAND
 #    ${CMAKE_COMMAND} -P ${ALDER_DOXY_DIR}/doc_makeall.cmake
-#    DEPENDS ${ALDER_DOXY_DIR}/doc_makeall.cmake 
-#    WORKING DIR ${ALDER_DOXY_DIR}/doxygen 
+#    DEPENDS ${ALDER_DOXY_DIR}/doc_makeall.cmake
+#    WORKING DIR ${ALDER_DOXY_DIR}/doxygen
 #    RESULT_VARIABLE rv )
 
 ENDIF( BUILD_DOCUMENTATION )
 
-SUBDIRS( 
-  ${ALDER_TESTING_DIR} 
+SUBDIRS(
+  ${ALDER_TESTING_DIR}
   ${ALDER_PROGRAMS_DIR}
 )

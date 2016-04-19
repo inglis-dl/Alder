@@ -30,6 +30,7 @@
 #include <QAlderImageWidget.h>
 
 // VTK includes
+#include <vtkDataArray.h>
 #include <vtkEventQtSlotConnect.h>
 #include <vtkImageData.h>
 #include <vtkPointData.h>

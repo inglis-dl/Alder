@@ -28,6 +28,7 @@
 #ifndef __vtkImageCoordinateWidget_h
 #define __vtkImageCoordinateWidget_h
 
+// VTK includes
 #include <vtkInteractorObserver.h>
 #include <vtkSmartPointer.h>
 
@@ -68,7 +69,7 @@ public:
    * unsigned short, we want to probe the original data which could be
    * float, short, int etc.
    */
-  void SetInput( vtkDataSet* input );
+  void SetInputData( vtkDataSet* input );
 
   //@{
   /** Get the current image coordinate position. */

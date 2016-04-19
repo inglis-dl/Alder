@@ -15,7 +15,7 @@
 #include <Database.h>
 
 // VTK includes
-#include <vtkAlderMySQLQuery.h>
+#include <vtkMySQLQuery.h>
 
 #include <sstream>
 #include <stdexcept>
@@ -63,7 +63,7 @@ namespace Alder
   }
 
   //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void ActiveRecord::LoadFromQuery( vtkAlderMySQLQuery *query )
+  void ActiveRecord::LoadFromQuery( vtkMySQLQuery *query )
   {
     for( int c = 0; c < query->GetNumberOfFields(); ++c )
     {
@@ -79,7 +79,7 @@ namespace Alder
   bool ActiveRecord::Load( const std::map< std::string, std::string > &map )
   {
     Application *app = Application::GetInstance();
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     this->ColumnValues.clear();
 
     // create an sql statement using the provided map
@@ -123,7 +123,7 @@ namespace Alder
   void ActiveRecord::Save( const bool &replace )
   {
     Application *app = Application::GetInstance();
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     std::string name = this->GetName();
     std::stringstream stream;
     bool first = true;
@@ -178,7 +178,7 @@ namespace Alder
   int ActiveRecord::GetLastInsertId() const
   {
     Application *app = Application::GetInstance();
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     std::stringstream stream;
     std::string name = this->GetName();
     stream << "SELECT Max( Id ) FROM " << name;
@@ -202,7 +202,7 @@ namespace Alder
   void ActiveRecord::Remove()
   {
     Application *app = Application::GetInstance();
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     this->AssertPrimaryId();
 
     std::stringstream stream;
@@ -223,7 +223,7 @@ namespace Alder
   int ActiveRecord::GetCount( const std::string &recordType )
   {
     Application *app = Application::GetInstance();
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     std::stringstream stream;
     stream << "SELECT COUNT(*) FROM " << recordType << " "
            << "WHERE " << this->GetName() << "Id = " << this->Get( "Id" ).ToString();

@@ -176,7 +176,7 @@ namespace Alder
     if( !forward ) stream << "DESC ";
 
     app->Log( "Querying Database (Interview::GetNeighbour): " + stream.str() );
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery( stream.str().c_str() );
     query->Execute();
 
@@ -228,7 +228,7 @@ namespace Alder
            << "WHERE Exam.InterviewId=" << this->Get( "Id" ).ToString();
 
     Application *app = Application::GetInstance();
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery( stream.str().c_str() );
     query->Execute();
 
@@ -258,7 +258,7 @@ namespace Alder
            << "AND User.Id=" << user->Get( "Id" ).ToString();
 
     Application *app = Application::GetInstance();
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery( stream.str().c_str() );
     query->Execute();
 
@@ -542,7 +542,7 @@ namespace Alder
            << "AND InterviewId=" << this->Get( "Id" ).ToString();
 
     Database *db = app->GetDB();
-    vtkSmartPointer<vtkAlderMySQLQuery> query = db->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = db->GetQuery();
 
     app->Log( "Querying Database: " + stream.str() );
     query->SetQuery( stream.str().c_str() );
@@ -642,7 +642,7 @@ namespace Alder
                << "GROUP BY UId "
                << "ORDER BY UId ";
         app->Log( "Querying Database: " + stream.str() );
-        vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+        vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
         query->SetQuery( stream.str().c_str() );
         query->Execute();
 
@@ -935,7 +935,7 @@ namespace Alder
 
     Application *app = Application::GetInstance();
     app->Log( "Querying Database: " + stream.str() );
-    vtkSmartPointer<vtkAlderMySQLQuery> query = app->GetDB()->GetQuery();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery( stream.str().c_str() );
     query->Execute();
 
