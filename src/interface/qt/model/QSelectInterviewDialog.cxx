@@ -470,7 +470,7 @@ void QSelectInterviewDialog::accepted()
       text += QString::number(vecInterview.size());
       text += " interviews requiring download of images. ";
       if( 1 < vecInterview.size() )
-        text += "This could take some time to do. ";
+        text += "This could take some time to complete. ";
       text += "Proceed with downloading?";
       QMessageBox::StandardButton reply = QMessageBox::question( this,
         title, text, QMessageBox::Yes|QMessageBox::No );
