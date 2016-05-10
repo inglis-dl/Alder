@@ -13,6 +13,7 @@
 
 // Alder includes
 #include <Modality.h>
+#include <Rating.h>
 #include <User.h>
 
 // VTK includes
@@ -290,20 +291,43 @@ void QUserListDialog::remove()
 
   vtkNew< Alder::User > user;
   user->Load( "Id", items.at( d->columnIndex["Name"] )->data( Qt::UserRole ).toInt() );
+  // check if the user has ratings
+  std::map<std::string,int> ratings = Alder::Rating::GetNumberOfRatings( user.GetPointer() );
+  bool hasRatings = false;
+  for( auto it = ratings.cbegin(); it != ratings.cend(); ++it )
+  {
+    if( 0 < it->second )
+    {
+      hasRatings = true;
+      break;
+    }
+  }
 
   // show a warning to the user before continuing
   std::stringstream stream;
-  stream << "Are you sure you wish to remove user \"" << user->Get( "Name" ).ToString() << "\"?  "
-         << "All of this user's ratings will also be permanantely removed.  "
-         << "This operation cannot be undone.";
-  if( QMessageBox::Yes == QMessageBox::question(
-     this,
-     QDialog::tr("Remove User"),
-     stream.str().c_str(),
-     QMessageBox::Yes | QMessageBox::No ) )
+  if( hasRatings )
   {
-    user->Remove();
-    d->updateUi();
+    stream << "User \"" << user->Get( "Name" ).ToString() << "\" "
+           << "has ratings and therefore cannot be removed";
+    QMessageBox::information(
+       this,
+       QDialog::tr("Remove User"),
+       stream.str().c_str()
+    );
+  }
+  else
+  {
+    stream << "Are you sure you wish to remove user \"" << user->Get( "Name" ).ToString() << "\"?  "
+           << "This operation cannot be undone.";
+    if( QMessageBox::Yes == QMessageBox::question(
+       this,
+       QDialog::tr("Remove User"),
+       stream.str().c_str(),
+       QMessageBox::Yes | QMessageBox::No ) )
+    {
+      user->Remove();
+      d->updateUi();
+    }
   }
 }
 
