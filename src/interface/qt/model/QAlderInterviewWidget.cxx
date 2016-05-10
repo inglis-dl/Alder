@@ -800,11 +800,12 @@ void QAlderInterviewWidgetPrivate::updateEnabled()
   this->nextPushButton->setEnabled( interview );
   this->treeWidget->setEnabled( interview );
 
-  this->useDerivedCheckBox->setEnabled( image );
-  this->resetRatingPushButton->setEnabled( image );
-  this->codeTableWidget->setEnabled( image && user && user->Get("Expert").ToInt() );
-  this->ratingSlider->setEnabled( image && !this->useDerivedCheckBox->isChecked() );
-  this->noteTextEdit->setEnabled( image );
+  bool expert = user && user->Get("Expert").ToInt();
+  this->useDerivedCheckBox->setEnabled( image && expert );
+  this->resetRatingPushButton->setEnabled( image && expert );
+  this->codeTableWidget->setEnabled( image && expert );
+  this->ratingSlider->setEnabled( image && expert && !this->useDerivedCheckBox->isChecked() );
+  this->noteTextEdit->setEnabled( image && expert );
 
   // the action buttons depend on the type and content of the image
   vtkSmartPointer<Alder::Exam> exam;
