@@ -801,7 +801,9 @@ namespace Alder
     if( meta && "YBR_FULL_422" == meta->GetAttributeValue(vtkDICOMTag(0x0028, 0x0004)).AsString() )
     {
       vtkNew<vtkImageData> image;
-      image->DeepCopy( reader->GetOutput() );
+      vtkImageData* input = reader->GetOutput();
+      image->SetDimensions( input->GetDimensions() );
+      image->AllocateScalars( input->GetScalarType(), input->GetNumberOfScalarComponents() );
 
       vtkNew<vtkMatrix3x3> in;
       vtkNew<vtkMatrix3x3> out;
@@ -823,9 +825,12 @@ namespace Alder
       // g = y0 + A11(y1 -128) + A12(y2 - 128)
       // b = y0 + A21(y1 -128) + A22(y2 - 128)
 
-      vtkDataArray* data = image->GetPointData()->GetScalars();
+      vtkDataArray* outData = image->GetPointData()->GetScalars();
+      unsigned char* outArray = (unsigned char*)outData->GetVoidPointer(0);
+      vtkDataArray* inData = input->GetPointData()->GetScalars();
+      unsigned char* inArray = (unsigned char*)inData->GetVoidPointer(0);
+      int nTuple = inData->GetNumberOfTuples();
       double range[2] = { 0, 255 };
-      unsigned char* array = (unsigned char*)data->GetVoidPointer(0);
       double a01 = out->GetElement(0,1);
       double a02 = out->GetElement(0,2);
       double a11 = out->GetElement(1,1);
@@ -838,10 +843,9 @@ namespace Alder
       double ybcr0;
       double ybcr1;
       double ybcr2;
-      int nTuple = data->GetNumberOfTuples();
       for( int i = 0; i < nTuple; ++i )
       {
-        unsigned char* ybcr = array + 3*i;
+        unsigned char* ybcr = inArray + 3*i;
         ybcr0 = ybcr[0];
         ybcr1 = ybcr[1] - 128.;
         ybcr2 = ybcr[2] - 128.;
@@ -853,6 +857,7 @@ namespace Alder
         vtkMath::ClampValue( &rgb1, range );
         vtkMath::ClampValue( &rgb2, range );
 
+        ybcr = outArray + 3*i;
         *(ybcr+0)=(unsigned char)rgb0;
         *(ybcr+1)=(unsigned char)rgb1;
         *(ybcr+2)=(unsigned char)rgb2;
