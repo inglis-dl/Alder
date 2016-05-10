@@ -127,6 +127,8 @@ namespace Alder
       std::string _uid = interview->Get("UId").ToString();
       if( _uid != this->uid )
         loaded = this->LoadData( _uid );
+      else
+        this->ReloadData();
 
       if( loaded )
         this->SetActiveInterview( interview );
