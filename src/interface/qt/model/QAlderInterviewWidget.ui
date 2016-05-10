@@ -103,7 +103,7 @@
          <enum>QTabWidget::Triangular</enum>
         </property>
         <property name="currentIndex">
-         <number>2</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="noteTab">
          <attribute name="title">
@@ -175,6 +175,9 @@
                 <height>0</height>
                </size>
               </property>
+              <property name="toolTip">
+               <string>manually set the rating level</string>
+              </property>
               <property name="maximum">
                <number>5</number>
               </property>
@@ -203,6 +206,9 @@
           </item>
           <item>
            <widget class="QCheckBox" name="useDerivedCheckBox">
+            <property name="toolTip">
+             <string>select to set the rating using selected codes.  Unselect to use manual rating</string>
+            </property>
             <property name="text">
              <string>Use Derived Rating</string>
             </property>
@@ -213,6 +219,9 @@
           </item>
           <item alignment="Qt::AlignLeft">
            <widget class="QPushButton" name="resetRatingPushButton">
+            <property name="toolTip">
+             <string>reset/remove the rating</string>
+            </property>
             <property name="text">
              <string>Reset</string>
             </property>
@@ -307,6 +316,9 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="toolTip">
+               <string>swap selected image's laterality with its sibling</string>
+              </property>
               <property name="text">
                <string>Swap</string>
               </property>
@@ -320,6 +332,9 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="toolTip">
+               <string>remove identifying information</string>
+              </property>
               <property name="text">
                <string>Anonymize</string>
               </property>
@@ -332,6 +347,9 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>convert photometric interpretation to RBG</string>
               </property>
               <property name="text">
                <string>RGB</string>
@@ -391,6 +409,9 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>spatial origin</string>
               </property>
               <property name="frameShape">
                <enum>QFrame::Panel</enum>
@@ -456,6 +477,9 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="toolTip">
+               <string>number of channels per pixel</string>
+              </property>
               <property name="frameShape">
                <enum>QFrame::Panel</enum>
               </property>
@@ -488,6 +512,9 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="toolTip">
+               <string>file size in bytes</string>
+              </property>
               <property name="frameShape">
                <enum>QFrame::Panel</enum>
               </property>
@@ -506,6 +533,9 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>pixel spacing</string>
               </property>
               <property name="frameShape">
                <enum>QFrame::Panel</enum>
@@ -526,6 +556,9 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="toolTip">
+               <string>scalar range of pixel channels</string>
+              </property>
               <property name="frameShape">
                <enum>QFrame::Panel</enum>
               </property>
@@ -544,6 +577,9 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>number of pixels in x,y,z</string>
               </property>
               <property name="frameShape">
                <enum>QFrame::Panel</enum>
@@ -589,6 +625,9 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>file name on disk</string>
               </property>
               <property name="frameShape">
                <enum>QFrame::Panel</enum>
