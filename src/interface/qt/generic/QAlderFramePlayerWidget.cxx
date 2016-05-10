@@ -268,8 +268,8 @@ void QAlderFramePlayerWidgetPrivate::updateUi(const PipelineInfoType& pipeInfo)
   // Slider
   this->frameSlider->blockSignals( true );
   this->frameSlider->setEnabled( (pipeInfo.frameRange[0] != pipeInfo.frameRange[1]) );
-  this->frameSlider->setRange( pipeInfo.frameRange[0], pipeInfo.frameRange[1] );
-  this->frameSlider->setValue( pipeInfo.currentFrame );
+  this->frameSlider->setRange( pipeInfo.frameRange[0]+1, pipeInfo.frameRange[1]+1 );
+  this->frameSlider->setValue( pipeInfo.currentFrame+1 );
   this->frameSlider->blockSignals( false );
 
   // SpinBox
@@ -278,8 +278,11 @@ void QAlderFramePlayerWidgetPrivate::updateUi(const PipelineInfoType& pipeInfo)
   // value.  The speed can be set and is clamped between 1 and whatever the max frame
   // rate set through the QAlderFramePlayerWidget's maxFrameRate property.
   this->speedSpinBox->blockSignals( true );
+  double frameRate = pipeInfo.maxFrameRate;
+  if(this->speedSpinBox->maximum() < frameRate)
+    this->speedSpinBox->setMaximum(frameRate);
   this->speedSpinBox->setValue(
-    qMin( this->speedSpinBox->value(), this->maxFrameRate ) );
+    qMin( this->speedSpinBox->value(), frameRate ) );
   this->speedSpinBox->blockSignals( false );
 }
 
@@ -515,7 +518,7 @@ void QAlderFramePlayerWidget::play()
 
     // We reset the Slider to the initial value if we play from the end
     if( pipeInfo.currentFrame == pipeInfo.frameRange[1] )
-      d->frameSlider->setValue(pipeInfo.frameRange[0]);
+      d->frameSlider->setValue(pipeInfo.frameRange[0]+1);
   }
   else if( QAbstractAnimation::Backward == d->direction )
   {
@@ -533,7 +536,7 @@ void QAlderFramePlayerWidget::play()
 
     // We reset the Slider to the initial value if we play from the beginning
     if( pipeInfo.currentFrame == pipeInfo.frameRange[0] )
-      d->frameSlider->setValue(pipeInfo.frameRange[1]);
+      d->frameSlider->setValue(pipeInfo.frameRange[1]+1);
   }
 
   double timeInterval =
@@ -642,7 +645,10 @@ void QAlderFramePlayerWidget::onTick()
 void QAlderFramePlayerWidget::setCurrentFrame( double frame )
 {
   Q_D(QAlderFramePlayerWidget);
-  d->processRequest( frame );
+  if( d->frameSlider == qobject_cast<QAlderSliderWidget*>(sender()) )
+    d->processRequest( frame-1 );
+  else
+    d->processRequest( frame );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -916,6 +922,12 @@ void QAlderFramePlayerWidget::setMaxFrameRate(double frameRate)
   // Clamp frameRate min value
   frameRate = (0 >= frameRate ) ? 60 : frameRate;
   d->maxFrameRate = frameRate;
+  d->speedSpinBox->blockSignals( true );
+  if(d->speedSpinBox->maximum() < frameRate)
+    d->speedSpinBox->setMaximum( frameRate );
+  d->speedSpinBox->setValue(
+    qMin( d->speedSpinBox->value(), frameRate ) );
+  d->speedSpinBox->blockSignals( false );
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -929,7 +941,7 @@ double QAlderFramePlayerWidget::maxFrameRate() const
 double QAlderFramePlayerWidget::currentFrame() const
 {
   Q_D(const QAlderFramePlayerWidget);
-  return d->frameSlider->value();
+  return d->frameSlider->value()-1;
 }
 
 //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
