@@ -22,7 +22,11 @@
 #ifndef __CodeGroup_h
 #define __CodeGroup_h
 
+// Alder includes
 #include <ActiveRecord.h>
+
+// C++ includes
+#include <string>
 
 /**
  * @addtogroup Alder
@@ -33,38 +37,38 @@ namespace Alder
 {
   class CodeGroup : public ActiveRecord
   {
-  public:
-    static CodeGroup *New();
-    vtkTypeMacro( CodeGroup, ActiveRecord );
-    std::string GetName() const { return "CodeGroup"; }
+    public:
+      static CodeGroup *New();
+      vtkTypeMacro(CodeGroup, ActiveRecord);
+      std::string GetName() const { return "CodeGroup"; }
 
-    /**
-     * Get the number of times a CodeGroup has been used in the CodeType table.
-     * @return number of times used
-     */
-    int GetUsage();
+      /**
+       * Get the number of times a CodeGroup has been used in the CodeType table.
+       * @return number of times used
+       */
+      int GetUsage();
 
 
-    /**
-     * Check if a CodeGroup with the code and value exists.
-     */
-    static bool IsUnique( const std::string& code, const int& value );
+      /**
+       * Check if a CodeGroup with the code and value exists.
+       */
+      static bool IsUnique(const std::string &code, const int &value);
 
-    /**
-     * Update all Rating and DerivedRating values in the Rating table.
-     * This method must be called whenever the Value of this record changes.
-     */
-    void UpdateRatings();
+      /**
+       * Update all Rating and DerivedRating values in the Rating table.
+       * This method must be called whenever the Value of this record changes.
+       */
+      void UpdateRatings();
 
-  protected:
-    CodeGroup() {}
-    ~CodeGroup() {}
+    protected:
+      CodeGroup() {}
+      ~CodeGroup() {}
 
-  private:
-    CodeGroup( const CodeGroup& ); // Not implemented
-    void operator=( const CodeGroup& ); // Not implemented
+    private:
+      CodeGroup(const CodeGroup&);  // Not implemented
+      void operator=(const CodeGroup&);  // Not implemented
   };
-}
+}  // namespace Alder
 
 /** @} end of doxygen group */
 

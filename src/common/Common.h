@@ -31,23 +31,22 @@ namespace Alder
 {
   class Common
   {
-  public:
+    public:
+      enum CustomEvents
+      {
+        UserChangedEvent = vtkCommand::UserEvent + 100,
+        InterviewChangedEvent,
+        ImageChangedEvent,
+        AtlasImageChangedEvent,
+        SliceChangedEvent,
+        OrientationChangedEvent,
+        DataChangedEvent
+      };
 
-    enum CustomEvents
-    {
-      UserChangedEvent = vtkCommand::UserEvent + 100,
-      InterviewChangedEvent,
-      ImageChangedEvent,
-      AtlasImageChangedEvent,
-      SliceChangedEvent,
-      OrientationChangedEvent,
-      DataChangedEvent
-    };
-
-  protected:
-    Common() {}
-    ~Common() {}
+    protected:
+      Common() {}
+      ~Common() {}
   };
-}
+}  // namespace Alder
 
-#endif // __Common_h
+#endif  // __Common_h

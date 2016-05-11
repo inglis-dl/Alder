@@ -9,15 +9,22 @@
 
 =========================================================================*/
 #include <CodeType.h>
+
+// Alder includes
 #include <Rating.h>
 
+// VTK includes
 #include <vtkObjectFactory.h>
+
+// C++ includes
+#include <map>
+#include <string>
 
 namespace Alder
 {
-  vtkStandardNewMacro( CodeType );
+  vtkStandardNewMacro(CodeType);
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   int CodeType::GetUsage()
   {
     Application *app = Application::GetInstance();
@@ -31,22 +38,23 @@ namespace Alder
            << "AND Rating.UserId=User.Id "
            << "WHERE CodeType.Id=" << this->Get("Id").ToString();
 
-    app->Log( "Querying Database: " + stream.str() );
+    app->Log("Querying Database: " + stream.str());
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
-    query->SetQuery( stream.str().c_str() );
+    query->SetQuery(stream.str().c_str());
     query->Execute();
-    if( query->HasError() )
+    if (query->HasError())
     {
-      app->Log( query->GetLastErrorText() );
-      throw std::runtime_error( "There was an error while trying to query the database." );
+      app->Log(query->GetLastErrorText());
+      throw std::runtime_error(
+        "There was an error while trying to query the database.");
     }
     // only has one row
     query->NextRow();
-    return query->DataValue( 0 ).ToInt();
+    return query->DataValue(0).ToInt();
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void CodeType::GetUsageById( std::map<int,int>& codeIdUsageMap )
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void CodeType::GetUsageById(std::map<int, int> &codeIdUsageMap)
   {
     Application *app = Application::GetInstance();
     std::stringstream stream;
@@ -59,25 +67,27 @@ namespace Alder
            << "AND Rating.UserId=User.Id "
            << "GROUP BY CodeType.Id";
 
-    app->Log( "Querying Database: " + stream.str() );
+    app->Log("Querying Database: " + stream.str());
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
-    query->SetQuery( stream.str().c_str() );
+    query->SetQuery(stream.str().c_str());
     query->Execute();
-    if( query->HasError() )
+    if (query->HasError())
     {
-      app->Log( query->GetLastErrorText() );
-      throw std::runtime_error( "There was an error while trying to query the database." );
+      app->Log(query->GetLastErrorText());
+      throw std::runtime_error(
+        "There was an error while trying to query the database.");
     }
 
     codeIdUsageMap.clear();
-    while( query->NextRow() )
+    while (query->NextRow())
     {
       codeIdUsageMap[query->DataValue(0).ToInt()] = query->DataValue(1).ToInt();
     }
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool CodeType::IsUnique( const std::string& code, const int& value, const int& groupId )
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  bool CodeType::IsUnique(const std::string &code, const int &value,
+    const int &groupId)
   {
     Application *app = Application::GetInstance();
     std::stringstream stream;
@@ -86,42 +96,44 @@ namespace Alder
            << "WHERE Code='" << code << "' "
            << "AND Value=" << vtkVariant(value).ToString() << " ";
 
-    if( -1 == groupId )
+    if (-1 == groupId)
       stream << "AND CodeGroupId IS NULL";
     else
       stream << "AND CodeGroupId=" << vtkVariant(groupId).ToString();
 
-    app->Log( "Querying Database: " + stream.str() );
+    app->Log("Querying Database: " + stream.str());
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
-    query->SetQuery( stream.str().c_str() );
+    query->SetQuery(stream.str().c_str());
     query->Execute();
-    if( query->HasError() )
+    if (query->HasError())
     {
-      app->Log( query->GetLastErrorText() );
-      throw std::runtime_error( "There was an error while trying to query the database." );
+      app->Log(query->GetLastErrorText());
+      throw std::runtime_error(
+        "There was an error while trying to query the database.");
     }
     // only has one row
     query->NextRow();
-    return (0 == query->DataValue( 0 ).ToInt());
+    return (0 == query->DataValue(0).ToInt());
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void CodeType::UpdateRatings()
   {
-    std::string Id = this->Get( "Id" ).ToString();
+    std::string Id = this->Get("Id").ToString();
     Application *app = Application::GetInstance();
     int threshold = Rating::MinimumRating - Rating::MaximumRating;
     std::stringstream stream;
     stream  << "UPDATE Rating "
-            << "JOIN ( "
+            << "JOIN ("
             << "  SELECT RatingId, "
             << "  IF(SUM(Value)<"
-            <<    threshold << "," << Rating::MinimumRating << "," << Rating::MaximumRating
+            <<    threshold << ","
+            <<    Rating::MinimumRating << "," << Rating::MaximumRating
             << "  +SUM(Value)) AS NewDerived, "
             << "  DerivedRating, "
             << "  MatchedRating "
-            << "  FROM ( "
-            << "    ( SELECT "
+            << "  FROM ("
+            << "    (SELECT "
             << "      r.Id AS RatingId, "
             << "      SUM(t.Value) AS Value, "
             << "      r.DerivedRating, "
@@ -130,21 +142,21 @@ namespace Alder
             << "      JOIN Image i ON i.Id=r.ImageId "
             << "      JOIN Code c ON c.ImageId=r.ImageId "
             << "      JOIN CodeType t ON t.Id=c.CodeTypeId "
-            << "      JOIN ( "
+            << "      JOIN ("
             << "        SELECT DISTINCT r.Id "
             << "        FROM Rating r "
             << "        JOIN Code c ON c.ImageId=r.ImageId "
             << "        WHERE c.CodeTypeId=" << Id
-            << "      ) s ON s.Id=r.Id "
+            << "     ) s ON s.Id=r.Id "
             << "      WHERE t.CodeGroupId IS NULL "
             << "      GROUP BY r.Id "
-            << "    ) "
+            << "   ) "
             << "    UNION ALL "
-            << "    ( SELECT RatingId, "
+            << "    (SELECT RatingId, "
             << "      SUM(valueG) AS Value, "
             << "      DerivedRating, "
             << "      MatchedRating "
-            << "      FROM ( "
+            << "      FROM ("
             << "        SELECT "
             << "        r.Id AS RatingId, "
             << "        g.Id AS GroupId, "
@@ -156,29 +168,30 @@ namespace Alder
             << "        JOIN Code c ON c.ImageId=r.ImageId "
             << "        JOIN CodeType t ON t.Id=c.CodeTypeId "
             << "        JOIN CodeGroup g ON g.Id=t.CodeGroupId "
-            << "        JOIN ( "
+            << "        JOIN ("
             << "          SELECT DISTINCT r.Id "
             << "          FROM Rating r "
             << "          JOIN Code c ON c.ImageId=r.ImageId "
             << "          WHERE c.CodeTypeId=" << Id
-            << "        ) s ON s.Id=r.Id "
+            << "       ) s ON s.Id=r.Id "
             << "        GROUP BY r.Id, g.Id "
-            << "      ) AS x1 GROUP BY ratingId "
-            << "    ) ORDER BY RatingId "
-            << "  ) AS x2 GROUP BY RatingId "
+            << "     ) AS x1 GROUP BY ratingId "
+            << "   ) ORDER BY RatingId "
+            << " ) AS x2 GROUP BY RatingId "
             << ") AS x3 ON x3.RatingId=Rating.Id "
             << "SET Rating.DerivedRating=x3.Newderived, "
             << "Rating.Rating=IF(x3.MatchedRating,x3.NewDerived,Rating.Rating) "
             << "WHERE x3.Newderived!=Rating.DerivedRating";
 
-    app->Log( "Querying Database: " + stream.str() );
+    app->Log("Querying Database: " + stream.str());
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
-    query->SetQuery( stream.str().c_str() );
+    query->SetQuery(stream.str().c_str());
     query->Execute();
-    if( query->HasError() )
+    if (query->HasError())
     {
-      app->Log( query->GetLastErrorText() );
-      throw std::runtime_error( "There was an error while trying to query the database." );
+      app->Log(query->GetLastErrorText());
+      throw std::runtime_error(
+        "There was an error while trying to query the database.");
     }
   }
-}
+}  // namespace Alder

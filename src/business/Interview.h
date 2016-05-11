@@ -29,6 +29,11 @@
 #include <Wave.h>
 #include <Common.h>
 
+// C++ includes
+#include <string>
+#include <utility>
+#include <vector>
+
 /**
  * @addtogroup Alder
  * @{
@@ -40,7 +45,7 @@ namespace Alder
   {
   public:
     static Interview *New();
-    vtkTypeMacro( Interview, ActiveRecord );
+    vtkTypeMacro(Interview, ActiveRecord);
     std::string GetName() const { return "Interview"; }
 
     enum ImageStatus
@@ -56,7 +61,8 @@ namespace Alder
      *
      * @param waveList std::pair vector of Wave Id, full update flag
      */
-    static void UpdateInterviewData( const std::vector< std::pair< int, bool > > &waveList );
+    static void UpdateInterviewData(
+      const std::vector<std::pair<int, bool>> &waveList);
 
     /**
      * Returns whether any exam data has been downloaded.
@@ -67,7 +73,7 @@ namespace Alder
      * Returns whether any images remain to be downloaded.
      * @param modifier QueryModifier to constrain to user allowed modalities
      */
-    Interview::ImageStatus GetImageStatus( QueryModifier *modifier = NULL );
+    Interview::ImageStatus GetImageStatus(QueryModifier *modifier = NULL);
 
     /**
      * Updates and/or creates all Exam data associated with the Interview from Opal.
@@ -76,7 +82,7 @@ namespace Alder
      * @param aSource       Opal data source containing an Exam view
      */
     void UpdateExamData(
-     Alder::Wave *aWave = NULL, const std::string &aSource = "" );
+     Wave *aWave = NULL, const std::string &aSource = "");
 
     /**
      * Updates all exam and image data associated with the interview from Opal.
@@ -96,7 +102,8 @@ namespace Alder
      * @param list  vector of interview UId wave rank pairs
      * @return      the number of Interviews loaded
      */
-    static int LoadFromList( const std::vector< std::pair < std::string, std::string > > &list );
+    static int LoadFromList(
+      const std::vector<std::pair<std::string, std::string>> &list);
 
     /**
      * Given an image Id, find an image in this interview having the same
@@ -104,7 +111,7 @@ namespace Alder
      * @param imageId the Id of an image record
      * @return        the Id of a similar image or empty string on fail
      */
-    std::string GetSimilarImageId( const std::string &imageId );
+    std::string GetSimilarImageId(const std::string &imageId);
 
     //@{
     /**
@@ -114,19 +121,22 @@ namespace Alder
      * @param unRated whether the requested neighbour has to have unrated images only
      * @return        the neighbouring interview in UId/VisidDate order
      */
-    vtkSmartPointer<Interview> GetNeighbour( const bool &forward, const bool &loaded, const bool &unRated );
-    vtkSmartPointer<Interview> GetNext( const bool &loaded, const bool &unRated )
-    { return this->GetNeighbour( true, loaded, unRated ); }
-    vtkSmartPointer<Interview> GetNextLoaded( const bool &unRated )
-    { return this->GetNeighbour( true, true, unRated ); }
-    vtkSmartPointer<Interview> GetNextUnLoaded( const bool &unRated )
-    { return this->GetNeighbour( true, false, unRated ); }
-    vtkSmartPointer<Interview> GetPrevious( const bool &loaded, const bool &unRated )
-    { return this->GetNeighbour( false, loaded, unRated ); }
-    vtkSmartPointer<Interview> GetPreviousLoaded( const bool &unRated )
-    { return this->GetNeighbour( false, true, unRated ); }
-    vtkSmartPointer<Interview> GetPreviousUnLoaded( const bool &unRated )
-    { return this->GetNeighbour( false, false, unRated ); }
+    vtkSmartPointer<Interview> GetNeighbour(
+      const bool &forward, const bool &loaded, const bool &unRated);
+    vtkSmartPointer<Interview> GetNext(
+      const bool &loaded, const bool &unRated)
+    { return this->GetNeighbour(true, loaded, unRated); }
+    vtkSmartPointer<Interview> GetNextLoaded(const bool &unRated)
+    { return this->GetNeighbour(true, true, unRated); }
+    vtkSmartPointer<Interview> GetNextUnLoaded(const bool &unRated)
+    { return this->GetNeighbour(true, false, unRated); }
+    vtkSmartPointer<Interview> GetPrevious(
+      const bool &loaded, const bool &unRated)
+    { return this->GetNeighbour(false, loaded, unRated); }
+    vtkSmartPointer<Interview> GetPreviousLoaded(const bool &unRated)
+    { return this->GetNeighbour(false, true, unRated); }
+    vtkSmartPointer<Interview> GetPreviousUnLoaded(const bool &unRated)
+    { return this->GetNeighbour(false, false, unRated); }
     //@}
 
     /**
@@ -141,17 +151,17 @@ namespace Alder
      * @param user a User object
      * @return     whether all images in this interview are rated by the User
      */
-    bool IsRatedBy( Alder::User *user );
+    bool IsRatedBy(User *user);
 
   protected:
     Interview() {}
     ~Interview() {}
 
   private:
-    Interview( const Interview& ); // Not implemented
-    void operator=( const Interview& ); // Not implemented
+    Interview(const Interview&);  // Not implemented
+    void operator=(const Interview&);  // Not implemented
   };
-}
+}  // namespace Alder
 
 /** @} end of doxygen group */
 

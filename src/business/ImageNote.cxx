@@ -10,9 +10,10 @@
 =========================================================================*/
 #include <ImageNote.h>
 
+// VTK includes
 #include <vtkObjectFactory.h>
 
 namespace Alder
 {
-  vtkStandardNewMacro( ImageNote );
-}
+  vtkStandardNewMacro(ImageNote);
+}  // namespace Alder

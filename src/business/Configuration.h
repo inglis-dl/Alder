@@ -32,8 +32,10 @@
 // VTK includes
 #include <vtkSmartPointer.h>
 
+// C++ includes
 #include <iostream>
 #include <map>
+#include <string>
 
 class vtkXMLConfigurationFileReader;
 
@@ -48,7 +50,7 @@ namespace Alder
   {
   public:
     static Configuration *New();
-    vtkTypeMacro( Configuration, ModelObject );
+    vtkTypeMacro(Configuration, ModelObject);
 
     /**
      * Gets a value from the configuration given a category and key.
@@ -56,27 +58,28 @@ namespace Alder
      * @param key       a key within the mapping of category values
      * @return          the value associated with the key or an empty string if none found
      */
-    std::string GetValue( const std::string category, const std::string key ) const;
+    std::string GetValue(const std::string category,
+      const std::string key) const;
 
     /**
      * Reads a configuration file given a filename.
      * @param fileName the name of the configuration file
      * @return success or fail to read the file
      */
-    bool Read( const std::string fileName );
+    bool Read(const std::string fileName);
 
   protected:
     Configuration();
     ~Configuration() {}
 
-    std::map< std::string, std::map< std::string, std::string > > Settings;
+    std::map<std::string, std::map<std::string, std::string>> Settings;
     vtkSmartPointer<vtkXMLConfigurationFileReader> Reader;
 
   private:
-    Configuration( const Configuration& ); // Not implemented
-    void operator=( const Configuration& ); // Not implemented
+    Configuration(const Configuration&);  // Not implemented
+    void operator=(const Configuration&);  // Not implemented
   };
-}
+}  // namespace Alder
 
 /** @} end of doxygen group */
 

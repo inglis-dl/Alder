@@ -17,66 +17,70 @@
 // VTK includes
 #include <vtkMySQLQuery.h>
 
+// C++ includes
+#include <map>
 #include <sstream>
 #include <stdexcept>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace Alder
 {
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   ActiveRecord::ActiveRecord()
   {
     this->Initialized = false;
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool ActiveRecord::ColumnNameExists( const std::string &column )
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  bool ActiveRecord::ColumnNameExists(const std::string &column)
   {
     // make sure the record is initialized
-    if( !this->Initialized )
+    if (!this->Initialized)
       this->Initialize();
 
-    auto pair = this->ColumnValues.find( column );
+    auto pair = this->ColumnValues.find(column);
     return this->ColumnValues.cend() != pair;
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void ActiveRecord::Initialize()
   {
     this->ColumnValues.clear();
 
     Database *db = Application::GetInstance()->GetDB();
     std::string name = this->GetName();
-    std::vector<std::string> columns = db->GetColumnNames( name );
+    std::vector<std::string> columns = db->GetColumnNames(name);
 
     // When first creating an active record we want the ColumnValues ivar to have an empty
     // value for every column in the active record's table.  We use mysql's information_schema
     // database for this purpose.  This is all implemented by the Database model
-    for( auto it = columns.cbegin(); it != columns.cend(); ++it )
+    for (auto it = columns.cbegin(); it != columns.cend(); ++it)
     {
       const std::string column = *it;
-      vtkVariant columnDefault = db->GetColumnDefault( name, column );
-      this->ColumnValues.insert( std::pair< std::string, vtkVariant >( column, columnDefault ) );
+      vtkVariant columnDefault = db->GetColumnDefault(name, column);
+      this->ColumnValues.insert(std::pair< std::string, vtkVariant >(column, columnDefault));
     }
 
     this->Initialized = true;
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void ActiveRecord::LoadFromQuery( vtkMySQLQuery *query )
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void ActiveRecord::LoadFromQuery(vtkMySQLQuery *query)
   {
-    for( int c = 0; c < query->GetNumberOfFields(); ++c )
+    for (int c = 0; c < query->GetNumberOfFields(); ++c)
     {
-      std::string column = query->GetFieldName( c );
-      if( "CreateTimestamp" != column && "UpdateTimestamp" != column )
+      std::string column = query->GetFieldName(c);
+      if ("CreateTimestamp" != column && "UpdateTimestamp" != column)
         this->ColumnValues.insert(
-          std::pair< std::string, vtkVariant >( column, query->DataValue( c ) ) );
+          std::pair<std::string, vtkVariant>(column, query->DataValue(c)));
     }
     this->Initialized = true;
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool ActiveRecord::Load( const std::map< std::string, std::string > &map )
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  bool ActiveRecord::Load(const std::map< std::string, std::string > &map)
   {
     Application *app = Application::GetInstance();
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
@@ -86,119 +90,121 @@ namespace Alder
     std::string name = this->GetName();
     std::stringstream stream;
     stream << "SELECT * FROM " << name;
-    for( auto it = map.cbegin(); it != map.cend(); ++it )
-      stream << ( map.cbegin() == it ? " WHERE " : " AND " )
-             << it->first << " = " << query->EscapeString( it->second );
+    for (auto it = map.cbegin(); it != map.cend(); ++it)
+      stream << (map.cbegin() == it ? " WHERE " : " AND ")
+             << it->first << " = " << query->EscapeString(it->second);
 
-    app->Log( "Querying Database: " + stream.str() );
-    query->SetQuery( stream.str().c_str() );
+    app->Log("Querying Database: " + stream.str());
+    query->SetQuery(stream.str().c_str());
     query->Execute();
 
-    if( query->HasError() )
+    if (query->HasError())
     {
-      app->Log( query->GetLastErrorText() );
-      throw std::runtime_error( "There was an error while trying to query the database." );
+      app->Log(query->GetLastErrorText());
+      throw std::runtime_error("There was an error while trying to query the database.");
     }
 
     bool first = true;
-    while( query->NextRow() )
+    while (query->NextRow())
     {
       // make sure we only have one record, throw exception if not
-      if( !first )
+      if (!first)
       {
         std::stringstream error;
         error << "Loading " << name << " record resulted in multiple rows";
-        throw std::runtime_error( error.str() );
+        throw std::runtime_error(error.str());
       }
 
-      this->LoadFromQuery( query );
-      if( first ) first = false;
+      this->LoadFromQuery(query);
+      if (first) first = false;
     }
 
     // if we didn't find a row then first is still true
     return !first;
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void ActiveRecord::Save( const bool &replace )
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void ActiveRecord::Save(const bool &replace)
   {
     Application *app = Application::GetInstance();
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     std::string name = this->GetName();
     std::stringstream stream;
     bool first = true;
-    for( auto it = this->ColumnValues.cbegin(); it != this->ColumnValues.cend(); ++it )
+    for (auto it = this->ColumnValues.cbegin(); it != this->ColumnValues.cend(); ++it)
     {
-      if( "Id" != it->first )
+      if ("Id" != it->first)
       {
-        stream << ( first ? "" :  ", " ) << it->first
-               << " = " << ( it->second.IsValid() ? query->EscapeString( it->second.ToString() ) : "NULL" );
-        if( first ) first = false;
+        stream << (first ? "" :  ", ")
+               << it->first
+               << " = "
+               << (it->second.IsValid() ? query->EscapeString(it->second.ToString()) : "NULL");
+        if (first) first = false;
       }
     }
 
     // different sql based on whether the record already exists or not
-    if( !this->Get( "Id" ).IsValid() || 0 == this->Get( "Id" ).ToInt() )
+    if (!this->Get("Id").IsValid() || 0 == this->Get("Id").ToInt())
     {
       // add the CreateTimestamp column
-      stream << ( first ? "" :  ", " ) << "CreateTimestamp = NULL";
+      stream << (first ? "" :  ", ") << "CreateTimestamp = NULL";
 
       // add a new record
       std::string s = stream.str();
-      stream.str( "" );
-      stream << ( replace ? "REPLACE" : "INSERT" ) << " INTO " << name << " SET " << s;
+      stream.str("");
+      stream << (replace ? "REPLACE" : "INSERT") << " INTO " << name << " SET " << s;
     }
     else
     {
       // update the existing record
       std::string s = stream.str();
-      stream.str( "" );
+      stream.str("");
       stream << "UPDATE " << name << " SET " << s
-             << " WHERE Id = " << query->EscapeString( this->Get( "Id" ).ToString() );
+             << " WHERE Id = " << query->EscapeString(this->Get("Id").ToString());
     }
 
-    app->Log( "Querying Database: " + stream.str() );
-    query->SetQuery( stream.str().c_str() );
+    app->Log("Querying Database: " + stream.str());
+    query->SetQuery(stream.str().c_str());
     query->Execute();
 
-    if( query->HasError() )
+    if (query->HasError())
     {
-      app->Log( query->GetLastErrorText() );
-      throw std::runtime_error( "There was an error while trying to query the database." );
+      app->Log(query->GetLastErrorText());
+      throw std::runtime_error("There was an error while trying to query the database.");
     }
 
     // if the record's Id isn't set, get it based on the auto-increment property of the Id column
-    if( !this->Get( "Id" ).IsValid() || 0 == this->Get( "Id" ).ToInt() )
+    if (!this->Get("Id").IsValid() || 0 == this->Get("Id").ToInt())
     {
-      this->Set( "Id", this->GetLastInsertId() );
+      this->Set("Id", this->GetLastInsertId());
     }
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   int ActiveRecord::GetLastInsertId() const
   {
     Application *app = Application::GetInstance();
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     std::stringstream stream;
     std::string name = this->GetName();
-    stream << "SELECT Max( Id ) FROM " << name;
+    stream << "SELECT Max(Id) FROM " << name;
 
-    app->Log( "Getting last insert id for table: " + name );
-    query->SetQuery( stream.str().c_str() );
+    app->Log("Getting last insert id for table: " + name);
+    query->SetQuery(stream.str().c_str());
     query->Execute();
 
-    if( query->HasError() )
+    if (query->HasError())
     {
-      app->Log( query->GetLastErrorText() );
-      throw std::runtime_error( "There was an error while trying to query the database." );
+      app->Log(query->GetLastErrorText());
+      throw std::runtime_error("There was an error while trying to query the database.");
     }
 
     // only has one row
     query->NextRow();
-    return query->DataValue( 0 ).ToInt();
+    return query->DataValue(0).ToInt();
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void ActiveRecord::Remove()
   {
     Application *app = Application::GetInstance();
@@ -207,72 +213,72 @@ namespace Alder
 
     std::stringstream stream;
     stream << "DELETE FROM " << this->GetName() << " "
-           << "WHERE Id = " << query->EscapeString( this->Get( "Id" ).ToString() );
-    app->Log( "Querying Database: " + stream.str() );
-    query->SetQuery( stream.str().c_str() );
+           << "WHERE Id = " << query->EscapeString(this->Get("Id").ToString());
+    app->Log("Querying Database: " + stream.str());
+    query->SetQuery(stream.str().c_str());
     query->Execute();
 
-    if( query->HasError() )
+    if (query->HasError())
     {
-      app->Log( query->GetLastErrorText() );
-      throw std::runtime_error( "There was an error while trying to query the database." );
+      app->Log(query->GetLastErrorText());
+      throw std::runtime_error("There was an error while trying to query the database.");
     }
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  int ActiveRecord::GetCount( const std::string &recordType )
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  int ActiveRecord::GetCount(const std::string &recordType)
   {
     Application *app = Application::GetInstance();
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     std::stringstream stream;
     stream << "SELECT COUNT(*) FROM " << recordType << " "
-           << "WHERE " << this->GetName() << "Id = " << this->Get( "Id" ).ToString();
+           << "WHERE " << this->GetName() << "Id = " << this->Get("Id").ToString();
 
-    app->Log( "Querying Database: " + stream.str() );
-    query->SetQuery( stream.str().c_str() );
+    app->Log("Querying Database: " + stream.str());
+    query->SetQuery(stream.str().c_str());
     query->Execute();
 
-    if( query->HasError() )
+    if (query->HasError())
     {
-      app->Log( query->GetLastErrorText() );
-      throw std::runtime_error( "There was an error while trying to query the database." );
+      app->Log(query->GetLastErrorText());
+      throw std::runtime_error("There was an error while trying to query the database.");
     }
 
     // only has one row
     query->NextRow();
-    return query->DataValue( 0 ).ToInt();
+    return query->DataValue(0).ToInt();
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  vtkVariant ActiveRecord::Get( const std::string &column )
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  vtkVariant ActiveRecord::Get(const std::string &column)
   {
     // make sure the column exists
-    if( !this->ColumnNameExists( column ) )
+    if (!this->ColumnNameExists(column))
     {
       std::stringstream error;
       error << "Tried to get column \"" << this->GetName() << "." << column << "\" which doesn't exist";
-      throw std::runtime_error( error.str() );
+      throw std::runtime_error(error.str());
     }
 
-    return this->ColumnValues.find( column )->second;
+    return this->ColumnValues.find(column)->second;
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void ActiveRecord::SetVariant( const std::string column, const vtkVariant value )
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void ActiveRecord::SetVariant(const std::string column, const vtkVariant value)
   {
     // make sure the column exists
-    if( !this->ColumnNameExists( column ) )
+    if (!this->ColumnNameExists(column))
     {
       std::stringstream error;
       error << "Tried to set column \"" << this->GetName() << "." << column << "\" which doesn't exist";
-      throw std::runtime_error( error.str() );
+      throw std::runtime_error(error.str());
     }
 
-    this->ColumnValues.find( column )->second = value;
+    this->ColumnValues.find(column)->second = value;
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  int ActiveRecord::GetRelationship( const std::string &table, const std::string &override ) const
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  int ActiveRecord::GetRelationship(const std::string &table, const std::string &override) const
   {
     Database *db = Application::GetInstance()->GetDB();
 
@@ -281,11 +287,11 @@ namespace Alder
     std::string joiningTable = override.empty() ? name + "Has" + table : override;
     std::string column = override.empty() ? name + "Id" : override;
 
-    if( db->TableExists( joiningTable ) )
+    if (db->TableExists(joiningTable))
     {
       return ActiveRecord::ManyToMany;
     }
-    else if( db->ColumnExists( table, column ) )
+    else if (db->ColumnExists(table, column))
     {
       return ActiveRecord::OneToMany;
     }
@@ -293,17 +299,17 @@ namespace Alder
     return ActiveRecord::None;
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void ActiveRecord::PrintSelf( ostream& os, vtkIndent indent )
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void ActiveRecord::PrintSelf(ostream& os, vtkIndent indent)
   {
-    this->Superclass::PrintSelf( os, indent );
+    this->Superclass::PrintSelf(os, indent);
 
-    os << indent << "Initialized: " << ( this->Initialized ? "Yes" : "No" ) << endl;
+    os << indent << "Initialized: " << (this->Initialized ? "Yes" : "No") << endl;
     os << indent << "Column Values:" << endl;
-    for( auto it = this->ColumnValues.cbegin(); it != this->ColumnValues.cend(); ++it )
+    for (auto it = this->ColumnValues.cbegin(); it != this->ColumnValues.cend(); ++it)
     {
       os << indent.GetNextIndent() << it->first << ": " << it->second
-         << ( it->second.IsValid() ? it->second.ToString() : "NULL" ) << endl;
+         << (it->second.IsValid() ? it->second.ToString() : "NULL") << endl;
     }
   }
-}
+}  // namespace Alder

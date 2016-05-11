@@ -4,7 +4,6 @@
   Module:   Code.h
   Language: C++
 
-  Author: Patrick Emond <emondpd AT mcmaster DOT ca>
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
@@ -24,6 +23,9 @@
 
 #include <ActiveRecord.h>
 
+// C++ includes
+#include <string>
+
 /**
  * @addtogroup Alder
  * @{
@@ -33,20 +35,20 @@ namespace Alder
 {
   class Code : public ActiveRecord
   {
-  public:
-    static Code *New();
-    vtkTypeMacro( Code, ActiveRecord );
-    std::string GetName() const { return "Code"; }
+    public:
+      static Code *New();
+      vtkTypeMacro(Code, ActiveRecord);
+      std::string GetName() const { return "Code"; }
 
-  protected:
-    Code() {}
-    ~Code() {}
+    protected:
+      Code() {}
+      ~Code() {}
 
-  private:
-    Code( const Code& ); // Not implemented
-    void operator=( const Code& ); // Not implemented
+    private:
+      Code(const Code&);  // Not implemented
+      void operator=(const Code&);  // Not implemented
   };
-}
+}  // namespace Alder
 
 /** @} end of doxygen group */
 
