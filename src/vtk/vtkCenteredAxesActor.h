@@ -18,24 +18,25 @@
 #ifndef __vtkCenteredAxesActor_h
 #define __vtkCenteredAxesActor_h
 
+// VTK includes
 #include <vtkAxesActor.h>
 
 class vtkCenteredAxesActor : public vtkAxesActor
 {
-public:
-  static vtkCenteredAxesActor *New();
-  vtkTypeMacro(vtkCenteredAxesActor, vtkAxesActor);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  public:
+    static vtkCenteredAxesActor *New();
+    vtkTypeMacro(vtkCenteredAxesActor, vtkAxesActor);
+    void PrintSelf(ostream &os, vtkIndent indent);
 
-  double* GetBounds();
+    double* GetBounds();
 
-protected:
-  vtkCenteredAxesActor(){};
-  ~vtkCenteredAxesActor(){};
+  protected:
+    vtkCenteredAxesActor() {}
+    ~vtkCenteredAxesActor() {}
 
-private:
-  vtkCenteredAxesActor(const vtkCenteredAxesActor&); /** Not implemented. */
-  void operator=(const vtkCenteredAxesActor&); /** Not implemented. */
+  private:
+    vtkCenteredAxesActor(const vtkCenteredAxesActor&);  /** Not implemented. */
+    void operator=(const vtkCenteredAxesActor&);  /** Not implemented. */
 };
 
 #endif

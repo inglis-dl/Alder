@@ -9,6 +9,7 @@
 =========================================================================*/
 #include <vtkCustomCornerAnnotation.h>
 
+// VTK includes
 #include <vtkAlgorithmOutput.h>
 #include <vtkImageData.h>
 #include <vtkImageSlice.h>
@@ -23,15 +24,15 @@
 
 vtkStandardNewMacro(vtkCustomCornerAnnotation);
 
-vtkSetObjectImplementationMacro( vtkCustomCornerAnnotation, ImageSlice, vtkImageSlice );
-vtkSetObjectImplementationMacro( vtkCustomCornerAnnotation, WindowLevel, vtkImageWindowLevel );
-vtkCxxSetObjectMacro( vtkCustomCornerAnnotation, TextProperty, vtkTextProperty );
+vtkSetObjectImplementationMacro(vtkCustomCornerAnnotation, ImageSlice, vtkImageSlice);
+vtkSetObjectImplementationMacro(vtkCustomCornerAnnotation, WindowLevel, vtkImageWindowLevel);
+vtkCxxSetObjectMacro(vtkCustomCornerAnnotation, TextProperty, vtkTextProperty);
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 vtkCustomCornerAnnotation::vtkCustomCornerAnnotation()
 {
   this->PositionCoordinate->SetCoordinateSystemToNormalizedViewport();
-  this->PositionCoordinate->SetValue(0.2,0.85);
+  this->PositionCoordinate->SetValue(0.2, 0.85);
 
   this->LastSize[0] = 0;
   this->LastSize[1] = 0;
@@ -46,11 +47,11 @@ vtkCustomCornerAnnotation::vtkCustomCornerAnnotation()
 
   vtkSmartPointer<vtkTextProperty> tprop = vtkSmartPointer<vtkTextProperty>::New();
   tprop->ShadowOff();
-  double color[3] = {1.,1.,1.};
+  double color[3] = {1., 1., 1.};
   tprop->SetColor(color);
   this->SetTextProperty(tprop);
 
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < 4; ++i)
     {
     this->CornerText[i].clear();
     this->TextMapper[i] = vtkSmartPointer<vtkTextMapper>::New();
@@ -68,7 +69,7 @@ vtkCustomCornerAnnotation::vtkCustomCornerAnnotation()
   this->ShowSliceAndImage = 1;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 vtkCustomCornerAnnotation::~vtkCustomCornerAnnotation()
 {
   this->SetTextProperty(0);
@@ -81,21 +82,21 @@ vtkCustomCornerAnnotation::~vtkCustomCornerAnnotation()
  * The parameter window could be used to determine which graphic
  * resources to release.
  */
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkCustomCornerAnnotation::ReleaseGraphicsResources(vtkWindow *win)
 {
   this->Superclass::ReleaseGraphicsResources(win);
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < 4; ++i)
     {
     this->TextActor[i]->ReleaseGraphicsResources(win);
     }
 }
 
-#define text_swap(a,b,c){a=b;b=c;c=a;}
+#define text_swap(a, b, c) { a = b; b = c; c = a; }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkCustomCornerAnnotation::TextReplace(vtkImageSlice *ia,
-                                      vtkImageWindowLevel *wl)
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void vtkCustomCornerAnnotation::TextReplace(
+  vtkImageSlice *ia, vtkImageWindowLevel *wl)
 {
   int i;
   char *text, *text2;
@@ -136,105 +137,108 @@ void vtkCustomCornerAnnotation::TextReplace(vtkImageSlice *ia,
 
 
   // search for tokens, replace and then assign to TextMappers
-  for (i = 0; i < 4; i++)
+  for (i = 0; i < 4; ++i)
     {
-    if ( !this->CornerText[i].empty() )
+    if (!this->CornerText[i].empty())
       {
-      text = new char [this->CornerText[i].size()+1000];
-      text2 = new char [this->CornerText[i].size()+1000];
-      strcpy(text,this->CornerText[i].c_str());
+      text = new char[this->CornerText[i].size() + 1000];
+      text2 = new char[this->CornerText[i].size() + 1000];
+      strcpy(text, this->CornerText[i].c_str());
 
       // now do the replacements
 
-      rpos = strstr(text,"<image>");  //pointer to first occurence of <image> in text
+      // pointer to first occurence of <image> in text
+      rpos = strstr(text, "<image>");
       while (rpos)
         {
         *rpos = '\0';
         if (ia && this->ShowSliceAndImage)
           {
-          sprintf(text2,"%sImage: %i%s",text,slice,rpos+7);
+          sprintf(text2, "%sImage: %i%s", text, slice, rpos + 7);
           }
         else
           {
-          sprintf(text2,"%s%s",text,rpos+7);
+          sprintf(text2, "%s%s", text, rpos + 7);
           }
-        text_swap(tmp,text,text2);
-        rpos = strstr(text,"<image>");
+        text_swap(tmp, text, text2);
+        rpos = strstr(text, "<image>");
         }
 
-      rpos = strstr(text,"<image_and_max>");
+      rpos = strstr(text, "<image_and_max>");
       while (rpos)
         {
         *rpos = '\0';
         if (ia && this->ShowSliceAndImage)
           {
-          sprintf(text2,"%sImage: %i / %i%s",text,slice,slice_max,rpos+15);
+          sprintf(text2, "%sImage: %i / %i%s", text, slice, slice_max, rpos + 15);
           }
         else
           {
-          sprintf(text2,"%s%s",text,rpos+15);
+          sprintf(text2, "%s%s", text, rpos + 15);
           }
-        text_swap(tmp,text,text2);
-        rpos = strstr(text,"<image_and_max>");
+        text_swap(tmp, text, text2);
+        rpos = strstr(text, "<image_and_max>");
         }
 
-      rpos = strstr(text,"<slice>");
+      rpos = strstr(text, "<slice>");
       while (rpos)
         {
         *rpos = '\0';
         if (ia && this->ShowSliceAndImage)
           {
-          sprintf(text2,"%sSlice: %i%s",text,slice,rpos+7);
+          sprintf(text2, "%sSlice: %i%s", text, slice, rpos + 7);
           }
         else
           {
-          sprintf(text2,"%s%s",text,rpos+7);
+          sprintf(text2, "%s%s", text, rpos + 7);
           }
-        text_swap(tmp,text,text2);
-        rpos = strstr(text,"<slice>");
+        text_swap(tmp, text, text2);
+        rpos = strstr(text, "<slice>");
         }
 
-      rpos = strstr(text,"<slice_and_max>");
+      rpos = strstr(text, "<slice_and_max>");
       while (rpos)
         {
         *rpos = '\0';
         if (ia && this->ShowSliceAndImage)
           {
-          sprintf(text2,"%sSlice: %i / %i%s",text,slice,slice_max,rpos+15);
+          sprintf(text2, "%sSlice: %i / %i%s", text, slice, slice_max, rpos + 15);
           }
         else
           {
-          sprintf(text2,"%s%s",text,rpos+15);
+          sprintf(text2, "%s%s", text, rpos + 15);
           }
-        text_swap(tmp,text,text2);
-        rpos = strstr(text,"<slice_and_max>");
+        text_swap(tmp, text, text2);
+        rpos = strstr(text, "<slice_and_max>");
         }
 
-      rpos = strstr(text,"<slice_pos>");
+      rpos = strstr(text, "<slice_pos>");
       while (rpos)
         {
         *rpos = '\0';
         if (ia && this->ShowSliceAndImage)
           {
-          int w = vtkImageSliceMapper::SafeDownCast(ia->GetMapper())->GetOrientation();
+          int w =
+            vtkImageSliceMapper::SafeDownCast(
+              ia->GetMapper())->GetOrientation();
           double pos;
-          switch( w )
+          switch (w)
           {
             case 0: pos = ia->GetMinXBound(); break;
             case 1: pos = ia->GetMinYBound(); break;
             case 2: pos = ia->GetMinZBound(); break;
           }
-          sprintf(text2,"%s%g%s",text,pos,rpos+11);
+          sprintf(text2, "%s%g%s", text, pos, rpos + 11);
           }
         else
           {
-          sprintf(text2,"%s%s",text,rpos+11);
+          sprintf(text2, "%s%s", text, rpos + 11);
           }
-        text_swap(tmp,text,text2);
-        rpos = strstr(text,"<slice_pos>");
+        text_swap(tmp, text, text2);
+        rpos = strstr(text, "<slice_pos>");
         }
 
-      rpos = strstr(text,"<window>");
+      rpos = strstr(text, "<window>");
       while (rpos)
         {
         *rpos = '\0';
@@ -242,22 +246,22 @@ void vtkCustomCornerAnnotation::TextReplace(vtkImageSlice *ia,
           {
           if (input_type_is_float)
             {
-            sprintf(text2,"%sWindow: %g%s",text,window,rpos+8);
+            sprintf(text2, "%sWindow: %g%s", text, window, rpos + 8);
             }
           else
             {
-            sprintf(text2,"%sWindow: %li%s",text,windowi,rpos+8);
+            sprintf(text2, "%sWindow: %li%s", text, windowi, rpos + 8);
             }
           }
         else
           {
-          sprintf(text2,"%s%s",text,rpos+8);
+          sprintf(text2, "%s%s", text, rpos + 8);
           }
-        text_swap(tmp,text,text2);
-        rpos = strstr(text,"<window>");
+        text_swap(tmp, text, text2);
+        rpos = strstr(text, "<window>");
         }
 
-      rpos = strstr(text,"<level>");
+      rpos = strstr(text, "<level>");
       while (rpos)
         {
         *rpos = '\0';
@@ -265,22 +269,22 @@ void vtkCustomCornerAnnotation::TextReplace(vtkImageSlice *ia,
           {
           if (input_type_is_float)
             {
-            sprintf(text2,"%sLevel: %g%s",text,level,rpos+7);
+            sprintf(text2, "%sLevel: %g%s", text, level, rpos + 7);
             }
           else
             {
-            sprintf(text2,"%sLevel: %li%s",text,leveli,rpos+7);
+            sprintf(text2, "%sLevel: %li%s", text, leveli, rpos + 7);
             }
           }
         else
           {
-          sprintf(text2,"%s%s",text,rpos+7);
+          sprintf(text2, "%s%s", text, rpos + 7);
           }
-        text_swap(tmp,text,text2);
-        rpos = strstr(text,"<level>");
+        text_swap(tmp, text, text2);
+        rpos = strstr(text, "<level>");
         }
 
-      rpos = strstr(text,"<window_level>");
+      rpos = strstr(text, "<window_level>");
       while (rpos)
         {
         *rpos = '\0';
@@ -288,19 +292,19 @@ void vtkCustomCornerAnnotation::TextReplace(vtkImageSlice *ia,
           {
           if (input_type_is_float)
             {
-            sprintf(text2,"%sWW/WL: %g / %g%s",text,window,level,rpos+14);
+            sprintf(text2, "%sWW/WL: %g / %g%s", text, window, level, rpos + 14);
             }
           else
             {
-            sprintf(text2,"%sWW/WL: %li / %li%s",text,windowi,leveli,rpos+14);
+            sprintf(text2, "%sWW/WL: %li / %li%s", text, windowi, leveli, rpos + 14);
             }
           }
         else
           {
-          sprintf(text2,"%s%s",text,rpos+14);
+          sprintf(text2, "%s%s", text, rpos + 14);
           }
-        text_swap(tmp,text,text2);
-        rpos = strstr(text,"<window_level>");
+        text_swap(tmp, text, text2);
+        rpos = strstr(text, "<window_level>");
         }
 
       this->TextMapper[i]->SetInput(text);
@@ -314,14 +318,14 @@ void vtkCustomCornerAnnotation::TextReplace(vtkImageSlice *ia,
     }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 int vtkCustomCornerAnnotation::RenderOverlay(vtkViewport *viewport)
 {
   // Everything is built, just have to render
   // only render if font is at least minimum font
   if (this->FontSize >= this->MinimumFontSize)
     {
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
       {
       this->TextActor[i]->RenderOverlay(viewport);
       }
@@ -344,14 +348,14 @@ int GetNumberOfLines(const char *str)
     if ((str = strstr(str, "\n")) != NULL)
       {
       result++;
-      str++; // Skip '\n'
+      str++;  // skip '\n'
       }
     }
   return result;
 }
-}
+}  // namespace
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
 {
   int fontSize;
@@ -383,7 +387,7 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
     {
     vtkPropCollection *pc = viewport->GetViewProps();
     int numProps = pc->GetNumberOfItems();
-    for (i = 0; i < numProps; i++)
+    for (i = 0; i < numProps; ++i)
       {
       ia = vtkImageSlice::SafeDownCast(pc->GetItemAsObject(i));
       if (ia)
@@ -411,7 +415,7 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
     {
     int *vSize = viewport->GetSize();
 
-    vtkDebugMacro(<<"Rebuilding text");
+    vtkDebugMacro(<< "Rebuilding text");
 
     // Replace text
     this->TextReplace(ia, wl);
@@ -466,7 +470,7 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
 
       int tempi[8];
       int allZeros = 1;
-      for (i = 0; i < 4; i++)
+      for (i = 0; i < 4; ++i)
         {
         this->TextMapper[i]->GetSize(viewport, tempi + i * 2);
         if (tempi[2*i] > 0 || tempi[2*i+1] > 0)
@@ -494,17 +498,17 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
       int num_lines_13 = GetNumberOfLines(this->TextMapper[1]->GetInput()) +
         GetNumberOfLines(this->TextMapper[3]->GetInput());
 
-      int line_max_02 = (int)(vSize[1] * this->MaximumLineHeight) *
+      int line_max_02 = static_cast<int>(vSize[1] * this->MaximumLineHeight) *
         (num_lines_02 ? num_lines_02 : 1);
 
-      int line_max_13 = (int)(vSize[1] * this->MaximumLineHeight) *
+      int line_max_13 = static_cast<int>(vSize[1] * this->MaximumLineHeight) *
         (num_lines_13 ? num_lines_13 : 1);
 
       // Target size is to use 90% of x and y
 
       int tSize[2];
-      tSize[0] = (int)(0.9*vSize[0]);
-      tSize[1] = (int)(0.9*vSize[1]);
+      tSize[0] = static_cast<int>(0.9*vSize[0]);
+      tSize[1] = static_cast<int>(0.9*vSize[1]);
 
       // While the size is too small increase it
 
@@ -516,7 +520,7 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
              fontSize < 100)
         {
         fontSize++;
-        for (i = 0; i < 4; i++)
+        for (i = 0; i < 4; ++i)
           {
           this->TextMapper[i]->GetTextProperty()->SetFontSize(fontSize);
           this->TextMapper[i]->GetSize(viewport, tempi + i * 2);
@@ -538,7 +542,7 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
              fontSize > 0)
         {
         fontSize--;
-        for (i = 0; i < 4; i++)
+        for (i = 0; i < 4; ++i)
           {
           this->TextMapper[i]->GetTextProperty()->SetFontSize(fontSize);
           this->TextMapper[i]->GetSize(viewport, tempi + i * 2);
@@ -550,14 +554,14 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
         max_width = (width_01 > width_23) ? width_01 : width_23;
         }
 
-      fontSize = static_cast<int>(pow((double)fontSize,
+      fontSize = static_cast<int>(pow(static_cast<double>(fontSize),
               NonlinearFontScaleFactor)*LinearFontScaleFactor);
       if (fontSize > this->MaximumFontSize)
         {
         fontSize = this->MaximumFontSize;
         }
       this->FontSize = fontSize;
-      for (i = 0; i < 4; i++)
+      for (i = 0; i < 4; ++i)
         {
         this->TextMapper[i]->GetTextProperty()->SetFontSize(fontSize);
         }
@@ -566,7 +570,7 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
 
       this->SetTextActorsPosition(vSize);
 
-      for (i = 0; i < 4; i++)
+      for (i = 0; i < 4; ++i)
         {
         this->TextActor[i]->SetProperty(this->GetProperty());
         }
@@ -579,7 +583,7 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
 
   if (this->FontSize >= this->MinimumFontSize)
     {
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < 4; ++i)
       {
       this->TextActor[i]->RenderOpaqueGeometry(viewport);
       }
@@ -589,13 +593,13 @@ int vtkCustomCornerAnnotation::RenderOpaqueGeometry(vtkViewport *viewport)
 }
 
 /** Does this prop have some translucent polygonal geometry? */
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 int vtkCustomCornerAnnotation::HasTranslucentPolygonalGeometry()
 {
   return 0;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkCustomCornerAnnotation::SetTextActorsPosition(int vsize[2])
 {
   this->TextActor[0]->SetPosition(5, 5);
@@ -604,7 +608,7 @@ void vtkCustomCornerAnnotation::SetTextActorsPosition(int vsize[2])
   this->TextActor[3]->SetPosition(vsize[0] - 5, vsize[1] - 5);
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkCustomCornerAnnotation::SetTextActorsJustification()
 {
   vtkTextProperty *tprop = this->TextMapper[0]->GetTextProperty();
@@ -624,15 +628,15 @@ void vtkCustomCornerAnnotation::SetTextActorsJustification()
   tprop->SetVerticalJustificationToTop();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkCustomCornerAnnotation::SetText(int i, const char *text)
 {
-  if (i < 0 || i > 3 )
+  if (0 > i || 3 < i)
     {
     return;
     }
 
-  if ( text == this->CornerText[i] )
+  if (text == this->CornerText[i])
     {
     return;
     }
@@ -640,10 +644,10 @@ void vtkCustomCornerAnnotation::SetText(int i, const char *text)
   this->Modified();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 const char* vtkCustomCornerAnnotation::GetText(int i)
 {
-  if (i < 0 || i > 3)
+  if (0 > i || 3 < i)
     {
     return 0;
     }
@@ -651,28 +655,28 @@ const char* vtkCustomCornerAnnotation::GetText(int i)
   return this->CornerText[i].c_str();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkCustomCornerAnnotation::ClearAllTexts()
 {
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < 4; ++i)
     {
     this->SetText(i, "");
     }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkCustomCornerAnnotation::CopyAllTextsFrom(vtkCustomCornerAnnotation *ca)
 {
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < 4; ++i)
     {
     this->SetText(i, ca->GetText(i));
     }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkCustomCornerAnnotation::PrintSelf(ostream& os, vtkIndent indent)
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void vtkCustomCornerAnnotation::PrintSelf(ostream &os, vtkIndent indent)
 {
-  this->Superclass::PrintSelf(os,indent);
+  this->Superclass::PrintSelf(os, indent);
   os << indent << "ImageSlice: " << this->GetImageSlice() << endl;
   os << indent << "MinimumFontSize: " << this->GetMinimumFontSize() << endl;
   os << indent << "MaximumFontSize: " << this->GetMaximumFontSize() << endl;

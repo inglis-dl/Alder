@@ -22,30 +22,31 @@
 #ifndef __vtkCustomInteractorStyleImage_h
 #define __vtkCustomInteractorStyleImage_h
 
+// VTK includes
 #include <vtkInteractorStyleImage.h>
 
 class vtkCustomInteractorStyleImage : public vtkInteractorStyleImage
 {
-public:
-  static vtkCustomInteractorStyleImage *New();
-  vtkTypeMacro(vtkCustomInteractorStyleImage, vtkInteractorStyleImage);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  public:
+    static vtkCustomInteractorStyleImage *New();
+    vtkTypeMacro(vtkCustomInteractorStyleImage, vtkInteractorStyleImage);
+    void PrintSelf(ostream &os, vtkIndent indent);
 
-  /**
-   * Method overridden from parent class to fix a bug with passing
-   * window level events.
-   */
-  virtual void WindowLevel();
+    /**
+     * Method overridden from parent class to fix a bug with passing
+     * window level events.
+     */
+    virtual void WindowLevel();
 
-  virtual void OnChar();
+    virtual void OnChar();
 
-protected:
-  vtkCustomInteractorStyleImage(){};
-  ~vtkCustomInteractorStyleImage(){};
+  protected:
+    vtkCustomInteractorStyleImage() {}
+    ~vtkCustomInteractorStyleImage() {}
 
-private:
-  vtkCustomInteractorStyleImage(const vtkCustomInteractorStyleImage&); /** Not implemented. */
-  void operator=(const vtkCustomInteractorStyleImage&); /** Not implemented. */
+  private:
+    vtkCustomInteractorStyleImage(const vtkCustomInteractorStyleImage&);  /** Not implemented. */
+    void operator=(const vtkCustomInteractorStyleImage&);  /** Not implemented. */
 };
 
 #endif

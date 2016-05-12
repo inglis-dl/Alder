@@ -16,7 +16,7 @@
 
 vtkStandardNewMacro(vtkCenteredAxesActor);
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 double* vtkCenteredAxesActor::GetBounds()
 {
   vtkBoundingBox totalBoundingBox(this->XAxisShaft->GetBounds());
@@ -29,8 +29,8 @@ double* vtkCenteredAxesActor::GetBounds()
   return this->Bounds;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkCenteredAxesActor::PrintSelf(ostream& os, vtkIndent indent)
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void vtkCenteredAxesActor::PrintSelf(ostream &os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
 }

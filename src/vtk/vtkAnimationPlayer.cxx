@@ -5,7 +5,7 @@
   Language:  C++
 
   Author: Patrick Emond <emondpd AT mcmaster DOT ca>
-  Author: Dean Inglis <inglisd AT mcmaster DOT ca>  
+  Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
   Copyright (c) Kitware, Inc.
   All rights reserved.
@@ -18,12 +18,13 @@
 =========================================================================*/
 #include <vtkAnimationPlayer.h>
 
+// VTK includes
 #include <vtkAnimationScene.h>
 #include <vtkCommand.h>
 #include <vtkMath.h>
 #include <vtkObjectFactory.h>
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 vtkAnimationPlayer::vtkAnimationPlayer()
 {
   this->AnimationScene = 0;
@@ -33,14 +34,14 @@ vtkAnimationPlayer::vtkAnimationPlayer()
   this->Loop = false;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 vtkAnimationPlayer::~vtkAnimationPlayer()
 {
   this->SetAnimationScene(0);
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkAnimationPlayer::SetAnimationScene(vtkAnimationScene* scene)
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void vtkAnimationPlayer::SetAnimationScene(vtkAnimationScene *scene)
 {
   if (this->AnimationScene != scene)
   {
@@ -49,13 +50,13 @@ void vtkAnimationPlayer::SetAnimationScene(vtkAnimationScene* scene)
   }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 vtkAnimationScene* vtkAnimationPlayer::GetAnimationScene()
 {
   return this->AnimationScene;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkAnimationPlayer::Play()
 {
   if (!this->AnimationScene)
@@ -80,30 +81,31 @@ void vtkAnimationPlayer::Play()
   playbackWindow[1] = endtime;
   double period = endtime - starttime;
   this->CurrentTime = starttime;
- 
+
   this->InPlay = true;
   this->StopPlay = false;
 
-  do 
+  do
   {
     this->StartLoop(starttime, endtime, playbackWindow);
     this->AnimationScene->Initialize();
     double deltatime = 0.0;
     while (!this->StopPlay && this->CurrentTime <= endtime)
     {
-      this->AnimationScene->Tick(this->CurrentTime, deltatime, this->CurrentTime);
+      this->AnimationScene->Tick(
+        this->CurrentTime, deltatime, this->CurrentTime);
       double progress = (this->CurrentTime - starttime) / period;
       this->InvokeEvent(vtkCommand::ProgressEvent, &progress);
       double nexttime = this->GetNextTime(this->CurrentTime);
-      if( vtkMath::IsNan(nexttime) ) break;
+      if (vtkMath::IsNan(nexttime)) break;
       deltatime = nexttime - this->CurrentTime;
-      this->CurrentTime = nexttime; 
+      this->CurrentTime = nexttime;
     }
 
     // Finalize will get called when Tick() is called with time>=endtime on the
-    // cue. However, no harm in calling this method again since it has any effect 
-    // only the first time it gets called.
-    // this->AnimationScene->Finalize();
+    // cue. However, no harm in calling this method again since it has any
+    // effect only the first time it gets called.
+    this->AnimationScene->Finalize();
 
     this->CurrentTime = starttime;
     this->EndLoop();
@@ -116,7 +118,7 @@ void vtkAnimationPlayer::Play()
   this->InvokeEvent(vtkCommand::EndEvent);
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkAnimationPlayer::Stop()
 {
   if (this->InPlay)
@@ -125,7 +127,7 @@ void vtkAnimationPlayer::Stop()
   }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkAnimationPlayer::GoToFirst()
 {
   this->Stop();
@@ -136,7 +138,7 @@ void vtkAnimationPlayer::GoToFirst()
   }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkAnimationPlayer::GoToLast()
 {
   this->Stop();
@@ -147,46 +149,46 @@ void vtkAnimationPlayer::GoToLast()
   }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkAnimationPlayer::GoToNext()
 {
   this->Stop();
   double starttime = this->AnimationScene->GetStartTime();
   double endtime = this->AnimationScene->GetEndTime();
-  double time = this->GoToNextTime( starttime, endtime, 
-                this->AnimationScene->GetAnimationTime() );
+  double time = this->GoToNextTime(starttime, endtime,
+                this->AnimationScene->GetAnimationTime());
 
   if (time >= starttime && time < endtime)
   {
     this->AnimationScene->SetAnimationTime(time);
   }
-  else 
+  else
   {
     this->AnimationScene->SetAnimationTime(endtime);
   }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkAnimationPlayer::GoToPrevious()
 {
   this->Stop();
   double starttime = this->AnimationScene->GetStartTime();
   double endtime = this->AnimationScene->GetEndTime();
-  double time = this->GoToPreviousTime(starttime, endtime, 
+  double time = this->GoToPreviousTime(starttime, endtime,
     this->AnimationScene->GetAnimationTime());
 
   if (time >= starttime && time < endtime)
   {
     this->AnimationScene->SetAnimationTime(time);
   }
-  else 
+  else
   {
     this->AnimationScene->SetAnimationTime(starttime);
   }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkAnimationPlayer::PrintSelf(ostream& os, vtkIndent indent)
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void vtkAnimationPlayer::PrintSelf(ostream &os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
 }
