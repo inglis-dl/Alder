@@ -2,8 +2,6 @@ PROJECT( AlderVTK )
 
 SET( AlderVTK_SRCS
   vtkAnimationPlayer.cxx
-#  vtkAlderMySQLDatabase.cxx
-#  vtkAlderMySQLQuery.cxx
   vtkCenteredAxesActor.cxx
   vtkCustomCornerAnnotation.cxx
   vtkCustomInteractorStyleImage.cxx
