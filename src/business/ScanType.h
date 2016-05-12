@@ -22,7 +22,11 @@
 #ifndef __ScanType_h
 #define __ScanType_h
 
+// Alder includes
 #include <ActiveRecord.h>
+
+// C++ includes
+#include <string>
 
 /**
  * @addtogroup Alder
@@ -33,20 +37,20 @@ namespace Alder
 {
   class ScanType : public ActiveRecord
   {
-  public:
-    static ScanType *New();
-    vtkTypeMacro( ScanType, ActiveRecord );
-    std::string GetName() const { return "ScanType"; }
+    public:
+      static ScanType *New();
+      vtkTypeMacro(ScanType, ActiveRecord);
+      std::string GetName() const { return "ScanType"; }
 
-  protected:
-    ScanType() {}
-    ~ScanType() {}
+    protected:
+      ScanType() {}
+      ~ScanType() {}
 
-  private:
-    ScanType( const ScanType& ); // Not implemented
-    void operator=( const ScanType& ); // Not implemented
+    private:
+      ScanType(const ScanType&);  // Not implemented
+      void operator=(const ScanType&);  // Not implemented
   };
-}
+}  // namespace Alder
 
 /** @} end of doxygen group */
 

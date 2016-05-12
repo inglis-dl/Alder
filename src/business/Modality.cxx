@@ -10,9 +10,10 @@
 =========================================================================*/
 #include <Modality.h>
 
+// VTK includes
 #include <vtkObjectFactory.h>
 
 namespace Alder
 {
-  vtkStandardNewMacro( Modality );
-}
+  vtkStandardNewMacro(Modality);
+}  // namespace Alder

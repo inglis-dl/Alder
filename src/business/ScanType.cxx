@@ -10,9 +10,10 @@
 =========================================================================*/
 #include <ScanType.h>
 
+// VTK includes
 #include <vtkObjectFactory.h>
 
 namespace Alder
 {
-  vtkStandardNewMacro( ScanType );
-}
+  vtkStandardNewMacro(ScanType);
+}  // namespace Alder

@@ -19,35 +19,41 @@
 // VTK includes
 #include <vtkObjectFactory.h>
 
+// C++ includes
+#include <map>
+#include <string>
+#include <vector>
+
 namespace Alder
 {
-  vtkStandardNewMacro( Rating );
+  vtkStandardNewMacro(Rating);
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Rating::UpdateDerivedRating( const bool& derived )
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void Rating::UpdateDerivedRating(const bool &derived)
   {
     this->AssertPrimaryId();
 
-    vtkVariant userId = this->Get( "UserId" );
-    vtkVariant imageId = this->Get( "ImageId" );
-    if( userId.IsValid() && imageId.IsValid() );
+    vtkVariant userId = this->Get("UserId");
+    vtkVariant imageId = this->Get("ImageId");
+    if (userId.IsValid() && imageId.IsValid());
     {
       int derivedRating = Rating::MaximumRating;
-      //loop over all selected codes
+      // loop over all selected codes
 
       // get the ungrouped codes
-      std::vector< vtkSmartPointer< Alder::Code > > codeList;
-      vtkSmartPointer< Alder::QueryModifier > modifier = vtkSmartPointer< Alder::QueryModifier >::New();
-      modifier->Join( "CodeType", "CodeType.Id", "Code.CodeTypeId" );
-      modifier->Where( "UserId", "=", userId.ToInt() );
-      modifier->Where( "ImageId", "=", imageId.ToInt() );
-      modifier->Where( "CodeType.CodeGroupId", "=", vtkVariant() );
+      std::vector<vtkSmartPointer<Code>> codeList;
+      vtkSmartPointer<QueryModifier> modifier =
+        vtkSmartPointer<QueryModifier>::New();
+      modifier->Join("CodeType", "CodeType.Id", "Code.CodeTypeId");
+      modifier->Where("UserId", "=", userId.ToInt());
+      modifier->Where("ImageId", "=", imageId.ToInt());
+      modifier->Where("CodeType.CodeGroupId", "=", vtkVariant());
 
-      Alder::Code::GetAll( &codeList, modifier );
-      for( auto it = codeList.begin(); it != codeList.end(); ++it )
+      Code::GetAll(&codeList, modifier);
+      for (auto it = codeList.begin(); it != codeList.end(); ++it)
       {
-        vtkSmartPointer< Alder::CodeType > type;
-        (*it)->GetRecord( type );
+        vtkSmartPointer<CodeType> type;
+        (*it)->GetRecord(type);
         derivedRating += type->Get("Value").ToInt();
       }
 
@@ -55,50 +61,54 @@ namespace Alder
 
       // get the grouped codes
       modifier->Reset();
-      modifier->Join( "CodeType", "CodeType.Id", "Code.CodeTypeId" );
-      modifier->Where( "UserId", "=", userId.ToInt() );
-      modifier->Where( "ImageId", "=", imageId.ToInt() );
-      modifier->Where( "CodeType.CodeGroupId", "!=", vtkVariant() );
-      modifier->Group( "CodeType.CodeGroupId" );
+      modifier->Join("CodeType", "CodeType.Id", "Code.CodeTypeId");
+      modifier->Where("UserId", "=", userId.ToInt());
+      modifier->Where("ImageId", "=", imageId.ToInt());
+      modifier->Where("CodeType.CodeGroupId", "!=", vtkVariant());
+      modifier->Group("CodeType.CodeGroupId");
 
-      Alder::Code::GetAll( &codeList, modifier );
-      for( auto it = codeList.begin(); it != codeList.end(); ++it )
+      Code::GetAll(&codeList, modifier);
+      for (auto it = codeList.begin(); it != codeList.end(); ++it)
       {
-        vtkSmartPointer< Alder::CodeType > type;
-        (*it)->GetRecord( type );
-        vtkSmartPointer< Alder::CodeGroup > group;
-        if( type->GetRecord( group ) )
+        vtkSmartPointer<CodeType> type;
+        (*it)->GetRecord(type);
+        vtkSmartPointer<CodeGroup> group;
+        if (type->GetRecord(group))
         {
           derivedRating += group->Get("Value").ToInt();
         }
       }
 
-      if( Rating::MinimumRating > derivedRating ) derivedRating = Rating::MinimumRating;
-      if( Rating::MaximumRating < derivedRating ) derivedRating = Rating::MaximumRating;
+      if (Rating::MinimumRating> derivedRating)
+        derivedRating = Rating::MinimumRating;
+      if (Rating::MaximumRating < derivedRating)
+        derivedRating = Rating::MaximumRating;
 
-      this->Set( "DerivedRating", derivedRating );
-      if( derived )
-        this->Set( "Rating", derivedRating );
+      this->Set("DerivedRating", derivedRating);
+      if (derived)
+        this->Set("Rating", derivedRating);
       this->Save();
     }
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Rating::UpdateRatings()
   {
     Application *app = Application::GetInstance();
     std::stringstream stream;
     int threshold = Rating::MinimumRating - Rating::MaximumRating;
     stream  << "UPDATE Rating "
-            << "JOIN ( "
+            << "JOIN ("
             << "  SELECT RatingId, "
             << "  IF(SUM(Value)<"
-            <<    threshold << "," << Rating::MinimumRating << "," << Rating::MaximumRating
+            <<    threshold << ","
+            <<    Rating::MinimumRating << ","
+            <<    Rating::MaximumRating
             << "  +SUM(Value)) AS NewDerived, "
             << "  DerivedRating, "
             << "  MatchedRating "
-            << "  FROM ( "
-            << "    ( SELECT "
+            << "  FROM ("
+            << "    (SELECT "
             << "      r.Id AS RatingId, "
             << "      SUM(t.Value) AS Value, "
             << "      r.DerivedRating, "
@@ -109,13 +119,13 @@ namespace Alder
             << "      JOIN CodeType t ON t.Id=c.CodeTypeId "
             << "      WHERE t.CodeGroupId IS NULL "
             << "      GROUP BY r.Id "
-            << "    ) "
+            << "   ) "
             << "    UNION ALL "
-            << "    ( SELECT RatingId, "
+            << "    (SELECT RatingId, "
             << "      SUM(valueG) AS Value, "
             << "      DerivedRating, "
             << "      MatchedRating "
-            << "      FROM ( "
+            << "      FROM ("
             << "        SELECT "
             << "        r.Id AS RatingId, "
             << "        g.Id AS GroupId, "
@@ -128,29 +138,31 @@ namespace Alder
             << "        JOIN CodeType t ON t.Id=c.CodeTypeId "
             << "        JOIN CodeGroup g ON g.Id=t.CodeGroupId "
             << "        GROUP BY r.Id, g.Id "
-            << "      ) AS x1 GROUP BY ratingId "
-            << "    ) ORDER BY RatingId "
-            << "  ) AS x2 GROUP BY RatingId "
+            << "     ) AS x1 GROUP BY ratingId "
+            << "   ) ORDER BY RatingId "
+            << " ) AS x2 GROUP BY RatingId "
             << ") AS x3 ON x3.RatingId=Rating.Id "
             << "SET Rating.DerivedRating=x3.Newderived, "
             << "Rating.Rating=IF(x3.MatchedRating,x3.NewDerived,Rating.Rating) "
             << "WHERE x3.Newderived!=Rating.DerivedRating";
 
-    app->Log( "Querying Database: " + stream.str() );
+    app->Log("Querying Database: " + stream.str());
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
-    query->SetQuery( stream.str().c_str() );
+    query->SetQuery(stream.str().c_str());
     query->Execute();
-    if( query->HasError() )
+    if (query->HasError())
     {
-      app->Log( query->GetLastErrorText() );
-      throw std::runtime_error( "There was an error while trying to query the database." );
+      app->Log(query->GetLastErrorText());
+      throw std::runtime_error(
+        "There was an error while trying to query the database.");
     }
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  std::map<std::string, int> Rating::GetNumberOfRatings( User* user )
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  std::map<std::string, int> Rating::GetNumberOfRatings(User* user)
   {
-    if( !user ) throw std::runtime_error( "Tried to get rating counts for null user" );
+    if (!user)
+      throw std::runtime_error("Tried to get rating counts for null user");
 
     Application *app = Application::GetInstance();
     std::stringstream stream;
@@ -162,18 +174,19 @@ namespace Alder
            << "JOIN Modality ON Modality.Id=ScanType.ModalityId "
            << "WHERE Rating.UserId = " << user->Get("Id").ToString() << " "
            << "GROUP BY Modality.Name";
-    app->Log( "Querying Database: " + stream.str() );
+    app->Log("Querying Database: " + stream.str());
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
-    query->SetQuery( stream.str().c_str() );
+    query->SetQuery(stream.str().c_str());
     query->Execute();
-    if( query->HasError() )
+    if (query->HasError())
     {
-      app->Log( query->GetLastErrorText() );
-      throw std::runtime_error( "There was an error while trying to query the database." );
+      app->Log(query->GetLastErrorText());
+      throw std::runtime_error(
+        "There was an error while trying to query the database.");
     }
 
     std::map<std::string, int> ratings;
-    while( query->NextRow() )
+    while (query->NextRow())
     {
       std::string modalityName = query->DataValue(0).ToString();
       ratings[modalityName] = query->DataValue(1).ToInt();
@@ -181,11 +194,12 @@ namespace Alder
     return ratings;
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  std::vector<std::map<std::string,std::string>> Rating::GetRatingReportData( User* user,
-    const std::string& modality )
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  std::vector<std::map<std::string, std::string>> Rating::GetRatingReportData(
+    User* user,  const std::string &modality)
   {
-    if( !user ) throw std::runtime_error( "Tried to get rating data for null user" );
+    if (!user)
+      throw std::runtime_error("Tried to get rating data for null user");
 
     Application *app = Application::GetInstance();
     std::stringstream stream;
@@ -211,10 +225,10 @@ namespace Alder
            << "JOIN Interview ON Interview.Id=Exam.InterviewId "
            << "JOIN Site ON Site.Id=Interview.SiteId "
            << "JOIN User ON User.Id=Rating.UserId "
-           << "LEFT JOIN ( "
+           << "LEFT JOIN ("
            << "  SELECT "
-           << "  GROUP_CONCAT( DISTINCT Code ORDER BY Code SEPARATOR ',' ) AS Code, "
-           << "  GROUP_CONCAT( DISTINCT CodeType.Id ORDER BY CodeType.Id SEPARATOR ',' ) AS CodeID, "
+           << "  GROUP_CONCAT(DISTINCT Code ORDER BY Code SEPARATOR ',') AS Code, "
+           << "  GROUP_CONCAT(DISTINCT CodeType.Id ORDER BY CodeType.Id SEPARATOR ',') AS CodeID, "
            << "  ImageId "
            << "  FROM Code "
            << "  JOIN CodeType ON CodeType.Id=Code.CodeTypeId "
@@ -222,45 +236,46 @@ namespace Alder
            << "  JOIN User ON User.Id=Code.UserId "
            << "  WHERE Code.UserId=" << user->Get("Id").ToString() << " "
            << "  GROUP BY Image.Id "
-           << "  ) x ON x.ImageId=Rating.ImageId "
+           << " ) x ON x.ImageId=Rating.ImageId "
            << "WHERE User.Id=" << user->Get("Id").ToString() << " ";
 
-    if( !modality.empty() )
+    if (!modality.empty())
     {
       stream << "AND Modality.Name='" << modality << "' ";
     }
     stream << "ORDER BY SITE, VISITDATE, UID";
 
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
-    query->SetQuery( stream.str().c_str() );
+    query->SetQuery(stream.str().c_str());
     query->Execute();
-    if( query->HasError() )
+    if (query->HasError())
     {
-      app->Log( query->GetLastErrorText() );
-      throw std::runtime_error( "There was an error while trying to query the database." );
+      app->Log(query->GetLastErrorText());
+      throw std::runtime_error(
+        "There was an error while trying to query the database.");
     }
 
-    std::vector<std::map<std::string,std::string>> ratings;
-    std::map<int,std::string> queryMap = {
-      {0,"RATER"},
-      {1,"RATING"},
-      {2,"DERIVED"},
-      {3,"CODE"},
-      {4,"CODEID"},
-      {5,"TYPE"},
-      {6,"SIDE"},
-      {7,"UID"},
-      {8,"VISITDATE"},
-      {9,"SITE"},
-      {10,"INTERVIEWER"},
-      {11,"RATING_CREATE_DATETIME"},
-      {12,"RATING_UPDATE_DATETIME"}
+    std::vector<std::map<std::string, std::string>> ratings;
+    std::map<int, std::string> queryMap = {
+      {0, "RATER"},
+      {1, "RATING"},
+      {2, "DERIVED"},
+      {3, "CODE"},
+      {4, "CODEID"},
+      {5, "TYPE"},
+      {6, "SIDE"},
+      {7, "UID"},
+      {8, "VISITDATE"},
+      {9, "SITE"},
+      {10, "INTERVIEWER"},
+      {11, "RATING_CREATE_DATETIME"},
+      {12, "RATING_UPDATE_DATETIME"}
     };
 
-    while( query->NextRow() )
+    while (query->NextRow())
     {
-      std::map<std::string,std::string> tmp;
-      for( auto it = queryMap.cbegin(); it != queryMap.cend(); ++it )
+      std::map<std::string, std::string> tmp;
+      for (auto it = queryMap.cbegin(); it != queryMap.cend(); ++it)
       {
         tmp[it->second] = query->DataValue(it->first).ToString();
       }
@@ -269,4 +284,4 @@ namespace Alder
 
     return ratings;
   }
-}
+}  // namespace Alder

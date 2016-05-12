@@ -8,7 +8,6 @@
   Author: Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #include <ModelObject.h>
 
 namespace Alder
@@ -16,4 +15,4 @@ namespace Alder
   ModelObject::ModelObject()
   {
   }
-}
+}  // namespace Alder

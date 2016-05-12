@@ -20,234 +20,244 @@
 // VTK includes
 #include <vtkObjectFactory.h>
 
+// C++ includes
+#include <map>
+#include <string>
+#include <vector>
+
 namespace Alder
 {
-  vtkStandardNewMacro( Wave );
+  vtkStandardNewMacro(Wave);
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Wave::UpdateScanTypeData()
   {
     Application *app = Application::GetInstance();
     OpalService *opal = app->GetOpal();
 
     // the list of ScanTypes by Name
-    std::string source = this->Get( "MetaDataSource" ).ToString();
-    std::vector< std::string > vecOpal = opal->GetIdentifiers( source, "ScanType" );
-    if( vecOpal.empty() )
+    std::string source = this->Get("MetaDataSource").ToString();
+    std::vector<std::string> vecOpal = opal->GetIdentifiers(source, "ScanType");
+    if (vecOpal.empty())
     {
       std::string err = "Opal data source ";
       err += source;
       err += " is missing ScanType identifiers";
-      app->Log( err );
+      app->Log(err);
       return;
     }
 
-    std::vector< std::string > validate = app->GetDB()->GetColumnNames( "ScanType" );
+    std::vector<std::string> validate =
+      app->GetDB()->GetColumnNames("ScanType");
 
-    std::map< std::string, std::map< std::string, std::string > > mapOpal =
-      opal->GetRows( source, "ScanType", 0, vecOpal.size() );
+    std::map<std::string, std::map<std::string, std::string> > mapOpal =
+      opal->GetRows(source, "ScanType", 0, vecOpal.size());
 
-    std::string waveId = this->Get( "Id" ).ToString();
-    vtkSmartPointer< QueryModifier > modifier = vtkSmartPointer< QueryModifier >::New();
+    std::string waveId = this->Get("Id").ToString();
+    vtkSmartPointer<QueryModifier> modifier =
+      vtkSmartPointer<QueryModifier>::New();
 
-    for( auto it = mapOpal.cbegin(); it != mapOpal.cend(); ++it )
+    for (auto it = mapOpal.cbegin(); it != mapOpal.cend(); ++it)
     {
       std::string type = it->first;
-      if( type.empty() )
+      if (type.empty())
          continue;
 
-      std::map< std::string, std::string > loader;
+      std::map<std::string, std::string> loader;
       loader["WaveId"] = waveId;
       loader["Type"] = type;
       bool create = true;
-      vtkNew< Alder::ScanType > scanType;
-      if( scanType->Load( loader ) )
+      vtkNew<ScanType> scanType;
+      if (scanType->Load(loader))
       {
         create = false;
         loader.clear();
       }
 
-      std::map< std::string,std::string > mapVar = it->second;
-      for( auto mit = mapVar.cbegin(); mit != mapVar.cend(); ++mit )
+      std::map<std::string, std::string> mapVar = it->second;
+      for (auto mit = mapVar.cbegin(); mit != mapVar.cend(); ++mit)
       {
         std::string var = mit->first;
         std::string val = mit->second;
-        if( std::find( validate.begin(), validate.end(), var ) == validate.end() )
+        if (std::find(validate.begin(), validate.end(), var) == validate.end())
         {
           // is the variable the modality name?
-          std::vector< std::string > tmp = Alder::Utilities::explode( var, "." );
-          if( 2 == tmp.size() && "Modality" == tmp.front() )
+          std::vector<std::string> tmp = Utilities::explode(var, ".");
+          if (2 == tmp.size() && "Modality" == tmp.front())
           {
-            vtkNew< Alder::Modality > modality;
-            if( !modality->Load( "Name", val ) )
+            vtkNew<Modality> modality;
+            if (!modality->Load("Name", val))
             {
-              modality->Set( "Name", val );
+              modality->Set("Name", val);
               modality->Save();
-              modality->Load( "Name", val );
+              modality->Load("Name", val);
             }
-            loader["ModalityId"] = modality->Get( "Id" ).ToString();
+            loader["ModalityId"] = modality->Get("Id").ToString();
           }
         }
         else
         {
-          if( create || ( val != scanType->Get( var ).ToString() ) )
+          if (create || (val != scanType->Get(var).ToString()))
             loader[var] = val;
         }
       }
 
-      if( !loader.empty() )
+      if (!loader.empty())
       {
-        scanType->Set( loader );
+        scanType->Set(loader);
         scanType->Save();
       }
       loader["WaveId"] = waveId;
       loader["Type"] = type;
-      if( scanType->Load( loader ) )
+      if (scanType->Load(loader))
       {
         // update the ScanTypeHasCodeType information
-
         // get the vector of CodeTypes by ScanType.Type
         modifier->Reset();
-        modifier->Join( "ScanTypeHasCodeType", "CodeType.Id","ScanTypeHasCodeType.CodeTypeId" );
-        modifier->Join( "ScanType", "ScanType.Id","ScanTypeHasCodeType.ScanTypeId" );
-        modifier->Where( "ScanType.Type", "=", scanType->Get("Type") );
+        modifier->Join(
+          "ScanTypeHasCodeType", "CodeType.Id",
+          "ScanTypeHasCodeType.CodeTypeId");
+        modifier->Join(
+          "ScanType", "ScanType.Id",
+          "ScanTypeHasCodeType.ScanTypeId");
+        modifier->Where("ScanType.Type", "=", scanType->Get("Type"));
 
-        std::vector< vtkSmartPointer< CodeType > > codeTypeList;
-        CodeType::GetAll( &codeTypeList, modifier );
-        if( !codeTypeList.empty() )
+        std::vector<vtkSmartPointer<CodeType>> codeTypeList;
+        CodeType::GetAll(&codeTypeList, modifier);
+        for (auto cit = codeTypeList.begin(); cit != codeTypeList.end(); ++cit)
         {
-          for( auto cit = codeTypeList.begin(); cit != codeTypeList.end(); ++cit )
-          {
-            scanType->AddRecord( (*cit) );
-          }
+          scanType->AddRecord((*cit));
         }
       }
     }
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Wave::UpdateWaveData( const std::string &source )
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  void Wave::UpdateWaveData(const std::string &source)
   {
     // get the waves from Opal
     // create or update as required
-    if( source.empty() ) return;
+    if (source.empty()) return;
 
     Application *app = Application::GetInstance();
     OpalService *opal = app->GetOpal();
     bool sustain = opal->GetSustainConnection();
-    if( !sustain )
+    if (!sustain)
     {
       try
       {
         opal->SustainConnectionOn();
       }
-      catch( std::runtime_error& e )
+      catch(std::runtime_error &e)
       {
-        app->Log( e.what() );
+        app->Log(e.what());
         return;
       }
     }
 
     // the list of Waves by Name
-    std::vector< std::string > vecOpal = opal->GetIdentifiers( source, "Wave" );
-    if( vecOpal.empty() )
+    std::vector<std::string> vecOpal = opal->GetIdentifiers(source, "Wave");
+    if (vecOpal.empty())
     {
       std::string err = "Opal data source ";
       err += source;
       err += " is missing Wave identifiers";
-      app->Log( err );
-      if( !sustain )
+      app->Log(err);
+      if (!sustain)
         opal->SustainConnectionOff();
       return;
     }
 
-    std::vector< std::string > validate = app->GetDB()->GetColumnNames( "Wave" );
+    std::vector<std::string> validate = app->GetDB()->GetColumnNames("Wave");
 
-    std::map< std::string, std::map< std::string, std::string > > mapOpal =
-      opal->GetRows( source, "Wave", 0, vecOpal.size() );
+    std::map<std::string, std::map<std::string, std::string> > mapOpal =
+      opal->GetRows(source, "Wave", 0, vecOpal.size());
 
-    for( auto it = mapOpal.cbegin(); it != mapOpal.cend(); ++it )
+    for (auto it = mapOpal.cbegin(); it != mapOpal.cend(); ++it)
     {
       std::string name = it->first;
-      if( name.empty() )
+      if (name.empty())
          continue;
 
-      std::map< std::string, std::string > mapVar = it->second;
-      std::map< std::string, std::string > loader;
+      std::map<std::string, std::string> mapVar = it->second;
+      std::map<std::string, std::string> loader;
       loader["Name"] = name;
-      vtkNew< Alder::Wave > wave;
+      vtkNew<Wave > wave;
       bool create = true;
-      if( wave->Load( "Name", name ) )
+      if (wave->Load("Name", name))
       {
         create = false;
         loader.clear();
       }
 
-      for( auto mit = mapVar.cbegin(); mit != mapVar.cend(); ++mit )
+      for (auto mit = mapVar.cbegin(); mit != mapVar.cend(); ++mit)
       {
         std::string var = mit->first;
         std::string val = mit->second;
-        if( std::find( validate.begin(), validate.end(), var ) == validate.end() )
+        if (std::find(validate.begin(), validate.end(), var) == validate.end())
         {
           std::string warning = "Invalid wave column '";
           warning += var;
           warning += "' in Opal source ";
           warning += source;
-          app->Log( warning );
+          app->Log(warning);
           continue;
         }
         else
         {
-          if( create || ( val != wave->Get( var ).ToString() ) )
+          if (create || (val != wave->Get(var).ToString()))
             loader[var] = val;
         }
       }
 
-      if( !loader.empty() )
+      if (!loader.empty())
       {
-        wave->Set( loader );
+        wave->Set(loader);
         wave->Save();
-        if( create )
-          wave->Load( loader );
+        if (create)
+          wave->Load(loader);
       }
 
       wave->UpdateScanTypeData();
     }
 
-    if( !sustain )
+    if (!sustain)
       opal->SustainConnectionOff();
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   int Wave::GetIdentifierCount()
   {
-    std::string source = this->Get( "MetaDataSource" ).ToString();
-    if( source.empty() )
-      throw std::runtime_error( "MetaDataSource missing for Wave identifier count" );
+    std::string source = this->Get("MetaDataSource").ToString();
+    if (source.empty())
+      throw std::runtime_error(
+        "MetaDataSource missing for Wave identifier count");
 
     Application *app = Application::GetInstance();
     OpalService *opal = app->GetOpal();
-    std::vector< std::string > vecOpal = opal->GetIdentifiers( source, "Interview" );
+    std::vector<std::string> vecOpal =
+      opal->GetIdentifiers(source, "Interview");
     return vecOpal.size();
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::string Wave::GetMaximumInterviewUpdateTimestamp()
   {
     Application *app = Application::GetInstance();
     std::stringstream stream;
-    stream << "SELECT MAX( UpdateTimestamp ) "
+    stream << "SELECT MAX(UpdateTimestamp) "
            << "FROM Interview "
-           << "WHERE WaveId=" << this->Get( "Id" ).ToString();
-    app->Log( "Querying Database: " + stream.str() );
+           << "WHERE WaveId=" << this->Get("Id").ToString();
+    app->Log("Querying Database: " + stream.str());
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
-    query->SetQuery( stream.str().c_str() );
+    query->SetQuery(stream.str().c_str());
     query->Execute();
 
-    if( query->HasError() )
+    if (query->HasError())
     {
-      app->Log( query->GetLastErrorText() );
-      throw std::runtime_error( "There was an error while trying to query the database." );
+      app->Log(query->GetLastErrorText());
+      throw std::runtime_error(
+        "There was an error while trying to query the database.");
     }
 
     // only one row
@@ -255,27 +265,29 @@ namespace Alder
     return query->DataValue(0).ToString();
   }
 
-  //-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   int Wave::GetMaximumExamCount()
   {
     Application *app = Application::GetInstance();
     std::stringstream stream;
-    stream << "SELECT SUM( IF(SideCount=0,1,SideCount) ) "
+    stream << "SELECT SUM(IF(SideCount=0,1,SideCount)) "
            << "FROM ScanType "
-           << "WHERE WaveId=" << this->Get( "Id" ).ToString();
-    app->Log( "Querying Database: " + stream.str() );
+           << "WHERE WaveId="
+           << this->Get("Id").ToString();
+    app->Log("Querying Database: " + stream.str());
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
-    query->SetQuery( stream.str().c_str() );
+    query->SetQuery(stream.str().c_str());
     query->Execute();
 
-    if( query->HasError() )
+    if (query->HasError())
     {
-      app->Log( query->GetLastErrorText() );
-      throw std::runtime_error( "There was an error while trying to query the database." );
+      app->Log(query->GetLastErrorText());
+      throw std::runtime_error(
+        "There was an error while trying to query the database.");
     }
 
     // only one row
     query->NextRow();
     return query->DataValue(0).ToInt();
   }
-}
+}  // namespace Alder

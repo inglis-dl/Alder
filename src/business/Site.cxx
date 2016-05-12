@@ -10,9 +10,10 @@
 =========================================================================*/
 #include <Site.h>
 
+// VTK includes
 #include <vtkObjectFactory.h>
 
 namespace Alder
 {
-  vtkStandardNewMacro( Site );
-}
+  vtkStandardNewMacro(Site);
+}  // namespace Alder

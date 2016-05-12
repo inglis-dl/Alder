@@ -22,6 +22,7 @@
 #ifndef __ModelObject_h
 #define __ModelObject_h
 
+// VTK includes
 #include <vtkObject.h>
 #include <vtkSetGet.h>
 
@@ -34,18 +35,18 @@ namespace Alder
 {
   class ModelObject : public vtkObject
   {
-  public:
-    vtkTypeMacro( ModelObject, vtkObject );
+    public:
+      vtkTypeMacro(ModelObject, vtkObject);
 
-  protected:
-    ModelObject();
-    ~ModelObject() {}
+    protected:
+      ModelObject();
+      ~ModelObject() {}
 
-  private:
-    ModelObject( const ModelObject& ); // Not implemented
-    void operator=( const ModelObject& ); // Not implemented
+    private:
+      ModelObject(const ModelObject&);  // Not implemented
+      void operator=(const ModelObject&);  // Not implemented
   };
-}
+}  // namespace Alder
 
 /** @} end of doxygen group */
 

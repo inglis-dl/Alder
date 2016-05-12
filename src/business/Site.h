@@ -22,7 +22,11 @@
 #ifndef __Site_h
 #define __Site_h
 
+// VTK includes
 #include <ActiveRecord.h>
+
+// C++ includes
+#include <string>
 
 /**
  * @addtogroup Alder
@@ -33,20 +37,20 @@ namespace Alder
 {
   class Site : public ActiveRecord
   {
-  public:
-    static Site *New();
-    vtkTypeMacro( Site, ActiveRecord );
-    std::string GetName() const { return "Site"; }
+    public:
+      static Site *New();
+      vtkTypeMacro(Site, ActiveRecord);
+      std::string GetName() const { return "Site"; }
 
-  protected:
-    Site() {}
-    ~Site() {}
+    protected:
+      Site() {}
+      ~Site() {}
 
-  private:
-    Site( const Site& ); // Not implemented
-    void operator=( const Site& ); // Not implemented
+    private:
+      Site(const Site&);  // Not implemented
+      void operator=(const Site&);  // Not implemented
   };
-}
+}  // namespace Alder
 
 /** @} end of doxygen group */
 
