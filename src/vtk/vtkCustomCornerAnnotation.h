@@ -46,20 +46,20 @@ class vtkTextProperty;
 class vtkCustomCornerAnnotation : public vtkActor2D
 {
   public:
-    static vtkCustomCornerAnnotation *New();
+    static vtkCustomCornerAnnotation* New();
     vtkTypeMacro(vtkCustomCornerAnnotation, vtkActor2D);
-    void PrintSelf(ostream &os, vtkIndent indent);
+    void PrintSelf(ostream& os, vtkIndent indent);
 
     //@{
     /**
      * Draw the scalar bar and annotation text to the screen.
      */
     int RenderOpaqueGeometry(vtkViewport* viewport);
-    virtual int RenderTranslucentPolygonalGeometry(vtkViewport *viewport)
+    virtual int RenderTranslucentPolygonalGeometry(vtkViewport* viewport)
     {
       return 0;
     };
-    int RenderOverlay(vtkViewport *viewport);
+    int RenderOverlay(vtkViewport* viewport);
     //@}
 
     /** Does this prop have some translucent polygonal geometry? */
@@ -111,15 +111,15 @@ class vtkCustomCornerAnnotation : public vtkActor2D
 
     //@{
     /** Set/Get the text to be displayed for each corner */
-    void SetText(int i, const char *text);
+    void SetText(int i, const char* text);
     const char* GetText(int i);
     void ClearAllTexts();
-    void CopyAllTextsFrom(vtkCustomCornerAnnotation *annotation);
+    void CopyAllTextsFrom(vtkCustomCornerAnnotation* annotation);
     //@}
 
     //@{
     /** Set an image actor to look at for slice information */
-    void SetImageSlice(vtkImageSlice *slice);
+    void SetImageSlice(vtkImageSlice* slice);
     vtkGetObjectMacro(ImageSlice, vtkImageSlice);
     //@}
 
@@ -128,7 +128,7 @@ class vtkCustomCornerAnnotation : public vtkActor2D
      * Set an instance of vtkImageWindowLevel to use for
      * looking at window level changes
      */
-    void SetWindowLevel(vtkImageWindowLevel *wl);
+    void SetWindowLevel(vtkImageWindowLevel* wl);
     vtkGetObjectMacro(WindowLevel, vtkImageWindowLevel);
     //@}
 
@@ -146,7 +146,7 @@ class vtkCustomCornerAnnotation : public vtkActor2D
 
     //@{
     /** Set/Get the text property of all corners. */
-    virtual void SetTextProperty(vtkTextProperty *property);
+    virtual void SetTextProperty(vtkTextProperty* property);
     vtkGetObjectMacro(TextProperty, vtkTextProperty);
     //@}
 
@@ -165,20 +165,20 @@ class vtkCustomCornerAnnotation : public vtkActor2D
 
     double MaximumLineHeight;
 
-    vtkTextProperty *TextProperty;
+    vtkTextProperty* TextProperty;
 
-    vtkImageWindowLevel *WindowLevel;
+    vtkImageWindowLevel* WindowLevel;
     double LevelShift;
     double LevelScale;
-    vtkImageSlice *ImageSlice;
-    vtkImageSlice *LastImageSlice;
+    vtkImageSlice* ImageSlice;
+    vtkImageSlice* LastImageSlice;
 
     std::string CornerText[4];
 
     int FontSize;
     vtkSmartPointer<vtkActor2D> TextActor[4];
-    vtkTimeStamp   BuildTime;
-    int            LastSize[2];
+    vtkTimeStamp BuildTime;
+    int LastSize[2];
     vtkSmartPointer<vtkTextMapper> TextMapper[4];
 
     int MinimumFontSize;
@@ -191,7 +191,7 @@ class vtkCustomCornerAnnotation : public vtkActor2D
 
     /** Search for replacable tokens and replace */
     virtual void TextReplace(
-      vtkImageSlice *slice, vtkImageWindowLevel *wl);
+      vtkImageSlice* slice, vtkImageWindowLevel* wl);
 
     /**
      * Set text actor positions given a viewport size and justification

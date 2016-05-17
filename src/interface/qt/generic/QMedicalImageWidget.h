@@ -24,37 +24,35 @@ class QMedicalImageWidget : public QWidget
 {
   Q_OBJECT
 
-public:
-  //constructor
-  QMedicalImageWidget( QWidget* parent = 0 );
-  //destructor
-  ~QMedicalImageWidget();
+  public:
+    // constructor
+    explicit QMedicalImageWidget(QWidget* parent = 0);
+    // destructor
+    ~QMedicalImageWidget();
 
-  void reset();
-  void load( const QString& fileName );
-  void save( const QString& fileName );
-  vtkMedicalImageViewer* GetViewer();
+    void reset();
+    void load(const QString& fileName);
+    void save(const QString& fileName);
+    vtkMedicalImageViewer* GetViewer();
 
-public Q_SLOTS:
+  public Q_SLOTS:
+    void slotSelectColor();
+    void slotFlipVertical();
+    void slotFlipHorizontal();
+    void slotRotateClockwise();
+    void slotRotateCounterClockwise();
+    void slotInvertWindowLevel();
+    void slotInterpolationToggle();
 
-  void slotSelectColor();
-  void slotFlipVertical();
-  void slotFlipHorizontal();
-  void slotRotateClockwise();
-  void slotRotateCounterClockwise();
-  void slotInvertWindowLevel();
-  void slotInterpolationToggle();
+  protected:
+    void updateInterface();
+    bool eventFilter(QObject* obj, QEvent* event);
 
-protected:
-  void updateInterface();
+    vtkSmartPointer<vtkMedicalImageViewer> viewer;
 
-  bool eventFilter( QObject *, QEvent * );
-
-  vtkSmartPointer<vtkMedicalImageViewer> viewer;
-
-private:
-  // Designer form
-  Ui_QMedicalImageWidget *ui;
+  private:
+    // Designer form
+    Ui_QMedicalImageWidget *ui;
 };
 
 #endif

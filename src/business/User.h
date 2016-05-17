@@ -39,7 +39,7 @@ namespace Alder
   class User : public ActiveRecord
   {
     public:
-      static User *New();
+      static User* New();
       vtkTypeMacro(User, ActiveRecord);
       std::string GetName() const { return "User"; }
 
@@ -52,7 +52,7 @@ namespace Alder
        * Check if the password is the user's password.
        * @param password the password to check
        */
-      virtual bool IsPassword(const std::string &password);
+      virtual bool IsPassword(const std::string& password);
 
       /**
        * Get the default password.
@@ -64,7 +64,7 @@ namespace Alder
        * Get a modifier to enforce user specific modality constraints
        * @param modifier the QueryModifier to initialize
        */
-      void InitializeExamModifier(QueryModifier *modifier);
+      void InitializeExamModifier(QueryModifier* modifier);
 
     protected:
       User() {}
@@ -77,7 +77,7 @@ namespace Alder
        * @param column name of a column in the User table
        * @param value  the value to set the column to
        */
-      virtual void SetVariant(const std::string column, vtkVariant value);
+      virtual void SetVariant(const std::string column, const vtkVariant value);
 
     private:
       User(const User&);  // Not implemented

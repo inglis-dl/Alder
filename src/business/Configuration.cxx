@@ -37,7 +37,7 @@ namespace Alder
       this->Reader->Update();
       this->Settings = this->Reader->GetSettings();
     }
-    catch(std::exception &e)
+    catch (std::exception& e)
     {
       return false;
     }

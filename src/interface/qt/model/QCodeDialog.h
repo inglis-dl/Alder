@@ -19,22 +19,22 @@ class QCodeDialog : public QDialog
 {
   Q_OBJECT
 
-public:
-  typedef QDialog Superclass;
-  //constructor
-  explicit QCodeDialog( QWidget* parent = 0 );
-  //destructor
-  virtual ~QCodeDialog();
+  public:
+    typedef QDialog Superclass;
+    // constructor
+    explicit QCodeDialog(QWidget* parent = 0);
+    // destructor
+    virtual ~QCodeDialog();
 
-public slots:
-  void close();
+  public slots:
+    void close();
 
-protected:
-  QScopedPointer<QCodeDialogPrivate> d_ptr;
+  protected:
+    QScopedPointer<QCodeDialogPrivate> d_ptr;
 
-private:
-  Q_DECLARE_PRIVATE(QCodeDialog);
-  Q_DISABLE_COPY(QCodeDialog);
+  private:
+    Q_DECLARE_PRIVATE(QCodeDialog);
+    Q_DISABLE_COPY(QCodeDialog);
 };
 
 #endif

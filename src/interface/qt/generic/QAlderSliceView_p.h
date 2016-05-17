@@ -13,8 +13,8 @@
 #include <QObject>
 
 // Alder includes
-#include "QAlderSliceView.h"
-#include "QAlderAbstractView_p.h"
+#include <QAlderSliceView.h>
+#include <QAlderAbstractView_p.h>
 #include <vtkCustomCornerAnnotation.h>
 #include <vtkCustomInteractorStyleImage.h>
 #include <vtkImageCoordinateWidget.h>
@@ -26,73 +26,75 @@
 #include <vtkRenderer.h>
 #include <vtkSmartPointer.h>
 
+// C++ includes
 #include <map>
+#include <string>
 
 class QAlderSliceViewPrivate : public QAlderAbstractViewPrivate
 {
   Q_OBJECT
   Q_DECLARE_PUBLIC(QAlderSliceView);
 
-public:
-  QAlderSliceViewPrivate(QAlderSliceView& object);
+  public:
+    QAlderSliceViewPrivate(QAlderSliceView& object);
 
-  void setColorWindowLevel( const double&, const double& );
-  void flipCameraVertical();
-  void flipCameraHorizontal();
-  void rotateCamera( const double& );
-  void setSlice( const int& );
-  void setImageData( vtkImageData* );
-  void setOrientation( const QAlderSliceView::Orientation& );
-  void setInterpolation( const int& );
-  int sliceMin();
-  int sliceMax();
+    void setColorWindowLevel(const double& window, const double& level);
+    void flipCameraVertical();
+    void flipCameraHorizontal();
+    void rotateCamera(const double& angle);
+    void setSlice(const int& slice);
+    void setImageData(vtkImageData* image);
+    void setOrientation(const QAlderSliceView::Orientation& orientation);
+    void setInterpolation(const int& interp);
+    int sliceMin();
+    int sliceMax();
 
-  void doResetWindowLevelEvent();
-  void doStartWindowLevelEvent();
-  void doWindowLevelEvent();
+    void doResetWindowLevelEvent();
+    void doStartWindowLevelEvent();
+    void doWindowLevelEvent();
 
-  vtkSmartPointer<vtkCustomCornerAnnotation>     CornerAnnotation;
-  vtkSmartPointer<vtkImageSlice>                 ImageSlice;
-  vtkSmartPointer<vtkImageSliceMapper>           ImageSliceMapper;
-  vtkSmartPointer<vtkImageCoordinateWidget>      CoordinateWidget;
-  vtkSmartPointer<vtkCustomInteractorStyleImage> InteractorStyle;
-  vtkSmartPointer<vtkImageWindowLevel>           WindowLevel;
+    vtkSmartPointer<vtkCustomCornerAnnotation>     CornerAnnotation;
+    vtkSmartPointer<vtkImageSlice>                 ImageSlice;
+    vtkSmartPointer<vtkImageSliceMapper>           ImageSliceMapper;
+    vtkSmartPointer<vtkImageCoordinateWidget>      CoordinateWidget;
+    vtkSmartPointer<vtkCustomInteractorStyleImage> InteractorStyle;
+    vtkSmartPointer<vtkImageWindowLevel>           WindowLevel;
 
-  void setupRendering( const bool& display, const bool& initCamera = false );
-  void setupCoordinateWidget();
-  void setupCornerAnnotation();
+    void setupRendering(const bool& display, const bool& initCamera = false);
+    void setupCoordinateWidget();
+    void setupCornerAnnotation();
 
-  bool annotateOverView;
-  bool cursorOverView;
-  int slice;
-  QAlderSliceView::Orientation orientation;
-  int dimensionality;
-  int interpolation;
-  int frameRate;
+    bool annotateOverView;
+    bool cursorOverView;
+    int slice;
+    QAlderSliceView::Orientation orientation;
+    int dimensionality;
+    int interpolation;
+    int frameRate;
 
-private:
-  int lastSlice[3];
-  double cameraPosition[3][3];      /**< Current camera position */
-  double cameraFocalPoint[3][3];    /**< Current camera focal point */
-  double cameraViewUp[3][3];        /**< Current camera view up */
-  double cameraParallelScale[3];    /**< Current camera parallel scale (zoom) */
-  double cameraDistance[3];         /**< Current camera distance */
-  double cameraClippingRange[3][2]; /**< Current clipping range */
+  private:
+    int lastSlice[3];
+    double cameraPosition[3][3];
+    double cameraFocalPoint[3][3];
+    double cameraViewUp[3][3];
+    double cameraParallelScale[3];
+    double cameraDistance[3];
+    double cameraClippingRange[3][2];
 
-  double originalColorWindow;
-  double originalColorLevel;
-  double initialColorWindow;
-  double initialColorLevel;
+    double originalColorWindow;
+    double originalColorLevel;
+    double initialColorWindow;
+    double initialColorLevel;
 
-  int* sliceRange();
+    int* sliceRange();
 
-  void computeCameraFromCurrentSlice( const bool& useCamera = true );
-  void updateCameraView();
-  void initializeWindowLevel();
-  void initializeCameraViews();
-  void recordCameraView( const int& specified = -1 );
+    void computeCameraFromCurrentSlice(const bool& useCamera = true);
+    void updateCameraView();
+    void initializeWindowLevel();
+    void initializeCameraViews();
+    void recordCameraView(const int& specified = -1);
 
-  std::map< std::string, unsigned long > callbackTags;
+    std::map<std::string, unsigned long> callbackTags;
 };
 
 #endif

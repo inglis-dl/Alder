@@ -16,35 +16,33 @@
 namespace Alder { class Interview; };
 class QTableWidgetItem;
 
-class QSelectInterviewDialogPrivate : public QObject, public Ui_QSelectInterviewDialog
+class QSelectInterviewDialogPrivate : public QObject,
+  public Ui_QSelectInterviewDialog
 {
   Q_OBJECT
   Q_DECLARE_PUBLIC(QSelectInterviewDialog);
-protected:
-  QSelectInterviewDialog* const q_ptr;
+  protected:
+    QSelectInterviewDialog* const q_ptr;
 
-public:
-  explicit QSelectInterviewDialogPrivate(QSelectInterviewDialog& object);
-  virtual ~QSelectInterviewDialogPrivate();
+  public:
+    explicit QSelectInterviewDialogPrivate(QSelectInterviewDialog& object);
+    virtual ~QSelectInterviewDialogPrivate();
 
-  void setupUi(QWidget*);
-  void updateUi();
+    void setupUi(QWidget* widget);
+    void updateUi();
 
-public slots:
+  public slots:
+    void sort(int column);
+    void search();
+    void selectionChanged();
 
-  void sort(int);
-
-  void search();
-
-  void selectionChanged();
-
-private:
-  bool searchTextInUId( const QString& );
-  void updateRow( const int&, Alder::Interview* );
-  QStringList searchText;
-  int sortColumn;
-  Qt::SortOrder sortOrder;
-  QMap<QString,int> columnIndex;
+  private:
+    bool searchTextInUId(const QString& uid);
+    void updateRow(const int& row, Alder::Interview* interview);
+    QStringList searchText;
+    int sortColumn;
+    Qt::SortOrder sortOrder;
+    QMap<QString, int> columnIndex;
 };
 
 #endif

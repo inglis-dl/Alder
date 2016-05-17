@@ -79,13 +79,13 @@ namespace Alder
   {
     this->AssertPrimaryId();
 
-    vtkSmartPointer< Exam > exam;
+    vtkSmartPointer<Exam> exam;
     if (!this->GetRecord(exam))
       throw std::runtime_error("Image has no parent exam!");
 
     // the image file's directory is simply
     // the image data path and the exam code
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     std::stringstream stream;
     stream << app->GetConfig()->GetValue("Path", "ImageData")
            << "/" << exam->GetCode();
@@ -94,7 +94,7 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  std::string Image::CreateFile(std::string const &suffix)
+  std::string Image::CreateFile(std::string const& suffix)
   {
     // first get the path and create it if it doesn't exist
     std::string path = this->GetFilePath();
@@ -122,7 +122,7 @@ namespace Alder
         {
           child->Remove();
         }
-        catch(std::runtime_error &e)
+        catch (std::runtime_error& e)
         {
           throw(e);
         }
@@ -141,14 +141,14 @@ namespace Alder
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Image::ValidateFile()
   {
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     bool valid = false;
     std::string fileName;
     try
     {
       fileName = this->GetFileName();
     }
-    catch(std::runtime_error& e)
+    catch (std::runtime_error& e)
     {
       app->Log(e.what());
       return valid;
@@ -195,7 +195,7 @@ namespace Alder
     std::string path = this->GetFilePath();
 
     // now look for image files in that directory
-    vtkNew< vtkDirectory > directory;
+    vtkNew<vtkDirectory> directory;
 
     if (!directory->Open(path.c_str()))
     {
@@ -247,7 +247,7 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  std::string Image::GetDICOMTag(std::string const &tagName)
+  std::string Image::GetDICOMTag(std::string const& tagName)
   {
     // get the name of the unzipped file
     std::string fileName = this->GetFileName();
@@ -323,7 +323,7 @@ namespace Alder
     if (".gz" == fileName.substr(fileName.size() - 3, 3))
       fileName = fileName.substr(0, fileName.size() - 3);
 
-    std::vector< int > dims;
+    std::vector<int> dims;
     gdcm::ImageReader reader;
     reader.SetFileName(fileName.c_str());
     if (reader.Read())
@@ -334,7 +334,7 @@ namespace Alder
     }
     else
     {
-      Application *app = Application::GetInstance();
+      Application* app = Application::GetInstance();
       app->Log("ERROR: failed read during get dicom dimensions");
     }
     return dims;
@@ -363,7 +363,7 @@ namespace Alder
   {
     if (!this->GetDICOMTag("PatientName").empty())
     {
-      Application *app = Application::GetInstance();
+      Application* app = Application::GetInstance();
       gdcm::Reader gdcmRead;
       std::string fileName = this->GetFileName();
       gdcmRead.SetFileName(fileName.c_str());
@@ -406,14 +406,14 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool Image::SwapExamSideTo(const std::string &side)
+  bool Image::SwapExamSideTo(const std::string& side)
   {
     if (side.empty() || !("left" == side || "right" == side))
     {
       return false;
     }
 
-    vtkSmartPointer< Exam > exam;
+    vtkSmartPointer<Exam> exam;
     if (!this->GetRecord(exam))
     {
       return false;
@@ -466,7 +466,7 @@ namespace Alder
         return false;
       }
 
-      Application *app = Application::GetInstance();
+      Application* app = Application::GetInstance();
       std::string rootPath = app->GetConfig()->GetValue("Path", "ImageData");
       if (!Utilities::fileExists(rootPath))
       {
@@ -558,11 +558,11 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   vtkSmartPointer<Image> Image::GetNeighbourAtlasImage(
-    const int &rating, const bool &forward, const int &id)
+    const int& rating, const bool& forward, const int& id)
   {
     this->AssertPrimaryId();
 
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     bool hasParent = this->Get("ParentImageId").IsValid();
 
     vtkSmartPointer<Exam> exam;
@@ -643,12 +643,12 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  vtkSmartPointer< Image > Image::GetAtlasImage(const int &rating)
+  vtkSmartPointer<Image> Image::GetAtlasImage(const int& rating)
   {
-    Application *app = Application::GetInstance();
-    vtkSmartPointer< vtkMySQLQuery > query = app->GetDB()->GetQuery();
+    Application* app = Application::GetInstance();
+    vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
 
-    vtkSmartPointer< Exam > exam;
+    vtkSmartPointer<Exam> exam;
     this->GetRecord(exam);
     bool hasParent = this->Get("ParentImageId").IsValid();
 
@@ -695,10 +695,10 @@ namespace Alder
     this->AssertPrimaryId();
 
     std::string manufacturer = this->GetDICOMTag("Manufacturer");
-    if ("hologic" != Alder::Utilities::toLower(manufacturer))
+    if ("hologic" != Utilities::toLower(manufacturer))
       return false;
 
-    vtkSmartPointer< Exam > exam = vtkSmartPointer<Exam>::New();
+    vtkSmartPointer<Exam> exam = vtkSmartPointer<Exam>::New();
     if (!this->GetRecord(exam))
       throw std::runtime_error("ERROR: no exam record for this image.");
 
@@ -734,7 +734,7 @@ namespace Alder
     if (-1 == examType) return false;
 
     std::string fileName = this->GetFileName();
-    vtkNew< vtkImageDataReader > reader;
+    vtkNew<vtkImageDataReader> reader;
     reader->SetFileName(fileName.c_str());
     vtkImageData* image = reader->GetOutput();
 
@@ -755,8 +755,8 @@ namespace Alder
 
     bool found = false;
     // start search from the middle of the left edge
-    int ix = x0[ examType ];
-    int iy = y0[ examType ] + (y1[ examType ] - y0[ examType ])/2;
+    int ix = x0[examType];
+    int iy = y0[examType] + (y1[examType] - y0[examType])/2;
     do
     {
       int val = static_cast<int>(
@@ -782,7 +782,7 @@ namespace Alder
     canvas->DrawImage(0, 0, image);
     // erase the name field with its gray background color
     canvas->SetDrawColor(222, 222, 222);
-    canvas->FillBox(x0[ examType ] , ix, y0[ examType ], y1[ examType ]);
+    canvas->FillBox(x0[examType] , ix, y0[examType], y1[examType]);
     canvas->Update();
 
     // flip the canvas vertically

@@ -1,3 +1,4 @@
+// C includes
 #include <stdio.h>
 #include <signal.h>
 #include <execinfo.h>
@@ -5,56 +6,54 @@
 #include <dlfcn.h>
 #include <stdlib.h>
 
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void c()
 {
-    enum
-    {  
-        MAX_DEPTH = 10 
-    }; 
+  enum
+  {
+    MAX_DEPTH = 10
+  };
 
-    void *trace[MAX_DEPTH];
+  void* trace[MAX_DEPTH];
+  Dl_info dlinfo;
+  int status;
+  const char* symname;
+  char* demangled;
 
-    Dl_info dlinfo;
+  int trace_size = backtrace(trace, MAX_DEPTH);
+  printf("Call stack: \n");
+  for (int i = 0; i < trace_size; ++i)
+  {
+    if (!dladdr(trace[i], &dlinfo))
+        continue;
 
-    int status;
-    const char *symname;
-    char *demangled;
+    symname = dlinfo.dli_sname;
+    demangled = abi::__cxa_demangle(symname, NULL, 0, &status);
+    if (status == 0 && demangled)
+        symname = demangled;
 
-    int trace_size = backtrace(trace, MAX_DEPTH);
+    printf("object: %s, function: %s\n", dlinfo.dli_fname, symname);
 
-    printf("Call stack: \n");
-
-    for (int i=0; i<trace_size; ++i)
-    {  
-        if(!dladdr(trace[i], &dlinfo))
-            continue;
-
-        symname = dlinfo.dli_sname;
-
-        demangled = abi::__cxa_demangle(symname, NULL, 0, &status);
-        if(status == 0 && demangled)
-            symname = demangled;
-
-        printf("object: %s, function: %s\n", dlinfo.dli_fname, symname);
-
-        if (demangled)
-            free(demangled);
-    }  
+    if (demangled)
+      free(demangled);
+  }
 }
 
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void b()
 {
-    c();
+  c();
 }
 
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void a()
 {
-    b();
+  b();
 }
 
-int main(int argc, char **argv)
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+int main(int argc, char** argv)
 {
-    a();
-
-    return 0;
+  a();
+  return 0;
 }

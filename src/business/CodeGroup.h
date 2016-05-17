@@ -38,7 +38,7 @@ namespace Alder
   class CodeGroup : public ActiveRecord
   {
     public:
-      static CodeGroup *New();
+      static CodeGroup* New();
       vtkTypeMacro(CodeGroup, ActiveRecord);
       std::string GetName() const { return "CodeGroup"; }
 
@@ -52,7 +52,7 @@ namespace Alder
       /**
        * Check if a CodeGroup with the code and value exists.
        */
-      static bool IsUnique(const std::string &code, const int &value);
+      static bool IsUnique(const std::string& code, const int& value);
 
       /**
        * Update all Rating and DerivedRating values in the Rating table.

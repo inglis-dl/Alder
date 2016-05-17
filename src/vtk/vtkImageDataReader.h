@@ -45,7 +45,7 @@ class vtkImageDataReader : public vtkObject
   public:
     static vtkImageDataReader* New();
     vtkTypeMacro(vtkImageDataReader, vtkObject);
-    void PrintSelf(ostream &os, vtkIndent indent);
+    void PrintSelf(ostream& os, vtkIndent indent);
 
     //@{
     /**
@@ -53,7 +53,7 @@ class vtkImageDataReader : public vtkObject
      * If a directory is selected then the reader will attempt to open all
      * DICOM files in that directory.
      */
-    virtual void SetFileName(const char *name);
+    virtual void SetFileName(const char* name);
     std::string GetFileName() { return this->FileName; }
     //@}
 
@@ -81,7 +81,7 @@ class vtkImageDataReader : public vtkObject
      * Before trying to do anything with the named file, check if it is in fact
      * readable by this object.
      */
-    static bool IsValidFileName(const char *name);
+    static bool IsValidFileName(const char* name);
 
     /**
      * Get the medical image properties if the image, if there are any.
@@ -97,7 +97,7 @@ class vtkImageDataReader : public vtkObject
      * Sets the the reader (keeping a reference to it and deleting the
      * old one).
      */
-    virtual void SetReader(vtkAlgorithm *reader);
+    virtual void SetReader(vtkAlgorithm* reader);
 
     std::string FileName;
     vtkAlgorithm* Reader;

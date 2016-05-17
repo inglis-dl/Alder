@@ -46,7 +46,7 @@ namespace Alder
   class ParticipantData : public ModelObject
   {
     public:
-      static ParticipantData *New();
+      static ParticipantData* New();
       vtkTypeMacro(ParticipantData, ModelObject);
 
     /** 
@@ -138,14 +138,14 @@ namespace Alder
      * This method invokes Common::InterviewChangedEvent
      * @param Interview an interview
      */
-    void SetActiveInterview(Interview *interview);
+    void SetActiveInterview(Interview* interview);
 
     /**
      * Set the active Image.
      * This method invokes Common::ImageChangedEvent
      * @param Image an image
      */
-    void SetActiveImage(Image *image);
+    void SetActiveImage(Image* image);
 
     protected:
       ParticipantData();
@@ -161,8 +161,8 @@ namespace Alder
       std::map<Wave*, std::vector<vtkSmartPointer<Interview>>> waveInterviewMap;
       std::map<int, vtkSmartPointer<Wave>> rankWaveMap;
 
-      Interview *ActiveInterview;
-      Image *ActiveImage;
+      Interview* ActiveInterview;
+      Image* ActiveImage;
 
     private:
       ParticipantData(const ParticipantData&);  // Not implemented

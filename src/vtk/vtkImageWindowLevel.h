@@ -35,9 +35,9 @@
 class vtkImageWindowLevel : public vtkImageMapToColors
 {
   public:
-    static vtkImageWindowLevel *New();
+    static vtkImageWindowLevel* New();
     vtkTypeMacro(vtkImageWindowLevel, vtkImageMapToColors);
-    void PrintSelf(ostream &os, vtkIndent indent);
+    void PrintSelf(ostream& os, vtkIndent indent);
 
     //@{
     /**
@@ -64,19 +64,19 @@ class vtkImageWindowLevel : public vtkImageMapToColors
     ~vtkImageWindowLevel();
 
     virtual int RequestInformation(
-      vtkInformation *request,
-      vtkInformationVector **inputVector,
-      vtkInformationVector *outputVector);
+      vtkInformation* request,
+      vtkInformationVector** inputVector,
+      vtkInformationVector* outputVector);
     void ThreadedRequestData(
-      vtkInformation *request,
-      vtkInformationVector **inputVector,
-      vtkInformationVector *outputVector,
-      vtkImageData ***inData, vtkImageData **outData,
+      vtkInformation* request,
+      vtkInformationVector** inputVector,
+      vtkInformationVector* outputVector,
+      vtkImageData*** inData, vtkImageData** outData,
       int extent[6], int id);
     virtual int RequestData(
-      vtkInformation *request,
-      vtkInformationVector **inputVector,
-      vtkInformationVector *outputVector);
+      vtkInformation* request,
+      vtkInformationVector** inputVector,
+      vtkInformationVector* outputVector);
 
     double Window;
     double Level;

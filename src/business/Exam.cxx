@@ -91,8 +91,8 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Exam::UpdateImageData(const std::string &aIdentifier,
-    const std::string &aSource)
+  void Exam::UpdateImageData(const std::string& aIdentifier,
+    const std::string& aSource)
   {
     vtkSmartPointer<Interview> interview;
     std::string identifier = aIdentifier;
@@ -138,8 +138,8 @@ namespace Alder
     std::string examId = this->Get("Id").ToString();
     bool dicom = this->IsDICOM();
 
-    Application *app = Application::GetInstance();
-    OpalService *opal = app->GetOpal();
+    Application* app = Application::GetInstance();
+    OpalService* opal = app->GetOpal();
     bool sustain = opal->GetSustainConnection();
     if (!sustain)
     {
@@ -147,7 +147,7 @@ namespace Alder
       {
         opal->SustainConnectionOn();
       }
-      catch(std::runtime_error& e)
+      catch (std::runtime_error& e)
       {
         app->Log(e.what());
         return;
@@ -160,10 +160,10 @@ namespace Alder
     int downloaded = 1;
     for (int acq = 1; acq <= acqCount; ++acq)
     {
-      vtkNew<Alder::Image> image;
+      vtkNew<Image> image;
       std::map<std::string, std::string> loader;
-      loader[ "ExamId" ] = examId;
-      loader[ "Acquisition" ] = vtkVariant(acqGlobal++).ToString();
+      loader["ExamId"] = examId;
+      loader["Acquisition"] = vtkVariant(acqGlobal++).ToString();
       if (!image->Load(loader))
       {
         image->Set(loader);
@@ -204,7 +204,7 @@ namespace Alder
         {
           image->Remove();
         }
-        catch(std::runtime_error &e)
+        catch (std::runtime_error& e)
         {
           app->Log(e.what());
         }
@@ -220,11 +220,11 @@ namespace Alder
       std::string childNameFormat = scanType->Get("ChildNameFormat").ToString();
       for (int acq = 1; acq <= childCount; ++acq)
       {
-        vtkNew<Alder::Image> image;
+        vtkNew<Image> image;
         std::map<std::string, std::string> loader;
-        loader[ "ExamId" ] = examId;
-        loader[ "Acquisition" ] = vtkVariant(acqGlobal++).ToString();
-        loader[ "ParentImageId" ] = parentId;
+        loader["ExamId"] = examId;
+        loader["Acquisition"] = vtkVariant(acqGlobal++).ToString();
+        loader["ParentImageId"] = parentId;
         if (!image->Load(loader))
         {
           image->Set(loader);
@@ -265,7 +265,7 @@ namespace Alder
           {
             image->Remove();
           }
-          catch(std::runtime_error &e)
+          catch (std::runtime_error& e)
           {
             app->Log(e.what());
           }
@@ -284,21 +284,21 @@ namespace Alder
     if (downloaded && 1 == childCount && 1 < acqCount
         && !childId.empty() && dicom)
     {
-      std::vector<vtkSmartPointer<Alder::Image>> vecImage;
+      std::vector<vtkSmartPointer<Image>> vecImage;
       this->GetList(&vecImage);
 
       // map AcquisitionDateTime from dicom file headers to Image Ids
       std::map<std::string, std::string> mapTime;
       for (auto it = vecImage.cbegin(); it != vecImage.cend(); ++it)
       {
-        Alder::Image *image = it->GetPointer();
+        Image* image = it->GetPointer();
         mapTime[image->Get("Id").ToString()] =
           image->GetDICOMTag("AcquisitionDateTime");
       }
 
       if (mapTime.find(childId) == mapTime.end()) return;
 
-      std::string acqDateTime = mapTime[ childId ];
+      std::string acqDateTime = mapTime[childId];
       parentId.clear();
       for (auto it = mapTime.cbegin(); it != mapTime.cend(); ++it)
       {
@@ -312,7 +312,7 @@ namespace Alder
       }
       if (!parentId.empty())
       {
-        vtkNew<Alder::Image> image;
+        vtkNew<Image> image;
         image->Load("Id", childId);
         image->Set("ParentImageId", parentId);
         image->Save(true);
@@ -348,7 +348,7 @@ namespace Alder
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Exam::IsDICOM()
   {
-    vtkSmartPointer<Alder::ScanType> scanType;
+    vtkSmartPointer<ScanType> scanType;
     if (this->GetRecord(scanType))
     {
       std::string suffix = scanType->Get("FileSuffix").ToString();
@@ -358,7 +358,7 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool Exam::IsRatedBy(Alder::User *user)
+  bool Exam::IsRatedBy(User* user)
   {
     if (!user)
       throw std::runtime_error("Tried to get rating for null user");
@@ -372,7 +372,7 @@ namespace Alder
            << "AND User.Id="
            << user->Get("Id").ToString();
 
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery(stream.str().c_str());
     query->Execute();
@@ -397,14 +397,14 @@ namespace Alder
     if (!this->GetRecord(scanType))
       throw std::runtime_error("Exam missing parent ScanType");
 
-    std::vector<vtkSmartPointer<Alder::CodeType>> vecCodeType;
+    std::vector<vtkSmartPointer<CodeType>> vecCodeType;
     scanType->GetList(&vecCodeType);
     for (auto it = vecCodeType.cbegin(); it != vecCodeType.cend(); ++it)
     {
       vtkVariant code = (*it)->Get("Code");
       vtkVariant id = (*it)->Get("Id");
       if (code.IsValid() && id.IsValid())
-        data[ id.ToInt() ] = code.ToString();
+        data[id.ToInt()] = code.ToString();
     }
     return data;
   }

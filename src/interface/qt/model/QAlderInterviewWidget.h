@@ -20,31 +20,31 @@ class QAlderInterviewWidget : public QWidget
 {
   Q_OBJECT
 
-public:
-  typedef QWidget Superclass;
-  explicit QAlderInterviewWidget( QWidget* parent = 0 );
-  virtual ~QAlderInterviewWidget();
+  public:
+    typedef QWidget Superclass;
+    explicit QAlderInterviewWidget(QWidget* parent = 0);
+    virtual ~QAlderInterviewWidget();
 
-  void saveImage( const QString& fileName );
-  int activeInterviewId();
+    void saveImage(const QString& fileName);
+    int activeInterviewId();
 
-signals:
-  void imageSelected( int id );
+  signals:
+    void imageSelected(int id);
 
-public slots:
-  void hideControls( bool );
-  void interviewChanged();
-  void imageChanged();
-  void loadInterview( int id );
-  void userChanged();
-  void updatePermission();
+  public slots:
+    void hideControls(bool hide);
+    void interviewChanged();
+    void imageChanged();
+    void loadInterview(int id);
+    void userChanged();
+    void updatePermission();
 
-protected:
-  QScopedPointer<QAlderInterviewWidgetPrivate> d_ptr;
+  protected:
+    QScopedPointer<QAlderInterviewWidgetPrivate> d_ptr;
 
-private:
-  Q_DECLARE_PRIVATE(QAlderInterviewWidget);
-  Q_DISABLE_COPY(QAlderInterviewWidget);
+  private:
+    Q_DECLARE_PRIVATE(QAlderInterviewWidget);
+    Q_DISABLE_COPY(QAlderInterviewWidget);
 };
 
 #endif

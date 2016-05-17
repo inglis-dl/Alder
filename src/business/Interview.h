@@ -44,7 +44,7 @@ namespace Alder
   class Interview : public ActiveRecord
   {
   public:
-    static Interview *New();
+    static Interview* New();
     vtkTypeMacro(Interview, ActiveRecord);
     std::string GetName() const { return "Interview"; }
 
@@ -62,7 +62,7 @@ namespace Alder
      * @param waveList std::pair vector of Wave Id, full update flag
      */
     static void UpdateInterviewData(
-      const std::vector<std::pair<int, bool>> &waveList);
+      const std::vector<std::pair<int, bool>>& waveList);
 
     /**
      * Returns whether any exam data has been downloaded.
@@ -73,7 +73,7 @@ namespace Alder
      * Returns whether any images remain to be downloaded.
      * @param modifier QueryModifier to constrain to user allowed modalities
      */
-    Interview::ImageStatus GetImageStatus(QueryModifier *modifier = NULL);
+    Interview::ImageStatus GetImageStatus(QueryModifier* modifier = NULL);
 
     /**
      * Updates and/or creates all Exam data associated with the Interview from Opal.
@@ -82,7 +82,7 @@ namespace Alder
      * @param aSource       Opal data source containing an Exam view
      */
     void UpdateExamData(
-     Wave *aWave = NULL, const std::string &aSource = "");
+     Wave* aWave = NULL, const std::string& aSource = "");
 
     /**
      * Updates all exam and image data associated with the interview from Opal.
@@ -103,7 +103,7 @@ namespace Alder
      * @return      the number of Interviews loaded
      */
     static int LoadFromList(
-      const std::vector<std::pair<std::string, std::string>> &list);
+      const std::vector<std::pair<std::string, std::string>>& list);
 
     /**
      * Given an image Id, find an image in this interview having the same
@@ -111,7 +111,7 @@ namespace Alder
      * @param imageId the Id of an image record
      * @return        the Id of a similar image or empty string on fail
      */
-    std::string GetSimilarImageId(const std::string &imageId);
+    std::string GetSimilarImageId(const std::string& imageId);
 
     //@{
     /**
@@ -122,20 +122,20 @@ namespace Alder
      * @return        the neighbouring interview in UId/VisidDate order
      */
     vtkSmartPointer<Interview> GetNeighbour(
-      const bool &forward, const bool &loaded, const bool &unRated);
+      const bool& forward, const bool& loaded, const bool& unRated);
     vtkSmartPointer<Interview> GetNext(
-      const bool &loaded, const bool &unRated)
+      const bool& loaded, const bool& unRated)
     { return this->GetNeighbour(true, loaded, unRated); }
-    vtkSmartPointer<Interview> GetNextLoaded(const bool &unRated)
+    vtkSmartPointer<Interview> GetNextLoaded(const bool& unRated)
     { return this->GetNeighbour(true, true, unRated); }
-    vtkSmartPointer<Interview> GetNextUnLoaded(const bool &unRated)
+    vtkSmartPointer<Interview> GetNextUnLoaded(const bool& unRated)
     { return this->GetNeighbour(true, false, unRated); }
     vtkSmartPointer<Interview> GetPrevious(
-      const bool &loaded, const bool &unRated)
+      const bool& loaded, const bool& unRated)
     { return this->GetNeighbour(false, loaded, unRated); }
-    vtkSmartPointer<Interview> GetPreviousLoaded(const bool &unRated)
+    vtkSmartPointer<Interview> GetPreviousLoaded(const bool& unRated)
     { return this->GetNeighbour(false, true, unRated); }
-    vtkSmartPointer<Interview> GetPreviousUnLoaded(const bool &unRated)
+    vtkSmartPointer<Interview> GetPreviousUnLoaded(const bool& unRated)
     { return this->GetNeighbour(false, false, unRated); }
     //@}
 
@@ -151,7 +151,7 @@ namespace Alder
      * @param user a User object
      * @return     whether all images in this interview are rated by the User
      */
-    bool IsRatedBy(User *user);
+    bool IsRatedBy(User* user);
 
   protected:
     Interview() {}

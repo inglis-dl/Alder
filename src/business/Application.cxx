@@ -123,7 +123,7 @@ namespace Alder
   Application* Application::New()
   {
     vtkObject* ret = vtkObjectFactory::CreateInstance("Application");
-    return ret ? static_cast< Application* >(ret) : new Application;
+    return ret ? static_cast<Application*>(ret) : new Application;
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -152,7 +152,7 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Application::Log(const std::string &message)
+  void Application::Log(const std::string& message)
   {
     this->LogStream << "[" << Utilities::getTime("%y-%m-%d %T") << "] " << message << std::endl;
   }
@@ -162,7 +162,7 @@ namespace Alder
   {
     int status;
     Dl_info dlinfo;
-    void *trace[ALDER_STACK_DEPTH];
+    void* trace[ALDER_STACK_DEPTH];
     int trace_size = backtrace(trace, ALDER_STACK_DEPTH);
 
     for (int i = 0; i < trace_size; ++i)
@@ -179,7 +179,7 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  std::string Application::GetUnmangledClassName(const std::string &mangledName) const
+  std::string Application::GetUnmangledClassName(const std::string& mangledName) const
   {
     for (auto it = this->ClassNameRegistry.begin(); it != this->ClassNameRegistry.end(); ++it)
       if (mangledName == it->second) return it->first;
@@ -189,7 +189,7 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool Application::ReadConfiguration(const std::string &fileName)
+  bool Application::ReadConfiguration(const std::string& fileName)
   {
     // make sure the file exists
     ifstream ifile(fileName.c_str());

@@ -20,24 +20,24 @@ class QLoginDialog : public QDialog
 {
   Q_OBJECT
 
-public:
-  typedef QDialog Superclass;
-  //constructor
-  explicit QLoginDialog( QWidget* parent = 0 );
-  //destructor
-  virtual ~QLoginDialog();
-  
-public slots:
-  virtual void accepted();
+  public:
+    typedef QDialog Superclass;
+    // constructor
+    explicit QLoginDialog(QWidget* parent = 0);
+    // destructor
+    virtual ~QLoginDialog();
 
-protected:
-  QScopedPointer<QLoginDialogPrivate> d_ptr;
+  public slots:
+    virtual void accepted();
 
-protected slots:
+  protected:
+    QScopedPointer<QLoginDialogPrivate> d_ptr;
 
-private:
-  Q_DECLARE_PRIVATE(QLoginDialog);
-  Q_DISABLE_COPY(QLoginDialog);
+  protected slots:
+
+  private:
+    Q_DECLARE_PRIVATE(QLoginDialog);
+    Q_DISABLE_COPY(QLoginDialog);
 };
 
 #endif

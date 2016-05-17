@@ -25,7 +25,7 @@ vtkStandardNewMacro(vtkCustomInteractorStyleImage);
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkCustomInteractorStyleImage::WindowLevel()
 {
-  vtkRenderWindowInteractor *rwi = this->Interactor;
+  vtkRenderWindowInteractor* rwi = this->Interactor;
 
   this->WindowLevelCurrentPosition[0] = rwi->GetEventPosition()[0];
   this->WindowLevelCurrentPosition[1] = rwi->GetEventPosition()[1];
@@ -39,7 +39,7 @@ void vtkCustomInteractorStyleImage::WindowLevel()
   {
     if (this->CurrentImageProperty)
     {
-      int *size = this->CurrentRenderer->GetSize();
+      int* size = this->CurrentRenderer->GetSize();
 
       double window = this->WindowLevelInitial[0];
       double level = this->WindowLevelInitial[1];
@@ -102,7 +102,7 @@ void vtkCustomInteractorStyleImage::WindowLevel()
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkCustomInteractorStyleImage::OnChar()
 {
-  vtkRenderWindowInteractor *rwi = this->Interactor;
+  vtkRenderWindowInteractor* rwi = this->Interactor;
 
   // trap x y z char
   switch (rwi->GetKeyCode())
@@ -122,7 +122,7 @@ void vtkCustomInteractorStyleImage::OnChar()
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkCustomInteractorStyleImage::PrintSelf(ostream &os, vtkIndent indent)
+void vtkCustomInteractorStyleImage::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
 }

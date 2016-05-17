@@ -22,25 +22,25 @@ class QReportDialog : public QDialog
   Q_PROPERTY(double percentBuild READ percentBuild CONSTANT)
   Q_PROPERTY(double percentWrite READ percentWrite CONSTANT)
 
-public:
-  typedef QDialog Superclass;
-  //constructor
-  explicit QReportDialog( QWidget* parent = 0 );
-  //destructor
-  ~QReportDialog();
+  public:
+    typedef QDialog Superclass;
+    // constructor
+    explicit QReportDialog(QWidget* parent = 0);
+    // destructor
+    ~QReportDialog();
 
-  double percentBuild() const;
-  double percentWrite() const;
+    double percentBuild() const;
+    double percentWrite() const;
 
-public slots:
-  virtual void close();
+  public slots:
+    virtual void close();
 
-protected:
-  QScopedPointer<QReportDialogPrivate> d_ptr;
+  protected:
+    QScopedPointer<QReportDialogPrivate> d_ptr;
 
-private:
-  Q_DECLARE_PRIVATE(QReportDialog);
-  Q_DISABLE_COPY(QReportDialog);
+  private:
+    Q_DECLARE_PRIVATE(QReportDialog);
+    Q_DISABLE_COPY(QReportDialog);
 };
 
 #endif

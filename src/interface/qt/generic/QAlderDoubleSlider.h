@@ -24,7 +24,7 @@
 
 =========================================================================*/
 
-/** 
+/**
  * @class QAlderDoubleSlider
  *
  * @author Patrick Emond <emondpd AT mcmaster DOT ca>
@@ -67,203 +67,203 @@ class QAlderDoubleSlider : public QWidget
   Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation)
   Q_PROPERTY(QString handleToolTip READ handleToolTip WRITE setHandleToolTip)
 
-public:
-  /** Superclass typedef */
-  typedef QWidget Superclass;
+  public:
+    /** Superclass typedef */
+    typedef QWidget Superclass;
 
-  /** 
-   * Constructors, builds a slider whose default values are the same as
-   * QSlider (vertical by default).
-   */
-  explicit QAlderDoubleSlider(QWidget* parent = 0);
+    /**
+     * Constructors, builds a slider whose default values are the same as
+     * QSlider (vertical by default).
+     */
+    explicit QAlderDoubleSlider(QWidget* parent = 0);
 
-  /** 
-   * Constructors, builds a slider whose default values are the same as
-   * QSlider (vertical by default).
-   */
-  explicit QAlderDoubleSlider(Qt::Orientation orient, QWidget* parent = 0);
+    /**
+     * Constructors, builds a slider whose default values are the same as
+     * QSlider (vertical by default).
+     */
+    explicit QAlderDoubleSlider(Qt::Orientation orient, QWidget* parent = 0);
 
-  /** Destructor */
-  virtual ~QAlderDoubleSlider();
+    /** Destructor */
+    virtual ~QAlderDoubleSlider();
 
-  //@{
-  /** 
-   * This property holds the sliders's minimum value.
-   * When setting this property, the maximum is adjusted if necessary to
-   * ensure that the range remains valid. Also the slider's current value
-   * is adjusted to be within the new range. 
-   */
-  void setMinimum(double min);
-  double minimum()const;
-  //@}
+    //@{
+    /**
+     * This property holds the sliders's minimum value.
+     * When setting this property, the maximum is adjusted if necessary to
+     * ensure that the range remains valid. Also the slider's current value
+     * is adjusted to be within the new range.
+     */
+    void setMinimum(double min);
+    double minimum()const;
+    //@}
 
-  //@{
-  /** 
-   * This property holds the slider's maximum value.
-   * When setting this property, the minimum is adjusted if necessary to 
-   * ensure that the range remains valid. Also the slider's current value
-   * is adjusted to be within the new range.
-   */
-  void setMaximum(double max);
-  double maximum()const;
-  //@}
+    //@{
+    /**
+     * This property holds the slider's maximum value.
+     * When setting this property, the minimum is adjusted if necessary to
+     * ensure that the range remains valid. Also the slider's current value
+     * is adjusted to be within the new range.
+     */
+    void setMaximum(double max);
+    double maximum()const;
+    //@}
 
-  /** 
-   * Sets the slider's minimum to min and its maximum to max.
-   * If max is smaller than min, min becomes the only legal value.
-   */
-  void setRange(double min, double max);
+    /**
+     * Sets the slider's minimum to min and its maximum to max.
+     * If max is smaller than min, min becomes the only legal value.
+     */
+    void setRange(double min, double max);
 
-  /** 
-   * This property holds the slider's current value.
-   * The slider forces the value to be within the legal range: 
-   * minimum <= value <= maximum.
-   * Changing the value also changes the sliderPosition.
-   */
-  double value()const;
+    /**
+     * This property holds the slider's current value.
+     * The slider forces the value to be within the legal range:
+     * minimum <= value <= maximum.
+     * Changing the value also changes the sliderPosition.
+     */
+    double value()const;
 
-  //@{
-  /** 
-   * This property holds the single step.
-   * The smaller of two natural steps that an abstract sliders provides and
-   * typically corresponds to the user pressing an arrow key
-   * Default value is 1.
-   */
-  void setSingleStep(double step);
-  double singleStep()const;
-  //@}
+    //@{
+    /**
+     * This property holds the single step.
+     * The smaller of two natural steps that an abstract sliders provides and
+     * typically corresponds to the user pressing an arrow key
+     * Default value is 1.
+     */
+    void setSingleStep(double step);
+    double singleStep()const;
+    //@}
 
-  //@{
-  /** 
-   * This property holds the page step.
-   * The larger of two natural steps that an abstract slider provides and
-   * typically corresponds to the user pressing PageUp or PageDown.
-   * Default value is 10.
-   */
-  void setPageStep(double step);
-  double pageStep()const;
-  //@}
+    //@{
+    /**
+     * This property holds the page step.
+     * The larger of two natural steps that an abstract slider provides and
+     * typically corresponds to the user pressing PageUp or PageDown.
+     * Default value is 10.
+     */
+    void setPageStep(double step);
+    double pageStep()const;
+    //@}
 
-  //@{
-  /** 
-   * This property holds the interval between tickmarks.
-   * This is a value interval, not a pixel interval. If it is 0, the slider
-   * will choose between lineStep() and pageStep().
-   * The default value is 0.
-   */
-  void setTickInterval(double ti);
-  double tickInterval()const;
-  //@}
+    //@{
+    /**
+     * This property holds the interval between tickmarks.
+     * This is a value interval, not a pixel interval. If it is 0, the slider
+     * will choose between lineStep() and pageStep().
+     * The default value is 0.
+     */
+    void setTickInterval(double ti);
+    double tickInterval()const;
+    //@}
 
-  //@{
-  /** 
-   * This property holds the current slider position.
-   * If tracking is enabled (the default), this is identical to value.
-   */
-  double sliderPosition()const;
-  void setSliderPosition(double);
-  //@}
+    //@{
+    /**
+     * This property holds the current slider position.
+     * If tracking is enabled (the default), this is identical to value.
+     */
+    double sliderPosition()const;
+    void setSliderPosition(double pos);
+    //@}
 
-  //@{
-  /** 
-   * This property holds whether slider tracking is enabled.
-   * If tracking is enabled (the default), the slider emits the valueChanged()
-   * signal while the slider is being dragged. If tracking is disabled, the 
-   * slider emits the valueChanged() signal only when the user releases the
-   * slider.
-   */
-  void setTracking(bool enable);
-  bool hasTracking()const;
-  //@}
-  
-  /**
-   * Triggers a slider action. Possible actions are SliderSingleStepAdd, 
-   * SliderSingleStepSub, SliderPageStepAdd, SliderPageStepSub, 
-   * SliderToMinimum, SliderToMaximum, and SliderMove.
-   */
-  void triggerAction(QAbstractSlider::SliderAction action);
+    //@{
+    /**
+     * This property holds whether slider tracking is enabled.
+     * If tracking is enabled (the default), the slider emits the valueChanged()
+     * signal while the slider is being dragged. If tracking is disabled, the
+     * slider emits the valueChanged() signal only when the user releases the
+     * slider.
+     */
+    void setTracking(bool enable);
+    bool hasTracking()const;
+    //@}
 
-  /**
-   * This property holds the orientation of the slider.
-   * The orientation must be Qt::Vertical (the default) or Qt::Horizontal.
-   */
-  Qt::Orientation orientation()const;
+    /**
+     * Triggers a slider action. Possible actions are SliderSingleStepAdd,
+     * SliderSingleStepSub, SliderPageStepAdd, SliderPageStepSub,
+     * SliderToMinimum, SliderToMaximum, and SliderMove.
+     */
+    void triggerAction(QAbstractSlider::SliderAction action);
 
-  //@{
-  /**
-   * Controls the text to display for the handle tooltip. It is in addition
-   * to the widget tooltip.
-   * "%1" is replaced by the current value of the slider.
-   * Empty string (by default) means no tooltip.
-   */
-  QString handleToolTip()const;
-  void setHandleToolTip(const QString& toolTip);
-  //@}
+    /**
+     * This property holds the orientation of the slider.
+     * The orientation must be Qt::Vertical (the default) or Qt::Horizontal.
+     */
+    Qt::Orientation orientation()const;
 
-  /** Reimplemented for internal reasons (handle tooltip). */
-  virtual bool eventFilter(QObject*, QEvent*);
+    //@{
+    /**
+     * Controls the text to display for the handle tooltip. It is in addition
+     * to the widget tooltip.
+     * "%1" is replaced by the current value of the slider.
+     * Empty string (by default) means no tooltip.
+     */
+    QString handleToolTip()const;
+    void setHandleToolTip(const QString& toolTip);
+    //@}
 
-public Q_SLOTS:
-  /** 
-   * This property holds the slider's current value.
-   * The slider forces the value to be within the legal range: 
-   * minimum <= value <= maximum.
-   * Changing the value also changes the sliderPosition.
-   */
-  void setValue(double value);
+    /** Reimplemented for internal reasons (handle tooltip). */
+    virtual bool eventFilter(QObject* object, QEvent* event);
 
-  /**
-   * This property holds the orientation of the slider.
-   * The orientation must be Qt::Vertical (the default) or Qt::Horizontal.
-   */
-  void setOrientation(Qt::Orientation orientation);
+  public Q_SLOTS:
+    /**
+     * This property holds the slider's current value.
+     * The slider forces the value to be within the legal range:
+     * minimum <= value <= maximum.
+     * Changing the value also changes the sliderPosition.
+     */
+    void setValue(double value);
 
-Q_SIGNALS:
-  /**
-   * This signal is emitted when the slider value has changed, with the new
-   * slider value as argument.
-   */
-  void valueChanged(double value);
+    /**
+     * This property holds the orientation of the slider.
+     * The orientation must be Qt::Vertical (the default) or Qt::Horizontal.
+     */
+    void setOrientation(Qt::Orientation orientation);
 
-  /**
-   * This signal is emitted when sliderDown is true and the slider moves. 
-   * This usually happens when the user is dragging the slider. The value
-   * is the new slider position.
-   * This signal is emitted even when tracking is turned off.
-   */
-  void sliderMoved(double position);
-  
-  /**
-   * This signal is emitted when the user presses the slider with the mouse,
-   * or programmatically when setSliderDown(true) is called.
-   */
-  void sliderPressed();
-  
-  /** 
-   * This signal is emitted when the user releases the slider with the mouse, 
-   * or programmatically when setSliderDown(false) is called.
-   */
-  void sliderReleased();
+  Q_SIGNALS:
+    /**
+     * This signal is emitted when the slider value has changed, with the new
+     * slider value as argument.
+     */
+    void valueChanged(double value);
 
-  /**
-   * This signal is emitted when the slider range has changed, with min being
-   * the new minimum, and max being the new maximum.
-   * Warning: don't confound with valuesChanged(double, double);
-   * @see QAbstractSlider::rangeChanged()
-   */
-  void rangeChanged(double min, double max);
+    /**
+     * This signal is emitted when sliderDown is true and the slider moves.
+     * This usually happens when the user is dragging the slider. The value
+     * is the new slider position.
+     * This signal is emitted even when tracking is turned off.
+     */
+    void sliderMoved(double position);
 
-protected Q_SLOTS:
-  void onValueChanged(int value);
-  void onSliderMoved(int position);
-  void onRangeChanged(int min, int max);
+    /**
+     * This signal is emitted when the user presses the slider with the mouse,
+     * or programmatically when setSliderDown(true) is called.
+     */
+    void sliderPressed();
 
-protected:
-  QScopedPointer<QAlderDoubleSliderPrivate> d_ptr;
+    /**
+     * This signal is emitted when the user releases the slider with the mouse,
+     * or programmatically when setSliderDown(false) is called.
+     */
+    void sliderReleased();
 
-private:
-  Q_DECLARE_PRIVATE(QAlderDoubleSlider);
-  Q_DISABLE_COPY(QAlderDoubleSlider);
+    /**
+     * This signal is emitted when the slider range has changed, with min being
+     * the new minimum, and max being the new maximum.
+     * Warning: don't confound with valuesChanged(double, double);
+     * @see QAbstractSlider::rangeChanged()
+     */
+    void rangeChanged(double min, double max);
+
+  protected Q_SLOTS:
+    void onValueChanged(int value);
+    void onSliderMoved(int position);
+    void onRangeChanged(int min, int max);
+
+  protected:
+    QScopedPointer<QAlderDoubleSliderPrivate> d_ptr;
+
+  private:
+    Q_DECLARE_PRIVATE(QAlderDoubleSlider);
+    Q_DISABLE_COPY(QAlderDoubleSlider);
 };
 
 #endif

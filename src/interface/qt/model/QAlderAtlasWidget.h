@@ -20,26 +20,26 @@ class QAlderAtlasWidget : public QWidget
 {
   Q_OBJECT
 
-public:
-  typedef QWidget Superclass;
-  explicit QAlderAtlasWidget( QWidget* parent = 0 );
-  virtual ~QAlderAtlasWidget();
+  public:
+    typedef QWidget Superclass;
+    explicit QAlderAtlasWidget(QWidget* parent = 0);
+    virtual ~QAlderAtlasWidget();
 
-  virtual void showEvent( QShowEvent* );
-  virtual void hideEvent( QHideEvent* );
+    virtual void showEvent(QShowEvent* event);
+    virtual void hideEvent(QHideEvent* event);
 
-signals:
-  void showing( bool );
+  signals:
+    void showing(bool state);
 
-public slots:
-  virtual void loadImage( int id );
+  public slots:
+    virtual void loadImage(int id);
 
-protected:
-  QScopedPointer<QAlderAtlasWidgetPrivate> d_ptr;
+  protected:
+    QScopedPointer<QAlderAtlasWidgetPrivate> d_ptr;
 
-private:
-  Q_DECLARE_PRIVATE(QAlderAtlasWidget);
-  Q_DISABLE_COPY(QAlderAtlasWidget);
+  private:
+    Q_DECLARE_PRIVATE(QAlderAtlasWidget);
+    Q_DISABLE_COPY(QAlderAtlasWidget);
 };
 
 #endif

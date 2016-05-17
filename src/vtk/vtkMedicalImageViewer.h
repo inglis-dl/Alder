@@ -87,9 +87,9 @@ class vtkFrameAnimationPlayer;
 class vtkMedicalImageViewer : public vtkObject
 {
   public:
-    static vtkMedicalImageViewer *New();
+    static vtkMedicalImageViewer* New();
     vtkTypeMacro(vtkMedicalImageViewer, vtkObject);
-    void PrintSelf(ostream &os, vtkIndent indent);
+    void PrintSelf(ostream& os, vtkIndent indent);
 
     /**
      * Force render the display.
@@ -103,7 +103,7 @@ class vtkMedicalImageViewer : public vtkObject
      * Set/Get the input image to the viewer.
      * @param input vtkImageData from the output of a reader
      */
-    virtual void SetInputData(vtkImageData *input);
+    virtual void SetInputData(vtkImageData* input);
     virtual vtkImageData* GetInput();
     //@}
 
@@ -121,7 +121,7 @@ class vtkMedicalImageViewer : public vtkObject
      * @param fileName Name of a file on disk
      * @return boolean
      */
-     bool Load(const std::string &fileName);
+     bool Load(const std::string& fileName);
 
     /**
      * Enum constants for orthonormal slice orientations. */
@@ -136,7 +136,7 @@ class vtkMedicalImageViewer : public vtkObject
     /**
      * Set/Get the orthonormal view orientation. */
     vtkGetMacro(ViewOrientation, int);
-    virtual void SetViewOrientation(const int &orientation);
+    virtual void SetViewOrientation(const int& orientation);
     virtual void SetViewOrientationToXY()
       { this->SetViewOrientation(vtkMedicalImageViewer::VIEW_ORIENTATION_XY); }
     virtual void SetViewOrientationToYZ()
@@ -148,7 +148,7 @@ class vtkMedicalImageViewer : public vtkObject
     //@{
     /**
      * Rotate the camera. */
-    void RotateCamera(const double &angle);
+    void RotateCamera(const double& angle);
     //@}
 
     //@{
@@ -227,7 +227,7 @@ class vtkMedicalImageViewer : public vtkObject
      * @param max fill the maximum slice by reference
      * @sa GetSliceMin(), GetSliceMax()
      */
-    virtual void GetSliceRange(int &min, int &max);
+    virtual void GetSliceRange(int& min, int& max);
 
     /**
      * Return the minimum and maximum slice index values.
@@ -243,10 +243,10 @@ class vtkMedicalImageViewer : public vtkObject
      * Class member ivars are accessible for connecting to third party
      * GUI toolkits (e.g., Qt), or for custom configuration.
      */
-    virtual void SetRenderWindow(vtkRenderWindow *window);
-    virtual void SetRenderer(vtkRenderer *renderer);
-    virtual void SetInteractor(vtkRenderWindowInteractor *interactor);
-    virtual void SetInteractorStyle(vtkCustomInteractorStyleImage *style);
+    virtual void SetRenderWindow(vtkRenderWindow* window);
+    virtual void SetRenderer(vtkRenderer* renderer);
+    virtual void SetInteractor(vtkRenderWindowInteractor* interactor);
+    virtual void SetInteractorStyle(vtkCustomInteractorStyleImage* style);
     vtkGetObjectMacro(RenderWindow, vtkRenderWindow);
     vtkGetObjectMacro(Renderer, vtkRenderer);
     vtkGetObjectMacro(Interactor, vtkRenderWindowInteractor);
@@ -288,7 +288,7 @@ class vtkMedicalImageViewer : public vtkObject
      * @sa  Window, Level, GetColorWindow(), GetColorLevel()
      * @return current window and level by reference
      */
-    void SetColorWindowLevel(const double &window, const double &level);
+    void SetColorWindowLevel(const double& window, const double& level);
 
     //@{
     /**
@@ -340,7 +340,7 @@ class vtkMedicalImageViewer : public vtkObject
      * Scrolling starts at the first slice, proceeds to the last slice and
      * then repeats.
      */
-    void CineLoop(const bool &enable);
+    void CineLoop(const bool& enable);
 
     /** Set the current slice to the first slice. */
     void CineRewind();
@@ -367,28 +367,28 @@ class vtkMedicalImageViewer : public vtkObject
      * is off, cursoring can still be active with its output directed
      * via callback mechanism to another GUI element.
      */
-    void SetCursor(const int &cursor);
+    void SetCursor(const int& cursor);
     vtkBooleanMacro(Cursor, const int&);
     vtkGetMacro(Cursor, int);
 
     /**
      * Turn annotation on or off in the render window.
      */
-    void SetAnnotate(const int &annotate);
+    void SetAnnotate(const int& annotate);
     vtkBooleanMacro(Annotate, const int&);
     vtkGetMacro(Annotate, int);
 
     /**
      * Turn axes marker on or off in the render window.
      */
-    void SetAxesDisplay(const int &axes);
+    void SetAxesDisplay(const int& axes);
     vtkBooleanMacro(AxesDisplay, const int&);
     vtkGetMacro(AxesDisplay, int);
 
     /**
      * Turn bounding box and origin axes on or off in the render window.
      */
-    void SetBoxDisplay(const int &box);
+    void SetBoxDisplay(const int& box);
     vtkBooleanMacro(BoxDisplay, const int&);
     vtkGetMacro(BoxDisplay, int);
 
@@ -402,7 +402,7 @@ class vtkMedicalImageViewer : public vtkObject
      * mode using interpolation of pixel values and the image actor
      * shows pixels with linear interpolation.
      */
-    void SetInterpolate(const int &interp);
+    void SetInterpolate(const int& interp);
     int  GetInterpolate();
     vtkBooleanMacro(Interpolate, const int&);
 
@@ -415,13 +415,13 @@ class vtkMedicalImageViewer : public vtkObject
     /**
      * Set/Get animation frame rate
      */
-    void SetFrameRate(const int &rate);
+    void SetFrameRate(const int& rate);
     vtkGetMacro(FrameRate, int);
 
     /**
      * Save the current slice view to file
      */
-     void WriteSlice(const std::string &name);
+     void WriteSlice(const std::string& name);
 
   protected:
     vtkMedicalImageViewer();
@@ -449,12 +449,12 @@ class vtkMedicalImageViewer : public vtkObject
       * pipeline.
       */
     vtkSmartPointer<vtkImageWindowLevel> WindowLevel;
-    vtkRenderWindow *RenderWindow;
-    vtkRenderer *Renderer;
+    vtkRenderWindow* RenderWindow;
+    vtkRenderer* Renderer;
     vtkSmartPointer<vtkImageSlice> ImageSlice;
     vtkSmartPointer<vtkImageSliceMapper> ImageSliceMapper;
-    vtkRenderWindowInteractor *Interactor;
-    vtkCustomInteractorStyleImage *InteractorStyle;
+    vtkRenderWindowInteractor* Interactor;
+    vtkCustomInteractorStyleImage* InteractorStyle;
     vtkSmartPointer<vtkImageCoordinateWidget> CursorWidget;
     vtkSmartPointer<vtkCustomCornerAnnotation> Annotation;
     vtkSmartPointer<vtkAxesActor> AxesActor;

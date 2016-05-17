@@ -20,27 +20,28 @@ class QChangePasswordDialog : public QDialog
 {
   Q_OBJECT
 
-public:
-  typedef QDialog Superclass;
-  //constructor
-  explicit QChangePasswordDialog( QWidget* parent = 0, const QString& pwd = "" );
-  //destructor
-  virtual ~QChangePasswordDialog();
+  public:
+    typedef QDialog Superclass;
+    // constructor
+    explicit QChangePasswordDialog(QWidget* parent = 0,
+      const QString& pwd = "");
+    // destructor
+    virtual ~QChangePasswordDialog();
 
-public slots:
-  virtual void accepted();
+  public slots:
+    virtual void accepted();
 
-signals:
-  void passwordChanged( const QString& pwd );
+  signals:
+    void passwordChanged(const QString& pwd);
 
-protected:
-  QScopedPointer<QChangePasswordDialogPrivate> d_ptr;
+  protected:
+    QScopedPointer<QChangePasswordDialogPrivate> d_ptr;
 
-  virtual bool eventFilter( QObject*, QEvent* );
+    virtual bool eventFilter(QObject* qobject, QEvent* event);
 
-private:
-  Q_DECLARE_PRIVATE(QChangePasswordDialog);
-  Q_DISABLE_COPY(QChangePasswordDialog);
+  private:
+    Q_DECLARE_PRIVATE(QChangePasswordDialog);
+    Q_DISABLE_COPY(QChangePasswordDialog);
 };
 
 #endif

@@ -63,12 +63,12 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void OpalService::Setup(
-    const std::string &username,
-    const std::string &password,
-    const std::string &host,
-    const int &port,
-    const int &timeout,
-    const int &verbose)
+    const std::string& username,
+    const std::string& password,
+    const std::string& host,
+    const int& port,
+    const int& timeout,
+    const int& verbose)
   {
     this->Username = username;
     this->Password = password;
@@ -76,7 +76,7 @@ namespace Alder
     this->Port = port;
     this->Timeout = timeout;
     this->Verbose = verbose;
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     app->Log(
       "Setup Opal service using cURL version: " + std::string(curl_version()));
     curl_global_init(CURL_GLOBAL_SSL);
@@ -135,18 +135,18 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   Json::Value OpalService::Read(
-    const std::string &servicePath, const std::string &fileName) const
+    const std::string& servicePath, const std::string& fileName) const
   {
     bool toFile = !fileName.empty();
-    FILE *file;
-    CURL *curl = NULL;
+    FILE* file;
+    CURL* curl = NULL;
     std::stringstream urlStream;
     std::string credentials, url, result;
-    struct curl_slist *headers = NULL;
+    struct curl_slist* headers = NULL;
     CURLcode res = CURLE_OK;
     Json::Value root;
     Json::Reader reader;
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
 
     urlStream << "https://" << this->Host << ":"
               << this->Port << "/ws" + servicePath;
@@ -240,7 +240,7 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::vector<std::string> OpalService::GetIdentifiers(
-    const std::string &dataSource, const std::string &table) const
+    const std::string& dataSource, const std::string& table) const
   {
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table << "/entities";
@@ -248,7 +248,7 @@ namespace Alder
     try
     {
     }
-    catch(std::runtime_error &e)
+    catch (std::runtime_error& e)
     {
       throw e;
     }
@@ -267,8 +267,8 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::map<std::string, std::map<std::string, std::string>> OpalService::GetRows(
-    const std::string &dataSource, const std::string &table,
-    const int &offset, const int &limit) const
+    const std::string& dataSource, const std::string& table,
+    const int& offset, const int& limit) const
   {
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table
@@ -278,7 +278,7 @@ namespace Alder
     {
       root = this->Read(stream.str());
     }
-    catch(std::runtime_error &e)
+    catch (std::runtime_error& e)
     {
       throw e;
     }
@@ -307,8 +307,8 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::map<std::string, std::string> OpalService::GetRow(
-    const std::string &dataSource, const std::string &table,
-    const std::string &identifier) const
+    const std::string& dataSource, const std::string& table,
+    const std::string& identifier) const
   {
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table
@@ -318,7 +318,7 @@ namespace Alder
     {
       root = this->Read(stream.str());
     }
-    catch(std::runtime_error &e)
+    catch (std::runtime_error& e)
     {
       throw e;
     }
@@ -340,8 +340,8 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::map<std::string, std::string> OpalService::GetColumn(
-    const std::string &dataSource, const std::string &table,
-    const std::string &variable, const int &offset, const int &limit)
+    const std::string& dataSource, const std::string& table,
+    const std::string& variable, const int& offset, const int& limit)
   {
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table
@@ -352,7 +352,7 @@ namespace Alder
     {
       root = this->Read(stream.str());
     }
-    catch(std::runtime_error &e)
+    catch (std::runtime_error& e)
     {
       throw e;
     }
@@ -375,8 +375,8 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::string OpalService::GetValue(
-    const std::string &dataSource, const std::string &table,
-    const std::string &identifier, const std::string &variable) const
+    const std::string& dataSource, const std::string& table,
+    const std::string& identifier, const std::string& variable) const
   {
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table
@@ -386,7 +386,7 @@ namespace Alder
     {
       root = this->Read(stream.str());
     }
-    catch(std::runtime_error &e)
+    catch (std::runtime_error& e)
     {
       throw e;
     }
@@ -396,8 +396,8 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::vector<std::string> OpalService::GetValues(
-    const std::string &dataSource, const std::string &table,
-    const std::string &identifier, const std::string &variable) const
+    const std::string& dataSource, const std::string& table,
+    const std::string& identifier, const std::string& variable) const
   {
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table
@@ -407,7 +407,7 @@ namespace Alder
     {
       root = this->Read(stream.str());
     }
-    catch(std::runtime_error &e)
+    catch (std::runtime_error& e)
     {
       throw e;
     }
@@ -423,7 +423,7 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::vector<std::string> OpalService::GetVariables(
-    const std::string &dataSource, const std::string &table) const
+    const std::string& dataSource, const std::string& table) const
   {
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table
@@ -433,7 +433,7 @@ namespace Alder
     {
       values = this->Read(stream.str());
     }
-    catch(std::runtime_error &e)
+    catch (std::runtime_error& e)
     {
       throw e;
     }
@@ -448,7 +448,7 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::vector<std::string> OpalService::GetTables(
-    const std::string &dataSource) const
+    const std::string& dataSource) const
   {
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/tables";
@@ -457,7 +457,7 @@ namespace Alder
     {
       values = this->Read(stream.str());
     }
-    catch(std::runtime_error &e)
+    catch (std::runtime_error& e)
     {
       throw e;
     }
@@ -472,12 +472,12 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void OpalService::SaveFile(
-    const std::string &fileName,
-    const std::string &dataSource,
-    const std::string &table,
-    const std::string &identifier,
-    const std::string &variable,
-    const int &position) const
+    const std::string& fileName,
+    const std::string& dataSource,
+    const std::string& table,
+    const std::string& identifier,
+    const std::string& variable,
+    const int& position) const
   {
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table
@@ -491,7 +491,7 @@ namespace Alder
     {
       this->Read(stream.str(), fileName);
     }
-    catch(std::runtime_error &e)
+    catch (std::runtime_error& e)
     {
       throw e;
     }

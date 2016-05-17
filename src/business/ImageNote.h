@@ -38,7 +38,7 @@ namespace Alder
   class ImageNote : public ActiveRecord
   {
     public:
-      static ImageNote *New();
+      static ImageNote* New();
       vtkTypeMacro(ImageNote, ActiveRecord);
       std::string GetName() const { return "ImageNote"; }
 

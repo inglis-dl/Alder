@@ -28,9 +28,9 @@
 class vtkCustomInteractorStyleImage : public vtkInteractorStyleImage
 {
   public:
-    static vtkCustomInteractorStyleImage *New();
+    static vtkCustomInteractorStyleImage* New();
     vtkTypeMacro(vtkCustomInteractorStyleImage, vtkInteractorStyleImage);
-    void PrintSelf(ostream &os, vtkIndent indent);
+    void PrintSelf(ostream& os, vtkIndent indent);
 
     /**
      * Method overridden from parent class to fix a bug with passing

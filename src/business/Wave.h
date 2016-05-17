@@ -38,7 +38,7 @@ namespace Alder
   class Wave : public ActiveRecord
   {
     public:
-      static Wave *New();
+      static Wave* New();
       vtkTypeMacro(Wave, ActiveRecord);
       std::string GetName() const { return "Wave"; }
 
@@ -46,7 +46,7 @@ namespace Alder
        * Updates the Wave db table with Opal information.
        * @param aSource Opal project containing wave configuration data.
        */
-      static void UpdateWaveData(const std::string &aSource);
+      static void UpdateWaveData(const std::string& aSource);
 
       /**
        * Get the maximum UpdateTimestamp from the Interview table as an estimate

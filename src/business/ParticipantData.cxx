@@ -55,7 +55,7 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void ParticipantData::SetActiveInterview(Interview *interview)
+  void ParticipantData::SetActiveInterview(Interview* interview)
   {
     if (interview != this->ActiveInterview)
     {
@@ -174,18 +174,18 @@ namespace Alder
   {
     vtkVariant vuid = vtkVariant(this->uid.c_str());
 
-    vtkSmartPointer< Alder::QueryModifier > modifier =
-      vtkSmartPointer< Alder::QueryModifier >::New();
+    vtkSmartPointer<QueryModifier> modifier =
+      vtkSmartPointer<QueryModifier>::New();
 
     std::vector<vtkSmartPointer<Wave>> wlist;
-    Alder::Wave::GetAll(&wlist);
+    Wave::GetAll(&wlist);
     for (auto w = wlist.begin(); w != wlist.end(); ++w)
     {
       vtkSmartPointer<Wave> wave = *w;
       vtkVariant v = wave->Get("Id");
       if (!v.IsValid())
         continue;
-      this->rankWaveMap[ v.ToInt() ] = wave;
+      this->rankWaveMap[v.ToInt()] = wave;
 
       // get the interviews
       std::vector<vtkSmartPointer<Interview>> ilist;
@@ -194,7 +194,7 @@ namespace Alder
       modifier->Where("WaveId", "=", v);
 
       Interview::GetAll(&ilist, modifier);
-      this->waveInterviewMap[ *w ] = ilist;
+      this->waveInterviewMap[*w] = ilist;
 
       for (auto i = ilist.begin(); i != ilist.end(); ++i)
       {
@@ -205,7 +205,7 @@ namespace Alder
         modifier->Reset();
         modifier->Order("Side");
         interview->GetList(&elist, modifier);
-        this->interviewExamMap[ *i ] = elist;
+        this->interviewExamMap[*i] = elist;
 
         for (auto e = elist.begin(); e != elist.end(); ++e)
         {
@@ -215,7 +215,7 @@ namespace Alder
           modifier->Reset();
           modifier->Where("ParentImageId", "=", vtkVariant(), false);
           exam->GetList(&plist, modifier);
-          this->examImageMap[ *e ] = plist;
+          this->examImageMap[*e] = plist;
 
           for (auto  p = plist.begin(); p != plist.end(); ++p)
           {
@@ -223,7 +223,7 @@ namespace Alder
             vtkSmartPointer<Image> image = *p;
             std::vector<vtkSmartPointer<Image>> clist;
             image->GetList(&clist, "ParentImageId");
-            this->childImageMap[ *p ] = clist;
+            this->childImageMap[*p] = clist;
           }
         }
       }

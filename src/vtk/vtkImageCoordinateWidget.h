@@ -46,22 +46,22 @@ class vtkPropCollection;
 class vtkImageCoordinateWidget : public vtkInteractorObserver
 {
   public:
-    static vtkImageCoordinateWidget *New();
+    static vtkImageCoordinateWidget* New();
     vtkTypeMacro(vtkImageCoordinateWidget, vtkInteractorObserver);
-    void PrintSelf(ostream &os, vtkIndent indent);
+    void PrintSelf(ostream& os, vtkIndent indent);
 
     /** Methods that satisfy the superclass' API. */
     virtual void SetEnabled(int enable);
 
     //@{
     /** Add, remove or query props to a list. */
-    virtual void AddViewProp(vtkProp *prop);
-    virtual void RemoveProp(vtkProp *prop);
+    virtual void AddViewProp(vtkProp* prop);
+    virtual void RemoveProp(vtkProp* prop);
     virtual void RemoveAllProps();
-    virtual void RemoveProps(vtkPropCollection *collection);
-    int          HasProp(vtkProp *prop);
-    int          GetNumberOfProps();
-    vtkProp*     GetNthProp(int n);
+    virtual void RemoveProps(vtkPropCollection* collection);
+    int HasProp(vtkProp* prop);
+    int GetNumberOfProps();
+    vtkProp* GetNthProp(int n);
     //@}
 
     /**
@@ -74,7 +74,7 @@ class vtkImageCoordinateWidget : public vtkInteractorObserver
 
     //@{
     /** Get the current image coordinate position. */
-    int GetCursorPosition(double &x, double &y, double &z);
+    int GetCursorPosition(double& x, double& y, double& z);
     int GetCursorPosition(double xyz[3])
     { return this->GetCursorPosition(xyz[0], xyz[1], xyz[2]); }
     //@}
@@ -84,12 +84,12 @@ class vtkImageCoordinateWidget : public vtkInteractorObserver
      * Get the image voxel value at the current coordinate position.
      * Invalid values will be set to VTK_DOUBLE_MAX.
      */
-    int GetCursorData1(double &v1);
-    int GetCursorData2(double &v1, double &v2);
-    int GetCursorData3(double &v1, double &v2, double &v3);
-    int GetCursorData4(double &v1, double &v2, double &v3, double &v4);
-    int GetCursorData9(double &v1, double &v2, double &v3, double &v4,
-                        double &v5, double &v6, double &v7, double &v8, double &v9);
+    int GetCursorData1(double& v1);
+    int GetCursorData2(double& v1, double& v2);
+    int GetCursorData3(double& v1, double& v2, double& v3);
+    int GetCursorData4(double& v1, double& v2, double& v3, double& v4);
+    int GetCursorData9(double& v1, double& v2, double& v3, double& v4,
+                       double& v5, double& v6, double& v7, double& v8, double& v9);
     int GetCursorData2(double v[2])
     { return this->GetCursorData2(v[0], v[1]); }
     int GetCursorData3(double v[3])
@@ -129,7 +129,7 @@ class vtkImageCoordinateWidget : public vtkInteractorObserver
 
     //@{
     /** Set/Get the picker. */
-    void SetPicker(vtkAbstractPropPicker *picker);
+    void SetPicker(vtkAbstractPropPicker* picker);
     vtkGetObjectMacro(Picker, vtkAbstractPropPicker);
     //@}
 
@@ -138,7 +138,7 @@ class vtkImageCoordinateWidget : public vtkInteractorObserver
      * You can add a transformation for your own use to transform the coordinates
      * that are displayed.
      */
-    void SetUserTransform(vtkHomogeneousTransform *transform);
+    void SetUserTransform(vtkHomogeneousTransform* transform);
     vtkGetObjectMacro(UserTransform, vtkHomogeneousTransform);
     //@}
 
@@ -173,15 +173,15 @@ class vtkImageCoordinateWidget : public vtkInteractorObserver
     //@{
     /** Update the cursor depending on which mode the widget is in. */
     void UpdateCursor(int X, int Y);
-    void UpdateContinuousCursor(double *q);
-    void UpdateDiscreteCursor(double *q);
+    void UpdateContinuousCursor(double* q);
+    void UpdateDiscreteCursor(double* q);
     //@}
 
     /**
      * When using this method make sure the double vector 'argument' has at
      * least 'components' doubles allocated.
      */
-    int GetCursorDataN(double *v1, const int &components);
+    int GetCursorDataN(double* v1, const int& components);
 
     // Attributes
     int    CursoringMode;

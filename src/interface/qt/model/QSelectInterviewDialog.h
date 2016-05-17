@@ -20,25 +20,25 @@ class QSelectInterviewDialog : public QDialog
 {
   Q_OBJECT
 
-public:
-  typedef QDialog Superclass;
-  //constructor
-  explicit QSelectInterviewDialog( QWidget* parent = 0 );
-  //destructor
-  virtual ~QSelectInterviewDialog();
-  
-public slots:
-  virtual void accepted();
+  public:
+    typedef QDialog Superclass;
+    // constructor
+    explicit QSelectInterviewDialog(QWidget* parent = 0);
+    // destructor
+    virtual ~QSelectInterviewDialog();
 
-signals:
-  void interviewSelected( int );
+  public slots:
+    virtual void accepted();
 
-protected:
-  QScopedPointer<QSelectInterviewDialogPrivate> d_ptr;
+  signals:
+    void interviewSelected(int id);
 
-private:
-  Q_DECLARE_PRIVATE(QSelectInterviewDialog);
-  Q_DISABLE_COPY(QSelectInterviewDialog);
+  protected:
+    QScopedPointer<QSelectInterviewDialogPrivate> d_ptr;
+
+  private:
+    Q_DECLARE_PRIVATE(QSelectInterviewDialog);
+    Q_DISABLE_COPY(QSelectInterviewDialog);
 };
 
 #endif

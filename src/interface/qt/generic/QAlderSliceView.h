@@ -6,11 +6,11 @@
   Author:    Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-
 #ifndef __QAlderSliceView_h
 #define __QAlderSliceView_h
 
-#include "QAlderAbstractView.h"
+// Alder includes
+#include <QAlderAbstractView.h>
 
 class QAlderSliceViewPrivate;
 class vtkImageData;
@@ -24,82 +24,61 @@ class QAlderSliceView : public QAlderAbstractView
     WRITE setCursorOverView)
   Q_PROPERTY(double colorLevel READ colorLevel WRITE setColorLevel)
   Q_PROPERTY(double colorWindow READ colorWindow WRITE setColorWindow)
-  Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged)
+  Q_PROPERTY(Orientation orientation READ orientation
+    WRITE setOrientation NOTIFY orientationChanged)
   Q_PROPERTY(int interpolation READ interpolation WRITE setInterpolation)
-  Q_PROPERTY(QColor annotationColor READ annotationColor WRITE setAnnotationColor)
+  Q_PROPERTY(QColor annotationColor READ annotationColor
+    WRITE setAnnotationColor)
   Q_ENUMS(Orientation)
 
-public:
-  typedef QAlderAbstractView Superclass;
-  explicit QAlderSliceView(QWidget* parent = 0);
-  virtual ~QAlderSliceView();
+  public:
+    typedef QAlderAbstractView Superclass;
+    explicit QAlderSliceView(QWidget* parent = 0);
+    virtual ~QAlderSliceView();
 
-  enum Orientation { OrientationYZ, OrientationXZ, OrientationXY };
+    enum Orientation { OrientationYZ, OrientationXZ, OrientationXY };
 
-  Orientation orientation() const;
+    Orientation orientation() const;
+    double colorLevel() const;
+    double colorWindow() const;
+    int slice() const;
+    int sliceMin();
+    int sliceMax();
+    int interpolation() const;
+    bool annotateOverView() const;
+    bool cursorOverView() const;
+    bool hasImageData() const;
+    int dimensionality() const;
+    void setImageToSinusoid();
+    bool load(const QString& fileName);
+    void writeSlice(const QString& fileName);
+    virtual QColor annotationColor() const;
+    vtkImageData* imageData();
+    int frameRate() const;
 
-  double colorLevel() const;
+  public slots:
+    void setColorLevel(double newColorLevel);
+    void setColorWindow(double newColorWindow);
+    void setOrientation(Orientation orientation);
+    void setSlice(int slice);
+    void invertColorWindowLevel();
+    void setCursorOverView(bool view);
+    void setAnnotateOverView(bool view);
+    void rotateCamera(double angle);
+    void setInterpolation(int newInterpolation);
+    void flipCameraHorizontal();
+    void flipCameraVertical();
+    void rotateCameraClockwise();
+    void rotateCameraCounterClockwise();
+    void setAnnotationColor(const QColor& qcolor);
 
-  double colorWindow() const;
+  Q_SIGNALS:
+    void orientationChanged(QAlderSliceView::Orientation orientation);
+    void imageDataChanged();
 
-  int slice() const;
-  int sliceMin();
-  int sliceMax();
-
-  int interpolation() const;
-
-  bool annotateOverView() const;
-  bool cursorOverView() const;
-
-  bool hasImageData() const;
-
-  int dimensionality() const;
-
-  void setImageToSinusoid();
-
-  bool load( const QString& fileName );
-
-  void writeSlice( const QString& fileName );
-
-  virtual QColor annotationColor() const;
-
-  vtkImageData* imageData();
-
-  int frameRate() const;
-
-public slots:
-
-  void setColorLevel( double newColorLevel );
-
-  void setColorWindow( double newColorWindow );
-
-  void setOrientation( Orientation orientation );
-
-  void setSlice( int slice );
-
-  void invertColorWindowLevel();
-
-  void setCursorOverView( bool view );
-  void setAnnotateOverView( bool view );
-
-  void rotateCamera( double angle );
-
-  void setInterpolation( int newInterpolation );
-
-  void flipCameraHorizontal();
-  void flipCameraVertical();
-  void rotateCameraClockwise();
-  void rotateCameraCounterClockwise();
-
-  void setAnnotationColor(const QColor& qcolor);
-
-Q_SIGNALS:
-  void orientationChanged( QAlderSliceView::Orientation orientation );
-  void imageDataChanged();
-
-private:
-  Q_DECLARE_PRIVATE(QAlderSliceView);
-  Q_DISABLE_COPY(QAlderSliceView);
+  private:
+    Q_DECLARE_PRIVATE(QAlderSliceView);
+    Q_DISABLE_COPY(QAlderSliceView);
 };
 
 #endif

@@ -51,7 +51,7 @@ class vtkXMLFileReader : public vtkAlgorithm
      * Set/Get the file name
      */
     virtual std::string GetFileName() { return this->FileName; }
-    virtual void SetFileName(const std::string &fileName);
+    virtual void SetFileName(const std::string& fileName);
 
   protected:
     /**
@@ -110,7 +110,7 @@ class vtkXMLFileReader : public vtkAlgorithm
           return "XmlDeclaration";
         return "Unknown";
       }
-      void PrintSelf(ostream &os, vtkIndent indent)
+      void PrintSelf(ostream& os, vtkIndent indent)
       {
         os << indent << "Name: "
            << (NULL == this->Name ? "(null)" :
@@ -146,9 +146,9 @@ class vtkXMLFileReader : public vtkAlgorithm
     ~vtkXMLFileReader();
 
     virtual int ProcessRequest(
-      vtkInformation *requst,
-      vtkInformationVector **inputVector,
-      vtkInformationVector *outputVector);
+      vtkInformation* requst,
+      vtkInformationVector** inputVector,
+      vtkInformationVector* outputVector);
 
     /**
      * Opens and parses the current XML file.
@@ -175,10 +175,10 @@ class vtkXMLFileReader : public vtkAlgorithm
      */
     void RewindReader();
 
-    void ReadValue(std::string &value);
+    void ReadValue(std::string& value);
 
     std::string FileName;
-    xmlTextReader *Reader;
+    xmlTextReader* Reader;
     vtkXMLFileReaderNode CurrentNode;
 
   private:

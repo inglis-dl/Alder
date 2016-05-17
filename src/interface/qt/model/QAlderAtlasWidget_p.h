@@ -26,29 +26,28 @@ class QAlderAtlasWidgetPrivate : public QObject, public Ui_QAlderAtlasWidget
 {
   Q_OBJECT
   Q_DECLARE_PUBLIC(QAlderAtlasWidget);
-protected:
-  QAlderAtlasWidget* const q_ptr;
+  protected:
+    QAlderAtlasWidget* const q_ptr;
 
-public:
-  explicit QAlderAtlasWidgetPrivate(QAlderAtlasWidget& object);
-  virtual ~QAlderAtlasWidgetPrivate();
+  public:
+    explicit QAlderAtlasWidgetPrivate(QAlderAtlasWidget& object);
+    virtual ~QAlderAtlasWidgetPrivate();
 
-  void setupUi(QWidget*);
-  void updateUi();
-  int  rating();
-  void updateRoot( const int &id );
+    void setupUi(QWidget* widget);
+    void updateUi();
+    int  rating();
+    void updateRoot(const int& id);
 
-public slots:
+  public slots:
+    void next();
+    void previous();
+    void ratingChanged();
 
-  void next();
-  void previous();
-  void ratingChanged();
+  private:
+    vtkSmartPointer<vtkEventQtSlotConnect> qvtkConnection;
 
-private:
-  vtkSmartPointer<vtkEventQtSlotConnect> qvtkConnection;
-
-  vtkSmartPointer<Alder::Image> rootImage;
-  vtkSmartPointer<Alder::Image> atlasImage;
+    vtkSmartPointer<Alder::Image> rootImage;
+    vtkSmartPointer<Alder::Image> atlasImage;
 };
 
 #endif

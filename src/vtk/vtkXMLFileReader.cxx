@@ -46,16 +46,16 @@ vtkXMLFileReader::~vtkXMLFileReader()
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 int vtkXMLFileReader::ProcessRequest(
-  vtkInformation *request,
-  vtkInformationVector **inputVector,
-  vtkInformationVector *outputVector)
+  vtkInformation* request,
+  vtkInformationVector** inputVector,
+  vtkInformationVector* outputVector)
 {
   return this->Superclass::ProcessRequest(request, inputVector, outputVector);
 }
 
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkXMLFileReader::PrintSelf(ostream &os, vtkIndent indent)
+void vtkXMLFileReader::PrintSelf(ostream& os, vtkIndent indent)
 {
   Superclass::PrintSelf(os, indent);
 
@@ -66,7 +66,7 @@ void vtkXMLFileReader::PrintSelf(ostream &os, vtkIndent indent)
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkXMLFileReader::SetFileName(const std::string &filename)
+void vtkXMLFileReader::SetFileName(const std::string& filename)
 {
   vtkDebugMacro(<< this->GetClassName() << " (" << this << "): setting "
                  << "FileName to " << filename.c_str());
@@ -156,7 +156,7 @@ void vtkXMLFileReader::FreeReader()
 void vtkXMLFileReader::ReadValue(std::string& value)
 {
   // list of expected elements
-  xmlChar *read = xmlTextReaderReadString(this->Reader);
+  xmlChar* read = xmlTextReaderReadString(this->Reader);
 
   value = "";
 

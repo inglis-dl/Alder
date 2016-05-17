@@ -41,9 +41,9 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   vtkSmartPointer<Interview> Interview::GetNeighbour(
-    const bool &forward, const bool &loaded, const bool &unrated)
+    const bool& forward, const bool& loaded, const bool& unrated)
   {
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     std::string interviewId = this->Get("Id").ToString();
     std::string uId = this->Get("UId").ToString();
     std::string userId = app->GetActiveUser()->Get("Id").ToString();
@@ -234,7 +234,7 @@ namespace Alder
            << "JOIN Exam ON Exam.Id=Image.ExamId "
            << "WHERE Exam.InterviewId=" << this->Get("Id").ToString();
 
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery(stream.str().c_str());
     query->Execute();
@@ -252,7 +252,7 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool Interview::IsRatedBy(User *user)
+  bool Interview::IsRatedBy(User* user)
   {
    if (!user)
       throw std::runtime_error("Tried to get rating for null user");
@@ -265,7 +265,7 @@ namespace Alder
            << "WHERE Exam.InterviewId=" << this->Get("Id").ToString() << " "
            << "AND User.Id=" << user->Get("Id").ToString();
 
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery(stream.str().c_str());
     query->Execute();
@@ -289,7 +289,7 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  Interview::ImageStatus Interview::GetImageStatus(QueryModifier *modifier)
+  Interview::ImageStatus Interview::GetImageStatus(QueryModifier* modifier)
   {
     std::vector<vtkSmartPointer<Exam>> vecExam;
     this->GetList(&vecExam, modifier);
@@ -324,11 +324,11 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Interview::UpdateExamData(Wave *aWave,
-    const std::string &aMetaSource)
+  void Interview::UpdateExamData(Wave* aWave,
+    const std::string& aMetaSource)
   {
-    Application *app = Application::GetInstance();
-    OpalService *opal = app->GetOpal();
+    Application* app = Application::GetInstance();
+    OpalService* opal = app->GetOpal();
     bool sustain = opal->GetSustainConnection();
     if (!sustain)
     {
@@ -336,7 +336,7 @@ namespace Alder
       {
         opal->SustainConnectionOn();
       }
-      catch(std::runtime_error &e)
+      catch (std::runtime_error& e)
       {
         app->Log(e.what());
         return;
@@ -475,7 +475,7 @@ namespace Alder
         }
 
         loader["Side"] = sideStr;
-        vtkNew< Exam > exam;
+        vtkNew<Exam> exam;
         if (exam->Load(loader))
         {
           // check and update data as required
@@ -534,7 +534,7 @@ namespace Alder
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Interview::UpdateImageData()
   {
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     User* user = app->GetActiveUser();
     std::vector<vtkSmartPointer<Exam>> vecExam;
     if (!user) return;
@@ -553,7 +553,7 @@ namespace Alder
            << "AND Downloaded=0 "
            << "AND InterviewId=" << this->Get("Id").ToString();
 
-    Database *db = app->GetDB();
+    Database* db = app->GetDB();
     vtkSmartPointer<vtkMySQLQuery> query = db->GetQuery();
 
     app->Log("Querying Database: " + stream.str());
@@ -576,7 +576,7 @@ namespace Alder
 
     if (!vecExam.empty())
     {
-      vtkSmartPointer<Wave > wave;
+      vtkSmartPointer<Wave> wave;
       this->GetRecord(wave);
 
       std::string source = wave->Get("ImageDataSource").ToString();
@@ -611,10 +611,10 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Interview::UpdateInterviewData(
-    const std::vector<std::pair< int, bool>> &waveList)
+    const std::vector<std::pair< int, bool>>& waveList)
   {
-    Application *app = Application::GetInstance();
-    OpalService *opal = app->GetOpal();
+    Application* app = Application::GetInstance();
+    OpalService* opal = app->GetOpal();
     bool sustain = opal->GetSustainConnection();
     if (!sustain)
     {
@@ -622,7 +622,7 @@ namespace Alder
       {
         opal->SustainConnectionOn();
       }
-      catch(std::runtime_error &e)
+      catch (std::runtime_error& e)
       {
         app->Log(e.what());
         return;
@@ -637,7 +637,7 @@ namespace Alder
     {
       std::string waveId = vtkVariant(it->first).ToString();
       bool fullUpdate = it->second;
-      vtkNew< Wave > wave;
+      vtkNew<Wave> wave;
       if (!wave->Load("Id", waveId)) continue;
 
       // get the list of UId's available in Opal
@@ -710,7 +710,7 @@ namespace Alder
     std::map<std::string, std::string> mapSite;
     for (auto it = vecSite.cbegin(); it != vecSite.cend(); ++it)
     {
-      Site *site = *it;
+      Site* site = *it;
       std::string siteId = site->Get("Id").ToString();
       mapSite[site->Get("Name").ToString()] = siteId;
       std::string alias = site->Get("Alias").ToString();
@@ -719,13 +719,13 @@ namespace Alder
     }
 
     // determine number of identifiers to pull per Opal curl call
-    int limit = static_cast<int>(0.1 * size);
+    int limit = static_cast<int>(0.1*size);
     limit = limit > 500 ? 500 : (limit < 10 ? 10 : limit);
     int index = 0;
     int progress = 0;
     int lastProgress = progress;
     bool done = false;
-    vtkSmartPointer<Wave > wave = vtkSmartPointer<Wave >::New();
+    vtkSmartPointer<Wave> wave = vtkSmartPointer<Wave>::New();
     std::string message = "Updating metadata of ";
     message += std::to_string(static_cast<int>(size)) + " interviews";
     app->SetAbortFlag(0);
@@ -746,7 +746,7 @@ namespace Alder
       std::vector<std::string>::iterator ibegin = vecUId.begin();
       std::vector<std::string>::iterator iend = vecUId.end();
 
-      std::map<std::string, std::map<std::string, std::string> > mapOpal;
+      std::map<std::string, std::map<std::string, std::string>> mapOpal;
       int localIndex = 0;
       do
       {
@@ -780,7 +780,7 @@ namespace Alder
           loader["UId"] = uidStr;
           loader["VisitDate"] = mapVar["VisitDate"];
 
-          vtkNew< Interview > interview;
+          vtkNew<Interview> interview;
           if (!interview->Load(loader))
           {
             // create the new interview
@@ -789,7 +789,7 @@ namespace Alder
             auto sit = mapSite.find(siteStr);
             if (sit == mapSite.end())
             {
-              vtkNew< Site > site;
+              vtkNew<Site> site;
               if (site->Load("Name", siteStr))
                 siteId = site->Get("Id").ToString();
               else if (site->Load("Alias", siteStr))
@@ -828,12 +828,12 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   int Interview::LoadFromList(
-    const std::vector<std::pair<std::string, std::string>> &list)
+    const std::vector<std::pair<std::string, std::string>>& list)
   {
     // load images for Interviews already pulled from Opal
     // via the administrator UI
     std::vector<vtkSmartPointer<Interview>> vecRevised;
-    vtkNew< Wave > wave;
+    vtkNew<Wave> wave;
     for (auto it = list.cbegin(); it != list.cend(); ++it)
     {
       std::string uidStr = it->first;
@@ -854,8 +854,8 @@ namespace Alder
 
     if (vecRevised.empty()) return 0;
 
-    Application *app = Application::GetInstance();
-    OpalService *opal = app->GetOpal();
+    Application* app = Application::GetInstance();
+    OpalService* opal = app->GetOpal();
     bool sustain = opal->GetSustainConnection();
     if (!sustain)
     {
@@ -863,7 +863,7 @@ namespace Alder
       {
         opal->SustainConnectionOn();
       }
-      catch(std::runtime_error &e)
+      catch (std::runtime_error& e)
       {
         app->Log(e.what());
         return 0;
@@ -871,10 +871,10 @@ namespace Alder
     }
 
     // the active user can only load exam images they have permission for
-    User *user = app->GetActiveUser();
+    User* user = app->GetActiveUser();
 
-    vtkSmartPointer<QueryModifier > modifier =
-      vtkSmartPointer<QueryModifier >::New();
+    vtkSmartPointer<QueryModifier> modifier =
+      vtkSmartPointer<QueryModifier>::New();
     user->InitializeExamModifier(modifier);
 
     int index = 0;
@@ -902,14 +902,14 @@ namespace Alder
           vtkCommand::ProgressEvent, reinterpret_cast<void*>(&progress));
       }
 
-      Interview *interview = *it;
-      vtkSmartPointer<Wave > wave;
+      Interview* interview = *it;
+      vtkSmartPointer<Wave> wave;
       interview->GetRecord(wave);
       try
       {
         interview->UpdateExamData(wave);
       }
-      catch(std::runtime_error &e)
+      catch (std::runtime_error& e)
       {
         std::string err =
           "There was an error while trying to update exam data (UId : ";
@@ -937,7 +937,7 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  std::string Interview::GetSimilarImageId(const std::string &imageId)
+  std::string Interview::GetSimilarImageId(const std::string& imageId)
   {
     this->AssertPrimaryId();
     std::string matchId;
@@ -971,7 +971,7 @@ namespace Alder
            << (hasParent ? "NOT NULL " : "NULL ")
            << "LIMIT 1";
 
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     app->Log("Querying Database: " + stream.str());
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     query->SetQuery(stream.str().c_str());

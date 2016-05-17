@@ -6,8 +6,8 @@ I  Module:    QAlderAbstractView.cxx
   Author:    Dean Inglis <inglisd AT mcmaster DOT ca>
 
 =========================================================================*/
-#include "QAlderAbstractView.h"
-#include "QAlderAbstractView_p.h"
+#include <QAlderAbstractView.h>
+#include <QAlderAbstractView_p.h>
 
 // Qt includes
 #include <QVBoxLayout>
@@ -21,10 +21,10 @@ I  Module:    QAlderAbstractView.cxx
 #include <vtkTextActor.h>
 #include <vtkTextProperty.h>
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 // QAlderAbstractViewPrivate methods
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QAlderAbstractViewPrivate::QAlderAbstractViewPrivate(QAlderAbstractView& object)
   : q_ptr(&object)
 {
@@ -40,20 +40,21 @@ QAlderAbstractViewPrivate::QAlderAbstractViewPrivate(QAlderAbstractView& object)
     this->AxesActor->GetYAxisCaptionActor2D(),
     this->AxesActor->GetZAxisCaptionActor2D()
   };
-  for (int i=0; i<3; i++)
+  for (int i = 0; i < 3; ++i)
   {
     captionActors[i]->GetTextActor()->SetTextScaleModeToViewport();
-    captionActors[i]->GetTextActor()->SetNonLinearFontScale( 0.9, 24 );
-    captionActors[i]->GetTextActor()->GetTextProperty()->SetFontSize( 36 );
+    captionActors[i]->GetTextActor()->SetNonLinearFontScale(0.9, 24);
+    captionActors[i]->GetTextActor()->GetTextProperty()->SetFontSize(36);
   }
-  this->OrientationMarkerWidget = vtkSmartPointer<vtkOrientationMarkerWidget>::New();
-  this->OrientationMarkerWidget->SetOrientationMarker( this->AxesActor );
+  this->OrientationMarkerWidget =
+    vtkSmartPointer<vtkOrientationMarkerWidget>::New();
+  this->OrientationMarkerWidget->SetOrientationMarker(this->AxesActor);
   this->OrientationMarkerWidget->KeyPressActivationOff();
-  this->OrientationMarkerWidget->SetViewport( 0.8, 0.0, 1.0, 0.2 );
+  this->OrientationMarkerWidget->SetViewport(0.8, 0.0, 1.0, 0.2);
   this->axesOverView = true;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderAbstractViewPrivate::init()
 {
   Q_Q(QAlderAbstractView);
@@ -69,61 +70,61 @@ void QAlderAbstractViewPrivate::init()
   this->RenderWindow->AddRenderer(this->Renderer);
   this->VTKWidget->SetRenderWindow(this->RenderWindow);
   this->Renderer->GradientBackgroundOn();
-  double color[3] = {0.,0.,0.};
-  this->Renderer->SetBackground(color); // black (lower part of gradient)
-  color[2]=1.;
-  this->Renderer->SetBackground2(color); // blue (upper part of gradient)
+  double color[3] = {0., 0., 0.};
+  this->Renderer->SetBackground(color);  // black (lower part of gradient)
+  color[2] = 1.;
+  this->Renderer->SetBackground2(color);  // blue (upper part of gradient)
 
   q->setInteractor(this->RenderWindow->GetInteractor());
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+--
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+--
 void QAlderAbstractViewPrivate::setupAxesWidget()
 {
   Q_ASSERT(this->RenderWindow);
   Q_ASSERT(this->Renderer);
-  if( this->axesOverView && this->RenderWindow->GetInteractor() )
+  if (this->axesOverView && this->RenderWindow->GetInteractor())
   {
-    this->OrientationMarkerWidget->SetDefaultRenderer( this->Renderer );
-    this->OrientationMarkerWidget->SetInteractor( this->RenderWindow->GetInteractor() );
+    this->OrientationMarkerWidget->SetDefaultRenderer(this->Renderer);
+    this->OrientationMarkerWidget->SetInteractor(
+      this->RenderWindow->GetInteractor());
     this->OrientationMarkerWidget->On();
     this->OrientationMarkerWidget->InteractiveOff();
   }
   else
   {
-    if( this->OrientationMarkerWidget->GetInteractor() )
+    if (this->OrientationMarkerWidget->GetInteractor())
       this->OrientationMarkerWidget->Off();
   }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+--
-QList<vtkRenderer*> QAlderAbstractViewPrivate::renderers()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+--
+QList<vtkRenderer*> QAlderAbstractViewPrivate::renderers() const
 {
   QList<vtkRenderer*> rendererList;
-
-  vtkRendererCollection* rendererCollection = this->RenderWindow->GetRenderers();
+  vtkRendererCollection* rendererCollection =
+    this->RenderWindow->GetRenderers();
   vtkCollectionSimpleIterator rendererIterator;
   rendererCollection->InitTraversal(rendererIterator);
-  vtkRenderer *renderer;
-  while ( (renderer= rendererCollection->GetNextRenderer(rendererIterator)) )
+  vtkRenderer* renderer;
+  while ((renderer = rendererCollection->GetNextRenderer(rendererIterator)))
   {
     rendererList << renderer;
   }
   return rendererList;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+--
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-vtkRenderer* QAlderAbstractViewPrivate::firstRenderer()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+--
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+vtkRenderer* QAlderAbstractViewPrivate::firstRenderer() const
 {
-  return static_cast<vtkRenderer*>(this->RenderWindow->GetRenderers()
-    ->GetItemAsObject(0));
+  return static_cast<vtkRenderer*>(
+    this->RenderWindow->GetRenderers()->GetItemAsObject(0));
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 // QAlderAbstractView methods
-
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QAlderAbstractView::QAlderAbstractView(QWidget* parentWidget)
   : Superclass(parentWidget)
   , d_ptr(new QAlderAbstractViewPrivate(*this))
@@ -132,8 +133,9 @@ QAlderAbstractView::QAlderAbstractView(QWidget* parentWidget)
   d->init();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-QAlderAbstractView::QAlderAbstractView(QAlderAbstractViewPrivate* pimpl, QWidget* parentWidget)
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QAlderAbstractView::QAlderAbstractView(
+  QAlderAbstractViewPrivate* pimpl, QWidget* parentWidget)
   : Superclass(parentWidget)
   , d_ptr(pimpl)
 {
@@ -141,12 +143,12 @@ QAlderAbstractView::QAlderAbstractView(QAlderAbstractViewPrivate* pimpl, QWidget
   // actions on a derived public class not yet finished to be created
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QAlderAbstractView::~QAlderAbstractView()
 {
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderAbstractView::forceRender()
 {
   Q_D(QAlderAbstractView);
@@ -158,95 +160,95 @@ void QAlderAbstractView::forceRender()
   d->RenderWindow->Render();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-vtkRenderWindow* QAlderAbstractView::renderWindow()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+vtkRenderWindow* QAlderAbstractView::renderWindow() const
 {
   Q_D(const QAlderAbstractView);
   return d->RenderWindow;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
 void QAlderAbstractView::setInteractor(vtkRenderWindowInteractor* newInteractor)
 {
   Q_D(QAlderAbstractView);
-  if( newInteractor != d->RenderWindow->GetInteractor() )
+  if (newInteractor != d->RenderWindow->GetInteractor())
     d->RenderWindow->SetInteractor(newInteractor);
 
-  if( newInteractor != d->OrientationMarkerWidget->GetInteractor() )
+  if (newInteractor != d->OrientationMarkerWidget->GetInteractor())
     d->OrientationMarkerWidget->SetInteractor(newInteractor);
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
-vtkRenderWindowInteractor* QAlderAbstractView::interactor()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+vtkRenderWindowInteractor* QAlderAbstractView::interactor() const
 {
   Q_D(const QAlderAbstractView);
   return d->RenderWindow->GetInteractor();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
 void QAlderAbstractView::setOrientationDisplay(bool display)
 {
   Q_D(QAlderAbstractView);
-  if( d->OrientationMarkerWidget->GetInteractor() )
+  if (d->OrientationMarkerWidget->GetInteractor())
     d->OrientationMarkerWidget->SetEnabled(display);
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
 bool QAlderAbstractView::orientationDisplay() const
 {
   Q_D(const QAlderAbstractView);
   return d->OrientationMarkerWidget->GetEnabled();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
-vtkInteractorObserver* QAlderAbstractView::interactorStyle()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+vtkInteractorObserver* QAlderAbstractView::interactorStyle() const
 {
   return this->interactor() ?
     this->interactor()->GetInteractorStyle() : 0;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
-QVTKWidget * QAlderAbstractView::VTKWidget() const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+QVTKWidget* QAlderAbstractView::VTKWidget() const
 {
   Q_D(const QAlderAbstractView);
   return d->VTKWidget;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
-QSize QAlderAbstractView::minimumSizeHint()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+QSize QAlderAbstractView::minimumSizeHint() const
 {
   // Arbitrary size. 50x50 because smaller seems too small.
   return QSize(50, 50);
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
-QSize QAlderAbstractView::sizeHint()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+QSize QAlderAbstractView::sizeHint() const
 {
   // Arbitrary size. 300x300 is the default vtkRenderWindow size.
   return QSize(300, 300);
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
-bool QAlderAbstractView::hasHeightForWidth()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+bool QAlderAbstractView::hasHeightForWidth() const
 {
   return true;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
-int QAlderAbstractView::heightForWidth(int width)const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+int QAlderAbstractView::heightForWidth(int width) const
 {
   // typically VTK render window tend to be square...
   return width;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
 vtkRenderer* QAlderAbstractView::renderer()
 {
   Q_D(const QAlderAbstractView);
   return d->firstRenderer();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
 void QAlderAbstractView::setBackgroundColor(const QColor& qcolor)
 {
   Q_D(QAlderAbstractView);
@@ -260,7 +262,7 @@ void QAlderAbstractView::setBackgroundColor(const QColor& qcolor)
   }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
 QColor QAlderAbstractView::backgroundColor() const
 {
   Q_D(const QAlderAbstractView);
@@ -271,7 +273,7 @@ QColor QAlderAbstractView::backgroundColor() const
                        : QColor();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
 void QAlderAbstractView::setForegroundColor(const QColor& qcolor)
 {
   Q_D(QAlderAbstractView);
@@ -285,7 +287,7 @@ void QAlderAbstractView::setForegroundColor(const QColor& qcolor)
   }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
 QColor QAlderAbstractView::foregroundColor() const
 {
   Q_D(const QAlderAbstractView);
@@ -296,7 +298,7 @@ QColor QAlderAbstractView::foregroundColor() const
                        : QColor();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
 void QAlderAbstractView::setGradientBackground(bool enable)
 {
   Q_D(QAlderAbstractView);
@@ -306,8 +308,8 @@ void QAlderAbstractView::setGradientBackground(bool enable)
   }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
-bool QAlderAbstractView::gradientBackground()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+---
+bool QAlderAbstractView::gradientBackground() const
 {
   Q_D(const QAlderAbstractView);
   vtkRenderer* firstRenderer = d->firstRenderer();

@@ -34,9 +34,9 @@ vtkStandardNewMacro(vtkXMLConfigurationFileReader);
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 int vtkXMLConfigurationFileReader::ProcessRequest(
-  vtkInformation *request,
-  vtkInformationVector **inputVector,
-  vtkInformationVector *outputVector)
+  vtkInformation* request,
+  vtkInformationVector** inputVector,
+  vtkInformationVector* outputVector)
 {
   if (request->Has(vtkDemandDrivenPipeline::REQUEST_DATA_OBJECT()))
   {
@@ -115,7 +115,7 @@ int vtkXMLConfigurationFileReader::ProcessRequest(
 
       this->FreeReader();
     }
-    catch(std::exception &e)
+    catch (std::exception& e)
     {
       this->FreeReader();
       throw e;

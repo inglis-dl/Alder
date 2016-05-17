@@ -40,11 +40,11 @@ class vtkImageDataWriter : public vtkObject
   public:
     static vtkImageDataWriter* New();
     vtkTypeMacro(vtkImageDataWriter, vtkObject);
-    void PrintSelf(ostream &os, vtkIndent indent);
+    void PrintSelf(ostream& os, vtkIndent indent);
 
     // Description:
     // Set/get the file name to be wrtitten to by the reader.
-    virtual void SetFileName(const char *name);
+    virtual void SetFileName(const char* name);
     std::string GetFileName() { return this->FileName; }
 
     // Description:
@@ -62,7 +62,7 @@ class vtkImageDataWriter : public vtkObject
     // Description:
     // Before trying to do anything with the named file, check if it is in fact
     // writable by this object.
-    static bool IsValidFileName(const char *name);
+    static bool IsValidFileName(const char* name);
 
     // Description:
     // When writing, see if the scalar range will allow fitting within a
@@ -80,7 +80,7 @@ class vtkImageDataWriter : public vtkObject
     // Description:
     // Sets the the reader (keeping a reference to it and deleting the any
     // old one).
-    virtual void SetWriter(vtkAlgorithm *writer);
+    virtual void SetWriter(vtkAlgorithm* writer);
 
     std::string FileName;
     vtkAlgorithm* Writer;

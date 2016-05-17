@@ -34,7 +34,7 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool ActiveRecord::ColumnNameExists(const std::string &column)
+  bool ActiveRecord::ColumnNameExists(const std::string& column)
   {
     // make sure the record is initialized
     if (!this->Initialized)
@@ -49,7 +49,7 @@ namespace Alder
   {
     this->ColumnValues.clear();
 
-    Database *db = Application::GetInstance()->GetDB();
+    Database* db = Application::GetInstance()->GetDB();
     std::string name = this->GetName();
     std::vector<std::string> columns = db->GetColumnNames(name);
 
@@ -60,14 +60,14 @@ namespace Alder
     {
       const std::string column = *it;
       vtkVariant columnDefault = db->GetColumnDefault(name, column);
-      this->ColumnValues.insert(std::pair< std::string, vtkVariant >(column, columnDefault));
+      this->ColumnValues.insert(std::pair<std::string, vtkVariant>(column, columnDefault));
     }
 
     this->Initialized = true;
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void ActiveRecord::LoadFromQuery(vtkMySQLQuery *query)
+  void ActiveRecord::LoadFromQuery(vtkMySQLQuery* query)
   {
     for (int c = 0; c < query->GetNumberOfFields(); ++c)
     {
@@ -80,9 +80,9 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool ActiveRecord::Load(const std::map< std::string, std::string > &map)
+  bool ActiveRecord::Load(const std::map<std::string, std::string>& map)
   {
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     this->ColumnValues.clear();
 
@@ -124,9 +124,9 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void ActiveRecord::Save(const bool &replace)
+  void ActiveRecord::Save(const bool& replace)
   {
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     std::string name = this->GetName();
     std::stringstream stream;
@@ -183,7 +183,7 @@ namespace Alder
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   int ActiveRecord::GetLastInsertId() const
   {
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     std::stringstream stream;
     std::string name = this->GetName();
@@ -207,7 +207,7 @@ namespace Alder
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void ActiveRecord::Remove()
   {
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     this->AssertPrimaryId();
 
@@ -226,9 +226,9 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  int ActiveRecord::GetCount(const std::string &recordType)
+  int ActiveRecord::GetCount(const std::string& recordType)
   {
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
     std::stringstream stream;
     stream << "SELECT COUNT(*) FROM " << recordType << " "
@@ -250,7 +250,7 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  vtkVariant ActiveRecord::Get(const std::string &column)
+  vtkVariant ActiveRecord::Get(const std::string& column)
   {
     // make sure the column exists
     if (!this->ColumnNameExists(column))
@@ -278,9 +278,9 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  int ActiveRecord::GetRelationship(const std::string &table, const std::string &override) const
+  int ActiveRecord::GetRelationship(const std::string& table, const std::string& override) const
   {
-    Database *db = Application::GetInstance()->GetDB();
+    Database* db = Application::GetInstance()->GetDB();
 
     // if no override is provided, figure out necessary table/column names
     std::string name = this->GetName();

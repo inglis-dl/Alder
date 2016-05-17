@@ -33,7 +33,7 @@
 class vtkXMLConfigurationFileReader : public vtkXMLFileReader
 {
   public:
-    static vtkXMLConfigurationFileReader *New();
+    static vtkXMLConfigurationFileReader* New();
     vtkTypeMacro(vtkXMLConfigurationFileReader, vtkXMLFileReader);
 
     std::map<std::string, std::map<std::string, std::string>> GetSettings()
@@ -45,15 +45,15 @@ class vtkXMLConfigurationFileReader : public vtkXMLFileReader
     ~vtkXMLConfigurationFileReader() {}
 
     virtual int ProcessRequest(
-      vtkInformation *request,
-      vtkInformationVector **inputVector,
-      vtkInformationVector *outputVector);
-    virtual int FillOutputPortInformation(int port, vtkInformation *request)
+      vtkInformation* request,
+      vtkInformationVector** inputVector,
+      vtkInformationVector* outputVector);
+    virtual int FillOutputPortInformation(int port, vtkInformation* request)
       { return 1; }
     virtual int RequestDataObject(
-      vtkInformation *request,
-      vtkInformationVector **inputVector,
-      vtkInformationVector *outputVector)
+      vtkInformation* request,
+      vtkInformationVector** inputVector,
+      vtkInformationVector* outputVector)
       { return 1; }
 
     std::map<std::string, std::map<std::string, std::string>> Settings;

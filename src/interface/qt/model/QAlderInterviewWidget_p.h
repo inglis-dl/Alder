@@ -13,8 +13,6 @@
 #include <QAlderInterviewWidget.h>
 #include <ui_QAlderInterviewWidget.h>
 
-// Alder includes
-
 // Qt includes
 #include <QMap>
 #include <QHash>
@@ -22,8 +20,8 @@
 // VTK includes
 #include <vtkSmartPointer.h>
 
-namespace Alder { 
-class ActiveRecord; 
+namespace Alder {
+class ActiveRecord;
 class Interview;
 class Modality;
 class ParticipantData;
@@ -34,64 +32,66 @@ class QTableWidgetItem;
 class QTreeWidgetItem;
 class vtkEventQtSlotConnect;
 
-class QAlderInterviewWidgetPrivate : public QObject, public Ui_QAlderInterviewWidget
+class QAlderInterviewWidgetPrivate : public QObject,
+  public Ui_QAlderInterviewWidget
 {
   Q_OBJECT
   Q_DECLARE_PUBLIC(QAlderInterviewWidget);
-protected:
-  QAlderInterviewWidget* const q_ptr;
+  protected:
+    QAlderInterviewWidget* const q_ptr;
 
-public:
-  explicit QAlderInterviewWidgetPrivate(QAlderInterviewWidget& object);
-  virtual ~QAlderInterviewWidgetPrivate();
+  public:
+    explicit QAlderInterviewWidgetPrivate(QAlderInterviewWidget& object);
+    virtual ~QAlderInterviewWidgetPrivate();
 
-  void setupUi(QWidget*);
-  void updateInfo();
-  void updateTree();
-  void updateRating();
-  void updateViewer();
-  void updateEnabled();
-  void updateCodeList();
-  void updatePermission();
-  void updateSelected();
+    void setupUi(QWidget* widget);
+    void updateInfo();
+    void updateTree();
+    void updateRating();
+    void updateViewer();
+    void updateEnabled();
+    void updateCodeList();
+    void updatePermission();
+    void updateSelected();
 
-public slots:
+  public slots:
 
-  void next();
-  void previous();
-  void ratingChanged(int);
-  void resetRating();
-  void treeSelectionChanged();
-  void noteChanged();
-  void codeChanged(QTableWidgetItem*);
-  void codeSelected();
-  void derivedRatingToggle();
-  void buildTree();
-  void imageYBRToRGB();
-  void imageAnonymize();
-  void imageSideSwap();
+    void next();
+    void previous();
+    void ratingChanged(int value);
+    void resetRating();
+    void treeSelectionChanged();
+    void noteChanged();
+    void codeChanged(QTableWidgetItem* item);
+    void codeSelected();
+    void derivedRatingToggle();
+    void buildTree();
+    void imageYBRToRGB();
+    void imageAnonymize();
+    void imageSideSwap();
 
-private:
-  // mapping between tree widget items and Alder::Interview and Alder::Image records
-  QHash<QTreeWidgetItem*, vtkSmartPointer<Alder::ActiveRecord>> treeModelMap;
+  private:
+    // mapping between tree widget items and Alder::Interview and
+    // Alder::Image records
+    QHash<QTreeWidgetItem*, vtkSmartPointer<Alder::ActiveRecord>> treeModelMap;
 
-  // connect VTK events to Qt slots
-  vtkSmartPointer<vtkEventQtSlotConnect> qvtkConnection;
+    // connect VTK events to Qt slots
+    vtkSmartPointer<vtkEventQtSlotConnect> qvtkConnection;
 
-  // mapping between Alder::Wave records and tree widget items
-  // sorted by Wave Name
-  QMap<QString, QTreeWidgetItem*> waveLookup;
+    // mapping between Alder::Wave records and tree widget items
+    // sorted by Wave Name
+    QMap<QString, QTreeWidgetItem*> waveLookup;
 
-  // data containter class to facilitate building the tree widget
-  // based on participant UID
-  vtkSmartPointer<Alder::ParticipantData> participantData;
+    // data containter class to facilitate building the tree widget
+    // based on participant UID
+    vtkSmartPointer<Alder::ParticipantData> participantData;
 
-  // mapping between Alder::Modality names and current Alder::User permissions
-  // sorted by Modalit Name
-  QMap<QString, bool> modalityPermission;
+    // mapping between Alder::Modality names and current Alder::User permissions
+    // sorted by Modalit Name
+    QMap<QString, bool> modalityPermission;
 
-  // method called by previous() and next() slots to change the interview
-  void setActiveInterview( Alder::Interview* );
+    // method called by previous() and next() slots to change the interview
+    void setActiveInterview(Alder::Interview* interview);
 };
 
 #endif

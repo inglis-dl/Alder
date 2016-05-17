@@ -19,28 +19,25 @@ class QUserListDialogPrivate : public QObject, public Ui_QUserListDialog
 {
   Q_OBJECT
   Q_DECLARE_PUBLIC(QUserListDialog);
-protected:
-  QUserListDialog* const q_ptr;
+  protected:
+    QUserListDialog* const q_ptr;
 
-public:
-  explicit QUserListDialogPrivate(QUserListDialog& object);
-  virtual ~QUserListDialogPrivate();
+  public:
+    explicit QUserListDialogPrivate(QUserListDialog& object);
+    virtual ~QUserListDialogPrivate();
 
-  void setupUi(QWidget*);
-  void updateUi();
+    void setupUi(QWidget* widget);
+    void updateUi();
 
-public Q_SLOTS:
+  public Q_SLOTS:
+    void sort(int column);
+    void userSelectionChanged();
+    void modalitySelectionChanged(QTableWidgetItem* item);
 
-  void sort(int);
-
-  void userSelectionChanged();
-
-  void modalitySelectionChanged(QTableWidgetItem *item);
-
-private:
-  int sortColumn;
-  Qt::SortOrder sortOrder;
-  QMap<QString,int> columnIndex;
+  private:
+    int sortColumn;
+    Qt::SortOrder sortOrder;
+    QMap<QString, int> columnIndex;
 };
 
 #endif

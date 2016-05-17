@@ -13,7 +13,7 @@
 #include <QObject>
 
 // Alder includes
-#include "QAlderAbstractView.h"
+#include <QAlderAbstractView.h>
 
 // VTK includes
 #include <vtkCenteredAxesActor.h>
@@ -29,25 +29,25 @@ class QAlderAbstractViewPrivate : public QObject
   Q_OBJECT
   Q_DECLARE_PUBLIC(QAlderAbstractView);
 
-protected:
-  QAlderAbstractView* const q_ptr;
+  protected:
+    QAlderAbstractView* const q_ptr;
 
-public:
-  QAlderAbstractViewPrivate(QAlderAbstractView& object);
+  public:
+    explicit QAlderAbstractViewPrivate(QAlderAbstractView& object);
 
-  virtual void init();
-  virtual void setupAxesWidget();
+    virtual void init();
+    virtual void setupAxesWidget();
 
-  bool axesOverView;
+    bool axesOverView;
 
-  QList<vtkRenderer*> renderers()const;
-  vtkRenderer* firstRenderer()const;
+    QList<vtkRenderer*> renderers()const;
+    vtkRenderer* firstRenderer()const;
 
-  QVTKWidget*                                 VTKWidget;
-  vtkSmartPointer<vtkRenderer>                Renderer;
-  vtkSmartPointer<vtkRenderWindow>            RenderWindow;
-  vtkSmartPointer<vtkCenteredAxesActor>       AxesActor;
-  vtkSmartPointer<vtkOrientationMarkerWidget> OrientationMarkerWidget;
+    QVTKWidget*                                 VTKWidget;
+    vtkSmartPointer<vtkRenderer>                Renderer;
+    vtkSmartPointer<vtkRenderWindow>            RenderWindow;
+    vtkSmartPointer<vtkCenteredAxesActor>       AxesActor;
+    vtkSmartPointer<vtkOrientationMarkerWidget> OrientationMarkerWidget;
 };
 
 #endif

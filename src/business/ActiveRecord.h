@@ -63,7 +63,7 @@ namespace Alder
      * Returns whether this record has a particular column.
      * @param column the name of the column
      */
-    bool ColumnNameExists(const std::string &column);
+    bool ColumnNameExists(const std::string& column);
 
     //@{
     /**
@@ -73,21 +73,21 @@ namespace Alder
      * @param value the value associated with the key
      * @throws      runtime_error
      */
-    bool Load(const std::string &key, const int &value)
+    bool Load(const std::string& key, const int& value)
     {
       return this->Load(key, vtkVariant(value).ToString());
     }
-    bool Load(const std::string &key, const std::string &value)
+    bool Load(const std::string& key, const std::string& value)
     {
-      return this->Load(std::pair< std::string, std::string >(key, value));
+      return this->Load(std::pair<std::string, std::string>(key, value));
     }
-    bool Load(std::pair< const std::string, const std::string > pair)
+    bool Load(std::pair<const std::string, const std::string> pair)
     {
-      std::map< std::string, std::string > map;
+      std::map<std::string, std::string> map;
       map.insert(pair);
       return this->Load(map);
     }
-    virtual bool Load(const std::map< std::string, std::string > &map);
+    virtual bool Load(const std::map<std::string, std::string>& map);
     //@}
 
     /**
@@ -95,7 +95,7 @@ namespace Alder
      * then a new record will be inserted into the database.
      * @param replace whether to replace an existing record
      */
-    virtual void Save(const bool &replace = false);
+    virtual void Save(const bool& replace = false);
 
     /**
      * Removes the current record from the database.
@@ -114,10 +114,10 @@ namespace Alder
      * @param list     an existing vector to put all records into
      * @param modifier QueryModifier
      */
-    template< class T > static void GetAll(
-      std::vector< vtkSmartPointer< T > > *list, QueryModifier *modifier = NULL)
+    template<class T> static void GetAll(
+      std::vector<vtkSmartPointer<T>>* list, QueryModifier* modifier = NULL)
     { // we have to implement this here because of the template
-      Application *app = Application::GetInstance();
+      Application* app = Application::GetInstance();
       // get the class name of T, return error if not found
       std::string type = app->GetUnmangledClassName(typeid(T).name());
       std::stringstream stream;
@@ -139,7 +139,7 @@ namespace Alder
       while (query->NextRow())
       {
         // create a new instance of the child class
-        vtkSmartPointer< T > record = vtkSmartPointer< T >::Take(T::SafeDownCast(T::New()));
+        vtkSmartPointer<T> record = vtkSmartPointer<T>::Take(T::SafeDownCast(T::New()));
         record->LoadFromQuery(query);
         list->push_back(record);
       }
@@ -152,11 +152,11 @@ namespace Alder
      * @parem distinct distinct select modifier
      * @param modifier QueryModifier
      */
-    template< class T >  static void GetAll(
-      std::vector< std::string > *list, const std::string &column,
-      const bool &distinct = true, QueryModifier *modifier = NULL)
+    template<class T>  static void GetAll(
+      std::vector<std::string>* list, const std::string& column,
+      const bool& distinct = true, QueryModifier* modifier = NULL)
     { // we have to implement this here because of the template
-      Application *app = Application::GetInstance();
+      Application* app = Application::GetInstance();
       // get the class name of T, return error if not found
       std::string type = app->GetUnmangledClassName(typeid(T).name());
       std::stringstream stream;
@@ -189,18 +189,18 @@ namespace Alder
      * @param modifier a QueryModifier to refine selection of the list elements
      * @throws         runtime_error
      */
-    template< class T > void GetList(
-      std::vector< vtkSmartPointer< T > > *list, QueryModifier *modifier = NULL)
+    template<class T> void GetList(
+      std::vector<vtkSmartPointer<T>>* list, QueryModifier* modifier = NULL)
     { this->GetList(list, modifier, ""); }
-    template< class T > void GetList(
-      std::vector< vtkSmartPointer< T > > *list, const std::string &override)
+    template<class T> void GetList(
+      std::vector<vtkSmartPointer<T>>* list, const std::string& override)
     { this->GetList(list, NULL, override); }
-    template< class T > void GetList(
-      std::vector< vtkSmartPointer< T > > *list, QueryModifier *modifier,
-      const std::string &override)
+    template<class T> void GetList(
+      std::vector<vtkSmartPointer<T>>* list, QueryModifier* modifier,
+      const std::string& override)
     {
-      Application *app = Application::GetInstance();
-      Database *db = app->GetDB();
+      Application* app = Application::GetInstance();
+      Database* db = app->GetDB();
       std::stringstream stream;
       std::string type = app->GetUnmangledClassName(typeid(T).name());
       vtkSmartPointer<vtkMySQLQuery> query = db->GetQuery();
@@ -249,8 +249,8 @@ namespace Alder
       while (query->NextRow())
       {
         // create a new instance of the child class
-        vtkSmartPointer< T > record =
-          vtkSmartPointer< T >::Take(T::SafeDownCast(app->Create(type)));
+        vtkSmartPointer<T> record =
+          vtkSmartPointer<T>::Take(T::SafeDownCast(app->Create(type)));
         record->LoadFromQuery(query);
         list->push_back(record);
       }
@@ -264,10 +264,10 @@ namespace Alder
      * @param override an alternate joining table name
      * @throws         runtime_error
      */
-    template <class T> bool Has(vtkSmartPointer< T > &record, const std::string &override = "")
+    template<class T> bool Has(vtkSmartPointer<T>& record, const std::string& override = "")
     {
-      Application *app = Application::GetInstance();
-      Database *db = app->GetDB();
+      Application* app = Application::GetInstance();
+      Database* db = app->GetDB();
       std::stringstream sql;
       std::string type = app->GetUnmangledClassName(typeid(T).name());
       vtkSmartPointer<vtkMySQLQuery> query = db->GetQuery();
@@ -314,7 +314,7 @@ namespace Alder
      * Returns the number of records which are related to this record by foreign key.
      * @param recordType the associated table name
      */
-    int GetCount(const std::string &recordType);
+    int GetCount(const std::string& recordType);
 
     /**
      * Returns the number of records which are related to this record by foreign key
@@ -322,10 +322,10 @@ namespace Alder
      * @param recordType the associated table name
      * @throws         runtime_error
      */
-    int GetCountExplicit(const std::string &recordType)
+    int GetCountExplicit(const std::string& recordType)
     {
-      Application *app = Application::GetInstance();
-      Database *db = app->GetDB();
+      Application* app = Application::GetInstance();
+      Database* db = app->GetDB();
       std::stringstream sql;
       vtkSmartPointer<vtkMySQLQuery> query = db->GetQuery();
 
@@ -375,10 +375,10 @@ namespace Alder
      * @param record a related record to add to this one
      * @throws       runtime_error
      */
-    template <class T> void AddRecord(vtkSmartPointer< T > &record)
+    template<class T> void AddRecord(vtkSmartPointer<T>& record)
     {
-      Application *app = Application::GetInstance();
-      Database *db = app->GetDB();
+      Application* app = Application::GetInstance();
+      Database* db = app->GetDB();
       std::stringstream sql;
       std::string type = app->GetUnmangledClassName(typeid(T).name());
       vtkSmartPointer<vtkMySQLQuery> query = db->GetQuery();
@@ -404,10 +404,10 @@ namespace Alder
      * @param record a related record to remove from this one
      * @throws       runtime_error
      */
-    template <class T> void RemoveRecord(vtkSmartPointer< T > &record)
+    template<class T> void RemoveRecord(vtkSmartPointer<T>& record)
     {
-      Application *app = Application::GetInstance();
-      Database *db = app->GetDB();
+      Application* app = Application::GetInstance();
+      Database* db = app->GetDB();
       std::stringstream sql;
       std::string type = app->GetUnmangledClassName(typeid(T).name());
       vtkSmartPointer<vtkMySQLQuery> query = db->GetQuery();
@@ -433,7 +433,7 @@ namespace Alder
      * @return       the value of the column as a vtkVariant
      * @throws       runtime_error
      */
-    virtual vtkVariant Get(const std::string &column);
+    virtual vtkVariant Get(const std::string& column);
 
     /**
      * Get the record which has a foreign key in this table.
@@ -442,9 +442,9 @@ namespace Alder
      * @return        success or fail if the record is found
      * @throws        runtime_error
      */
-    template <class T> bool GetRecord(vtkSmartPointer< T > &record, const std::string &aColumn = "")
+    template<class T> bool GetRecord(vtkSmartPointer<T>& record, const std::string& aColumn = "")
     {
-      Application *app = Application::GetInstance();
+      Application* app = Application::GetInstance();
       std::string table = app->GetUnmangledClassName(typeid(T).name());
 
       // if no column name was provided, use the default (table name followed by Id)
@@ -479,12 +479,12 @@ namespace Alder
      * SetNull() method instead of Set().
      * @param map a collection of column names and native values
      */
-    template <class T> void Set(const std::map< std::string, T > &map)
+    template<class T> void Set(const std::map<std::string, T>& map)
     {
       for (auto it = map.cbegin(); it != map.cend(); ++it)
         this->SetVariant(it->first, vtkVariant(it->second));
     }
-    template <class T> void Set(const std::string &column, const T &value)
+    template<class T> void Set(const std::string& column, const T& value)
     { this->SetVariant(column, vtkVariant(value)); }
     void SetNull(const std::string column)
     { this->SetVariant(column, vtkVariant()); }
@@ -501,7 +501,7 @@ namespace Alder
      * Loads values into the record from a query's current row.
      * @param query a mysql query object
      */
-    void LoadFromQuery(vtkMySQLQuery *query);
+    void LoadFromQuery(vtkMySQLQuery* query);
 
     bool operator == (const ActiveRecord& rhs) const
     {
@@ -576,7 +576,7 @@ namespace Alder
      * @param table
      * @param override
      */
-    int GetRelationship(const std::string &table, const std::string &override = "") const;
+    int GetRelationship(const std::string& table, const std::string& override = "") const;
 
     std::map<std::string, vtkVariant> ColumnValues;
     bool Initialized;

@@ -42,7 +42,7 @@ class vtkFrameAnimationPlayer : public vtkAnimationPlayer
   public:
     static vtkFrameAnimationPlayer* New();
     vtkTypeMacro(vtkFrameAnimationPlayer, vtkAnimationPlayer);
-    void PrintSelf(ostream &os, vtkIndent indent);
+    void PrintSelf(ostream& os, vtkIndent indent);
 
     /**
      * Set/Get the number of frames. Default 0 and must be set.
@@ -61,12 +61,12 @@ class vtkFrameAnimationPlayer : public vtkAnimationPlayer
     virtual void EndLoop() {}
 
     /** Return the next time given the current time. */
-    virtual double GetNextTime(const double &currentime);
+    virtual double GetNextTime(const double& currentime);
 
     virtual double GoToNextTime(
-      const double &start, const double &end, const double &currenttime);
+      const double& start, const double& end, const double& currenttime);
     virtual double GoToPreviousTime(
-      const double &start, const double &end, const double &currenttime);
+      const double& start, const double& end, const double& currenttime);
 
     int NumberOfFrames;
     double StartTime;

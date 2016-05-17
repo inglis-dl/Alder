@@ -40,7 +40,7 @@ namespace Alder
   class Exam : public ActiveRecord
   {
     public:
-      static Exam *New();
+      static Exam* New();
       vtkTypeMacro(Exam, ActiveRecord);
       std::string GetName() const { return "Exam"; }
 
@@ -69,15 +69,15 @@ namespace Alder
        * @param aIdentifier The UID of a participant (Opal identifier)
        * @parem aSource     The Opal project name containing image data
        */
-      void UpdateImageData(const std::string &aIdentifier = "",
-        const std::string &aSource = "");
+      void UpdateImageData(const std::string& aIdentifier = "",
+        const std::string& aSource = "");
 
       /**
        * Returns whether a user has rated all images associated with the exam.
        * If the exam has no images this method returns true.
        * @param user a User object to check against
        */
-      bool IsRatedBy(Alder::User* user);
+      bool IsRatedBy(User* user);
 
       /**
        * Is this a dicom image?

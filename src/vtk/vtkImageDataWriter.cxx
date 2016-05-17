@@ -72,7 +72,7 @@ vtkImageDataWriter::~vtkImageDataWriter()
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-bool vtkImageDataWriter::IsValidFileName(const char *fileName)
+bool vtkImageDataWriter::IsValidFileName(const char* fileName)
 {
   if (NULL == fileName)
   {
@@ -139,7 +139,7 @@ bool vtkImageDataWriter::IsValidFileName(const char *fileName)
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkImageDataWriter::SetFileName(const char *fileName)
+void vtkImageDataWriter::SetFileName(const char* fileName)
 {
   std::string fileNameStr(fileName);
 
@@ -273,7 +273,7 @@ void vtkImageDataWriter::SetFileName(const char *fileName)
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkImageDataWriter::SetInputData(vtkImageData *input)
+void vtkImageDataWriter::SetInputData(vtkImageData* input)
 {
   if (this->ImageData == input) return;
 
@@ -299,7 +299,7 @@ void vtkImageDataWriter::Write()
   }
 
   vtkImageData* image = this->ImageData;
-  vtkNew<vtkImageCast > castFilter;
+  vtkNew<vtkImageCast> castFilter;
 
   if (this->AutoDownCast)
   {
@@ -419,14 +419,14 @@ void vtkImageDataWriter::Write()
       if (VTK_UNSIGNED_CHAR_MIN <= range[0] &&
           VTK_UNSIGNED_CHAR_MAX >= range[1])
       {
-        vtkNew<vtkImageCast > convertFilter;
+        vtkNew<vtkImageCast> convertFilter;
         convertFilter->SetOutputScalarTypeToUnsignedChar();
         convertFilter->SetInputData(image);
         imageWriter->SetInputConnection(convertFilter->GetOutputPort());
       }
       else
       {
-        vtkNew<vtkImageShiftScale > convertFilter;
+        vtkNew<vtkImageShiftScale> convertFilter;
         convertFilter->SetOutputScalarTypeToUnsignedChar();
         convertFilter->SetShift(-range[0]);
         if (VTK_UNSIGNED_CHAR_MAX > (range[1]-range[0]))
@@ -445,7 +445,7 @@ void vtkImageDataWriter::Write()
     else if (this->Writer->IsA("vtkTIFFWriter") &&
       VTK_DOUBLE == scalarType)
     {
-      vtkNew<vtkImageCast > convertFilter;
+      vtkNew<vtkImageCast> convertFilter;
       convertFilter->SetOutputScalarTypeToFloat();
       convertFilter->SetInputData(image);
       imageWriter->SetInputConnection(convertFilter->GetOutputPort());
@@ -465,14 +465,14 @@ void vtkImageDataWriter::Write()
       if (VTK_UNSIGNED_SHORT_MIN <= range[0] &&
           VTK_UNSIGNED_SHORT_MAX >= range[1])
       {
-        vtkNew<vtkImageCast > convertFilter;
+        vtkNew<vtkImageCast> convertFilter;
         convertFilter->SetOutputScalarTypeToUnsignedShort();
         convertFilter->SetInputData(image);
         imageWriter->SetInputConnection(convertFilter->GetOutputPort());
       }
       else
       {
-        vtkNew<vtkImageShiftScale > convertFilter;
+        vtkNew<vtkImageShiftScale> convertFilter;
         convertFilter->SetOutputScalarTypeToUnsignedShort();
         convertFilter->SetShift(-range[0]);
         if ((range[1]-range[0]) < VTK_UNSIGNED_SHORT_MAX)
@@ -498,7 +498,7 @@ void vtkImageDataWriter::Write()
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkImageDataWriter::PrintSelf(ostream &os, vtkIndent indent)
+void vtkImageDataWriter::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
   os << indent << "FileName: " << this->FileName << "\n";

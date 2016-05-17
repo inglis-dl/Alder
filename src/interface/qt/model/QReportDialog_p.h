@@ -21,38 +21,33 @@ class QReportDialogPrivate : public QObject, public Ui_QReportDialog
 {
   Q_OBJECT
   Q_DECLARE_PUBLIC(QReportDialog);
-protected:
-  QReportDialog* const q_ptr;
+  protected:
+    QReportDialog* const q_ptr;
 
-public:
-  explicit QReportDialogPrivate(QReportDialog& object);
-  virtual ~QReportDialogPrivate();
+  public:
+    explicit QReportDialogPrivate(QReportDialog& object);
+    virtual ~QReportDialogPrivate();
 
-  void setupUi(QWidget*);
-  void updateUi();
-  void setProgress(int);
-  bool buildReportFile();
+    void setupUi(QWidget* widget);
+    void updateUi();
+    void setProgress(int value);
+    bool buildReportFile();
 
-public Q_SLOTS:
+  public Q_SLOTS:
+    void sort(int column);
+    void send();
+    void serverSelectionChanged(int item);
+    void modalitySelectionChanged(QTableWidgetItem* item);
 
-  void sort(int);
-
-  void send();
-
-  void serverSelectionChanged(int);
-
-  void modalitySelectionChanged(QTableWidgetItem*);
-
-private:
-  QMailSender mailSender;
-
-  int sortColumn;
-  Qt::SortOrder sortOrder;
-  QMap<QString, int> columnIndex;
-  QMap<int, QString> columnText;
-  QString currentReportFileName;
-  double percentBuild;
-  double percentWrite;
+  private:
+    QMailSender mailSender;
+    int sortColumn;
+    Qt::SortOrder sortOrder;
+    QMap<QString, int> columnIndex;
+    QMap<int, QString> columnText;
+    QString currentReportFileName;
+    double percentBuild;
+    double percentWrite;
 };
 
 #endif

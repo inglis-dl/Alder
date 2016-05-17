@@ -19,20 +19,20 @@ class QAlderDicomTagWidget : public QWidget
 {
   Q_OBJECT
 
-public:
-  typedef QWidget Superclass;
-  explicit QAlderDicomTagWidget( QWidget* parent = 0 );
-  virtual ~QAlderDicomTagWidget();
+  public:
+    typedef QWidget Superclass;
+    explicit QAlderDicomTagWidget(QWidget* parent = 0);
+    virtual ~QAlderDicomTagWidget();
 
-public Q_SLOTS:
-  virtual void load( const QString& aFileName );
+  public Q_SLOTS:
+    virtual void load(const QString& aFileName);
 
-protected:
-  QScopedPointer<QAlderDicomTagWidgetPrivate> d_ptr;
+  protected:
+    QScopedPointer<QAlderDicomTagWidgetPrivate> d_ptr;
 
-private:
-  Q_DECLARE_PRIVATE(QAlderDicomTagWidget);
-  Q_DISABLE_COPY(QAlderDicomTagWidget);
+  private:
+    Q_DECLARE_PRIVATE(QAlderDicomTagWidget);
+    Q_DISABLE_COPY(QAlderDicomTagWidget);
 };
 
 #endif

@@ -38,7 +38,7 @@ namespace Alder
   class Site : public ActiveRecord
   {
     public:
-      static Site *New();
+      static Site* New();
       vtkTypeMacro(Site, ActiveRecord);
       std::string GetName() const { return "Site"; }
 

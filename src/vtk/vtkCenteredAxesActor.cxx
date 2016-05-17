@@ -30,7 +30,7 @@ double* vtkCenteredAxesActor::GetBounds()
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkCenteredAxesActor::PrintSelf(ostream &os, vtkIndent indent)
+void vtkCenteredAxesActor::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
 }

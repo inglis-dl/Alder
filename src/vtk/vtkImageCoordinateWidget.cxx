@@ -67,12 +67,12 @@ vtkImageCoordinateWidget::~vtkImageCoordinateWidget()
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkImageCoordinateWidget::SetPicker(vtkAbstractPropPicker *picker)
+void vtkImageCoordinateWidget::SetPicker(vtkAbstractPropPicker* picker)
 {
   if (this->Picker != picker)
   {
     // to avoid destructor recursion
-    vtkAbstractPropPicker *temp = this->Picker;
+    vtkAbstractPropPicker* temp = this->Picker;
     this->Picker = picker;
     if (temp)
     {
@@ -91,7 +91,7 @@ void vtkImageCoordinateWidget::SetPicker(vtkAbstractPropPicker *picker)
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkImageCoordinateWidget::AddViewProp(vtkProp *prop)
+void vtkImageCoordinateWidget::AddViewProp(vtkProp* prop)
 {
   if (prop)
   {
@@ -101,7 +101,7 @@ void vtkImageCoordinateWidget::AddViewProp(vtkProp *prop)
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkImageCoordinateWidget::RemoveProp(vtkProp *prop)
+void vtkImageCoordinateWidget::RemoveProp(vtkProp* prop)
 {
   if (prop)
   {
@@ -118,10 +118,10 @@ void vtkImageCoordinateWidget::RemoveAllProps()
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkImageCoordinateWidget::RemoveProps(vtkPropCollection *props)
+void vtkImageCoordinateWidget::RemoveProps(vtkPropCollection* props)
 {
   if (!props) return;
-  vtkProp *aProp;
+  vtkProp* aProp;
   vtkCollectionSimpleIterator pit;
   for (props->InitTraversal(pit);
       (aProp = props->GetNextProp(pit));)
@@ -131,7 +131,7 @@ void vtkImageCoordinateWidget::RemoveProps(vtkPropCollection *props)
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-int vtkImageCoordinateWidget::HasProp(vtkProp *prop)
+int vtkImageCoordinateWidget::HasProp(vtkProp* prop)
 {
   return this->PropCollection->IsItemPresent(prop);
 }
@@ -295,7 +295,7 @@ void vtkImageCoordinateWidget::OnMouseMove()
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 int vtkImageCoordinateWidget::GetCursorPosition(
-  double &x, double &y, double &z)
+  double& x, double& y, double& z)
 {
   if (this->State != vtkImageCoordinateWidget::Cursoring)
   {
@@ -310,7 +310,7 @@ int vtkImageCoordinateWidget::GetCursorPosition(
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-int vtkImageCoordinateWidget::GetCursorDataN(double *v, const int &components)
+int vtkImageCoordinateWidget::GetCursorDataN(double* v, const int& components)
 {
   if (this->State != vtkImageCoordinateWidget::Cursoring)
   {
@@ -335,7 +335,7 @@ int vtkImageCoordinateWidget::GetCursorDataN(double *v, const int &components)
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-int vtkImageCoordinateWidget::GetCursorData1(double &v1)
+int vtkImageCoordinateWidget::GetCursorData1(double& v1)
 {
   int retVal;
   double v[1];
@@ -350,7 +350,7 @@ int vtkImageCoordinateWidget::GetCursorData1(double &v1)
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-int vtkImageCoordinateWidget::GetCursorData2(double &v1, double &v2)
+int vtkImageCoordinateWidget::GetCursorData2(double& v1, double& v2)
 {
   int retVal;
   double v[2];
@@ -367,7 +367,7 @@ int vtkImageCoordinateWidget::GetCursorData2(double &v1, double &v2)
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 int vtkImageCoordinateWidget::GetCursorData3(
-  double &v1, double &v2, double &v3)
+  double& v1, double& v2, double& v3)
 {
   int retVal;
   double v[3];
@@ -385,7 +385,7 @@ int vtkImageCoordinateWidget::GetCursorData3(
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 int vtkImageCoordinateWidget::GetCursorData4(
-  double &v1, double &v2, double &v3, double &v4)
+  double& v1, double& v2, double& v3, double& v4)
 {
   int retVal;
   double v[4];
@@ -404,8 +404,8 @@ int vtkImageCoordinateWidget::GetCursorData4(
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 int vtkImageCoordinateWidget::GetCursorData9(
-  double &v1, double &v2, double &v3, double &v4,
-  double &v5, double &v6, double &v7, double &v8, double &v9)
+  double& v1, double& v2, double& v3, double& v4,
+  double& v5, double& v6, double& v7, double& v8, double& v9)
 {
   int retVal;
   double v[9];
@@ -468,15 +468,15 @@ void vtkImageCoordinateWidget::UpdateCursor(int X, int Y)
   // this call and the data is not up to date, the GetScalar() call will
   // cause a segfault.
   this->Picker->Pick(X, Y, 0.0, this->CurrentRenderer);
-  vtkAssemblyPath *path = this->Picker->GetPath();
+  vtkAssemblyPath* path = this->Picker->GetPath();
 
-  vtkProp *pickedProp = 0;
+  vtkProp* pickedProp = 0;
   if (path )
   {
     // Deal with the possibility that we may be using a shared picker
     vtkCollectionSimpleIterator sit;
     path->InitTraversal(sit);
-    vtkAssemblyNode *node;
+    vtkAssemblyNode* node;
     for (int i = 0; i < path->GetNumberOfItems(); ++i)
     {
       node = path->GetNextNode(sit);
@@ -557,7 +557,7 @@ void vtkImageCoordinateWidget::UpdateCursor(int X, int Y)
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkImageCoordinateWidget::UpdateContinuousCursor(double *q)
+void vtkImageCoordinateWidget::UpdateContinuousCursor(double* q)
 {
   // empty the current image value
   this->CurrentImageValue.empty();
@@ -566,10 +566,10 @@ void vtkImageCoordinateWidget::UpdateContinuousCursor(double *q)
   this->CurrentCursorPosition[1] = q[1];
   this->CurrentCursorPosition[2] = q[2];
 
-  vtkPointData *pd = this->ImageData->GetPointData();
+  vtkPointData* pd = this->ImageData->GetPointData();
   if (!pd) return;
 
-  vtkNew< vtkPointData > outPD;
+  vtkNew<vtkPointData> outPD;
   outPD->InterpolateAllocate(pd, 1, 1);
 
   // Use tolerance as a function of size of source data
@@ -581,12 +581,12 @@ void vtkImageCoordinateWidget::UpdateContinuousCursor(double *q)
   //
   int subId;
   double pcoords[3], weights[8];
-  vtkCell *cell = this->ImageData->FindAndGetCell(
+  vtkCell* cell = this->ImageData->FindAndGetCell(
     q, 0, -1, tol2, subId, pcoords, weights);
   if (cell)
   {
     int components;
-    double *tuple;
+    double* tuple;
 
     // Interpolate the point data
     //
@@ -603,7 +603,7 @@ void vtkImageCoordinateWidget::UpdateContinuousCursor(double *q)
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkImageCoordinateWidget::UpdateDiscreteCursor(double *q)
+void vtkImageCoordinateWidget::UpdateDiscreteCursor(double* q)
 {
   // empty the current image value
   this->CurrentImageValue.empty();
@@ -617,9 +617,9 @@ void vtkImageCoordinateWidget::UpdateDiscreteCursor(double *q)
   double closestPt[3];
   this->ImageData->GetPoint(ptId, closestPt);
 
-  double *origin = this->ImageData->GetOrigin();
-  double *spacing = this->ImageData->GetSpacing();
-  int *extent = this->ImageData->GetExtent();
+  double* origin = this->ImageData->GetOrigin();
+  double* spacing = this->ImageData->GetSpacing();
+  int* extent = this->ImageData->GetExtent();
 
   int iq[3];
   int iqtemp;
@@ -649,7 +649,7 @@ void vtkImageCoordinateWidget::UpdateDiscreteCursor(double *q)
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkImageCoordinateWidget::PrintSelf(ostream &os, vtkIndent indent)
+void vtkImageCoordinateWidget::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
   os << indent << "CursoringMode: " << this->CursoringMode << endl;

@@ -27,7 +27,7 @@ namespace Alder
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   int CodeType::GetUsage()
   {
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     std::stringstream stream;
     stream << "SELECT COUNT(*) "
            << "FROM CodeType "
@@ -54,9 +54,9 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void CodeType::GetUsageById(std::map<int, int> &codeIdUsageMap)
+  void CodeType::GetUsageById(std::map<int, int>& codeIdUsageMap)
   {
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     std::stringstream stream;
     stream << "SELECT CodeType.Id, SUM(IF(Code.Id IS NULL, 0, 1)) AS Count "
            << "FROM CodeType "
@@ -86,10 +86,10 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool CodeType::IsUnique(const std::string &code, const int &value,
-    const int &groupId)
+  bool CodeType::IsUnique(const std::string& code, const int& value,
+    const int& groupId)
   {
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     std::stringstream stream;
     stream << "SELECT COUNT(*) "
            << "FROM CodeType "
@@ -120,7 +120,7 @@ namespace Alder
   void CodeType::UpdateRatings()
   {
     std::string Id = this->Get("Id").ToString();
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     int threshold = Rating::MinimumRating - Rating::MaximumRating;
     std::stringstream stream;
     stream  << "UPDATE Rating "

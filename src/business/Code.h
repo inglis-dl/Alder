@@ -36,7 +36,7 @@ namespace Alder
   class Code : public ActiveRecord
   {
     public:
-      static Code *New();
+      static Code* New();
       vtkTypeMacro(Code, ActiveRecord);
       std::string GetName() const { return "Code"; }
 

@@ -26,7 +26,7 @@ namespace Alder
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   int CodeGroup::GetUsage()
   {
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     std::stringstream stream;
     stream << "SELECT COUNT(*) "
            << "FROM CodeType "
@@ -48,9 +48,9 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool CodeGroup::IsUnique(const std::string &name, const int &value)
+  bool CodeGroup::IsUnique(const std::string& name, const int& value)
   {
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     std::stringstream stream;
     stream << "SELECT COUNT(*) "
            << "FROM CodeGroup "
@@ -76,7 +76,7 @@ namespace Alder
   void CodeGroup::UpdateRatings()
   {
     std::string Id = this->Get("Id").ToString();
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     int threshold = Rating::MinimumRating - Rating::MaximumRating;
     std::stringstream stream;
     stream  << "UPDATE Rating "

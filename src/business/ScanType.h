@@ -38,7 +38,7 @@ namespace Alder
   class ScanType : public ActiveRecord
   {
     public:
-      static ScanType *New();
+      static ScanType* New();
       vtkTypeMacro(ScanType, ActiveRecord);
       std::string GetName() const { return "ScanType"; }
 

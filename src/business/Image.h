@@ -40,7 +40,7 @@ namespace Alder
   class Image : public ActiveRecord
   {
     public:
-      static Image *New();
+      static Image* New();
       vtkTypeMacro(Image, ActiveRecord);
       std::string GetName() const { return "Image"; }
 
@@ -83,7 +83,7 @@ namespace Alder
        * @param suffix a file extension
        * @return       the full path and file name of the image
        */
-      std::string CreateFile(std::string const &suffix);
+      std::string CreateFile(std::string const& suffix);
 
       /**
        * Once the file is written to the disk this method validates it.
@@ -130,7 +130,7 @@ namespace Alder
        * @return        the value of the dicom tag
        * @throw         runtime_error
        */
-      std::string GetDICOMTag(std::string const &tagName);
+      std::string GetDICOMTag(std::string const& tagName);
 
       /**
        * Get the acquisition date time.  Works only for dicom images.
@@ -147,7 +147,7 @@ namespace Alder
        * @return vector of dimensions in x, y, z: x, y only if 2D
        * @throw  runtime_error
        */
-      std::vector< int > GetDICOMDimensions();
+      std::vector<int> GetDICOMDimensions();
 
       /**
        * Set the side of the image's parent exam from its dicom tag
@@ -204,13 +204,13 @@ namespace Alder
        * @return        a neigbouring atlas image
        * @throw         runtime_error
        */
-      vtkSmartPointer<Image> GetNeighbourAtlasImage(const int &rating,
-        const bool &forward, const int &id = 0);
-      vtkSmartPointer<Image> GetNextAtlasImage(const int &rating,
-        const int &id = 0)
+      vtkSmartPointer<Image> GetNeighbourAtlasImage(const int& rating,
+        const bool& forward, const int& id = 0);
+      vtkSmartPointer<Image> GetNextAtlasImage(const int& rating,
+        const int& id = 0)
       { return this->GetNeighbourAtlasImage(rating, true, id); }
-      vtkSmartPointer<Image> GetPreviousAtlasImage(int const &rating,
-        const int &id = 0)
+      vtkSmartPointer<Image> GetPreviousAtlasImage(int const& rating,
+        const int& id = 0)
       { return this->GetNeighbourAtlasImage(rating, false, id); }
       //@}
 
@@ -220,13 +220,13 @@ namespace Alder
        * @return       an atlas image matching this image
        * @throw        runtime_error
        */
-      vtkSmartPointer< Image > GetAtlasImage(const int &rating);
+      vtkSmartPointer<Image> GetAtlasImage(const int& rating);
 
     protected:
       Image() {}
       ~Image() {}
 
-      bool SwapExamSideTo(const std::string &side);
+      bool SwapExamSideTo(const std::string& side);
 
     private:
       Image(const Image&);  // Not implemented

@@ -21,26 +21,26 @@ class QAlderImageWidget : public QWidget
 {
   Q_OBJECT
 
-public:
-  typedef QWidget Superclass;
-  //constructor
-  explicit QAlderImageWidget( QWidget* parent = 0 );
-  //destructor
-  virtual ~QAlderImageWidget();
+  public:
+    typedef QWidget Superclass;
+    // constructor
+    explicit QAlderImageWidget(QWidget* parent = 0);
+    // destructor
+    virtual ~QAlderImageWidget();
 
-  void reset();
-  void load( const QString& filename );
-  void save( const QString& fileName );
-  vtkImageData* imageData();
+    void reset();
+    void load(const QString& filename);
+    void save(const QString& fileName);
+    vtkImageData* imageData();
 
-protected:
-  QScopedPointer<QAlderImageWidgetPrivate> d_ptr;
+  protected:
+    QScopedPointer<QAlderImageWidgetPrivate> d_ptr;
 
-  bool eventFilter( QObject *, QEvent * );
+    bool eventFilter(QObject* object, QEvent* event);
 
-private:
-  Q_DECLARE_PRIVATE(QAlderImageWidget);
-  Q_DISABLE_COPY(QAlderImageWidget);
+  private:
+    Q_DECLARE_PRIVATE(QAlderImageWidget);
+    Q_DISABLE_COPY(QAlderImageWidget);
 };
 
 #endif

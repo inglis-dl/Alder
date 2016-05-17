@@ -29,7 +29,7 @@ namespace Alder
   vtkStandardNewMacro(Rating);
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Rating::UpdateDerivedRating(const bool &derived)
+  void Rating::UpdateDerivedRating(const bool& derived)
   {
     this->AssertPrimaryId();
 
@@ -94,7 +94,7 @@ namespace Alder
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Rating::UpdateRatings()
   {
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     std::stringstream stream;
     int threshold = Rating::MinimumRating - Rating::MaximumRating;
     stream  << "UPDATE Rating "
@@ -164,7 +164,7 @@ namespace Alder
     if (!user)
       throw std::runtime_error("Tried to get rating counts for null user");
 
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     std::stringstream stream;
     stream << "SELECT Modality.Name, COUNT(*) AS Count "
            << "FROM Rating "
@@ -196,12 +196,12 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::vector<std::map<std::string, std::string>> Rating::GetRatingReportData(
-    User* user,  const std::string &modality)
+    User* user,  const std::string& modality)
   {
     if (!user)
       throw std::runtime_error("Tried to get rating data for null user");
 
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     std::stringstream stream;
     stream << "SELECT "
            << "User.Name AS RATER, "

@@ -42,7 +42,7 @@ vtkFrameAnimationPlayer::~vtkFrameAnimationPlayer()
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkFrameAnimationPlayer::StartLoop(
-  const double &starttime, const double &endtime,
+  const double& starttime, const double& endtime,
   double* vtkNotUsed(playbackWindow))
 {
   // the frame index is inited to 0 ONLY when an animation is not resumed from
@@ -54,7 +54,7 @@ void vtkFrameAnimationPlayer::StartLoop(
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-double vtkFrameAnimationPlayer::GetNextTime(const double &curtime)
+double vtkFrameAnimationPlayer::GetNextTime(const double& curtime)
 {
   this->FrameNo = static_cast<int>((curtime - this->StartTime) /
       (this->EndTime-this->StartTime) * this->NumberOfFrames + 0.5);
@@ -70,7 +70,7 @@ double vtkFrameAnimationPlayer::GetNextTime(const double &curtime)
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 double vtkFrameAnimationPlayer::GoToNextTime(
-  const double &start, const double &end, const double &curtime)
+  const double& start, const double& end, const double& curtime)
 {
   double delta = static_cast<double>(end-start)/(this->NumberOfFrames-1);
   return (curtime + delta);
@@ -78,14 +78,14 @@ double vtkFrameAnimationPlayer::GoToNextTime(
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 double vtkFrameAnimationPlayer::GoToPreviousTime(
-  const double &start, const double &end, const double &curtime)
+  const double& start, const double& end, const double& curtime)
 {
   double delta = static_cast<double>(end-start)/(this->NumberOfFrames-1);
   return (curtime - delta);
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkFrameAnimationPlayer::PrintSelf(ostream &os, vtkIndent indent)
+void vtkFrameAnimationPlayer::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
 }

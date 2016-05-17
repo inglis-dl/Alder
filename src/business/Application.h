@@ -61,7 +61,7 @@ namespace Alder
      * Logging functions.
      */
     bool OpenLogFile();
-    void Log(const std::string &message);
+    void Log(const std::string& message);
     void LogBacktrace();
     //@}
 
@@ -69,7 +69,7 @@ namespace Alder
      * Reads configuration variables from a given file.
      * @param filename the file to read the configuration from.
      */
-    bool ReadConfiguration(const std::string &fileName);
+    bool ReadConfiguration(const std::string& fileName);
 
     /**
      * Uses database values in the configuration to connect to a database.
@@ -106,7 +106,7 @@ namespace Alder
      * record if the user being set is not null.
      * @param user a User record object
      */
-    void SetActiveUser(User *user);
+    void SetActiveUser(User* user);
 
     /**
      * Creates a new instance of a model object given its class name.
@@ -114,7 +114,7 @@ namespace Alder
      * @return           a model object
      * @throws           runtime_error
      */
-    ModelObject* Create(const std::string &className) const
+    ModelObject* Create(const std::string& className) const
     {
       // make sure the constructor registry has the class name being asked for
       auto pair = this->ConstructorRegistry.find(className);
@@ -136,7 +136,7 @@ namespace Alder
      * @return             the unmangled class name
      * @throws             runtime_error
      */
-    std::string GetUnmangledClassName(const std::string &mangledName) const;
+    std::string GetUnmangledClassName(const std::string& mangledName) const;
 
     vtkSetMacro(AbortFlag, bool);
     vtkGetMacro(AbortFlag, bool);
@@ -145,25 +145,25 @@ namespace Alder
     Application();
     ~Application();
 
-    static Application *New();
-    static Application *Instance;
+    static Application* New();
+    static Application* Instance;
 
-    Configuration *Config;
-    Database *DB;
-    OpalService *Opal;
-    User *ActiveUser;
+    Configuration* Config;
+    Database* DB;
+    OpalService* Opal;
+    User* ActiveUser;
     volatile bool AbortFlag;
 
   private:
     Application(const Application&);  // Not implemented.
     void operator=(const Application&);  // Not implemented.
 
-    std::map< std::string, ModelObject*(*)() > ConstructorRegistry;
-    std::map< std::string, std::string > ClassNameRegistry;
+    std::map<std::string, ModelObject*(*)()> ConstructorRegistry;
+    std::map<std::string, std::string> ClassNameRegistry;
     std::ofstream LogStream;
   };
 
-  template <class T> ModelObject* createInstance() { return T::New(); }
+  template<class T>ModelObject* createInstance() { return T::New(); }
 }  // namespace Alder
 
 /** @} end of doxygen group */

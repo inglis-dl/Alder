@@ -31,35 +31,36 @@
 #include <QDebug>
 #include <QMouseEvent>
 
-// STD includes 
+// STD includes
 #include <cmath>
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 class QAlderSliderWidgetPrivate: public Ui_QAlderSliderWidget
 {
   Q_DECLARE_PUBLIC(QAlderSliderWidget);
-protected:
-  QAlderSliderWidget* const q_ptr;
+  protected:
+    QAlderSliderWidget* const q_ptr;
 
-public:
-  QAlderSliderWidgetPrivate(QAlderSliderWidget& object);
-  virtual ~QAlderSliderWidgetPrivate();
+  public:
+    explicit QAlderSliderWidgetPrivate(QAlderSliderWidget& object);
+    virtual ~QAlderSliderWidgetPrivate();
 
-  void updateSpinBoxWidth();
-  int synchronizedSpinBoxWidth()const;
-  void synchronizeSiblingSpinBox(int newWidth);
-  bool equal(double spinBoxValue, double sliderValue)const
-  {
-    return qAbs(sliderValue - spinBoxValue) < std::pow(10., -this->SpinBox->decimals());
-  }
+    void updateSpinBoxWidth();
+    int synchronizedSpinBoxWidth() const;
+    void synchronizeSiblingSpinBox(int newWidth);
+    bool equal(double spinBoxValue, double sliderValue) const
+    {
+      return qAbs(sliderValue - spinBoxValue) <
+             std::pow(10., -this->SpinBox->decimals());
+    }
 
-  bool   Tracking;
-  bool   Changing;
-  double ValueBeforeChange;
-  bool   AutoSpinBoxWidth;
+    bool Tracking;
+    bool Changing;
+    double ValueBeforeChange;
+    bool AutoSpinBoxWidth;
 };
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QAlderSliderWidgetPrivate::QAlderSliderWidgetPrivate(QAlderSliderWidget& object)
   :q_ptr(&object)
 {
@@ -69,12 +70,12 @@ QAlderSliderWidgetPrivate::QAlderSliderWidgetPrivate(QAlderSliderWidget& object)
   this->AutoSpinBoxWidth = true;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QAlderSliderWidgetPrivate::~QAlderSliderWidgetPrivate()
 {
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidgetPrivate::updateSpinBoxWidth()
 {
   int spinBoxWidth = this->synchronizedSpinBoxWidth();
@@ -89,8 +90,8 @@ void QAlderSliderWidgetPrivate::updateSpinBoxWidth()
   this->synchronizeSiblingSpinBox(spinBoxWidth);
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-int QAlderSliderWidgetPrivate::synchronizedSpinBoxWidth()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+int QAlderSliderWidgetPrivate::synchronizedSpinBoxWidth() const
 {
   Q_Q(const QAlderSliderWidget);
   int maxWidth = this->SpinBox->sizeHint().width();
@@ -107,7 +108,7 @@ int QAlderSliderWidgetPrivate::synchronizedSpinBoxWidth()const
   return maxWidth;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidgetPrivate::synchronizeSiblingSpinBox(int width)
 {
   Q_Q(const QAlderSliderWidget);
@@ -122,47 +123,50 @@ void QAlderSliderWidgetPrivate::synchronizeSiblingSpinBox(int width)
     }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QAlderSliderWidget::QAlderSliderWidget(QWidget* _parent) : Superclass(_parent)
   , d_ptr(new QAlderSliderWidgetPrivate(*this))
 {
   Q_D(QAlderSliderWidget);
-  
+
   d->setupUi(this);
 
   d->Slider->setMaximum(d->SpinBox->maximum());
   d->Slider->setMinimum(d->SpinBox->minimum());
 
-  this->connect(d->SpinBox, SIGNAL(valueChanged(double)), d->Slider, SLOT(setValue(double)));
-
-  this->connect(d->Slider, SIGNAL(sliderPressed()), this, SLOT(startChanging()));
-  this->connect(d->Slider, SIGNAL(sliderReleased()), this, SLOT(stopChanging()));
-  this->connect(d->Slider, SIGNAL(valueChanged(double)), this, SLOT(changeValue(double)));
+  this->connect(d->SpinBox, SIGNAL(valueChanged(double)),
+    d->Slider, SLOT(setValue(double)));
+  this->connect(d->Slider, SIGNAL(sliderPressed()),
+    this, SLOT(startChanging()));
+  this->connect(d->Slider, SIGNAL(sliderReleased()),
+    this, SLOT(stopChanging()));
+  this->connect(d->Slider, SIGNAL(valueChanged(double)),
+    this, SLOT(changeValue(double)));
   d->SpinBox->installEventFilter(this);
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QAlderSliderWidget::~QAlderSliderWidget()
 {
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-double QAlderSliderWidget::minimum()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+double QAlderSliderWidget::minimum() const
 {
   Q_D(const QAlderSliderWidget);
-  Q_ASSERT(d->equal(d->SpinBox->minimum(),d->Slider->minimum()));
+  Q_ASSERT(d->equal(d->SpinBox->minimum(), d->Slider->minimum()));
   return d->Slider->minimum();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-double QAlderSliderWidget::maximum()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+double QAlderSliderWidget::maximum() const
 {
   Q_D(const QAlderSliderWidget);
-  Q_ASSERT(d->equal(d->SpinBox->maximum(),d->Slider->maximum()));
+  Q_ASSERT(d->equal(d->SpinBox->maximum(), d->Slider->maximum()));
   return d->Slider->maximum();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::setMinimum(double min)
 {
   Q_D(QAlderSliderWidget);
@@ -173,13 +177,13 @@ void QAlderSliderWidget::setMinimum(double min)
   // SpinBox can truncate min (depending on decimals).
   // use Spinbox's min to set Slider's min
   d->Slider->setMinimum(d->SpinBox->minimum());
-  Q_ASSERT(d->equal(d->SpinBox->minimum(),d->Slider->minimum()));
-  Q_ASSERT(d->equal(d->SpinBox->value(),d->Slider->value()));
-  Q_ASSERT(d->equal(d->SpinBox->maximum(),d->Slider->maximum()));
+  Q_ASSERT(d->equal(d->SpinBox->minimum(), d->Slider->minimum()));
+  Q_ASSERT(d->equal(d->SpinBox->value(), d->Slider->value()));
+  Q_ASSERT(d->equal(d->SpinBox->maximum(), d->Slider->maximum()));
   d->updateSpinBoxWidth();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::setMaximum(double max)
 {
   Q_D(QAlderSliderWidget);
@@ -190,39 +194,39 @@ void QAlderSliderWidget::setMaximum(double max)
   // SpinBox can truncate max (depending on decimals).
   // use Spinbox's max to set Slider's max
   d->Slider->setMaximum(d->SpinBox->maximum());
-  Q_ASSERT(d->equal(d->SpinBox->minimum(),d->Slider->minimum()));
-  Q_ASSERT(d->equal(d->SpinBox->value(),d->Slider->value()));
-  Q_ASSERT(d->equal(d->SpinBox->maximum(),d->Slider->maximum()));
+  Q_ASSERT(d->equal(d->SpinBox->minimum(), d->Slider->minimum()));
+  Q_ASSERT(d->equal(d->SpinBox->value(), d->Slider->value()));
+  Q_ASSERT(d->equal(d->SpinBox->maximum(), d->Slider->maximum()));
   d->updateSpinBoxWidth();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::setRange(double min, double max)
 {
   Q_D(QAlderSliderWidget);
-  
+
   bool wasBlocked = d->SpinBox->blockSignals(true);
   d->SpinBox->setRange(min, max);
   d->SpinBox->blockSignals(wasBlocked);
-  
+
   // SpinBox can truncate the range (depending on decimals).
   // use Spinbox's range to set Slider's range
   d->Slider->setRange(d->SpinBox->minimum(), d->SpinBox->maximum());
-  Q_ASSERT(d->equal(d->SpinBox->minimum(),d->Slider->minimum()));
-  Q_ASSERT(d->equal(d->SpinBox->value(),d->Slider->value()));
-  Q_ASSERT(d->equal(d->SpinBox->maximum(),d->Slider->maximum()));
+  Q_ASSERT(d->equal(d->SpinBox->minimum(), d->Slider->minimum()));
+  Q_ASSERT(d->equal(d->SpinBox->value(), d->Slider->value()));
+  Q_ASSERT(d->equal(d->SpinBox->maximum(), d->Slider->maximum()));
   d->updateSpinBoxWidth();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-double QAlderSliderWidget::value()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+double QAlderSliderWidget::value() const
 {
   Q_D(const QAlderSliderWidget);
   Q_ASSERT(d->equal(d->SpinBox->value(), d->Slider->value()));
   return d->Changing ? d->ValueBeforeChange : d->Slider->value();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::setValue(double _value)
 {
   Q_D(QAlderSliderWidget);
@@ -231,14 +235,14 @@ void QAlderSliderWidget::setValue(double _value)
   bool isChanging = d->Changing;
   d->Changing = false;
   d->SpinBox->setValue(_value);
-  Q_ASSERT(d->equal(d->SpinBox->minimum(),d->Slider->minimum()));
-  Q_ASSERT(d->equal(d->SpinBox->value(),d->Slider->value()));
-  Q_ASSERT(d->equal(d->SpinBox->maximum(),d->Slider->maximum()));
+  Q_ASSERT(d->equal(d->SpinBox->minimum(), d->Slider->minimum()));
+  Q_ASSERT(d->equal(d->SpinBox->value(), d->Slider->value()));
+  Q_ASSERT(d->equal(d->SpinBox->maximum(), d->Slider->maximum()));
   // restore the prop
   d->Changing = isChanging;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::startChanging()
 {
   Q_D(QAlderSliderWidget);
@@ -250,7 +254,7 @@ void QAlderSliderWidget::startChanging()
   d->ValueBeforeChange = this->value();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::stopChanging()
 {
   Q_D(QAlderSliderWidget);
@@ -259,22 +263,23 @@ void QAlderSliderWidget::stopChanging()
     return;
     }
   d->Changing = false;
-  if (qAbs(this->value() - d->ValueBeforeChange) > (this->singleStep() * 0.000000001))
+  if (qAbs(this->value() - d->ValueBeforeChange) >
+      (this->singleStep() * 0.000000001))
     {
     emit this->valueChanged(this->value());
     }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::changeValue(double newValue)
 {
   Q_D(QAlderSliderWidget);
-  
+
   bool wasBlocked = d->SpinBox->blockSignals(true);
   d->SpinBox->setValue(newValue);
   d->SpinBox->blockSignals(wasBlocked);
   Q_ASSERT(d->equal(d->SpinBox->value(), d->Slider->value()));
-  
+
   if (!d->Tracking)
     {
     emit this->valueIsChanging(newValue);
@@ -285,95 +290,95 @@ void QAlderSliderWidget::changeValue(double newValue)
     }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-bool QAlderSliderWidget::eventFilter(QObject *obj, QEvent *event)
- {
-   if (event->type() == QEvent::MouseButtonPress)
-     {
-     QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
-     if (mouseEvent->button() & Qt::LeftButton)
-       {
-       this->startChanging();
-       }
-     }
-   else if (event->type() == QEvent::MouseButtonRelease) 
-     {
-     QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
-     if (mouseEvent->button() & Qt::LeftButton)
-       {
-       // here we might prevent QAlderSliderWidget::stopChanging
-       // from sending a valueChanged() event as the spinbox might
-       // send a valueChanged() after eventFilter() is done.
-       this->stopChanging();
-       }
-     } 
-   // standard event processing
-   return this->Superclass::eventFilter(obj, event);
- }
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+bool QAlderSliderWidget::eventFilter(QObject* obj, QEvent* event)
+{
+  if (event->type() == QEvent::MouseButtonPress)
+    {
+    QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
+    if (mouseEvent->button() & Qt::LeftButton)
+      {
+      this->startChanging();
+      }
+    }
+  else if (event->type() == QEvent::MouseButtonRelease)
+    {
+    QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
+    if (mouseEvent->button() & Qt::LeftButton)
+      {
+      // here we might prevent QAlderSliderWidget::stopChanging
+      // from sending a valueChanged() event as the spinbox might
+      // send a valueChanged() after eventFilter() is done.
+      this->stopChanging();
+      }
+    }
+  // standard event processing
+  return this->Superclass::eventFilter(obj, event);
+}
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-double QAlderSliderWidget::singleStep()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+double QAlderSliderWidget::singleStep() const
 {
   Q_D(const QAlderSliderWidget);
   Q_ASSERT(d->equal(d->SpinBox->singleStep(), d->Slider->singleStep()));
   return d->Slider->singleStep();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::setSingleStep(double step)
 {
   Q_D(QAlderSliderWidget);
   d->SpinBox->setSingleStep(step);
   d->Slider->setSingleStep(d->SpinBox->singleStep());
-  Q_ASSERT(d->equal(d->SpinBox->minimum(),d->Slider->minimum()));
-  Q_ASSERT(d->equal(d->SpinBox->value(),d->Slider->value()));
-  Q_ASSERT(d->equal(d->SpinBox->maximum(),d->Slider->maximum()));
+  Q_ASSERT(d->equal(d->SpinBox->minimum(), d->Slider->minimum()));
+  Q_ASSERT(d->equal(d->SpinBox->value(), d->Slider->value()));
+  Q_ASSERT(d->equal(d->SpinBox->maximum(), d->Slider->maximum()));
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-double QAlderSliderWidget::pageStep()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+double QAlderSliderWidget::pageStep() const
 {
   Q_D(const QAlderSliderWidget);
   return d->Slider->pageStep();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::setPageStep(double step)
 {
   Q_D(QAlderSliderWidget);
   d->Slider->setPageStep(step);
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-int QAlderSliderWidget::decimals()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+int QAlderSliderWidget::decimals() const
 {
   Q_D(const QAlderSliderWidget);
   return d->SpinBox->decimals();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::setDecimals(int newDecimals)
 {
   Q_D(QAlderSliderWidget);
   d->SpinBox->setDecimals(newDecimals);
   // The number of decimals can change the range values
   // i.e. 50.55 with 2 decimals -> 51 with 0 decimals
-  // As the SpinBox range change doesn't fire signals, 
+  // As the SpinBox range change doesn't fire signals,
   // we have to do the synchronization manually here
   d->Slider->setRange(d->SpinBox->minimum(), d->SpinBox->maximum());
-  Q_ASSERT(d->equal(d->SpinBox->minimum(),d->Slider->minimum()));
-  Q_ASSERT(d->equal(d->SpinBox->value(),d->Slider->value()));
-  Q_ASSERT(d->equal(d->SpinBox->maximum(),d->Slider->maximum()));
+  Q_ASSERT(d->equal(d->SpinBox->minimum(), d->Slider->minimum()));
+  Q_ASSERT(d->equal(d->SpinBox->value(), d->Slider->value()));
+  Q_ASSERT(d->equal(d->SpinBox->maximum(), d->Slider->maximum()));
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-QString QAlderSliderWidget::prefix()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QString QAlderSliderWidget::prefix() const
 {
   Q_D(const QAlderSliderWidget);
   return d->SpinBox->prefix();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::setPrefix(const QString& newPrefix)
 {
   Q_D(QAlderSliderWidget);
@@ -386,14 +391,14 @@ void QAlderSliderWidget::setPrefix(const QString& newPrefix)
   d->updateSpinBoxWidth();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-QString QAlderSliderWidget::suffix()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+QString QAlderSliderWidget::suffix() const
 {
   Q_D(const QAlderSliderWidget);
   return d->SpinBox->suffix();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::setSuffix(const QString& newSuffix)
 {
   Q_D(QAlderSliderWidget);
@@ -406,62 +411,62 @@ void QAlderSliderWidget::setSuffix(const QString& newSuffix)
   d->updateSpinBoxWidth();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-double QAlderSliderWidget::tickInterval()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+double QAlderSliderWidget::tickInterval() const
 {
   Q_D(const QAlderSliderWidget);
   return d->Slider->tickInterval();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::setTickInterval(double ti)
-{ 
+{
   Q_D(QAlderSliderWidget);
   d->Slider->setTickInterval(ti);
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::reset()
 {
   this->setValue(0.);
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::setSpinBoxAlignment(Qt::Alignment alignment)
 {
   Q_D(QAlderSliderWidget);
   return d->SpinBox->setAlignment(alignment);
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-Qt::Alignment QAlderSliderWidget::spinBoxAlignment()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+Qt::Alignment QAlderSliderWidget::spinBoxAlignment() const
 {
   Q_D(const QAlderSliderWidget);
   return d->SpinBox->alignment();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::setTracking(bool enable)
 {
   Q_D(QAlderSliderWidget);
   d->Tracking = enable;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-bool QAlderSliderWidget::hasTracking()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+bool QAlderSliderWidget::hasTracking() const
 {
   Q_D(const QAlderSliderWidget);
   return d->Tracking;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-bool QAlderSliderWidget::isAutoSpinBoxWidth()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+bool QAlderSliderWidget::isAutoSpinBoxWidth() const
 {
   Q_D(const QAlderSliderWidget);
   return d->AutoSpinBoxWidth;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::setAutoSpinBoxWidth(bool autoWidth)
 {
   Q_D(QAlderSliderWidget);
@@ -469,28 +474,28 @@ void QAlderSliderWidget::setAutoSpinBoxWidth(bool autoWidth)
   d->updateSpinBoxWidth();
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-bool QAlderSliderWidget::isSpinBoxVisible()const
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+bool QAlderSliderWidget::isSpinBoxVisible() const
 {
   Q_D(const QAlderSliderWidget);
   return d->SpinBox->isVisibleTo(const_cast<QAlderSliderWidget*>(this));
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderSliderWidget::setSpinBoxVisible(bool visible)
 {
   Q_D(QAlderSliderWidget);
   d->SpinBox->setVisible(visible);
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QDoubleSpinBox* QAlderSliderWidget::spinBox()
 {
   Q_D(QAlderSliderWidget);
   return d->SpinBox;
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 QAlderDoubleSlider* QAlderSliderWidget::slider()
 {
   Q_D(QAlderSliderWidget);

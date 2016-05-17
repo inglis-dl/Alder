@@ -39,13 +39,13 @@ class vtkAnimationPlayer : public vtkObject
 {
   public:
     vtkTypeMacro(vtkAnimationPlayer, vtkObject);
-    void PrintSelf(ostream &os, vtkIndent indent);
+    void PrintSelf(ostream& os, vtkIndent indent);
 
     /**
      * Set the animation scene that is to be played by this player.
      * Note that the animation scene is not reference counted to avoid loops.
      */
-    virtual void SetAnimationScene(vtkAnimationScene *scene);
+    virtual void SetAnimationScene(vtkAnimationScene* scene);
     vtkAnimationScene* GetAnimationScene();
 
     /**
@@ -96,19 +96,19 @@ class vtkAnimationPlayer : public vtkObject
     ~vtkAnimationPlayer();
 
     virtual void StartLoop(
-      const double &starttime, const double &endtime,
+      const double& starttime, const double& endtime,
       double* playbackWindow) = 0;
     virtual void EndLoop() = 0;
 
     /**
      * Return the next time given the current time.
      */
-    virtual double GetNextTime(const double &currentime) = 0;
+    virtual double GetNextTime(const double& currentime) = 0;
 
     virtual double GoToNextTime(
-      const double &start, const double &end, const double &currenttime) = 0;
+      const double& start, const double& end, const double& currenttime) = 0;
     virtual double GoToPreviousTime(
-      const double &start, const double &end, const double &currenttime) = 0;
+      const double& start, const double& end, const double& currenttime) = 0;
 
   private:
     vtkAnimationPlayer(const vtkAnimationPlayer&);  /** Not implemented */

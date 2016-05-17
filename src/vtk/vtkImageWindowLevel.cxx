@@ -36,16 +36,16 @@ vtkImageWindowLevel::~vtkImageWindowLevel()
 // This method checks to see if we can simply reference the input data
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 int vtkImageWindowLevel::RequestData(
-  vtkInformation *request,
-  vtkInformationVector **inputVector,
-  vtkInformationVector *outputVector)
+  vtkInformation* request,
+  vtkInformationVector** inputVector,
+  vtkInformationVector* outputVector)
 {
-  vtkInformation *outInfo = outputVector->GetInformationObject(0);
-  vtkInformation *inInfo = inputVector[0]->GetInformationObject(0);
+  vtkInformation* outInfo = outputVector->GetInformationObject(0);
+  vtkInformation* inInfo = inputVector[0]->GetInformationObject(0);
 
-  vtkImageData *outData = vtkImageData::SafeDownCast(
+  vtkImageData* outData = vtkImageData::SafeDownCast(
     outInfo->Get(vtkDataObject::DATA_OBJECT()));
-  vtkImageData *inData = vtkImageData::SafeDownCast(
+  vtkImageData* inData = vtkImageData::SafeDownCast(
     inInfo->Get(vtkDataObject::DATA_OBJECT()));
 
   // If LookupTable is null and window / level produces no change,
@@ -83,14 +83,14 @@ int vtkImageWindowLevel::RequestData(
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 int vtkImageWindowLevel::RequestInformation(
-  vtkInformation *vtkNotUsed(request),
-  vtkInformationVector **inputVector,
-  vtkInformationVector *outputVector)
+  vtkInformation* vtkNotUsed(request),
+  vtkInformationVector** inputVector,
+  vtkInformationVector* outputVector)
 {
-  vtkInformation *inInfo = inputVector[0]->GetInformationObject(0);
-  vtkInformation *outInfo = outputVector->GetInformationObject(0);
+  vtkInformation* inInfo = inputVector[0]->GetInformationObject(0);
+  vtkInformation* outInfo = outputVector->GetInformationObject(0);
 
-  vtkInformation *inScalarInfo =
+  vtkInformation* inScalarInfo =
     vtkDataObject::GetActiveFieldInformation(inInfo,
     vtkDataObject::FIELD_ASSOCIATION_POINTS, vtkDataSetAttributes::SCALARS);
   if (!inScalarInfo)
@@ -155,8 +155,8 @@ int vtkImageWindowLevel::RequestInformation(
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 template <class T>
 void vtkImageMapToWindowLevelClamps(
-  vtkImageData *data, double w, double l, T& lower, T& upper,
-  unsigned char &lower_val, unsigned char &upper_val)
+  vtkImageData* data, double w, double l, T& lower, T& upper,
+  unsigned char& lower_val, unsigned char& upper_val)
 {
   double f_lower, f_upper, f_lower_val, f_upper_val;
   double adjustedLower, adjustedUpper;
@@ -250,8 +250,8 @@ void vtkImageMapToWindowLevelClamps(
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 template <class T>
 void vtkImageWindowLevelExecute(
-  vtkImageWindowLevel *self, vtkImageData *inData, T *inPtr,
-  vtkImageData *outData, unsigned char *outPtr, int outExt[6], int id)
+  vtkImageWindowLevel* self, vtkImageData* inData, T* inPtr,
+  vtkImageData* outData, unsigned char* outPtr, int outExt[6], int id)
 {
   int idxX, idxY, idxZ;
   int extX, extY, extZ;
@@ -262,11 +262,11 @@ void vtkImageWindowLevelExecute(
   int dataType = inData->GetScalarType();
   int numberOfComponents, numberOfOutputComponents, outputFormat;
   int rowLength;
-  vtkScalarsToColors *lookupTable = self->GetLookupTable();
-  unsigned char *outPtr1;
-  T *inPtr1;
-  unsigned char *optr;
-  T *iptr;
+  vtkScalarsToColors* lookupTable = self->GetLookupTable();
+  unsigned char* outPtr1;
+  T* inPtr1;
+  unsigned char* optr;
+  T* iptr;
   double shift =  self->GetWindow() / 2.0 - self->GetLevel();
   double scale = 255.0 / self->GetWindow();
 
@@ -407,15 +407,15 @@ void vtkImageWindowLevelExecute(
  */
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkImageWindowLevel::ThreadedRequestData(
-  vtkInformation *vtkNotUsed(request),
-  vtkInformationVector **vtkNotUsed(inputVector),
-  vtkInformationVector *vtkNotUsed(outputVector),
-  vtkImageData ***inData,
-  vtkImageData **outData,
+  vtkInformation* vtkNotUsed(request),
+  vtkInformationVector** vtkNotUsed(inputVector),
+  vtkInformationVector* vtkNotUsed(outputVector),
+  vtkImageData*** inData,
+  vtkImageData** outData,
   int outExt[6], int id)
 {
-  void *inPtr = inData[0][0]->GetScalarPointerForExtent(outExt);
-  void *outPtr = outData[0]->GetScalarPointerForExtent(outExt);
+  void* inPtr = inData[0][0]->GetScalarPointerForExtent(outExt);
+  void* outPtr = outData[0]->GetScalarPointerForExtent(outExt);
 
   switch (inData[0][0]->GetScalarType())
     {
@@ -431,7 +431,7 @@ void vtkImageWindowLevel::ThreadedRequestData(
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkImageWindowLevel::PrintSelf(ostream &os, vtkIndent indent)
+void vtkImageWindowLevel::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
   os << indent << "Window: " << this->Window << endl;

@@ -64,7 +64,7 @@ vtkMedicalImageProperties* vtkImageDataReader::GetMedicalImageProperties()
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkImageDataReader::SetFileName(const char *fileName)
+void vtkImageDataReader::SetFileName(const char* fileName)
 {
   std::string fileExtension, filePath, fileNameOnly,
     fileNameStr(fileName);
@@ -234,7 +234,7 @@ void vtkImageDataReader::SetFileName(const char *fileName)
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-bool vtkImageDataReader::IsValidFileName(const char *fileName)
+bool vtkImageDataReader::IsValidFileName(const char* fileName)
 {
   if (NULL == fileName || !Alder::Utilities::fileExists(fileName))
   {
@@ -537,9 +537,8 @@ vtkImageData* vtkImageDataReader::GetOutput()
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkImageDataReader::PrintSelf(ostream &os, vtkIndent indent)
+void vtkImageDataReader::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
-
   os << indent << "FileName: " << this->FileName << "\n";
 }

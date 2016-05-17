@@ -20,23 +20,23 @@ class QAboutDialog : public QDialog
 {
   Q_OBJECT
 
-public:
-  typedef QDialog Superclass;
-  //constructor
-  explicit QAboutDialog( QWidget* parent = 0 );
-  //destructor
-  virtual ~QAboutDialog();
+  public:
+    typedef QDialog Superclass;
+    // constructor
+    explicit QAboutDialog(QWidget* parent = 0);
+    // destructor
+    virtual ~QAboutDialog();
 
-public slots:
+  public slots:
 
-protected:
-  QScopedPointer<QAboutDialogPrivate> d_ptr;
+  protected:
+    QScopedPointer<QAboutDialogPrivate> d_ptr;
 
-protected slots:
+  protected slots:
 
-private:
-  Q_DECLARE_PRIVATE(QAboutDialog);
-  Q_DISABLE_COPY(QAboutDialog);
+  private:
+    Q_DECLARE_PRIVATE(QAboutDialog);
+    Q_DISABLE_COPY(QAboutDialog);
 };
 
 #endif

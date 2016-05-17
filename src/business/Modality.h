@@ -38,7 +38,7 @@ namespace Alder
   class Modality : public ActiveRecord
   {
     public:
-      static Modality *New();
+      static Modality* New();
       vtkTypeMacro(Modality, ActiveRecord);
       std::string GetName() const { return "Modality"; }
 

@@ -58,7 +58,7 @@ namespace Alder
     /**
      *  Encrypt a string with SHA256 hash algorithm
      */
-    inline static void hashString(std::string input, std::string &output)
+    inline static void hashString(std::string input, std::string& output)
     {
       input += ALDER_SALT_STRING;
       output = "";
@@ -75,7 +75,7 @@ namespace Alder
     /**
      *  Base64 encode a string
      */
-    inline static void base64String(std::string input, std::string &output)
+    inline static void base64String(std::string input, std::string& output)
     {
       output = "";
 
@@ -107,7 +107,7 @@ namespace Alder
     /**
      *  Execute a command using popen/pclose
      */
-    inline static std::string exec(std::string const &command)
+    inline static std::string exec(std::string const& command)
     {
       FILE* pipe = popen(command.c_str(), "r");
       if (!pipe) return "ERROR";
@@ -121,7 +121,7 @@ namespace Alder
     /**
      *  Gets the time in a specified format using strftime
      */
-    inline static std::string getTime(std::string const &format)
+    inline static std::string getTime(std::string const& format)
     {
       char buffer[256];
       time_t rawtime;
@@ -133,7 +133,7 @@ namespace Alder
     /**
      *  Converts a string to lowercase
      */
-    inline static std::string toLower(std::string const &str)
+    inline static std::string toLower(std::string const& str)
     {
       std::string returnString = str;
       std::transform(str.begin(), str.end(), returnString.begin(), tolower);
@@ -143,7 +143,7 @@ namespace Alder
     /**
      *  Converts a string to uppercase
      */
-    inline static std::string toUpper(std::string const &str)
+    inline static std::string toUpper(std::string const& str)
     {
       std::string returnString = str;
       std::transform(str.begin(), str.end(), returnString.begin(), toupper);
@@ -153,7 +153,7 @@ namespace Alder
     /**
      *  Removes leading and trailing occurances of a specified char (default is space)
      */
-    inline static std::string removeLeadingTrailing(std::string const &str,
+    inline static std::string removeLeadingTrailing(std::string const& str,
       const char ch = ' ')
     {
       std::string result(str);
@@ -175,7 +175,7 @@ namespace Alder
     /**
      *  Tests if a file exists
      */
-    inline static bool fileExists(std::string const &filename)
+    inline static bool fileExists(std::string const& filename)
     {
       if (filename.empty()) return false;
       return 0 == access(filename.c_str(), R_OK);
@@ -184,7 +184,7 @@ namespace Alder
     /**
      * Gets the last . separated portion of a file name
      */
-    inline static std::string getFileExtension(std::string const &filename)
+    inline static std::string getFileExtension(std::string const& filename)
     {
       std::string::size_type dot_pos = filename.rfind(".");
       std::string extension = (dot_pos == std::string::npos) ? "" :
@@ -195,7 +195,7 @@ namespace Alder
     /**
      * Gets the path portion of a file name
      */
-    inline static std::string getFilenamePath(std::string const &filename)
+    inline static std::string getFilenamePath(std::string const& filename)
     {
       std::string::size_type slash_pos = filename.rfind("/");
       if (slash_pos != std::string::npos)
@@ -220,7 +220,7 @@ namespace Alder
     /**
      * Gets the size in bytes of a file
      */
-    inline static unsigned long int getFileLength(std::string const &filename)
+    inline static unsigned long int getFileLength(std::string const& filename)
     {
       struct stat fs;
       return 0 != stat(filename.c_str(), &fs) ? 0 : static_cast<unsigned long int>(fs.st_size);
@@ -245,9 +245,9 @@ namespace Alder
     /**
      * Divides a string by the provided separator, returning the results as a vector of strings
      */
-    inline static std::vector< std::string > explode(std::string str, std::string separator)
+    inline static std::vector<std::string> explode(std::string str, std::string separator)
     {
-      std::vector< std::string > results;
+      std::vector<std::string> results;
       int found = str.find_first_of(separator);
       while (found != std::string::npos)
       {
@@ -262,8 +262,8 @@ namespace Alder
     /**
      * Concatenates a vector of strings by the provided separator, returning the results as string
      */
-    inline static std::string implode(const std::vector<std::string> &vec,
-      const std::string &separator)
+    inline static std::string implode(const std::vector<std::string>& vec,
+      const std::string& separator)
     {
       std::string result;
       for (std::vector<std::string>::const_iterator it = vec.begin(); it != vec.end(); ++it)
@@ -277,7 +277,7 @@ namespace Alder
     /**
      * Removes all space characters (as defined by std::isspace) from the left side of a string
      */
-    inline static std::string &ltrim(std::string &s)
+    inline static std::string& ltrim(std::string& s)
     {
       s.erase(
         s.begin(), std::find_if(
@@ -289,7 +289,7 @@ namespace Alder
     /**
      * Removes all space characters (as defined by std::isspace) from the right side of a string
      */
-    inline static std::string &rtrim(std::string &s)
+    inline static std::string& rtrim(std::string& s)
     {
       s.erase(
         std::find_if(
@@ -301,7 +301,7 @@ namespace Alder
     /**
      * Removes all space characters (as defined by std::isspace) from both sides of a string
      */
-    inline static std::string &trim(std::string &s)
+    inline static std::string& trim(std::string& s)
     {
       return ltrim(rtrim(s));
     }
@@ -309,7 +309,7 @@ namespace Alder
     /**
      * Retain n characters from the left side of a string
      */
-    inline static std::string &left(std::string &s, const int &n)
+    inline static std::string& left(std::string& s, const int& n)
     {
       if (0 > n) return s;
       size_t len = std::string::npos;
@@ -322,7 +322,7 @@ namespace Alder
     /**
      * Retain n characters from the right side of a string
      */
-    inline static std::string &right(std::string &s, const int &n)
+    inline static std::string& right(std::string& s, const int& n)
     {
       if (0 > n ) return s;
       size_t len = s.size();

@@ -41,7 +41,7 @@ vtkAnimationPlayer::~vtkAnimationPlayer()
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkAnimationPlayer::SetAnimationScene(vtkAnimationScene *scene)
+void vtkAnimationPlayer::SetAnimationScene(vtkAnimationScene* scene)
 {
   if (this->AnimationScene != scene)
   {
@@ -188,7 +188,7 @@ void vtkAnimationPlayer::GoToPrevious()
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void vtkAnimationPlayer::PrintSelf(ostream &os, vtkIndent indent)
+void vtkAnimationPlayer::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);
 }

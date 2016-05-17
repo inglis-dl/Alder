@@ -24,9 +24,9 @@
 class vtkCenteredAxesActor : public vtkAxesActor
 {
   public:
-    static vtkCenteredAxesActor *New();
+    static vtkCenteredAxesActor* New();
     vtkTypeMacro(vtkCenteredAxesActor, vtkAxesActor);
-    void PrintSelf(ostream &os, vtkIndent indent);
+    void PrintSelf(ostream& os, vtkIndent indent);
 
     double* GetBounds();
 

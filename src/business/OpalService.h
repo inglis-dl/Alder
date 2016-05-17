@@ -59,7 +59,7 @@ namespace Alder
   class OpalService : public ModelObject
   {
     public:
-      static OpalService *New();
+      static OpalService* New();
       vtkTypeMacro(OpalService, ModelObject);
 
       /**
@@ -73,12 +73,12 @@ namespace Alder
        * @param vervose  Opal connection verbosity
        */
       void Setup(
-        const std::string &username,
-        const std::string &password,
-        const std::string &host,
-        const int &port = 8843,
-        const int &timeout = 10,
-        const int &verbose = 0);
+        const std::string& username,
+        const std::string& password,
+        const std::string& host,
+        const int& port = 8843,
+        const int& timeout = 10,
+        const int& verbose = 0);
 
       /**
        *  Set/Get the Opal connection port.
@@ -106,8 +106,8 @@ namespace Alder
        * @throws           std::runtime_error
        * @return           vector of identifiers
        */
-      std::vector<std::string> GetIdentifiers(const std::string &dataSource,
-        const std::string &table) const;
+      std::vector<std::string> GetIdentifiers(const std::string& dataSource,
+        const std::string& table) const;
 
       /**
        * Returns all variables for all identifiers limited by the offset
@@ -120,8 +120,8 @@ namespace Alder
        * @return           map of identifier keys to mapped data set values
        */
       std::map<std::string, std::map<std::string, std::string>> GetRows(
-        const std::string &dataSource, const std::string &table,
-        const int &offset = 0, const int &limit = 100) const;
+        const std::string& dataSource, const std::string& table,
+        const int& offset = 0, const int& limit = 100) const;
 
       /**
        * Returns all variables for a given identifier.
@@ -132,8 +132,8 @@ namespace Alder
        * @return           map of variable names to values
        */
       std::map<std::string, std::string> GetRow(
-        const std::string &dataSource, const std::string &table,
-        const std::string &identifier) const;
+        const std::string& dataSource, const std::string& table,
+        const std::string& identifier) const;
 
       /**
        * Returns all values for a particular variable limited by the offset
@@ -147,9 +147,9 @@ namespace Alder
        * @return           map of identifiers to variable values
        */
       std::map<std::string, std::string> GetColumn(
-        const std::string &dataSource, const std::string &table,
-        const std::string &variable,
-        const int &offset = 0, const int &limit = 100);
+        const std::string& dataSource, const std::string& table,
+        const std::string& variable,
+        const int& offset = 0, const int& limit = 100);
 
       /**
        * Returns a particular variable for a given identifier.
@@ -161,8 +161,8 @@ namespace Alder
        * @return           the value of a variable
        */
       std::string GetValue(
-        const std::string &dataSource, const std::string &table,
-        const std::string &identifier, const std::string &variable) const;
+        const std::string& dataSource, const std::string& table,
+        const std::string& identifier, const std::string& variable) const;
 
       /**
        * Returns an array of variables for a given identifier.
@@ -174,8 +174,8 @@ namespace Alder
        * @return           the values of a variable
        */
       std::vector<std::string> GetValues(
-        const std::string &dataSource, const std::string &table,
-        const std::string &identifier, const std::string &variable) const;
+        const std::string& dataSource, const std::string& table,
+        const std::string& identifier, const std::string& variable) const;
 
       /**
        * Returns an array of variable names within a table.
@@ -185,7 +185,7 @@ namespace Alder
        * @return           the variables of a table
        */
       std::vector<std::string> GetVariables(
-        const std::string &dataSource, const std::string &table) const;
+        const std::string& dataSource, const std::string& table) const;
 
       /**
        * Returns an array of table names within a data source.
@@ -194,7 +194,7 @@ namespace Alder
        * @return           the tables of a data source
        */
       std::vector<std::string> GetTables(
-        const std::string &dataSource) const;
+        const std::string& dataSource) const;
 
       /**
        * Save a binary blob Opal variable (i.e., an image) as a file.
@@ -207,12 +207,12 @@ namespace Alder
        * @throws           std::runtime_error
        */
       void SaveFile(
-        const std::string &fileName,
-        const std::string &dataSource,
-        const std::string &table,
-        const std::string &identifier,
-        const std::string &variable,
-        const int &position = -1) const;
+        const std::string& fileName,
+        const std::string& dataSource,
+        const std::string& table,
+        const std::string& identifier,
+        const std::string& variable,
+        const int& position = -1) const;
 
     protected:
       OpalService();
@@ -227,7 +227,7 @@ namespace Alder
        * @return            jason formatted data
        */
       virtual Json::Value Read(
-        const std::string &servicePath, const std::string &fileName = "") const;
+        const std::string& servicePath, const std::string& fileName = "") const;
 
       std::map<std::string,
         std::map<std::string,
@@ -239,8 +239,8 @@ namespace Alder
       int Timeout;
       int Verbose;
       int SustainConnection;
-      CURL *CurlConnection;
-      struct curl_slist *CurlHeaders;
+      CURL* CurlConnection;
+      struct curl_slist* CurlHeaders;
       std::string CurlCredentials;
 
     private:

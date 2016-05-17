@@ -69,7 +69,8 @@ class QAlderFramePlayerWidget : public QWidget
    * This property holds the previousFrame button's icon.
    * @see previousFrameIcon(), setPreviousFrameIcon()
    */
-  Q_PROPERTY(QIcon previousFrameIcon READ previousFrameIcon WRITE setPreviousFrameIcon)
+  Q_PROPERTY(QIcon previousFrameIcon READ previousFrameIcon
+    WRITE setPreviousFrameIcon)
 
   /**
    * This property holds the play button's icon.
@@ -81,7 +82,8 @@ class QAlderFramePlayerWidget : public QWidget
    * This property holds the play reverse button's icon.
    * @see playReverseIcon(), setPlayReverseIcon()
    */
-  Q_PROPERTY(QIcon playReverseIcon READ playReverseIcon WRITE setPlayReverseIcon)
+  Q_PROPERTY(QIcon playReverseIcon READ playReverseIcon
+    WRITE setPlayReverseIcon)
 
   /**
    * This property holds the nextFrame button's icon.
@@ -105,13 +107,15 @@ class QAlderFramePlayerWidget : public QWidget
    * Enable/Disable the visibility of play reverse button.
    * @see playReverseVisibility(), setPlayReverseVisibility()
    */
-  Q_PROPERTY(bool playReverseVisibility READ playReverseVisibility WRITE setPlayReverseVisibility)
+  Q_PROPERTY(bool playReverseVisibility READ playReverseVisibility
+    WRITE setPlayReverseVisibility)
 
   /**
    * Enable/Disable the visibility of the firstFrame and lastFrame buttons.
    * @see boundFramesVisibility(), setBoundFramesVisibility()
    */
-  Q_PROPERTY(bool boundFramesVisibility READ boundFramesVisibility WRITE setBoundFramesVisibility)
+  Q_PROPERTY(bool boundFramesVisibility READ boundFramesVisibility
+    WRITE setBoundFramesVisibility)
 
   /**
    * Enable/Disable the visibility of the seekBackward and seekForward buttons.
@@ -123,7 +127,8 @@ class QAlderFramePlayerWidget : public QWidget
    * Enable/Disable the visibility of time spinBox
    * @see frameSpinBoxVisibility(), setFrameSpinBoxVisibility()
    */
-  Q_PROPERTY(bool frameSpinBoxVisibility READ frameSpinBoxVisibility WRITE setFrameSpinBoxVisibility)
+  Q_PROPERTY(bool frameSpinBoxVisibility READ frameSpinBoxVisibility
+    WRITE setFrameSpinBoxVisibility)
 
   /**
    * This property holds the number of decimal digits for the frameSlider.
@@ -143,7 +148,8 @@ class QAlderFramePlayerWidget : public QWidget
    * frame. To get back to the automatic mode, set a negative value.
    * @see sliderSingleStep(), setSliderSingleStep()
    */
-  Q_PROPERTY(double sliderSingleStep READ sliderSingleStep WRITE setSliderSingleStep)
+  Q_PROPERTY(double sliderSingleStep READ sliderSingleStep
+    WRITE setSliderSingleStep)
 
   /**
    * This property holds the number of the higher frame per seconds rate the
@@ -157,7 +163,8 @@ class QAlderFramePlayerWidget : public QWidget
    * animation.
    * @see direction(), setDirection()
    */
-  Q_PROPERTY(QAbstractAnimation::Direction direction READ direction WRITE setDirection NOTIFY directionChanged)
+  Q_PROPERTY(QAbstractAnimation::Direction direction READ direction
+    WRITE setDirection NOTIFY directionChanged)
 
   /**
    *This property holds if the animation is repeated when we reach the end.
@@ -175,235 +182,236 @@ class QAlderFramePlayerWidget : public QWidget
    * This property is an accessor to the widget's current frame.
    * @see currentTime(), setCurrentTime()
    */
-  Q_PROPERTY(double currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY currentFrameChanged)
+  Q_PROPERTY(double currentFrame READ currentFrame WRITE setCurrentFrame
+    NOTIFY currentFrameChanged)
 
-public:
-  typedef QWidget Superclass;
-  QAlderFramePlayerWidget(QWidget* parent=0);
-  virtual ~QAlderFramePlayerWidget();
+  public:
+    typedef QWidget Superclass;
+    explicit QAlderFramePlayerWidget(QWidget* parent = 0);
+    virtual ~QAlderFramePlayerWidget();
 
-  //@{
-  /** Set/Get the viewer to connect with. */
-  void setViewer(vtkMedicalImageViewer* viewer);
-  vtkMedicalImageViewer* viewer() const;
-  //@}
+    //@{
+    /** Set/Get the viewer to connect with. */
+    void setViewer(vtkMedicalImageViewer* viewer);
+    vtkMedicalImageViewer* viewer() const;
+    //@}
 
-  void setSliceView( QAlderSliceView* );
+    void setSliceView(QAlderSliceView* sliceView);
 
-  //@{
-  /** Set/Get the first frame icon. */
-  void setFirstFrameIcon(const QIcon&);
-  QIcon firstFrameIcon() const;
-  //@}
+    //@{
+    /** Set/Get the first frame icon. */
+    void setFirstFrameIcon(const QIcon& icon);
+    QIcon firstFrameIcon() const;
+    //@}
 
-  //@{
-  /** Set/Get the previous frame icon. */
-  void setPreviousFrameIcon(const QIcon&);
-  QIcon previousFrameIcon() const;
-  //@}
+    //@{
+    /** Set/Get the previous frame icon. */
+    void setPreviousFrameIcon(const QIcon& icon);
+    QIcon previousFrameIcon() const;
+    //@}
 
-  /** Set/Get the play icon. */
-  void setPlayIcon(const QIcon&);
-  QIcon playIcon() const;
-  //@}
+    /** Set/Get the play icon. */
+    void setPlayIcon(const QIcon& icon);
+    QIcon playIcon() const;
+    //@}
 
-  //@{
-  /** Set/Get the reverse icon. */
-  void setPlayReverseIcon(const QIcon&);
-  QIcon playReverseIcon() const;
-  //@}
+    //@{
+    /** Set/Get the reverse icon. */
+    void setPlayReverseIcon(const QIcon& icon);
+    QIcon playReverseIcon() const;
+    //@}
 
-  //@{
-  /** Set/Get the icon of the next frame button. */
-  void setNextFrameIcon(const QIcon&);
-  QIcon nextFrameIcon() const;
-  //@}
+    //@{
+    /** Set/Get the icon of the next frame button. */
+    void setNextFrameIcon(const QIcon& icon);
+    QIcon nextFrameIcon() const;
+    //@}
 
-  //@{
-  /** Set/Get the icon of the last frame button. */
-  void setLastFrameIcon(const QIcon&);
-  QIcon lastFrameIcon() const;
-  //@}
+    //@{
+    /** Set/Get the icon of the last frame button. */
+    void setLastFrameIcon(const QIcon& icon);
+    QIcon lastFrameIcon() const;
+    //@}
 
-  //@{
-  /** Set the icon of the repeat button. */
-  void setRepeatIcon(const QIcon&);
-  QIcon repeatIcon() const;
-  //@}
+    //@{
+    /** Set the icon of the repeat button. */
+    void setRepeatIcon(const QIcon& icon);
+    QIcon repeatIcon() const;
+    //@}
 
-  //@{
-  /** Set/Get playReverseVisibility */
-  void setPlayReverseVisibility(bool visible);
-  bool playReverseVisibility() const;
-  //@}
+    //@{
+    /** Set/Get playReverseVisibility */
+    void setPlayReverseVisibility(bool visible);
+    bool playReverseVisibility() const;
+    //@}
 
-  //@{
-  /** Set/Get boundFramesVisibility */
-  void setBoundFramesVisibility(bool visible);
-  bool boundFramesVisibility() const;
-  //@}
+    //@{
+    /** Set/Get boundFramesVisibility */
+    void setBoundFramesVisibility(bool visible);
+    bool boundFramesVisibility() const;
+    //@}
 
-  //@{
-  /** Set/Get goToVisibility */
-  void setGoToVisibility(bool visible);
-  bool goToVisibility() const;
-  //@}
+    //@{
+    /** Set/Get goToVisibility */
+    void setGoToVisibility(bool visible);
+    bool goToVisibility() const;
+    //@}
 
-  //@{
-  /** Set/Get frameSpinBoxVisibility */
-  void setFrameSpinBoxVisibility(bool visible);
-  bool frameSpinBoxVisibility() const;
-  //@}
+    //@{
+    /** Set/Get frameSpinBoxVisibility */
+    void setFrameSpinBoxVisibility(bool visible);
+    bool frameSpinBoxVisibility() const;
+    //@}
 
-  //@{
-  /** Set/Get sliderDecimals */
-  void setSliderDecimals(int decimals);
-  int sliderDecimals() const;
-  //@}
+    //@{
+    /** Set/Get sliderDecimals */
+    void setSliderDecimals(int decimals);
+    int sliderDecimals() const;
+    //@}
 
-  //@{
-  /** Set/Get sliderPageStep */
-  void setSliderPageStep(double pageStep);
-  double sliderPageStep() const;
-  //@}
+    //@{
+    /** Set/Get sliderPageStep */
+    void setSliderPageStep(double pageStep);
+    double sliderPageStep() const;
+    //@}
 
-  //@{
-  /** Set/Get sliderSingleStep */
-  void setSliderSingleStep(double singleStep);
-  double sliderSingleStep() const;
-  //@}
+    //@{
+    /** Set/Get sliderSingleStep */
+    void setSliderSingleStep(double singleStep);
+    double sliderSingleStep() const;
+    //@}
 
-  //@{
-  /** Set/Get playback direction */
-  void setDirection(QAbstractAnimation::Direction playDirection);
-  QAbstractAnimation::Direction direction() const;
-  //@}
+    //@{
+    /** Set/Get playback direction */
+    void setDirection(QAbstractAnimation::Direction playDirection);
+    QAbstractAnimation::Direction direction() const;
+    //@}
 
-  //@{
-  /** Set/Get repeat */
-  void setRepeat(bool repeat);
-  bool repeat() const;
-  //@}
+    //@{
+    /** Set/Get repeat */
+    void setRepeat(bool repeat);
+    bool repeat() const;
+    //@}
 
-  //@{
-  /** Set/Get maxFrameRate in frames per second */
-  void setMaxFrameRate(double);
-  double maxFrameRate() const;
-  //@}
+    //@{
+    /** Set/Get maxFrameRate in frames per second */
+    void setMaxFrameRate(double rate);
+    double maxFrameRate() const;
+    //@}
 
-  /** Set currentFrame */
-  double currentFrame() const;
+    /** Set currentFrame */
+    double currentFrame() const;
 
-  /** Set playSpeed in frames per second */
-  double playSpeed() const;
+    /** Set playSpeed in frames per second */
+    double playSpeed() const;
 
-public slots:
-  /** Set currentFrame */
-  virtual void setCurrentFrame(double frame);
+  public slots:
+    /** Set currentFrame */
+    virtual void setCurrentFrame(double frame);
 
-  /** Set playSpeed in frames per second */
-  virtual void setPlaySpeed(double speed);
+    /** Set playSpeed in frames per second */
+    virtual void setPlaySpeed(double speed);
 
-  /**
-   * Set the current frame to the current frame provided by the source.
-   * @see goToPreviousFrame(), goToNextFrame(), goToLastFrame()
-   */
-  virtual void goToCurrentFrame();
+    /**
+     * Set the current frame to the current frame provided by the source.
+     * @see goToPreviousFrame(), goToNextFrame(), goToLastFrame()
+     */
+    virtual void goToCurrentFrame();
 
-  /**
-   * Set the current frame to the first frame.
-   * @see goToPreviousFrame(), goToNextFrame(), goToLastFrame()
-   */
-  virtual void goToFirstFrame();
+    /**
+     * Set the current frame to the first frame.
+     * @see goToPreviousFrame(), goToNextFrame(), goToLastFrame()
+     */
+    virtual void goToFirstFrame();
 
-  /**
-   * Set the current frame to the previous frame.
-   * @see goToFirstFrame(), goToNextFrame(), goToLastFrame()
-   */
-  virtual void goToPreviousFrame();
+    /**
+     * Set the current frame to the previous frame.
+     * @see goToFirstFrame(), goToNextFrame(), goToLastFrame()
+     */
+    virtual void goToPreviousFrame();
 
-  /**
-   * Set the current frame to the next frame.
-   * @see goToFirstFrame(), goToPreviousFrame(), goToLastFrame()
-   */
-  virtual void goToNextFrame();
+    /**
+     * Set the current frame to the next frame.
+     * @see goToFirstFrame(), goToPreviousFrame(), goToLastFrame()
+     */
+    virtual void goToNextFrame();
 
-  /**
-   * Set the current frame to the last frame.
-   * @see goToFirstFrame(), goToPreviousFrame(), goToNextFrame(), goToLastFrame()
-   */
-  virtual void goToLastFrame();
+    /**
+     * Set the current frame to the last frame.
+     * @see goToFirstFrame(), goToPreviousFrame(), goToNextFrame(), goToLastFrame()
+     */
+    virtual void goToLastFrame();
 
-  /**
-   * Automatically browse all the frames in the direction order.
-   * @see pause(), stop(), direction
-   */
-  virtual void play();
+    /**
+     * Automatically browse all the frames in the direction order.
+     * @see pause(), stop(), direction
+     */
+    virtual void play();
 
-  /**
-   * Pause the browse of the frames. To resume, call play().
-   * @see play(), pause()
-   */
-  virtual void pause();
+    /**
+     * Pause the browse of the frames. To resume, call play().
+     * @see play(), pause()
+     */
+    virtual void pause();
 
-  /**
-   * Call play() on true, pause() on false.
-   * @see play(), pause()
-   */
-  void play(bool playPause);
+    /**
+     * Call play() on true, pause() on false.
+     * @see play(), pause()
+     */
+    void play(bool playPause);
 
-  /**
-   * Browse the frames in forward order.
-   * @see playBackward(), play(), orientation
-   */
-  void playForward(bool playPause);
+    /**
+     * Browse the frames in forward order.
+     * @see playBackward(), play(), orientation
+     */
+    void playForward(bool playPause);
 
-  /**
-   * Browse the frames in backward order.
-   * @see playForward(), play(), orientation
-   */
-  void playBackward(bool playPause);
+    /**
+     * Browse the frames in backward order.
+     * @see playForward(), play(), orientation
+     */
+    void playBackward(bool playPause);
 
-  /**
-   * Stop the browsing of the frames and go back to the first frame.
-   * @see play(), pause()
-   */
-  void stop();
+    /**
+     * Stop the browsing of the frames and go back to the first frame.
+     * @see play(), pause()
+     */
+    void stop();
 
-  /**
-   * force an update to the widget's UI elements
-   */
-  virtual void update();
+    /**
+     * force an update to the widget's UI elements
+     */
+    virtual void update();
 
-protected Q_SLOTS:
-  virtual void onTick();
+  protected Q_SLOTS:
+    virtual void onTick();
 
-Q_SIGNALS:
-  /** Emitted when the frame has been changed */
-  void currentFrameChanged(double);
+  Q_SIGNALS:
+    /** Emitted when the frame has been changed */
+    void currentFrameChanged(double frame);
 
-  /** Emitted when the internal timer sends a timeout */
-  void onTimeout();
+    /** Emitted when the internal timer sends a timeout */
+    void onTimeout();
 
-  /**
-   * Emitted with playing(true) when play begins and
-  * playing(false) when play ends.
-   */
-  void playing(bool);
+    /**
+     * Emitted with playing(true) when play begins and
+    * playing(false) when play ends.
+     */
+    void playing(bool play);
 
-  /** Emitted when the player loops the animation */
-  void loop();
+    /** Emitted when the player loops the animation */
+    void loop();
 
-  /** Emitted when the playback direction is changed */
-  void directionChanged(QAbstractAnimation::Direction);
+    /** Emitted when the playback direction is changed */
+    void directionChanged(QAbstractAnimation::Direction dir);
 
-protected:
-  QScopedPointer<QAlderFramePlayerWidgetPrivate> d_ptr;
-  QPointer<QAlderSliceView> sliceViewPointer;
+  protected:
+    QScopedPointer<QAlderFramePlayerWidgetPrivate> d_ptr;
+    QPointer<QAlderSliceView> sliceViewPointer;
 
-private:
-  Q_DECLARE_PRIVATE(QAlderFramePlayerWidget);
-  Q_DISABLE_COPY(QAlderFramePlayerWidget);
+  private:
+    Q_DECLARE_PRIVATE(QAlderFramePlayerWidget);
+    Q_DISABLE_COPY(QAlderFramePlayerWidget);
 };
 
 #endif

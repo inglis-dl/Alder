@@ -27,8 +27,9 @@ namespace Alder
   vtkStandardNewMacro(User);
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void User::SetVariant(const std::string column, vtkVariant value)
+  void User::SetVariant(const std::string column, const vtkVariant aValue)
   {
+    vtkVariant value = aValue;
     if ("Password" == column && value.IsValid())
     { // if we are setting the password override the parent so that we can hash
       std::string hashedPassword;
@@ -54,7 +55,7 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool User::IsPassword(const std::string &password)
+  bool User::IsPassword(const std::string& password)
   {
     // first hash the password argument
     std::string hashedPassword;
@@ -63,7 +64,7 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void User::InitializeExamModifier(QueryModifier *modifier)
+  void User::InitializeExamModifier(QueryModifier* modifier)
   {
     if (!modifier) return;
     modifier->Reset();

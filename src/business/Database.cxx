@@ -42,11 +42,11 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Database::Connect(
-    const std::string &name,
-    const std::string &user,
-    const std::string &pass,
-    const std::string &host,
-    const int &port)
+    const std::string& name,
+    const std::string& user,
+    const std::string& pass,
+    const std::string& host,
+    const int& port)
   {
     // set the database parameters using the configuration object
     this->MySQLDatabase->SetDatabaseName(name.c_str());
@@ -62,7 +62,7 @@ namespace Alder
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Database::ReadInformationSchema()
   {
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     vtkSmartPointer<vtkMySQLQuery> query = this->GetQuery();
 
     std::stringstream stream;
@@ -103,7 +103,7 @@ namespace Alder
       }
 
       // get this column's details
-      std::map< std::string, vtkVariant > columnMap;
+      std::map<std::string, vtkVariant> columnMap;
       for (int c = 2; c < query->GetNumberOfFields(); ++c)
         columnMap.insert(std::pair<std::string, vtkVariant>(
           query->GetFieldName(c), query->DataValue(c)));
@@ -123,7 +123,7 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  std::vector<std::string> Database::GetColumnNames(const std::string &table) const
+  std::vector<std::string> Database::GetColumnNames(const std::string& table) const
   {
     auto tablePair = this->Columns.find(table);
     if (tablePair == this->Columns.cend())
@@ -145,14 +145,14 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool Database::TableExists(const std::string &table) const
+  bool Database::TableExists(const std::string& table) const
   {
     return this->Columns.cend() != this->Columns.find(table);
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool Database::ColumnExists(const std::string &table,
-    const std::string &column) const
+  bool Database::ColumnExists(const std::string& table,
+    const std::string& column) const
   {
     auto tablePair = this->Columns.find(table);
     if (tablePair == this->Columns.cend())
@@ -168,8 +168,8 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  vtkVariant Database::GetColumnDefault(const std::string &table,
-    const std::string &column) const
+  vtkVariant Database::GetColumnDefault(const std::string& table,
+    const std::string& column) const
   {
     auto tablePair = this->Columns.find(table);
     if (tablePair == this->Columns.cend())
@@ -195,8 +195,8 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool Database::IsColumnNullable(const std::string &table,
-    const std::string &column) const
+  bool Database::IsColumnNullable(const std::string& table,
+    const std::string& column) const
   {
     auto tablePair = this->Columns.find(table);
     if (tablePair == this->Columns.cend())
@@ -223,8 +223,8 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  bool Database::IsColumnForeignKey(const std::string &table,
-    const std::string &column) const
+  bool Database::IsColumnForeignKey(const std::string& table,
+    const std::string& column) const
   {
     auto tablePair = this->Columns.find(table);
     if (tablePair == this->Columns.cend())

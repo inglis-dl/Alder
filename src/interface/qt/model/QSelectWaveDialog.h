@@ -13,6 +13,8 @@
 // Qt includes
 #include <QDialog>
 
+// c++ includes
+#include <utility>
 #include <vector>
 
 class QSelectWaveDialogPrivate;
@@ -21,24 +23,24 @@ class QSelectWaveDialog : public QDialog
 {
   Q_OBJECT
 
-public:
-  typedef QDialog Superclass;
-  //constructor
-  explicit QSelectWaveDialog( QWidget* parent = 0 );
-  //destructor
-  virtual ~QSelectWaveDialog();
+  public:
+    typedef QDialog Superclass;
+    // constructor
+    explicit QSelectWaveDialog(QWidget* parent = 0);
+    // destructor
+    virtual ~QSelectWaveDialog();
 
-  std::vector<std::pair<int,bool>> selection();
+    std::vector<std::pair<int, bool>> selection();
 
-public slots:
-  void close();
+  public slots:
+    void close();
 
-protected:
-  QScopedPointer<QSelectWaveDialogPrivate> d_ptr;
+  protected:
+    QScopedPointer<QSelectWaveDialogPrivate> d_ptr;
 
-private:
-  Q_DECLARE_PRIVATE(QSelectWaveDialog);
-  Q_DISABLE_COPY(QSelectWaveDialog);
+  private:
+    Q_DECLARE_PRIVATE(QSelectWaveDialog);
+    Q_DISABLE_COPY(QSelectWaveDialog);
 };
 
 #endif

@@ -49,7 +49,7 @@ namespace Alder
   class Configuration : public ModelObject
   {
   public:
-    static Configuration *New();
+    static Configuration* New();
     vtkTypeMacro(Configuration, ModelObject);
 
     /**

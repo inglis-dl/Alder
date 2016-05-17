@@ -32,8 +32,8 @@ namespace Alder
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Wave::UpdateScanTypeData()
   {
-    Application *app = Application::GetInstance();
-    OpalService *opal = app->GetOpal();
+    Application* app = Application::GetInstance();
+    OpalService* opal = app->GetOpal();
 
     // the list of ScanTypes by Name
     std::string source = this->Get("MetaDataSource").ToString();
@@ -50,7 +50,7 @@ namespace Alder
     std::vector<std::string> validate =
       app->GetDB()->GetColumnNames("ScanType");
 
-    std::map<std::string, std::map<std::string, std::string> > mapOpal =
+    std::map<std::string, std::map<std::string, std::string>> mapOpal =
       opal->GetRows(source, "ScanType", 0, vecOpal.size());
 
     std::string waveId = this->Get("Id").ToString();
@@ -133,14 +133,14 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-  void Wave::UpdateWaveData(const std::string &source)
+  void Wave::UpdateWaveData(const std::string& source)
   {
     // get the waves from Opal
     // create or update as required
     if (source.empty()) return;
 
-    Application *app = Application::GetInstance();
-    OpalService *opal = app->GetOpal();
+    Application* app = Application::GetInstance();
+    OpalService* opal = app->GetOpal();
     bool sustain = opal->GetSustainConnection();
     if (!sustain)
     {
@@ -148,7 +148,7 @@ namespace Alder
       {
         opal->SustainConnectionOn();
       }
-      catch(std::runtime_error &e)
+      catch (std::runtime_error& e)
       {
         app->Log(e.what());
         return;
@@ -170,7 +170,7 @@ namespace Alder
 
     std::vector<std::string> validate = app->GetDB()->GetColumnNames("Wave");
 
-    std::map<std::string, std::map<std::string, std::string> > mapOpal =
+    std::map<std::string, std::map<std::string, std::string>> mapOpal =
       opal->GetRows(source, "Wave", 0, vecOpal.size());
 
     for (auto it = mapOpal.cbegin(); it != mapOpal.cend(); ++it)
@@ -182,7 +182,7 @@ namespace Alder
       std::map<std::string, std::string> mapVar = it->second;
       std::map<std::string, std::string> loader;
       loader["Name"] = name;
-      vtkNew<Wave > wave;
+      vtkNew<Wave> wave;
       bool create = true;
       if (wave->Load("Name", name))
       {
@@ -233,8 +233,8 @@ namespace Alder
       throw std::runtime_error(
         "MetaDataSource missing for Wave identifier count");
 
-    Application *app = Application::GetInstance();
-    OpalService *opal = app->GetOpal();
+    Application* app = Application::GetInstance();
+    OpalService* opal = app->GetOpal();
     std::vector<std::string> vecOpal =
       opal->GetIdentifiers(source, "Interview");
     return vecOpal.size();
@@ -243,7 +243,7 @@ namespace Alder
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   std::string Wave::GetMaximumInterviewUpdateTimestamp()
   {
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     std::stringstream stream;
     stream << "SELECT MAX(UpdateTimestamp) "
            << "FROM Interview "
@@ -268,7 +268,7 @@ namespace Alder
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   int Wave::GetMaximumExamCount()
   {
-    Application *app = Application::GetInstance();
+    Application* app = Application::GetInstance();
     std::stringstream stream;
     stream << "SELECT SUM(IF(SideCount=0,1,SideCount)) "
            << "FROM ScanType "
