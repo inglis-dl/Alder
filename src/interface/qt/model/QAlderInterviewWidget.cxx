@@ -31,6 +31,7 @@
 
 // VTK includes
 #include <vtkDataArray.h>
+#include <vtkEventForwarderCommand.h>
 #include <vtkEventQtSlotConnect.h>
 #include <vtkImageData.h>
 #include <vtkPointData.h>
@@ -810,7 +811,26 @@ void QAlderInterviewWidgetPrivate::updateViewer()
 {
   Alder::Image* image = this->participantData->GetActiveImage();
   if (image)
-    this->imageWidget->load(image->GetFileName().c_str());
+  {
+    if (3 == image->Get("Dimensionality").ToInt())
+    {
+      Alder::Application* app = Alder::Application::GetInstance();
+      vtkNew<vtkEventForwarderCommand> forward;
+      forward->SetTarget(app);
+      app->SetAbortFlag(0);
+      std::string message = "Reading image data...";
+      app->InvokeEvent(
+        vtkCommand::StartEvent,
+        reinterpret_cast<void*>(const_cast<char*>(message.c_str())));
+      this->imageWidget->load(
+        image->GetFileName().c_str(), forward.GetPointer());
+      app->InvokeEvent(vtkCommand::EndEvent);
+    }
+    else
+    {
+      this->imageWidget->load(image->GetFileName().c_str());
+    }
+  }
   else
     this->imageWidget->reset();
 }

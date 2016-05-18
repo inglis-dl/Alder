@@ -26,6 +26,7 @@
 #include <QAlderImageWidget.h>
 
 // VTK includes
+#include <vtkEventForwarderCommand.h>
 #include <vtkEventQtSlotConnect.h>
 #include <vtkNew.h>
 #include <vtkRenderer.h>
@@ -160,7 +161,24 @@ void QAlderAtlasWidgetPrivate::updateUi()
       scanType->GetRecord(modality);
       helpString = modality->Get("Help").ToString();
     }
-    this->imageWidget->load(this->atlasImage->GetFileName().c_str());
+    if (3 == this->atlasImage->Get("Dimensionality").ToInt())
+    {
+      Alder::Application* app = Alder::Application::GetInstance();
+      vtkNew<vtkEventForwarderCommand> forward;
+      forward->SetTarget(app);
+      app->SetAbortFlag(0);
+      std::string message = "Reading image data...";
+      app->InvokeEvent(
+        vtkCommand::StartEvent,
+        reinterpret_cast<void*>(const_cast<char*>(message.c_str())));
+      this->imageWidget->load(
+        this->atlasImage->GetFileName().c_str(), forward.GetPointer());
+      app->InvokeEvent(vtkCommand::EndEvent);
+    }
+    else
+    {
+      this->imageWidget->load(this->atlasImage->GetFileName().c_str());
+    }
     enable = true;
   }
   else

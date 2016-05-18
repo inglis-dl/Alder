@@ -14,11 +14,13 @@
 #include <QAlderSliceView.h>
 
 // VTK includes
+#include <vtkEventForwarderCommand.h>
 #include <vtkEventQtSlotConnect.h>
 #include <vtkImageData.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
 
+// C++ includes
 #include <sstream>
 #include <stdexcept>
 
@@ -102,10 +104,11 @@ void QAlderImageWidget::reset()
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderImageWidget::load(const QString& fileName)
+void QAlderImageWidget::load(
+  const QString& fileName, vtkEventForwarderCommand* forward)
 {
   Q_D(QAlderImageWidget);
-  if (!d->sliceView->load(fileName))
+  if (!d->sliceView->load(fileName, forward))
   {
     std::stringstream stream;
     stream << "Unable to load image file \"" << fileName.toStdString() << "\"";

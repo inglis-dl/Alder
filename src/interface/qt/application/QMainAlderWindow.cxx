@@ -200,7 +200,8 @@ void QMainAlderWindowPrivate::updateProgress(
   vtkObject*, unsigned long, void*, void* call_data)
 {
   QProgressBar* progress = this->statusbar->findChild<QProgressBar*>();
-  progress->setValue(*(reinterpret_cast<int*>(call_data)));
+  double value = *(reinterpret_cast<double*>(call_data));
+  progress->setValue(static_cast<int>(100*value));
   QApplication::processEvents();
 }
 

@@ -13,6 +13,7 @@
 #include <QAlderAbstractView.h>
 
 class QAlderSliceViewPrivate;
+class vtkEventForwarderCommand;
 class vtkImageData;
 
 class QAlderSliceView : public QAlderAbstractView
@@ -50,7 +51,7 @@ class QAlderSliceView : public QAlderAbstractView
     bool hasImageData() const;
     int dimensionality() const;
     void setImageToSinusoid();
-    bool load(const QString& fileName);
+    bool load(const QString& fileName, vtkEventForwarderCommand* forward = 0);
     void writeSlice(const QString& fileName);
     virtual QColor annotationColor() const;
     vtkImageData* imageData();

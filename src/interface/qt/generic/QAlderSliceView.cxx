@@ -20,6 +20,7 @@
 #include <vtkCamera.h>
 #include <vtkCommand.h>
 #include <vtkDataArray.h>
+#include <vtkEventForwarderCommand.h>
 #include <vtkImageChangeInformation.h>
 #include <vtkImageClip.h>
 #include <vtkImageData.h>
@@ -1218,7 +1219,8 @@ void QAlderSliceView::writeSlice(const QString& fileName)
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-bool QAlderSliceView::load(const QString& fileName)
+bool QAlderSliceView::load(
+  const QString& fileName, vtkEventForwarderCommand* forward)
 {
   Q_D(QAlderSliceView);
   bool success = false;
@@ -1226,6 +1228,11 @@ bool QAlderSliceView::load(const QString& fileName)
   {
     vtkNew<vtkImageDataReader> reader;
     reader->SetFileName(fileName.toStdString().c_str());
+    if (forward)
+    {
+      reader->GetReader()->AddObserver(
+        vtkCommand::ProgressEvent, forward);
+    }
     vtkImageData* image = reader->GetOutput();
     if (image)
     {

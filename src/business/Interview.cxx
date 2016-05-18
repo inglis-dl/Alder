@@ -585,9 +585,10 @@ namespace Alder
       int index = 0;
       int lastProgress = 0;
       int progress = 0;
-      double size = vecExam.size();
+      double progressScale = 100.0/vecExam.size();
+      double progressValue = 0.;
       std::string message = "Updating image data of ";
-      message += std::to_string(static_cast<int>(size)) + " exams";
+      message += std::to_string(static_cast<int>(vecExam.size())) + " exams";
       app->SetAbortFlag(0);
       app->InvokeEvent(
         vtkCommand::StartEvent,
@@ -596,11 +597,12 @@ namespace Alder
       {
         if (app->GetAbortFlag())
           break;
-        progress = static_cast<int>(100.*index/size);
+        progress = static_cast<int>(index*progressScale);
         if (lastProgress != progress)
         {
+          progressValue = 0.01*progress;
           app->InvokeEvent(
-            vtkCommand::ProgressEvent, reinterpret_cast<void*>(&progress));
+            vtkCommand::ProgressEvent, reinterpret_cast<void*>(&progressValue));
           lastProgress = progress;
         }
         (*it)->UpdateImageData(identifier, source);
@@ -724,6 +726,8 @@ namespace Alder
     int index = 0;
     int progress = 0;
     int lastProgress = progress;
+    double progressScale = 100.0/size;
+    double progressValue = 0.;
     bool done = false;
     vtkSmartPointer<Wave> wave = vtkSmartPointer<Wave>::New();
     std::string message = "Updating metadata of ";
@@ -750,11 +754,12 @@ namespace Alder
       int localIndex = 0;
       do
       {
-        progress = static_cast<int>(100.0*index/size);
+        progress = static_cast<int>(progressScale*index);
         if (lastProgress != progress)
         {
+          progressValue = 0.01*progress;
           app->InvokeEvent(
-            vtkCommand::ProgressEvent, reinterpret_cast<void*>(&progress));
+            vtkCommand::ProgressEvent, reinterpret_cast<void*>(&progressValue));
           lastProgress = progress;
         }
 
@@ -881,6 +886,8 @@ namespace Alder
     int lastProgress = 0;
     int progress = 0;
     double size = static_cast<double>(vecRevised.size());
+    double progressScale = 100.0/size;
+    double progressValue = 0.;
     std::string message = "Downloading images of ";
     message += std::to_string(static_cast<int>(size)) + " interviews";
     app->SetAbortFlag(0);
@@ -894,12 +901,13 @@ namespace Alder
         break;
       }
 
-      progress = static_cast<int>(100.*index/size);
+      progress = static_cast<int>(progressScale*index);
       if (lastProgress != progress)
       {
-        lastProgress = progress;
+        progressValue = 0.01*progress;
         app->InvokeEvent(
-          vtkCommand::ProgressEvent, reinterpret_cast<void*>(&progress));
+          vtkCommand::ProgressEvent, reinterpret_cast<void*>(&progressValue));
+        lastProgress = progress;
       }
 
       Interview* interview = *it;

@@ -14,7 +14,7 @@
 #include <QWidget>
 
 class QAlderImageWidgetPrivate;
-
+class vtkEventForwarderCommand;
 class vtkImageData;
 
 class QAlderImageWidget : public QWidget
@@ -29,7 +29,7 @@ class QAlderImageWidget : public QWidget
     virtual ~QAlderImageWidget();
 
     void reset();
-    void load(const QString& filename);
+    void load(const QString& filename, vtkEventForwarderCommand* forward = 0);
     void save(const QString& fileName);
     vtkImageData* imageData();
 
