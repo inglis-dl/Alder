@@ -14,7 +14,6 @@
 
 // VTK includes
 #include <vtkBMPReader.h>
-#include <vtkGDCMImageReader.h>
 #include <vtkGESignaReader.h>
 #include <vtkImageData.h>
 #include <vtkJPEGReader.h>
@@ -30,9 +29,16 @@
 #include <vtkTIFFReader.h>
 #include <vtkXMLImageDataReader.h>
 
+// vtk-dicom includes
+#include <vtkDICOMReader.h>
+#include <vtkDICOMMetaData.h>
+#include <vtkNIFTIReader.h>
+#include <vtkScancoCTReader.h>
+
 // GDCM includes
 #include <gdcmDirectoryHelper.h>
 #include <gdcmImageReader.h>
+#include <vtkGDCMImageReader.h>
 
 // C++ includes
 #include <map>
@@ -112,6 +118,8 @@ void vtkImageDataReader::SetFileName(const char* fileName)
   // need an instance of all readers to scan valid extensions
   vtkSmartPointer<vtkBMPReader> BMPReader =
     vtkSmartPointer<vtkBMPReader>::New();
+  vtkSmartPointer<vtkDICOMReader> DICOMReader =
+    vtkSmartPointer<vtkDICOMReader>::New();
   vtkSmartPointer<vtkGDCMImageReader> GDCMImageReader =
     vtkSmartPointer<vtkGDCMImageReader>::New();
   vtkSmartPointer<vtkGESignaReader> GESignaReader =
@@ -122,12 +130,16 @@ void vtkImageDataReader::SetFileName(const char* fileName)
     vtkSmartPointer<vtkMetaImageReader>::New();
   vtkSmartPointer<vtkMINCImageReader> MINCImageReader =
     vtkSmartPointer<vtkMINCImageReader>::New();
+  vtkSmartPointer<vtkNIFTIReader> NIFTIReader =
+    vtkSmartPointer<vtkNIFTIReader>::New();
   vtkSmartPointer<vtkPNGReader> PNGReader =
     vtkSmartPointer<vtkPNGReader>::New();
   vtkSmartPointer<vtkPNMReader> PNMReader =
     vtkSmartPointer<vtkPNMReader>::New();
   vtkSmartPointer<vtkSLCReader> SLCReader =
     vtkSmartPointer<vtkSLCReader>::New();
+  vtkSmartPointer<vtkScancoCTReader> ScancoCTReader =
+    vtkSmartPointer<vtkScancoCTReader>::New();
   vtkSmartPointer<vtkTIFFReader> TIFFReader =
     vtkSmartPointer<vtkTIFFReader>::New();
   vtkSmartPointer<vtkXMLImageDataReader> XMLImageDataReader =
@@ -135,93 +147,103 @@ void vtkImageDataReader::SetFileName(const char* fileName)
 
   // search through each reader to see which 'likes' the file extension
 
+  const char* fname = this->FileName.c_str();
   if (std::string::npos != Alder::Utilities::toLower(
-        GDCMImageReader->GetFileExtensions()).find(fileExtension))
-  { // DICOM
-    this->SetReader(GDCMImageReader);
-  }
-  else if (GDCMImageReader->CanReadFile(this->FileName.c_str()))
+    DICOMReader->GetFileExtensions()).find(fileExtension)
+    && DICOMReader->CanReadFile(fname))
   {
+    // DICOM (preferred)
+    this->SetReader(DICOMReader);
+  }
+  else if (std::string::npos != Alder::Utilities::toLower(
+    GDCMImageReader->GetFileExtensions()).find(fileExtension)
+    && GDCMImageReader->CanReadFile(fname))
+  {
+    // DICOM
     this->SetReader(GDCMImageReader);
   }
   else if (std::string::npos != Alder::Utilities::toLower(
-    BMPReader->GetFileExtensions()).find(fileExtension))
-  { // BMP
-    if (BMPReader->CanReadFile(this->FileName.c_str()))
-    {
-      this->SetReader(BMPReader);
-    }
+    BMPReader->GetFileExtensions()).find(fileExtension)
+    && BMPReader->CanReadFile(fname))
+  {
+    // BMP
+    this->SetReader(BMPReader);
   }
   else if (std::string::npos != Alder::Utilities::toLower(
-    GESignaReader->GetFileExtensions()).find(fileExtension))
-  { // GESigna file
-    if (GESignaReader->CanReadFile(this->FileName.c_str()))
-    {
-      this->SetReader(GESignaReader);
-    }
+    GESignaReader->GetFileExtensions()).find(fileExtension)
+    && GESignaReader->CanReadFile(fname))
+  {
+    // GESigna file
+    this->SetReader(GESignaReader);
   }
   else if (std::string::npos != Alder::Utilities::toLower(
-    JPEGReader->GetFileExtensions()).find(fileExtension))
-  { // JPEG file
-    if (JPEGReader->CanReadFile(this->FileName.c_str()))
-    {
-      this->SetReader(JPEGReader);
-    }
+    JPEGReader->GetFileExtensions()).find(fileExtension)
+    && JPEGReader->CanReadFile(fname))
+  {
+    // JPEG file
+    this->SetReader(JPEGReader);
   }
   else if (std::string::npos != Alder::Utilities::toLower(
-    MetaImageReader->GetFileExtensions()).find(fileExtension))
-  { // MetaImage file
-    if (MetaImageReader->CanReadFile(this->FileName.c_str()))
-    {
-      this->SetReader(MetaImageReader);
-    }
+    MetaImageReader->GetFileExtensions()).find(fileExtension)
+    && MetaImageReader->CanReadFile(fname))
+  {
+    // MetaImage file
+    this->SetReader(MetaImageReader);
   }
   else if (std::string::npos != Alder::Utilities::toLower(
-    MINCImageReader->GetFileExtensions()).find(fileExtension))
-  { // MINCImage file
-    if (MINCImageReader->CanReadFile(this->FileName.c_str()))
-    {
-      this->SetReader(MINCImageReader);
-    }
+    MINCImageReader->GetFileExtensions()).find(fileExtension)
+    && MINCImageReader->CanReadFile(fname))
+  {
+    // MINCImage file
+    this->SetReader(MINCImageReader);
   }
   else if (std::string::npos != Alder::Utilities::toLower(
-    PNGReader->GetFileExtensions()).find(fileExtension))
-  { // PNG file
-    if (PNGReader->CanReadFile(this->FileName.c_str()))
-    {
-      this->SetReader(PNGReader);
-    }
+    NIFTIReader->GetFileExtensions()).find(fileExtension)
+    && NIFTIReader->CanReadFile(fname))
+  {
+    // NIFTI file
+    this->SetReader(NIFTIReader);
   }
   else if (std::string::npos != Alder::Utilities::toLower(
-    PNMReader->GetFileExtensions()).find(fileExtension))
-  { // PNM file
-    if (PNMReader->CanReadFile(this->FileName.c_str()))
-    {
-      this->SetReader(PNMReader);
-    }
+    PNGReader->GetFileExtensions()).find(fileExtension)
+    && PNGReader->CanReadFile(fname))
+  {
+    // PNG file
+    this->SetReader(PNGReader);
   }
   else if (std::string::npos != Alder::Utilities::toLower(
-    SLCReader->GetFileExtensions()).find(fileExtension))
-  { // SLC file
-    if (SLCReader->CanReadFile(this->FileName.c_str()))
-    {
-      this->SetReader(SLCReader);
-    }
+    PNMReader->GetFileExtensions()).find(fileExtension)
+    && PNMReader->CanReadFile(fname))
+  {
+    // PNM file
+    this->SetReader(PNMReader);
   }
   else if (std::string::npos != Alder::Utilities::toLower(
-    TIFFReader->GetFileExtensions()).find(fileExtension))
-  { // TIFF file
-    if (TIFFReader->CanReadFile(this->FileName.c_str()))
-    {
-      this->SetReader(TIFFReader);
-    }
+    SLCReader->GetFileExtensions()).find(fileExtension)
+    && SLCReader->CanReadFile(fname))
+  {
+    // SLC file
+    this->SetReader(SLCReader);
   }
-  else if (".vti" == fileExtension)  // no GetFileExtensions() method
-  { // VTI file
-    if (XMLImageDataReader->CanReadFile(this->FileName.c_str()))
-    {
-      this->SetReader(XMLImageDataReader);
-    }
+  else if (std::string::npos != Alder::Utilities::toLower(
+    ScancoCTReader->GetFileExtensions()).find(fileExtension)
+    && ScancoCTReader->CanReadFile(fname))
+  {
+    // ScancoCT file
+    this->SetReader(ScancoCTReader);
+  }
+  else if (std::string::npos != Alder::Utilities::toLower(
+    TIFFReader->GetFileExtensions()).find(fileExtension)
+    && TIFFReader->CanReadFile(fname))
+  {
+    // TIFF file
+    this->SetReader(TIFFReader);
+  }
+  else if (".vti" == fileExtension  // no GetFileExtensions() method
+    && XMLImageDataReader->CanReadFile(fname))
+  {
+    // VTI file
+    this->SetReader(XMLImageDataReader);
   }
   else  // don't know how to handle this file, set the reader to NULL and
         // mark the file type as unknown
@@ -250,111 +272,117 @@ bool vtkImageDataReader::IsValidFileName(const char* fileName)
 
   // we need an instance of all readers so we can scan extensions
   vtkNew<vtkBMPReader> BMPReader;
+  vtkNew<vtkDICOMReader> DICOMReader;
   vtkNew<vtkGDCMImageReader> GDCMImageReader;
   vtkNew<vtkGESignaReader> GESignaReader;
   vtkNew<vtkJPEGReader> JPEGReader;
   vtkNew<vtkMetaImageReader> MetaImageReader;
   vtkNew<vtkMINCImageReader> MINCImageReader;
+  vtkNew<vtkNIFTIReader> NIFTIReader;
   vtkNew<vtkPNGReader> PNGReader;
   vtkNew<vtkPNMReader> PNMReader;
   vtkNew<vtkSLCReader> SLCReader;
+  vtkNew<vtkScancoCTReader> ScancoCTReader;
   vtkNew<vtkTIFFReader> TIFFReader;
   vtkNew<vtkXMLImageDataReader> XMLImageDataReader;
 
   // now search through each reader to see which 'likes' the file extension
   if (std::string::npos != Alder::Utilities::toLower(
-        GDCMImageReader->GetFileExtensions()).find(fileExtension))
-  { // DICOM
-    if (GDCMImageReader->CanReadFile(fileName))
-    {
-      knownFileType = true;
-    }
-  }
-  else if (std::string::npos != Alder::Utilities::toLower(
-    BMPReader->GetFileExtensions()).find(fileExtension))
-  { // BMP
-    if (BMPReader->CanReadFile(fileName))
-    {
-      knownFileType = true;
-    }
-  }
-  else if (std::string::npos != Alder::Utilities::toLower(
-    GESignaReader->GetFileExtensions()).find(fileExtension))
-  { // GESigna file
-    if (GESignaReader->CanReadFile(fileName))
-    {
-      knownFileType = true;
-    }
-  }
-  else if (std::string::npos != Alder::Utilities::toLower(
-    JPEGReader->GetFileExtensions()).find(fileExtension))
-  { // JPEG file
-    if (JPEGReader->CanReadFile(fileName))
-    {
-      knownFileType = true;
-    }
-  }
-  else if (std::string::npos != Alder::Utilities::toLower(
-    MetaImageReader->GetFileExtensions()).find(fileExtension))
-  { // MetaImage file
-    if (MetaImageReader->CanReadFile(fileName))
-    {
-      knownFileType = true;
-    }
-  }
-  else if (std::string::npos != Alder::Utilities::toLower(
-    MINCImageReader->GetFileExtensions()).find(fileExtension))
-  { // MINCImage file
-    if (MINCImageReader->CanReadFile(fileName))
-    {
-      knownFileType = true;
-    }
-  }
-  else if (std::string::npos != Alder::Utilities::toLower(
-    PNGReader->GetFileExtensions()).find(fileExtension))
-  { // PNG file
-    if (PNGReader->CanReadFile(fileName))
-    {
-      knownFileType = true;
-    }
-  }
-  else if (std::string::npos != Alder::Utilities::toLower(
-    PNMReader->GetFileExtensions()).find(fileExtension))
-  { // PNM file
-    if (PNMReader->CanReadFile(fileName))
-    {
-      knownFileType = true;
-    }
-  }
-  else if (std::string::npos != Alder::Utilities::toLower(
-    SLCReader->GetFileExtensions()).find(fileExtension))
-  { // SLC file
-    if (SLCReader->CanReadFile(fileName))
-    {
-      knownFileType = true;
-    }
-  }
-  else if (std::string::npos != Alder::Utilities::toLower(
-    TIFFReader->GetFileExtensions()).find(fileExtension))
-  { // TIFF file
-    if (TIFFReader->CanReadFile(fileName))
-    {
-      knownFileType = true;
-    }
-  }
-  else if (".vti" == fileExtension)  // no GetFileExtensions() method
-  { // VTI file
-    if (XMLImageDataReader->CanReadFile(fileName))
-    {
-      knownFileType = true;
-    }
-  }
-  else  // last ditch effort to read a dicom
+    DICOMReader->GetFileExtensions()).find(fileExtension)
+    && DICOMReader->CanReadFile(fileName))
   {
-    if (GDCMImageReader->CanReadFile(fileName))
-    {
-      knownFileType = true;
-    }
+    // DICOM (preferred)
+    knownFileType = true;
+  }
+  else if (std::string::npos != Alder::Utilities::toLower(
+    GDCMImageReader->GetFileExtensions()).find(fileExtension)
+    && GDCMImageReader->CanReadFile(fileName))
+  {
+    // DICOM
+    knownFileType = true;
+  }
+  else if (std::string::npos != Alder::Utilities::toLower(
+    BMPReader->GetFileExtensions()).find(fileExtension)
+    && BMPReader->CanReadFile(fileName))
+  {
+    // BMP
+    knownFileType = true;
+  }
+  else if (std::string::npos != Alder::Utilities::toLower(
+    GESignaReader->GetFileExtensions()).find(fileExtension)
+    && GESignaReader->CanReadFile(fileName))
+  {
+    // GESigna file
+    knownFileType = true;
+  }
+  else if (std::string::npos != Alder::Utilities::toLower(
+    JPEGReader->GetFileExtensions()).find(fileExtension)
+    && JPEGReader->CanReadFile(fileName))
+  {
+    // JPEG file
+    knownFileType = true;
+  }
+  else if (std::string::npos != Alder::Utilities::toLower(
+    MetaImageReader->GetFileExtensions()).find(fileExtension)
+    && MetaImageReader->CanReadFile(fileName))
+  {
+    // MetaImage file
+    knownFileType = true;
+  }
+  else if (std::string::npos != Alder::Utilities::toLower(
+    MINCImageReader->GetFileExtensions()).find(fileExtension)
+    && MINCImageReader->CanReadFile(fileName))
+  {
+    // MINCImage file
+    knownFileType = true;
+  }
+  else if (std::string::npos != Alder::Utilities::toLower(
+    NIFTIReader->GetFileExtensions()).find(fileExtension)
+    && NIFTIReader->CanReadFile(fileName))
+  {
+    // NIFTI file
+    knownFileType = true;
+  }
+  else if (std::string::npos != Alder::Utilities::toLower(
+    PNGReader->GetFileExtensions()).find(fileExtension)
+    && PNGReader->CanReadFile(fileName))
+  {
+    // PNG file
+    knownFileType = true;
+  }
+  else if (std::string::npos != Alder::Utilities::toLower(
+    PNMReader->GetFileExtensions()).find(fileExtension)
+    && PNMReader->CanReadFile(fileName))
+  {
+    // PNM file
+    knownFileType = true;
+  }
+  else if (std::string::npos != Alder::Utilities::toLower(
+    SLCReader->GetFileExtensions()).find(fileExtension)
+    && SLCReader->CanReadFile(fileName))
+  {
+    // SLC file
+    knownFileType = true;
+  }
+  else if (std::string::npos != Alder::Utilities::toLower(
+    ScancoCTReader->GetFileExtensions()).find(fileExtension)
+    && ScancoCTReader->CanReadFile(fileName))
+  {
+    // ScancoCT file
+    knownFileType = true;
+  }
+  else if (std::string::npos != Alder::Utilities::toLower(
+    TIFFReader->GetFileExtensions()).find(fileExtension)
+    && TIFFReader->CanReadFile(fileName))
+  {
+    // TIFF file
+    knownFileType = true;
+  }
+  else if (".vti" == fileExtension  // no GetFileExtensions() method
+    && XMLImageDataReader->CanReadFile(fileName))
+  {
+    // VTI file
+    knownFileType = true;
   }
 
   return knownFileType;
@@ -425,58 +453,33 @@ vtkImageData* vtkImageDataReader::GetOutput()
       image = XMLReader->GetOutput();
     }
   }
-  else if (this->Reader->IsA("vtkGDCMImageReader"))
-  {
-    gdcmReader = vtkGDCMImageReader::SafeDownCast(this->Reader);
-
-    // see if we have already read the data from the disk
-    // and return it if we have
-    if (this->ReadMTime >= this->GetMTime())
-    {
-      image = gdcmReader->GetOutput();
-    }
-    else
-    {
-      gdcmReader->SetFileName(this->FileName.c_str());
-      gdcmReader->Update();
-      image = gdcmReader->GetOutput();
-
-      if (!image)
-      {
-        std::stringstream error;
-        error << "Failed to read dicom file '"
-                 << this->FileName << "'.";
-        throw std::runtime_error(error.str());
-      }
-    }
-  }
   else  // if we get here then the reader is some form of vtkImageReader2
   {
     // we know that Reader must be a vtkImageReader2 object
     imageReader = vtkImageReader2::SafeDownCast(this->Reader);
 
     // if this reader is not up to date, re-read the file
-    if (this->ReadMTime < this->GetMTime())
+    if (this->ReadMTime >= this->GetMTime())
     {
-      // the GDCM reader has not implemented CanReadFile, so skip that check
-      if (!imageReader->IsA("vtkGDCMImageReader"))
+      image = imageReader->GetOutput();
+    }
+    else
+    {
+      // check that we can read the file
+      if (!imageReader->CanReadFile(this->FileName.c_str()))
       {
-        // check that we can read the file
-        if (!imageReader->CanReadFile(this->FileName.c_str()))
-        {
-          std::stringstream error;
-          error << "Unable to read '" << fileNameOnly << "' as a ";
-          error << imageReader->GetDescriptiveName() << " file.";
-          throw std::runtime_error(error.str());
-        }
+        std::stringstream error;
+        error << "Unable to read '" << fileNameOnly << "' as a ";
+        error << imageReader->GetDescriptiveName() << " file.";
+        throw std::runtime_error(error.str());
       }
 
       imageReader->SetFileName(this->FileName.c_str());
 
       // get a reference to the (updated) output image
       imageReader->Update();
+      image = imageReader->GetOutput();
     }
-    image = imageReader->GetOutput();
   }
 
   // if we did get an image, check that it has valid extents:
@@ -498,6 +501,36 @@ vtkImageData* vtkImageDataReader::GetOutput()
     this->MedicalImageProperties->DeepCopy(
       imageReader->GetMedicalImageProperties());
   }
+  else if (this->Reader->IsA("vtkDICOMReader"))
+  {
+    vtkDICOMReader* imageReader =
+      vtkDICOMReader::SafeDownCast(this->Reader);
+    this->MedicalImageProperties->DeepCopy(
+      imageReader->GetMedicalImageProperties());
+
+    std::map<std::string, vtkDICOMTag> dicomMap;
+    dicomMap["AcquisitionDateTime"] = vtkDICOMTag(0x0008, 0x002a);
+    dicomMap["SeriesNumber"] = vtkDICOMTag(0x0020, 0x0011);
+    dicomMap["CineRate"] = vtkDICOMTag(0x0018, 0x0040);
+    dicomMap["RecommendedDisplayFrameRate"] = vtkDICOMTag(0x0008, 0x2114);
+    vtkDICOMMetaData* meta = imageReader->GetMetaData();
+
+    for (auto it = dicomMap.cbegin(); it != dicomMap.cend(); ++it)
+    {
+      if (meta->HasAttribute(it->second))
+      {
+        std::string name = it->first;
+        std::string value =
+          meta->GetAttributeValue(it->second).AsString();
+        if (!value.empty())
+        {
+          value = Alder::Utilities::trim(value);
+          this->MedicalImageProperties->AddUserDefinedValue(
+            name.c_str(), value.c_str());
+        }
+      }
+    }
+  }
   else if (this->Reader->IsA("vtkGDCMImageReader"))
   {
     vtkGDCMImageReader* imageReader =
@@ -508,10 +541,10 @@ vtkImageData* vtkImageDataReader::GetOutput()
     gdcm::ImageReader reader;
     reader.SetFileName(imageReader->GetFileName());
     reader.Read();
-    const gdcm::File &file = reader.GetFile();
-    const gdcm::DataSet &ds = file.GetDataSet();
+    const gdcm::File& file = reader.GetFile();
+    const gdcm::DataSet& ds = file.GetDataSet();
 
-    std::map< std::string, gdcm::Tag > dicomMap;
+    std::map<std::string, gdcm::Tag> dicomMap;
     dicomMap["AcquisitionDateTime"] = gdcm::Tag(0x0008, 0x002a);
     dicomMap["SeriesNumber"] = gdcm::Tag(0x0020, 0x0011);
     dicomMap["CineRate"] = gdcm::Tag(0x0018, 0x0040);
@@ -525,9 +558,11 @@ vtkImageData* vtkImageDataReader::GetOutput()
         std::string value =
           gdcm::DirectoryHelper::GetStringValueFromTag(it->second, ds);
         if (!value.empty())
+        {
           value = Alder::Utilities::trim(value);
-        this->MedicalImageProperties->AddUserDefinedValue(
-          name.c_str(), value.c_str());
+          this->MedicalImageProperties->AddUserDefinedValue(
+            name.c_str(), value.c_str());
+        }
       }
     }
   }
