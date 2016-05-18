@@ -22,6 +22,7 @@
 // VTK includes
 #include <vtkDataArray.h>
 #include <vtkDirectory.h>
+#include <vtkEventForwarderCommand.h>
 #include <vtkImageData.h>
 #include <vtkImageDataReader.h>
 #include <vtkImageCanvasSource2D.h>
@@ -41,6 +42,7 @@
 #include <gdcmReader.h>
 #include <gdcmTrace.h>
 #include <gdcmWriter.h>
+#include <vtkImageYBRToRGB.h>
 
 // vtk-dicom includes
 #include <vtkDICOMCompiler.h>
@@ -807,7 +809,7 @@ namespace Alder
     dcmCompiler->SetMetaData(meta);
     dcmCompiler->WriteHeader();
     dcmCompiler->WritePixelData(
-      reinterpret_cast<unsigned char *>(
+      reinterpret_cast<unsigned char*>(
         flip->GetOutput()->GetScalarPointer()), length);
     dcmCompiler->Close();
 
@@ -825,96 +827,47 @@ namespace Alder
         0 == Utilities::getFileLength(fileName))
       return result;
 
+    Application* app = Application::GetInstance();
+    vtkNew<vtkEventForwarderCommand> forward;
+    forward->SetTarget(app);
+    int dim = this->Get("Dimensionality").ToInt();
+
     // read in the original image
     vtkNew<vtkDICOMReader> reader;
     reader->SetFileName(fileName.c_str());
     reader->SetMemoryRowOrderToTopDown();
+    if (3 == dim)
+    {
+      app->SetAbortFlag(0);
+      std::string message = "Reading image data...";
+      app->InvokeEvent(
+        vtkCommand::StartEvent,
+        reinterpret_cast<void*>(const_cast<char*>(message.c_str())));
+      reader->AddObserver(vtkCommand::ProgressEvent, forward.GetPointer());
+    }
     reader->Update();
 
     vtkDICOMMetaData* meta = reader->GetMetaData();
     if (meta && "YBR_FULL_422" == meta->GetAttributeValue(
           vtkDICOMTag(0x0028, 0x0004)).AsString())
     {
-      vtkNew<vtkImageData> image;
       vtkImageData* input = reader->GetOutput();
-      image->SetDimensions(input->GetDimensions());
-      image->AllocateScalars(
-        input->GetScalarType(), input->GetNumberOfScalarComponents());
-
-      vtkNew<vtkMatrix3x3> in;
-      vtkNew<vtkMatrix3x3> out;
-
-      in->SetElement(0, 0,  0.299);
-      in->SetElement(0, 1,  0.587);
-      in->SetElement(0, 2,  0.114);
-      in->SetElement(1, 0, -0.1687);
-      in->SetElement(1, 1, -0.3313);
-      in->SetElement(1, 2,  0.5);
-      in->SetElement(2, 0,  0.5);
-      in->SetElement(2, 1, -0.4187);
-      in->SetElement(2, 2, -0.0813);
-      in->Invert(in.GetPointer(), out.GetPointer());
-
-      // NOTE: matrix inversion shows that A^-1 : A00, A10, A20 == 1
-      // mutliplication can therefore be expressed as:
-      // r = y0 + A01(y1 -128) + A02(y2 - 128)
-      // g = y0 + A11(y1 -128) + A12(y2 - 128)
-      // b = y0 + A21(y1 -128) + A22(y2 - 128)
-
-      vtkDataArray* outData = image->GetPointData()->GetScalars();
-      unsigned char* outArray = (unsigned char*)outData->GetVoidPointer(0);
       vtkDataArray* inData = input->GetPointData()->GetScalars();
-      unsigned char* inArray = (unsigned char*)inData->GetVoidPointer(0);
       int nTuple = inData->GetNumberOfTuples();
-      double range[2] = { 0, 255 };
-      double a01 = out->GetElement(0, 1);
-      double a02 = out->GetElement(0, 2);
-      double a11 = out->GetElement(1, 1);
-      double a12 = out->GetElement(1, 2);
-      double a21 = out->GetElement(2, 1);
-      double a22 = out->GetElement(2, 2);
-      double rgb0;
-      double rgb1;
-      double rgb2;
-      double ybcr0;
-      double ybcr1;
-      double ybcr2;
-      for (int i = 0; i < nTuple; ++i)
+
+      vtkNew<vtkImageYBRToRGB> filter;
+      filter->SetInputConnection(reader->GetOutputPort());
+      if (3 == dim)
       {
-        unsigned char* ybcr = inArray + 3*i;
-        ybcr0 = ybcr[0];
-        ybcr1 = ybcr[1] - 128.;
-        ybcr2 = ybcr[2] - 128.;
-        rgb0 = ybcr0 + a01*ybcr1 + a02*ybcr2;
-        rgb1 = ybcr0 + a11*ybcr1 + a12*ybcr2;
-        rgb2 = ybcr0 + a21*ybcr1 + a22*ybcr2;
-
-        vtkMath::ClampValue(&rgb0, range);
-        vtkMath::ClampValue(&rgb1, range);
-        vtkMath::ClampValue(&rgb2, range);
-
-        ybcr = outArray + 3*i;
-        *(ybcr+0)=(unsigned char)rgb0;
-        *(ybcr+1)=(unsigned char)rgb1;
-        *(ybcr+2)=(unsigned char)rgb2;
+        app->SetAbortFlag(0);
+        std::string message = "Converting from YBR to RGB...";
+        app->InvokeEvent(
+          vtkCommand::StartEvent,
+          reinterpret_cast<void*>(const_cast<char*>(message.c_str())));
+        filter->AddObserver(vtkCommand::ProgressEvent, forward.GetPointer());
       }
-      /*
-      for (int i = 0; i < data->GetNumberOfTuples(); ++i)
-      {
-        double *ycbcr = data->GetTuple(i);
-
-        double old[3] = { ycbcr[0],
-                          ycbcr[1] - 128.,
-                          ycbcr[2] - 128. };
-        double rgb[3];
-        out->MultiplyPoint(old, rgb);
-        vtkMath::ClampValue(&rgb[0], range);
-        vtkMath::ClampValue(&rgb[1], range);
-        vtkMath::ClampValue(&rgb[2], range);
-
-        data->SetTuple3(i, rgb[0], rgb[1], rgb[2]);
-      }
-      */
+      filter->Update();
+      vtkImageData* image = filter->GetOutput();
       meta->SetAttributeValue(vtkDICOMTag(0x0028, 0x0004), std::string("RGB"));
 
       unsigned long length = 3*nTuple;
@@ -925,10 +878,13 @@ namespace Alder
       compiler->SetMetaData(meta);
       compiler->WriteHeader();
       compiler->WritePixelData(
-        (unsigned char *)(image->GetScalarPointer()), length);
+        reinterpret_cast<unsigned char*>(image->GetScalarPointer()), length);
       compiler->Close();
       result = true;
     }
+
+    if (3 == dim) app->InvokeEvent(vtkCommand::EndEvent);
+
     return result;
   }
 }  // namespace Alder
