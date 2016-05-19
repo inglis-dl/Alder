@@ -302,8 +302,6 @@ void QAlderInterviewWidgetPrivate::updatePermission()
       }
     }
   }
-  this->codeTableWidget->setEnabled(
-    user && user->Get("Expert").ToInt());
 }
 
 // build the tree with all available data
@@ -1358,6 +1356,7 @@ void QAlderInterviewWidget::updatePermission()
   Q_D(QAlderInterviewWidget);
   d->updatePermission();
   d->updateTree();
+  d->updateEnabled();
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
