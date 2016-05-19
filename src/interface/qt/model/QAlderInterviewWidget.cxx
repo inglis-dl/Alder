@@ -847,7 +847,7 @@ void QAlderInterviewWidgetPrivate::updateEnabled()
   this->nextPushButton->setEnabled(interview);
   this->treeWidget->setEnabled(interview);
 
-  bool expert = user && user->Get("Expert").ToInt();
+  bool expert = user && 0 < user->Get("Expert").ToInt();
   this->useDerivedCheckBox->setEnabled(image && expert);
   this->resetRatingPushButton->setEnabled(image && expert);
   this->codeTableWidget->setEnabled(image && expert);
