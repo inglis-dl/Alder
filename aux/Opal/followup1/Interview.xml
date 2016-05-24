@@ -1,0 +1,24 @@
+<org.obiba.magma.views.View>
+  <name>Interview</name>
+  <from class="org.obiba.magma.security.SudoValueTableReference">
+    <reference>clsa-dcs-f1.Participants</reference>
+  </from>
+  <select class="org.obiba.magma.views.support.NoneClause"/>
+  <where class="org.obiba.magma.views.support.AllClause"/>
+  <variables class="org.obiba.magma.js.views.VariablesClause">
+    <variables class="linked-hash-set">
+      <variable name="Site" valueType="text" entityType="Participant" unit="" mimeType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;Admin.ApplicationConfiguration.siteName&apos;);</attribute>
+        </attributes>
+      </variable>
+      <variable name="VisitDate" valueType="text" entityType="Participant" unit="" mimeType="" index="0">
+        <attributes>
+          <attribute name="script" valueType="text">$(&apos;Admin.Interview.startDate&apos;).format(&apos;yyyy-MM-dd&apos;);</attribute>
+        </attributes>
+      </variable>
+    </variables>
+  </variables>
+  <created valueType="datetime">2015-09-25T11:35:32.801-0400</created>
+  <updated valueType="datetime">2015-09-25T11:35:32.801-0400</updated>
+</org.obiba.magma.views.View>

@@ -17,40 +17,50 @@
 //
 // .SECTION See Also
 // Database vtkXMLFileReader
-// 
+//
 
 #ifndef __vtkXMLConfigurationFileReader_h
 #define __vtkXMLConfigurationFileReader_h
 
-#include "vtkXMLFileReader.h"
+// Alder includes
+#include <vtkXMLFileReader.h>
+#include <Utilities.h>
 
-#include "Utilities.h"
+// C++ includes
+#include <map>
+#include <string>
 
 class vtkXMLConfigurationFileReader : public vtkXMLFileReader
 {
-public:
-  static vtkXMLConfigurationFileReader *New();
-  vtkTypeMacro( vtkXMLConfigurationFileReader, vtkXMLFileReader );
-  
-  std::map< std::string, std::map< std::string, std::string > > GetSettings() { return this->Settings; }
+  public:
+    static vtkXMLConfigurationFileReader* New();
+    vtkTypeMacro(vtkXMLConfigurationFileReader, vtkXMLFileReader);
 
-protected:
-  vtkXMLConfigurationFileReader()
-  {
-    this->SetNumberOfOutputPorts( 0 );
-  }
-  ~vtkXMLConfigurationFileReader() {}
+    std::map<std::string, std::map<std::string, std::string>> GetSettings()
+      { return this->Settings; }
 
-  virtual int ProcessRequest( vtkInformation *, vtkInformationVector **, vtkInformationVector * );
-  virtual int FillOutputPortInformation( int, vtkInformation* ) { return 1; }
-  virtual int RequestDataObject( vtkInformation *, vtkInformationVector **, vtkInformationVector * )
-  { return 1; }
+  protected:
+    vtkXMLConfigurationFileReader()
+      { this->SetNumberOfOutputPorts(0); }
+    ~vtkXMLConfigurationFileReader() {}
 
-  std::map< std::string, std::map< std::string, std::string > > Settings;
+    virtual int ProcessRequest(
+      vtkInformation* request,
+      vtkInformationVector** inputVector,
+      vtkInformationVector* outputVector);
+    virtual int FillOutputPortInformation(int port, vtkInformation* request)
+      { return 1; }
+    virtual int RequestDataObject(
+      vtkInformation* request,
+      vtkInformationVector** inputVector,
+      vtkInformationVector* outputVector)
+      { return 1; }
 
-private:
-  vtkXMLConfigurationFileReader( const vtkXMLConfigurationFileReader& );  // Not implemented.
-  void operator=( const vtkXMLConfigurationFileReader& );  // Not implemented.
+    std::map<std::string, std::map<std::string, std::string>> Settings;
+
+  private:
+    vtkXMLConfigurationFileReader(const vtkXMLConfigurationFileReader&);  // Not implemented.
+    void operator=(const vtkXMLConfigurationFileReader&);  // Not implemented.
 };
 
 #endif

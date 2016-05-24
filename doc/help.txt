@@ -1,0 +1,9 @@
+Image View controls
+
+1) zooming is done by scrolling the middle mouse button or right mouse
+button click and drag up or down
+2) panning is done by clicking and dragging with middle mouse button
+3)  contrast is controlled by left mouse button click and drag left or right
+4)  brightness is controlled by left mouse button click and drag up or down
+5) pressing 'r' key resets the brightness/contrast to default
+6) press Shift+r will reset the view of the image (zoom and pan) to fit in the window

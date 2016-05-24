@@ -1,12 +1,12 @@
-CMAKE_MINIMUM_REQUIRED( VERSION 2.6 )
+CMAKE_MINIMUM_REQUIRED( VERSION 2.8.7 )
 PROJECT( Alder )
 
 # The major version number is incremented after major milestones are met
 SET( ALDER_VERSION_MAJOR 1 )
 # The minor version number is incremented after a development branch is merged to qa
-SET( ALDER_VERSION_MINOR 1 )
+SET( ALDER_VERSION_MINOR 6 )
 # The patch version number is incremented when changes are made to the release branch
-SET( ALDER_VERSION_PATCH 1 )
+SET( ALDER_VERSION_PATCH 0 )
 
 # Icons sizes to build
 SET( ALDER_ICON_SIZES 16x16 22x22 24x24 32x32 48x48 64x64 128x128 )
@@ -14,13 +14,24 @@ SET( ALDER_ICON_SIZES 16x16 22x22 24x24 32x32 48x48 64x64 128x128 )
 # Look in the build directory for cmake modules
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/" )
 
+# We're using cbegin and cend so we need c++11
+SET( CMAKE_CXX_FLAGS "-std=c++0x -Wno-deprecated" )
+
 # We need VTK
 FIND_PACKAGE( VTK REQUIRED )
 INCLUDE( ${VTK_USE_FILE} )
+IF("${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}" VERSION_LESS 6.0)
+  MESSAGE(FATAL_ERROR "VTK 6.0 or later is required.")
+ENDIF()
 
 # We need GDCM
 FIND_PACKAGE( GDCM REQUIRED )
 INCLUDE( ${GDCM_USE_FILE} )
+
+# We need vtk-dicom
+FIND_PACKAGE( DICOM REQUIRED )
+INCLUDE( ${DICOM_USE_FILE} )
+SET(VTK_DICOM_LBRARIES vtkDICOM)
 
 # We need QT4
 SET( QT_MIN_VERSION 4.0.0 )
@@ -47,31 +58,42 @@ IF( UNIX AND NOT APPLE )
   FIND_PACKAGE( ImageMagick COMPONENTS convert REQUIRED )
 ENDIF( UNIX AND NOT APPLE )
 
-SET( ALDER_ROOT_DIR         ${PROJECT_SOURCE_DIR}/.. )
-SET( ALDER_AUX_DIR          ${ALDER_ROOT_DIR}/aux )
-SET( ALDER_SRC_DIR          ${ALDER_ROOT_DIR}/src )
-SET( ALDER_MODEL_DIR        ${ALDER_SRC_DIR}/model )
-SET( ALDER_QT_DIR           ${ALDER_SRC_DIR}/interface/qt )
-SET( ALDER_QT_WIDGETS_DIR   ${ALDER_QT_DIR}/widgets )
-SET( ALDER_QT_RESOURCES_DIR ${ALDER_QT_WIDGETS_DIR}/resources )
-SET( ALDER_VTK_DIR          ${ALDER_SRC_DIR}/vtk )
-SET( ALDER_CONFIG_FILE      ${PROJECT_BINARY_DIR}/config.xml )
-SET( ALDER_DOC_DIR          ${ALDER_ROOT_DIR}/doc )
-SET( ALDER_DOXY_DIR         ${PROJECT_BINARY_DIR}/doxygen )
-SET( ALDER_TESTING_DIR      ${ALDER_ROOT_DIR}/testing )
+SET( ALDER_ROOT_DIR       ${PROJECT_SOURCE_DIR}/.. )
+SET( ALDER_AUX_DIR        ${ALDER_ROOT_DIR}/aux )
+SET( ALDER_SRC_DIR        ${ALDER_ROOT_DIR}/src )
+SET( ALDER_COMMON_DIR     ${ALDER_SRC_DIR}/common )
+SET( ALDER_BUSINESS_DIR   ${ALDER_SRC_DIR}/business )
+SET( ALDER_QT_DIR         ${ALDER_SRC_DIR}/interface/qt )
+SET( ALDER_QT_GENERIC_DIR ${ALDER_QT_DIR}/generic )
+SET( ALDER_QT_MODEL_DIR   ${ALDER_QT_DIR}/model )
+SET( ALDER_VTK_DIR        ${ALDER_SRC_DIR}/vtk )
+SET( ALDER_APP_DIR        ${ALDER_QT_DIR}/application )
+SET( ALDER_DOC_DIR        ${ALDER_ROOT_DIR}/doc )
+SET( ALDER_DOXY_DIR       ${PROJECT_BINARY_DIR}/doxygen )
+SET( ALDER_TESTING_DIR    ${ALDER_ROOT_DIR}/testing )
+SET( ALDER_PROGRAMS_DIR   ${ALDER_SRC_DIR}/programs )
+
+# Define the config file location, then test to see if it is in the install path when installing
+SET( ALDER_CONFIG_FILE ${PROJECT_BINARY_DIR}/config.xml CACHE PATH "The location of Alder's runtime config file" )
+
+IF( NOT ${ALDER_CONFIG_FILE} MATCHES ${CMAKE_INSTALL_PREFIX} )
+  INSTALL( CODE "MESSAGE( \"
+### WARNING ###
+The location of the config is not within the install prefix!
+In order to use the installed version of the config file (${CMAKE_INSTALL_PREFIX}/etc/config.xml)
+you must explicitly set ALDER_CONFIG_FILE to that path
+\" )" )
+ENDIF( NOT ${ALDER_CONFIG_FILE} MATCHES ${CMAKE_INSTALL_PREFIX} )
 
 # Create a salt string which can be set at build time
 SET( ALDER_SALT_STRING "this is salt" CACHE STRING "This is salt for encrypting passwords" )
 
-# Define where the application log is
-SET( ALDER_LOG_PATH ${PROJECT_BINARY_DIR}/log CACHE FILEPATH "The location of the application's log file" )
-
 # Define stack depth to display on thrown exceptions
 SET( ALDER_STACK_DEPTH "10" CACHE STRING "The stack depth to display on thrown exceptions" )
 
-# Configure the utitlities header
-CONFIGURE_FILE( ${ALDER_SRC_DIR}/Utilities.h.in
-                ${PROJECT_BINARY_DIR}/Utilities.h @ONLY IMMEDIATE )
+# Configure a header file to pass CMake settings to
+CONFIGURE_FILE( ${ALDER_SRC_DIR}/AlderConfig.h.in
+                ${PROJECT_BINARY_DIR}/AlderConfig.h @ONLY IMMEDIATE )
 
 # Configure the desktop file
 CONFIGURE_FILE( ${ALDER_AUX_DIR}/alder.desktop.in
@@ -87,152 +109,53 @@ IF( NOT EXISTS ${ALDER_CONFIG_FILE} )
   EXECUTE_PROCESS( COMMAND ${ALDER_AUX_DIR}/init_config ${ALDER_CONFIG_FILE} )
 ENDIF( NOT EXISTS ${ALDER_CONFIG_FILE} )
 
-# Set up include directories
-SET( ALDER_INCLUDE_DIR
-  ${ALDER_MODEL_DIR}
-  ${ALDER_QT_DIR}
-  ${ALDER_QT_WIDGETS_DIR}
-  ${ALDER_VTK_DIR}
-)
-
-SET( ALDER_SOURCE
-  ${ALDER_SRC_DIR}/Alder.cxx
-
-  ${ALDER_MODEL_DIR}/ActiveRecord.cxx
-  ${ALDER_MODEL_DIR}/Application.cxx
-  ${ALDER_MODEL_DIR}/Configuration.cxx
-  ${ALDER_MODEL_DIR}/Database.cxx
-  ${ALDER_MODEL_DIR}/Exam.cxx
-  ${ALDER_MODEL_DIR}/Image.cxx
-  ${ALDER_MODEL_DIR}/Interview.cxx
-  ${ALDER_MODEL_DIR}/Modality.cxx
-  ${ALDER_MODEL_DIR}/ModelObject.cxx
-  ${ALDER_MODEL_DIR}/OpalService.cxx
-  ${ALDER_MODEL_DIR}/QueryModifier.cxx
-  ${ALDER_MODEL_DIR}/Rating.cxx
-  ${ALDER_MODEL_DIR}/User.cxx
-
-  ${ALDER_VTK_DIR}/vtkAnimationPlayer.cxx
-  ${ALDER_VTK_DIR}/vtkAlderMySQLDatabase.cxx
-  ${ALDER_VTK_DIR}/vtkAlderMySQLQuery.cxx
-  ${ALDER_VTK_DIR}/vtkCustomCornerAnnotation.cxx
-  ${ALDER_VTK_DIR}/vtkCustomInteractorStyleImage.cxx
-  ${ALDER_VTK_DIR}/vtkFrameAnimationPlayer.cxx
-  ${ALDER_VTK_DIR}/vtkImageCoordinateWidget.cxx
-  ${ALDER_VTK_DIR}/vtkImageDataReader.cxx
-  ${ALDER_VTK_DIR}/vtkImageWindowLevel.cxx
-  ${ALDER_VTK_DIR}/vtkMedicalImageViewer.cxx
-  ${ALDER_VTK_DIR}/vtkXMLFileReader.cxx
-  ${ALDER_VTK_DIR}/vtkXMLConfigurationFileReader.cxx
-  
-  ${ALDER_QT_DIR}/QAlderApplication.cxx
-  ${ALDER_QT_DIR}/QAboutDialog.cxx
-  ${ALDER_QT_DIR}/QLoginDialog.cxx
-  ${ALDER_QT_DIR}/QMainAlderWindow.cxx
-  ${ALDER_QT_DIR}/QVTKProgressDialog.cxx
-  ${ALDER_QT_DIR}/QSelectInterviewDialog.cxx
-  ${ALDER_QT_DIR}/QUserListDialog.cxx
-
-  ${ALDER_QT_WIDGETS_DIR}/QAlderAtlasWidget.cxx
-  ${ALDER_QT_WIDGETS_DIR}/QAlderDicomTagWidget.cxx
-  ${ALDER_QT_WIDGETS_DIR}/QAlderDoubleSlider.cxx
-  ${ALDER_QT_WIDGETS_DIR}/QAlderFramePlayerWidget.cxx
-  ${ALDER_QT_WIDGETS_DIR}/QAlderInterviewWidget.cxx
-  ${ALDER_QT_WIDGETS_DIR}/QAlderSliderWidget.cxx
-)
-
-SET_SOURCE_FILES_PROPERTIES(
-  ${ALDER_MODEL_DIR}/ActiveRecord.cxx
-  ${ALDER_MODEL_DIR}/ModelObject.cxx
-
-  ${ALDER_VTK_DIR}/vtkAnimationPlayer.cxx
-  ${ALDER_VTK_DIR}/vtkXMLFileReader.cxx
-  ABSTRACT )
-
-SET( ALDER_UIS
-  ${ALDER_QT_DIR}/QAboutDialog.ui
-  ${ALDER_QT_DIR}/QLoginDialog.ui
-  ${ALDER_QT_DIR}/QMainAlderWindow.ui
-  ${ALDER_QT_DIR}/QVTKProgressDialog.ui
-  ${ALDER_QT_DIR}/QSelectInterviewDialog.ui
-  ${ALDER_QT_DIR}/QUserListDialog.ui
-
-  ${ALDER_QT_WIDGETS_DIR}/QAlderAtlasWidget.ui
-  ${ALDER_QT_WIDGETS_DIR}/QAlderDicomTagWidget.ui
-  ${ALDER_QT_WIDGETS_DIR}/QAlderFramePlayerWidget.ui
-  ${ALDER_QT_WIDGETS_DIR}/QAlderInterviewWidget.ui
-  ${ALDER_QT_WIDGETS_DIR}/QAlderSliderWidget.ui
-)
-
-SET( ALDER_HEADERS
-  ${ALDER_QT_DIR}/QAboutDialog.h
-  ${ALDER_QT_DIR}/QLoginDialog.h
-  ${ALDER_QT_DIR}/QMainAlderWindow.h
-  ${ALDER_QT_DIR}/QSelectInterviewDialog.h
-  ${ALDER_QT_DIR}/QUserListDialog.h
-  ${ALDER_QT_DIR}/QVTKProgressDialog.h
-
-  ${ALDER_QT_WIDGETS_DIR}/QAlderAtlasWidget.h
-  ${ALDER_QT_WIDGETS_DIR}/QAlderDicomTagWidget.h
-  ${ALDER_QT_WIDGETS_DIR}/QAlderDoubleSlider.h
-  ${ALDER_QT_WIDGETS_DIR}/QAlderFramePlayerWidget.h
-  ${ALDER_QT_WIDGETS_DIR}/QAlderInterviewWidget.h
-  ${ALDER_QT_WIDGETS_DIR}/QAlderSliderWidget.h
-)
-
-SET( ALDER_QT_QRC
-  ${ALDER_QT_RESOURCES_DIR}/QAlderWidgets.qrc
-)
-
-# Wrap QT files
-QT4_WRAP_UI( UIHeaders ${ALDER_UIS} )
-QT4_WRAP_CPP( MOCSrcs ${ALDER_HEADERS} )
-QT4_ADD_RESOURCES( QRCSrcs ${ALDER_QT_QRC} )
-
-ADD_DEFINITIONS( -DQT_GUI_LIBS -DQT_CORE_LIB )
-
-SET_SOURCE_FILES_PROPERTIES( ${ALDER_SOURCE} PROPERTIES OBJECT_DEPENDS "${UIHeaders}" )
-
-# Use the include path and library for Qt
-INCLUDE_DIRECTORIES(
-  ${ALDER_INCLUDE_DIR}
-  ${QT_INCLUDE_DIR}
-  ${LIBXML2_INCLUDE_DIR}
-  ${CMAKE_CURRENT_BINARY_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CRYPTO++_INCLUDE_DIR}
-  ${JSONCPP_INCLUDE_DIR}
-  ${MYSQL_INCLUDE_DIRECTORIES}
-  ${CURL_INCLUDE_DIR}
-)
-
-# We're using cbegin and cend so we need c++11
-SET( CMAKE_CXX_FLAGS "-std=c++0x -Wno-deprecated " )
+# Set default locations for exe and lib files
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 # Make sure to include RPATH in the installed binary to support linking to libraries
-SET( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE )
+SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-# Targets
-ADD_EXECUTABLE( alder ${ALDER_SOURCE} ${ALDER_UISrcs} ${MOCSrcs} ${QRCSrcs})
+# Set up include directories
+SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-TARGET_LINK_LIBRARIES( alder
-  QVTK
-  vtkRendering
-  vtkGraphics
-  vtkIO
-  vtkCommon
-  vtkgdcm
-  gdcmDSED
-  gdcmMSFF
-  gdcmDICT
-  ${QT_LIBRARIES}
-  ${LIBXML2_LIBRARIES}
-  ${CURL_LIBRARY}
-  ${CRYPTO++_LIBRARIES}
-  ${JSONCPP_LIBRARIES}
-  ${MYSQL_LIBRARY}
+SET(BUILD_SHARED_LIBS ON)
+
+# The libraries need AlderConfig.h
+INCLUDE_DIRECTORIES( BEFORE
+  ${PROJECT_BINARY_DIR}
 )
-INSTALL( TARGETS alder RUNTIME DESTINATION bin )
+
+SET( ALDER_LIBRARIES
+  AlderQtGeneric
+  AlderQtModel
+  AlderVTK
+  AlderBusiness
+  AlderCommon
+)
+
+# Alder libraries for use in other applications
+ADD_SUBDIRECTORY(
+  ${ALDER_COMMON_DIR} ${PROJECT_BINARY_DIR}/common
+)
+ADD_SUBDIRECTORY(
+  ${ALDER_VTK_DIR} ${PROJECT_BINARY_DIR}/vtk
+)
+ADD_SUBDIRECTORY(
+  ${ALDER_BUSINESS_DIR} ${PROJECT_BINARY_DIR}/business
+)
+ADD_SUBDIRECTORY(
+  ${ALDER_QT_GENERIC_DIR} ${PROJECT_BINARY_DIR}/generic
+)
+ADD_SUBDIRECTORY(
+  ${ALDER_QT_MODEL_DIR} ${PROJECT_BINARY_DIR}/model
+)
+ADD_SUBDIRECTORY(
+  ${ALDER_APP_DIR} ${PROJECT_BINARY_DIR}/application
+)
+
+INSTALL( FILES ${CMAKE_BINARY_DIR}/config.xml DESTINATION etc )
 
 ADD_CUSTOM_TARGET( dist
   COMMAND git archive --prefix=${ALDER_ARCHIVE_NAME}/ HEAD
@@ -278,33 +201,38 @@ IF( BUILD_DOCUMENTATION )
     ${ALDER_DOC_DIR}/doc_makeall.cmake.in
     ${ALDER_DOXY_DIR}/doc_makeall.cmake
     @ONLY )
-  
+
   CONFIGURE_FILE(
     ${ALDER_DOC_DIR}/doc_mainpage.dox.in
     ${ALDER_DOXY_DIR}/doc_mainpage.dox )
 
-  SET( DOXY_INPUT_SOURCE 
+  SET( DOXY_INPUT_SOURCE
     ${ALDER_SRC_DIR}
-    ${ALDER_MODEL_DIR}
+    ${ALDER_BUSINESS_DIR}
+    ${ALDER_COMMON_DIR}
     ${ALDER_VTK_DIR}
-    ${ALDER_QT_DIR}
+    ${ALDER_QT_GENERIC_DIR}
+    ${ALDER_QT_MODEL_DIR}
     ${ALDER_DOXY_DIR}/doc_mainpage.dox )
 
-  string( REPLACE ";" "\" \"" ALDER_DOXY_LIST "${DOXY_INPUT_SOURCE}" )
-  
+  STRING( REPLACE ";" "\" \"" ALDER_DOXY_LIST "${DOXY_INPUT_SOURCE}" )
+
   CONFIGURE_FILE(
     ${ALDER_DOC_DIR}/config.dox.in
     ${ALDER_DOXY_DIR}/config.dox )
 
 # Uncommenting this block will force a build of the documentation
 # every time cmake is run in the build directory
-# 
-#  execute_process(COMMAND 
+#
+#  execute_process(COMMAND
 #    ${CMAKE_COMMAND} -P ${ALDER_DOXY_DIR}/doc_makeall.cmake
-#    DEPENDS ${ALDER_DOXY_DIR}/doc_makeall.cmake 
-#    WORKING DIR ${ALDER_DOXY_DIR}/doxygen 
+#    DEPENDS ${ALDER_DOXY_DIR}/doc_makeall.cmake
+#    WORKING DIR ${ALDER_DOXY_DIR}/doxygen
 #    RESULT_VARIABLE rv )
 
 ENDIF( BUILD_DOCUMENTATION )
 
-SUBDIRS( ${ALDER_TESTING_DIR} )
+SUBDIRS(
+  ${ALDER_TESTING_DIR}
+  ${ALDER_PROGRAMS_DIR}
+)

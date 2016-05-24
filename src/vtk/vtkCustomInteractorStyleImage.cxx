@@ -10,32 +10,36 @@
 =========================================================================*/
 #include <vtkCustomInteractorStyleImage.h>
 
+// VTK includes
+#include <vtkAbstractPropPicker.h>
+#include <vtkAssemblyPath.h>
 #include <vtkCommand.h>
 #include <vtkImageProperty.h>
 #include <vtkObjectFactory.h>
+#include <vtkPropCollection.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindowInteractor.h>
 
 vtkStandardNewMacro(vtkCustomInteractorStyleImage);
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkCustomInteractorStyleImage::WindowLevel()
 {
-  vtkRenderWindowInteractor *rwi = this->Interactor;
+  vtkRenderWindowInteractor* rwi = this->Interactor;
 
   this->WindowLevelCurrentPosition[0] = rwi->GetEventPosition()[0];
   this->WindowLevelCurrentPosition[1] = rwi->GetEventPosition()[1];
 
   if (this->HandleObservers &&
       this->HasObserver(vtkCommand::WindowLevelEvent))
-    {
+  {
     this->InvokeEvent(vtkCommand::WindowLevelEvent, this);
-    }
+  }
   else
-    {
+  {
     if (this->CurrentImageProperty)
-      {
-      int *size = this->CurrentRenderer->GetSize();
+    {
+      int* size = this->CurrentRenderer->GetSize();
 
       double window = this->WindowLevelInitial[0];
       double level = this->WindowLevelInitial[1];
@@ -49,53 +53,75 @@ void vtkCustomInteractorStyleImage::WindowLevel()
 
       // Scale by current values
 
-      if ( fabs( window ) > 0.01 )
-        {
+      if (fabs(window) > 0.01)
+      {
         dx = dx * window;
-        }
+      }
       else
-        {
-        dx = dx * ( window < 0 ? -0.01 : 0.01 );
-        }
-      if ( fabs( level ) > 0.01 )
-        {
+      {
+        dx = dx * (0.0 > window ? -0.01 : 0.01);
+      }
+      if (fabs(level) > 0.01)
+      {
         dy = dy * level;
-        }
+      }
       else
-        {
-        dy = dy * ( level < 0 ? -0.01 : 0.01 );
-        }
+      {
+        dy = dy * (0.0 > level ? -0.01 : 0.01);
+      }
 
       // Abs so that direction does not flip
 
-      if ( window < 0.0 )
+      if (0.0 > window)
         {
         dx = -1 * dx;
         }
-      if ( level < 0.0 )
-        {
+      if (0.0 > level)
+      {
         dy = -1 * dy;
-        }
+      }
 
       // Compute new window level
 
       double newWindow = dx + window;
       double newLevel = level - dy;
 
-      if ( newWindow < 0.01 )
-        {
+      if (0.01 > newWindow)
+      {
         newWindow = 0.01;
-        }
+      }
 
       this->CurrentImageProperty->SetColorWindow(newWindow);
       this->CurrentImageProperty->SetColorLevel(newLevel);
 
       this->Interactor->Render();
-      }
-    }  
+    }
+  }
 }
 
-//-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void vtkCustomInteractorStyleImage::OnChar()
+{
+  vtkRenderWindowInteractor* rwi = this->Interactor;
+
+  // trap x y z char
+  switch (rwi->GetKeyCode())
+  {
+    case 'x' :
+    case 'X' :
+    case 'y' :
+    case 'Y' :
+    case 'z' :
+    case 'Z' :
+      break;
+
+    default:
+      this->Superclass::OnChar();
+      break;
+  }
+}
+
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void vtkCustomInteractorStyleImage::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os, indent);

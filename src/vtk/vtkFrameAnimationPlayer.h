@@ -34,45 +34,48 @@
 #ifndef __vtkFrameAnimationPlayer_h
 #define __vtkFrameAnimationPlayer_h
 
+// Alder includes
 #include <vtkAnimationPlayer.h>
 
 class vtkFrameAnimationPlayer : public vtkAnimationPlayer
 {
-public:
-  static vtkFrameAnimationPlayer* New();
-  vtkTypeMacro(vtkFrameAnimationPlayer, vtkAnimationPlayer);
-  void PrintSelf(ostream& os, vtkIndent indent);
+  public:
+    static vtkFrameAnimationPlayer* New();
+    vtkTypeMacro(vtkFrameAnimationPlayer, vtkAnimationPlayer);
+    void PrintSelf(ostream& os, vtkIndent indent);
 
-  /**
-   * Set/Get the number of frames. Default 0 and must be set.
-   */
-  vtkSetClampMacro(NumberOfFrames, int, 2, VTK_INT_MAX);
-  vtkGetMacro(NumberOfFrames, int);
+    /**
+     * Set/Get the number of frames. Default 0 and must be set.
+     */
+    vtkSetClampMacro(NumberOfFrames, int, 2, VTK_INT_MAX);
+    vtkGetMacro(NumberOfFrames, int);
 
-  /** Get the frame number currently in play */
-  vtkGetMacro(FrameNo, int);
+    /** Get the frame number currently in play */
+    vtkGetMacro(FrameNo, int);
 
-protected:
-  vtkFrameAnimationPlayer();
-  ~vtkFrameAnimationPlayer();
+  protected:
+    vtkFrameAnimationPlayer();
+    ~vtkFrameAnimationPlayer();
 
-  virtual void StartLoop(double, double, double*);
-  virtual void EndLoop() {};
+    virtual void StartLoop(const double&, const double&, double*);
+    virtual void EndLoop() {}
 
-  /** Return the next time given the current time. */
-  virtual double GetNextTime(double currentime);
+    /** Return the next time given the current time. */
+    virtual double GetNextTime(const double& currentime);
 
-  virtual double GoToNextTime(double start, double end, double currenttime);
-  virtual double GoToPreviousTime(double start, double end, double currenttime);
+    virtual double GoToNextTime(
+      const double& start, const double& end, const double& currenttime);
+    virtual double GoToPreviousTime(
+      const double& start, const double& end, const double& currenttime);
 
-  int NumberOfFrames;
-  double StartTime;
-  double EndTime;
-  int FrameNo;
+    int NumberOfFrames;
+    double StartTime;
+    double EndTime;
+    int FrameNo;
 
-private:
-  vtkFrameAnimationPlayer(const vtkFrameAnimationPlayer&); /** Not implemented */
-  void operator=(const vtkFrameAnimationPlayer&); /** Not implemented */
+  private:
+    vtkFrameAnimationPlayer(const vtkFrameAnimationPlayer&);  /** Not implemented */
+    void operator=(const vtkFrameAnimationPlayer&);  /** Not implemented */
 };
 
 #endif

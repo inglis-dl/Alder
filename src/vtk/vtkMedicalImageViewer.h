@@ -8,7 +8,7 @@
 
 =========================================================================*/
 
-/** 
+/**
  * @class vtkMedicalImageViewer
  *
  * @author Patrick Emond <emondpd AT mcmaster DOT ca>
@@ -16,9 +16,9 @@
  *
  * @brief Display a 2D image.
  *
- * vtkMedicalImageViewer is a convenience class for 
- * displaying a 2D image.  It packages up the functionality found in 
- * vtkRenderWindow, vtkRenderer, vtkImageActor and 
+ * vtkMedicalImageViewer is a convenience class for
+ * displaying a 2D image.  It packages up the functionality found in
+ * vtkRenderWindow, vtkRenderer, vtkImageSlice and
  * vtkImageWindowLevel into a single easy to use
  * class.  This class also creates an image interactor style
  * (vtkCustomInteractorStyleImage) that allows zooming and panning of images, and
@@ -35,8 +35,8 @@
  * InteractorStyle member.
  *
  * It is possible to mix images and geometry, using the methods:
- * viewer->SetInput( myImage );
- * viewer->GetRenderer()->AddActor( myActor );
+ * viewer->SetInputData(myImage);
+ * viewer->GetRenderer()->AddActor(myActor);
  *
  * This can be used to annotate an image with a PolyData of "edges" or
  * or highlight sections of an image or display a 3D isosurface
@@ -50,21 +50,32 @@
  * Note that pressing 'r' will reset the window/level and pressing
  * shift+'r' or control+'r' will reset the camera.
  *
- * @see vtkRenderWindow vtkRenderer vtkImageActor vtkImageWindowLevel
+ * @see vtkRenderWindow vtkRenderer vtkImageSlice vtkImageWindowLevel
  */
 #ifndef __vtkMedicalImageViewer_h
 #define __vtkMedicalImageViewer_h
 
-#include "vtkObject.h"
-#include "vtkSmartPointer.h"
+// VTK includes
+#include <vtkObject.h>
+#include <vtkSmartPointer.h>
+
+// C++ includes
+#include <string>
 #include <vector>
 
+class vtkAxes;
+class vtkAxesActor;
 class vtkCustomCornerAnnotation;
-class vtkImageActor;
+class vtkCustomInteractorStyleImage;
 class vtkImageCoordinateWidget;
 class vtkImageData;
+class vtkImageSlice;
+class vtkImageSliceMapper;
 class vtkImageWindowLevel;
-class vtkCustomInteractorStyleImage;
+class vtkOrientationMarkerWidget;
+class vtkOutlineCornerSource;
+class vtkPolyDataMapper;
+class vtkPropAssembly;
 class vtkRenderer;
 class vtkRenderWindow;
 class vtkRenderWindowInteractor;
@@ -73,372 +84,450 @@ class vtkAnimationScene;
 class vtkAnimationCue;
 class vtkFrameAnimationPlayer;
 
-class vtkMedicalImageViewer : public vtkObject 
+class vtkMedicalImageViewer : public vtkObject
 {
-public:
-  static vtkMedicalImageViewer *New();
-  vtkTypeMacro( vtkMedicalImageViewer, vtkObject );
-  void PrintSelf( ostream& os, vtkIndent indent );
+  public:
+    static vtkMedicalImageViewer* New();
+    vtkTypeMacro(vtkMedicalImageViewer, vtkObject);
+    void PrintSelf(ostream& os, vtkIndent indent);
 
-  /**
-   * Force render the display.
-   * In some situations, a pipeline update will not cause a 
-   * refresh render.  This method allows for forcing a render.
-   */
-  virtual void Render();
-  
-  //@{
-  /** 
-   * Set/Get the input image to the viewer.
-   * @param input vtkImageData from the output of a reader
-   */
-  virtual void SetInput( vtkImageData* input );
-  virtual vtkImageData* GetInput();
-  //@}
+    /**
+     * Force render the display.
+     * In some situations, a pipeline update will not cause a
+     * refresh render.  This method allows for forcing a render.
+     */
+    virtual void Render();
 
-  /**
-   * Load an image from file and display.
-   * 
-   * If fileName is valid, load the file via vtkGDCMImageReader and display it.
-   * Returns fails if image fails to load.
-   * @param fileName Name of a file on disk
-   * @return boolean
-   */
-   bool Load( const std::string& fileName );
+    //@{
+    /**
+     * Set/Get the input image to the viewer.
+     * @param input vtkImageData from the output of a reader
+     */
+    virtual void SetInputData(vtkImageData* input);
+    virtual vtkImageData* GetInput();
+    //@}
 
-  /**
-   * Enum constants for orthonormal slice orientations. */
-  enum
-  {
-    VIEW_ORIENTATION_YZ = 0,  /**< enum value VIEW_ORIENTATION_YZ. */
-    VIEW_ORIENTATION_XZ = 1,  /**< enum value VIEW_ORIENTATION_XZ. */
-    VIEW_ORIENTATION_XY = 2   /**< enum value VIEW_ORIENTATION_XY. */
-  };
+    /**
+     * Get the input image to the vtkImageSlice.
+     * The input is the vtkImageWindowLevel filter output.
+     */
+    virtual vtkImageData* GetDisplayInput();
 
-  //@{
-  /**
-   * Set/Get the orthonormal view orientation. */
-  vtkGetMacro( ViewOrientation, int );
-  virtual void SetViewOrientation( const int& );
-  virtual void SetViewOrientationToXY()
-    { this->SetViewOrientation(vtkMedicalImageViewer::VIEW_ORIENTATION_XY); };
-  virtual void SetViewOrientationToYZ()
-    { this->SetViewOrientation(vtkMedicalImageViewer::VIEW_ORIENTATION_YZ); };
-  virtual void SetViewOrientationToXZ()
-    { this->SetViewOrientation(vtkMedicalImageViewer::VIEW_ORIENTATION_XZ); };
-  //@}
+    /**
+     * Load an image from file and display.
+     *
+     * If fileName is valid, load the file via vtkGDCMImageReader and display it.
+     * Returns fails if image fails to load.
+     * @param fileName Name of a file on disk
+     * @return boolean
+     */
+     bool Load(const std::string& fileName);
 
-  //@{
-  /**
-   * Set/Get the current slice index to display.
-   * Depending on the orientation, this can be an X, Y or Z slice.
-   * @see GetSliceLocation()
-   */
-  vtkGetMacro( Slice, int );
-  virtual void SetSlice( int );
-  //@}
+    /**
+     * Enum constants for orthonormal slice orientations. */
+    enum
+    {
+      VIEW_ORIENTATION_YZ = 0,  /**< enum value VIEW_ORIENTATION_YZ. */
+      VIEW_ORIENTATION_XZ = 1,  /**< enum value VIEW_ORIENTATION_XZ. */
+      VIEW_ORIENTATION_XY = 2   /**< enum value VIEW_ORIENTATION_XY. */
+    };
 
-  /**
-   * Get the non-indexed location of the slice from the origin.
-   * @sa GetSlice(), SetSlice()
-   */
-  double GetSliceLocation();
+    //@{
+    /**
+     * Set/Get the orthonormal view orientation. */
+    vtkGetMacro(ViewOrientation, int);
+    virtual void SetViewOrientation(const int& orientation);
+    virtual void SetViewOrientationToXY()
+      { this->SetViewOrientation(vtkMedicalImageViewer::VIEW_ORIENTATION_XY); }
+    virtual void SetViewOrientationToYZ()
+      { this->SetViewOrientation(vtkMedicalImageViewer::VIEW_ORIENTATION_YZ); }
+    virtual void SetViewOrientationToXZ()
+      { this->SetViewOrientation(vtkMedicalImageViewer::VIEW_ORIENTATION_XZ); }
+    //@}
 
-  /**
-   * Update the display extent.
-   * Update the display extent so that the proper slice for the
-   * given orientation is displayed. It will also try to set a
-   * reasonable camera clipping range.
-   * This method is called automatically when the Input is changed, but
-   * most of the time the input of this class is likely to remain the same,
-   * i.e. connected to the output of a filter, or an image reader. When the
-   * input of this filter or reader itself is changed, an error message might
-   * be displayed since the current display extent is probably outside
-   * the new whole extent. Calling this method will ensure that the display
-   * extent is reset properly.
-   */
-  virtual void UpdateDisplayExtent();
-  
-  /**
-   * Get the minimum slice index. 
-   * @sa GetSliceMax(), GetSliceRange()
-   */
-  virtual int GetSliceMin();
+    //@{
+    /**
+     * Rotate the camera. */
+    void RotateCamera(const double& angle);
+    //@}
 
-  /**
-   * Get the maximum slice index. 
-   * @sa GetSliceMin(), GetSliceRange()
-   */
-  virtual int GetSliceMax();
+    //@{
+    /**
+     * Flip the camera horizontally. */
+    void FlipCameraHorizontal();
+    //@}
 
-  /**
-   * Get the number of slices. 
-   * @sa GetSliceMin(), GetSliceRange()
-   */
-  virtual int GetNumberOfSlices()
-    { return this->GetSliceMax() - this->GetSliceMin() + 1; }
+    //@{
+    /**
+     * Flip the camera horizontally. */
+    void FlipCameraVertical();
+    //@}
 
-  /**
-   * Return the minimum and maximum slice index values.
-   * @param range int array to put the range of slices in.
-   * @sa GetSliceMin(), GetSliceMax()
-   */
-  virtual void GetSliceRange( int range[2] )
-    { this->GetSliceRange(range[0], range[1]); }
-    
-  /**
-   * Return the minimum and maximum slice index values.
-   * @param min fill the minimum slice by reference
-   * @param max fill the maximum slice by reference
-   * @sa GetSliceMin(), GetSliceMax()
-   */
-  virtual void GetSliceRange( int &min, int &max );
+    //@{
+    /**
+     * Set/Get the current slice index to display.
+     * Depending on the orientation, this can be an X, Y or Z slice.
+     * @see GetSliceLocation()
+     */
+    vtkGetMacro(Slice, int);
+    virtual void SetSlice(int slice);
+    //@}
 
-  /**
-   * Return the minimum and maximum slice index values.
-   * Warning: this method is NOT thread safe.
-   * @return pointer to input image's whole extent array
-   * @sa GetSliceMin(), GetSliceMax()
-   */
-  virtual int* GetSliceRange();
+    /**
+     * Get the non-indexed location of the slice from the origin.
+     * @sa GetSlice(), SetSlice()
+     */
+    double GetSliceLocation();
 
-  //@{
-  /**
-   * Set/Get VTK object member ivars.
-   * Class member ivars are accessible for connecting to third party
-   * GUI toolkits (e.g., Qt), or for custom configuration.
-   */
-  virtual void SetRenderWindow( vtkRenderWindow* );
-  virtual void SetRenderer( vtkRenderer* );
-  virtual void SetInteractor( vtkRenderWindowInteractor* );
-  virtual void SetInteractorStyle( vtkCustomInteractorStyleImage* );
-  vtkGetObjectMacro( RenderWindow, vtkRenderWindow );
-  vtkGetObjectMacro( Renderer, vtkRenderer );
-  vtkGetObjectMacro( InteractorStyle, vtkCustomInteractorStyleImage );
-  vtkSmartPointer<vtkImageActor> GetImageActor(){ return this->ImageActor; }
-  vtkSmartPointer<vtkCustomCornerAnnotation> GetAnnotation(){ return this->Annotation; }
-  //@}
+    /**
+     * Update the display extent.
+     * Update the display extent so that the proper slice for the
+     * given orientation is displayed. It will also try to set a
+     * reasonable camera clipping range.
+     * This method is called automatically when the Input is changed, but
+     * most of the time the input of this class is likely to remain the same,
+     * i.e. connected to the output of a filter, or an image reader. When the
+     * input of this filter or reader itself is changed, an error message might
+     * be displayed since the current display extent is probably outside
+     * the new whole extent. Calling this method will ensure that the display
+     * extent is reset properly.
+     */
+    //virtual void UpdateDisplayExtent();
 
-  //@{
-  /**
-   * Configure the vtkImageWindowLevel ivar.
-   * Configuration is set automatically according to the number
-   * of scalar components per pixel/voxel.
-   * @see SetInput()
-   */
-  void SetMappingToLuminance();
-  void SetMappingToColorAlpha();
-  void SetMappingToColor();
-  //@}
-  
-  /**
-   * Get window.
-   * @sa Level, SetColorWindowLevel()
-   * @return current window
-   */
-  double GetColorWindow() { return this->Window; }
+    /**
+     * Get the minimum slice index.
+     * @sa GetSliceMax(), GetSliceRange()
+     */
+    virtual int GetSliceMin();
 
-  /**
-   * Get level.
-   * @sa Window, SetColorWindowLevel() 
-   * @return current level
-   */
-  double GetColorLevel() { return this->Level; }
+    /**
+     * Get the maximum slice index.
+     * @sa GetSliceMin(), GetSliceRange()
+     */
+    virtual int GetSliceMax();
 
-  /**
-   * Get window and level.
-   * @sa  Window, Level, GetColorWindow(), GetColorLevel()
-   * @return current window and level by reference
-   */
-  void SetColorWindowLevel( const double& , const double& );
+    /**
+     * Get the number of slices.
+     * @sa GetSliceMin(), GetSliceRange()
+     */
+    virtual int GetNumberOfSlices()
+      { return this->GetSliceMax() - this->GetSliceMin() + 1; }
 
-  //@{
-  /**
-   * Set the window level of the next image to be the same as the last one.
-   * Default is off.
-   */
-  vtkSetMacro( MaintainLastWindowLevel, int );
-  vtkGetMacro( MaintainLastWindowLevel, int );
-  vtkBooleanMacro( MaintainLastWindowLevel, int );
-  //@}
+    /**
+     * Return the minimum and maximum slice index values.
+     * @param range int array to put the range of slices in.
+     * @sa GetSliceMin(), GetSliceMax()
+     */
+    virtual void GetSliceRange(int range[2])
+      { this->GetSliceRange(range[0], range[1]); }
 
-  //@{
-  /** Window level control for callbacks and VTK events. */
-  void DoStartWindowLevel();
-  void DoResetWindowLevel();
-  void DoWindowLevel();
-  //@}
+    /**
+     * Return the minimum and maximum slice index values.
+     * @param min fill the minimum slice by reference
+     * @param max fill the maximum slice by reference
+     * @sa GetSliceMin(), GetSliceMax()
+     */
+    virtual void GetSliceRange(int& min, int& max);
 
-  /**
-   * Get the dimensionality of the image (e.g., 2D, 3D).
-   * @return dimension of the image
-   */
-  int GetImageDimensionality();
+    /**
+     * Return the minimum and maximum slice index values.
+     * Warning: this method is NOT thread safe.
+     * @return pointer to input image's whole extent array
+     * @sa GetSliceMin(), GetSliceMax()
+     */
+    virtual int* GetSliceRange();
 
-  /** Create a default 3D sinusoidal image. */
-  void SetImageToSinusoid();
+    //@{
+    /**
+     * Set/Get VTK object member ivars.
+     * Class member ivars are accessible for connecting to third party
+     * GUI toolkits (e.g., Qt), or for custom configuration.
+     */
+    virtual void SetRenderWindow(vtkRenderWindow* window);
+    virtual void SetRenderer(vtkRenderer* renderer);
+    virtual void SetInteractor(vtkRenderWindowInteractor* interactor);
+    virtual void SetInteractorStyle(vtkCustomInteractorStyleImage* style);
+    vtkGetObjectMacro(RenderWindow, vtkRenderWindow);
+    vtkGetObjectMacro(Renderer, vtkRenderer);
+    vtkGetObjectMacro(Interactor, vtkRenderWindowInteractor);
+    vtkGetObjectMacro(InteractorStyle, vtkCustomInteractorStyleImage);
+    vtkSmartPointer<vtkImageSlice> GetImageSlice()
+      { return this->ImageSlice; }
+    vtkSmartPointer<vtkCustomCornerAnnotation> GetAnnotation()
+      { return this->Annotation; }
+    //@}
 
-  /**
-   * Scroll once through slices.  Internally, this class uses native VTK
-   * vtkAnimationCue, vtkAnimationScene classes and a custom vtkAnimationPlayer
-   * class to implement cineloop control.  If necessary, access to these
-   * classes could be exposed to assign callbacks to the events they fire:
-   * vtkAnimationCue: AnimationCueTickEvent, StartAnimationCueEvent, EndAnimationCueEvent
-   * vtkAnimationPlayer: StartEvent, EndEvent,  ProgressEvent
-   * Scrolling starts at the current slice and proceeds to the last slice.
-   * Stops either when the last slice is reached or if CineStop() is called.
-   * If looping is set on via CineLoop(true) the scrolling continues
-   * until CineStop() is called.
-   */
-  void CinePlay();
+    //@{
+    /**
+     * Configure the vtkImageWindowLevel ivar.
+     * Configuration is set automatically according to the number
+     * of scalar components per pixel/voxel.
+     * @see SetInput()
+     */
+    void SetMappingToLuminance();
+    void SetMappingToColorAlpha();
+    void SetMappingToColor();
+    //@}
 
-  /**
-   * Scroll continuously through slices.
-   * Scrolling starts at the first slice, proceeds to the last slice and
-   * then repeats.
-   */
-  void CineLoop( const bool& );
+    /**
+     * Get window.
+     * @sa Level, SetColorWindowLevel()
+     * @return current window
+     */
+    double GetColorWindow() { return this->Window; }
 
-  /** Set the current slice to the first slice. */
-  void CineRewind();
+    /**
+     * Get level.
+     * @sa Window, SetColorWindowLevel()
+     * @return current level
+     */
+    double GetColorLevel() { return this->Level; }
 
-  /** Set the current slice to the last slice. */
-  void CineForward();
+    /**
+     * Get window and level.
+     * @sa  Window, Level, GetColorWindow(), GetColorLevel()
+     * @return current window and level by reference
+     */
+    void SetColorWindowLevel(const double& window, const double& level);
 
-  /** Set the current slice to the previous slice. */
-  void CineStepBackward();
+    //@{
+    /**
+     * Set the window level of the next image to be the same as the last one.
+     * Default is off.
+     */
+    vtkSetMacro(MaintainLastWindowLevel, int);
+    vtkGetMacro(MaintainLastWindowLevel, int);
+    vtkBooleanMacro(MaintainLastWindowLevel, int);
+    //@}
 
-  /** Set the current slice to the next slice. */
-  void CineStepForward();
+    /** Record the current camera parameters */
+    void RecordCameraView(int specified = -1);
 
-  /**
-   * Stop Scrolling through slices.
-   */
-  void CineStop();
+    //@}
+    //@{
+    /** Window level control for callbacks and VTK events. */
+    void DoStartWindowLevel();
+    void DoResetWindowLevel();
+    void DoWindowLevel();
+    void InvertWindowLevel();
+    //@}
 
-  /**
-   * Turn cursoring on or off.  Cursoring works in concert with
-   * corner annotation.  If cursoring is off, the cursor widget
-   * is disabled but the vtkCustomCornerAnnotation object could still be
-   * used to display other textual overlay content.  If annotation
-   * is off, cursoring can still be active with its output directed
-   * via callback mechanism to another GUI element.
-   */
-  void SetCursor( const int& );
-  vtkBooleanMacro( Cursor, const int& );
-  vtkGetMacro( Cursor, int );
+    /**
+     * Get the dimensionality of the image (e.g., 2D, 3D).
+     * @return dimension of the image
+     */
+    int GetImageDimensionality();
 
-  /**
-   * Turn annotation on or off in the render window.
-   */
-  void SetAnnotate( const int& );
-  vtkBooleanMacro( Annotate, const int& );
-  vtkGetMacro( Annotate, int );
+    /** Create a default 3D sinusoidal image. */
+    void SetImageToSinusoid();
 
-  /**
-   * Turns interpolation on or off for both the cursor widget
-   * and the image actor simultaneously.  Off state sets the
-   * cursor widget to use discrete cursoring mode: the cursor 
-   * snaps to pixel centers and reads off discrete pixel values,
-   * and the image actor show pixels with nearest neighbor interpolation.
-   * On state sets the cursor widget to use continous cursoring
-   * mode using interpolation of pixel values and the image actor
-   * shows pixels with linear interpolation.
-   */
-  void SetInterpolate( const int& );
-  vtkBooleanMacro( Interpolate, const int& );
-  vtkGetMacro( Interpolate, int );
+    /**
+     * Scroll once through slices.  Internally, this class uses native VTK
+     * vtkAnimationCue, vtkAnimationScene classes and a custom vtkAnimationPlayer
+     * class to implement cineloop control.  If necessary, access to these
+     * classes could be exposed to assign callbacks to the events they fire:
+     * vtkAnimationCue: AnimationCueTickEvent, StartAnimationCueEvent, EndAnimationCueEvent
+     * vtkAnimationPlayer: StartEvent, EndEvent,  ProgressEvent
+     * Scrolling starts at the current slice and proceeds to the last slice.
+     * Stops either when the last slice is reached or if CineStop() is called.
+     * If looping is set on via CineLoop(true) the scrolling continues
+     * until CineStop() is called.
+     */
+    void CinePlay();
 
-  /**
-   * Set/Get animation maximum frame rate
-   */
-  vtkSetClampMacro( MaxFrameRate, int, 0, 60 );
-  vtkGetMacro( MaxFrameRate, int );
+    /**
+     * Scroll continuously through slices.
+     * Scrolling starts at the first slice, proceeds to the last slice and
+     * then repeats.
+     */
+    void CineLoop(const bool& enable);
 
-  /**
-   * Set/Get animation frame rate
-   */
-  void SetFrameRate( const int& );
-  vtkGetMacro( FrameRate, int );
+    /** Set the current slice to the first slice. */
+    void CineRewind();
 
-protected:
-  vtkMedicalImageViewer();
-  ~vtkMedicalImageViewer();
+    /** Set the current slice to the last slice. */
+    void CineForward();
 
-  //@{
-  /**
-   * Internal methods to build or dismantle the display pipeline.
-   * WARNING: do not use without carefully considering side effects!
-   */
-  virtual void InstallPipeline();
-  virtual void UnInstallPipeline();
-  void InstallCursor();
-  void UnInstallCursor();
-  void InstallAnnotation();
-  void UnInstallAnnotation();
-  //@}
+    /** Set the current slice to the previous slice. */
+    void CineStepBackward();
 
-  //@{
-  /** VTK object ivars that constitute the visualization/interaction pipeline. */
-  vtkSmartPointer<vtkImageWindowLevel> WindowLevel;
-  vtkRenderWindow           *RenderWindow;
-  vtkRenderer               *Renderer;
-  vtkSmartPointer<vtkImageActor> ImageActor;
-  vtkRenderWindowInteractor *Interactor;
-  vtkCustomInteractorStyleImage   *InteractorStyle;
-  vtkSmartPointer<vtkImageCoordinateWidget> CursorWidget;
-  vtkSmartPointer<vtkCustomCornerAnnotation> Annotation;
-  //@}
+    /** Set the current slice to the next slice. */
+    void CineStepForward();
 
-  int Cursor;
-  int Annotate;
-  int Interpolate;
+    /**
+     * Stop Scrolling through slices.
+     */
+    void CineStop();
 
-  int Slice;        /**< Current slice index */
-  int LastSlice[3]; /**< Keeps track of last slice when changing orientation */
+    /**
+     * Turn cursoring on or off.  Cursoring works in concert with
+     * corner annotation.  If cursoring is off, the cursor widget
+     * is disabled but the vtkCustomCornerAnnotation object could still be
+     * used to display other textual overlay content.  If annotation
+     * is off, cursoring can still be active with its output directed
+     * via callback mechanism to another GUI element.
+     */
+    void SetCursor(const int& cursor);
+    vtkBooleanMacro(Cursor, const int&);
+    vtkGetMacro(Cursor, int);
 
-  /** Maintain window level settings between image changes */
-  int MaintainLastWindowLevel; 
-  double OriginalWindow; /**< Original window computed from input */
-  double OriginalLevel;  /**< Original level computed from input */
-  double InitialWindow;  /**< Initial window at start of interaction */   
-  double InitialLevel;   /**< Initial level at start of interaction */
-  double Window;         /**< Current window */
-  double Level;          /**< Current level */
+    /**
+     * Turn annotation on or off in the render window.
+     */
+    void SetAnnotate(const int& annotate);
+    vtkBooleanMacro(Annotate, const int&);
+    vtkGetMacro(Annotate, int);
 
-  /** 
-   * Callback ids for install and uninstall of callbacks to the interactor.
-   * Callback tags are set in InstallPipeline() and used for callback
-   * removal in UnInstallPipeline()
-   */
-  std::vector<unsigned long> WindowLevelCallbackTags;
+    /**
+     * Turn axes marker on or off in the render window.
+     */
+    void SetAxesDisplay(const int& axes);
+    vtkBooleanMacro(AxesDisplay, const int&);
+    vtkGetMacro(AxesDisplay, int);
 
-  /** Calculate the original window and level parameters
-    * @sa OriginalWindow, OriginalLevel
-    */
-  void InitializeWindowLevel();
+    /**
+     * Turn bounding box and origin axes on or off in the render window.
+     */
+    void SetBoxDisplay(const int& box);
+    vtkBooleanMacro(BoxDisplay, const int&);
+    vtkGetMacro(BoxDisplay, int);
 
-  int ViewOrientation;              /**< Current view orientation: XY, XZ, YZ */
-  double CameraPosition[3][3];      /**< Current camera position */
-  double CameraFocalPoint[3][3];    /**< Current camera focal point */
-  double CameraViewUp[3][3];        /**< Current camera view up */
-  double CameraParallelScale[3];    /**< Current camera parallel scale (zoom) */
+    /**
+     * Turns interpolation on or off for both the cursor widget
+     * and the image actor simultaneously.  Off state sets the
+     * cursor widget to use discrete cursoring mode: the cursor
+     * snaps to pixel centers and reads off discrete pixel values,
+     * and the image actor show pixels with nearest neighbor interpolation.
+     * On state sets the cursor widget to use continous cursoring
+     * mode using interpolation of pixel values and the image actor
+     * shows pixels with linear interpolation.
+     */
+    void SetInterpolate(const int& interp);
+    int  GetInterpolate();
+    vtkBooleanMacro(Interpolate, const int&);
 
-  /** Set up the default camera parameters based on input data dimensions etc. */
-  void InitializeCameraViews();
-  /** Record the current camera parameters */
-  void RecordCameraView();
+    /**
+     * Set/Get animation maximum frame rate
+     */
+    vtkSetClampMacro(MaxFrameRate, int, 0, 60);
+    vtkGetMacro(MaxFrameRate, int);
 
-  /** Animation control */
-  vtkSmartPointer<vtkAnimationScene> AnimationScene;
-  vtkSmartPointer<vtkAnimationCue> AnimationCue;
-  vtkSmartPointer<vtkFrameAnimationPlayer> AnimationPlayer;
-  int MaxFrameRate;
-  int FrameRate;
+    /**
+     * Set/Get animation frame rate
+     */
+    void SetFrameRate(const int& rate);
+    vtkGetMacro(FrameRate, int);
 
-private:
-  vtkMedicalImageViewer(const vtkMedicalImageViewer&);  /** Not implemented. */
-  void operator=(const vtkMedicalImageViewer&);  /** Not implemented. */
+    /**
+     * Save the current slice view to file
+     */
+     void WriteSlice(const std::string& name);
+
+  protected:
+    vtkMedicalImageViewer();
+    ~vtkMedicalImageViewer();
+
+    //@{
+    /**
+     * Internal methods to build or dismantle the display pipeline.
+     * WARNING: do not use without carefully considering side effects!
+     */
+    virtual void InstallPipeline();
+    virtual void UnInstallPipeline();
+    void InstallCursor();
+    void UnInstallCursor();
+    void InstallAnnotation();
+    void UnInstallAnnotation();
+    void InstallAxes();
+    void UnInstallAxes();
+    void InstallBox();
+    void UnInstallBox();
+    //@}
+
+    //@{
+    /** VTK object ivars that constitute the visualization/interaction
+      * pipeline.
+      */
+    vtkSmartPointer<vtkImageWindowLevel> WindowLevel;
+    vtkRenderWindow* RenderWindow;
+    vtkRenderer* Renderer;
+    vtkSmartPointer<vtkImageSlice> ImageSlice;
+    vtkSmartPointer<vtkImageSliceMapper> ImageSliceMapper;
+    vtkRenderWindowInteractor* Interactor;
+    vtkCustomInteractorStyleImage* InteractorStyle;
+    vtkSmartPointer<vtkImageCoordinateWidget> CursorWidget;
+    vtkSmartPointer<vtkCustomCornerAnnotation> Annotation;
+    vtkSmartPointer<vtkAxesActor> AxesActor;
+    vtkSmartPointer<vtkOrientationMarkerWidget> AxesWidget;
+    vtkSmartPointer<vtkPropAssembly> BoxActor;
+    vtkSmartPointer<vtkAxes> BoxAxes;
+    vtkSmartPointer<vtkOutlineCornerSource> BoxOutline;
+    vtkSmartPointer<vtkPolyDataMapper> BoxMapper;
+    //@}
+
+    int Cursor;
+    int Annotate;
+    int Interpolate;
+    int AxesDisplay;
+    int BoxDisplay;
+
+    /** Current slice index */
+    int Slice;
+    /** Keeps track of last slice when changing orientation */
+    int LastSlice[3];
+
+    /** Maintain window level settings between image changes */
+    int MaintainLastWindowLevel;
+    double OriginalWindow; /**< Original window computed from input */
+    double OriginalLevel;  /**< Original level computed from input */
+    double InitialWindow;  /**< Initial window at start of interaction */
+    double InitialLevel;   /**< Initial level at start of interaction */
+    double Window;         /**< Current window */
+    double Level;          /**< Current level */
+
+    /**
+     * Callback ids for install and uninstall of callbacks to the interactor.
+     * Callback tags are set in InstallPipeline() and used for callback
+     * removal in UnInstallPipeline()
+     */
+    std::vector<unsigned long> WindowLevelCallbackTags;
+
+    unsigned long CharCallbackTag;
+
+    /** Calculate the original window and level parameters
+      * @sa OriginalWindow, OriginalLevel
+      */
+    void InitializeWindowLevel();
+
+    /** Maintain view settings between image changes */
+    int MaintainLastView;
+    int ViewOrientation;              /**< Current view orientation */
+    double CameraPosition[3][3];      /**< Current camera position */
+    double CameraFocalPoint[3][3];    /**< Current camera focal point */
+    double CameraViewUp[3][3];        /**< Current camera view up */
+    double CameraParallelScale[3];    /**< Current camera parallel scale */
+    double CameraDistance[3];         /**< Current camera distance */
+    double CameraClippingRange[3][2]; /**< Current clipping range */
+
+    /** Set up the default camera parameters based on input data dimensions */
+    void InitializeCameraViews();
+    /** Update the camera from recorded parameters according to the current
+     * view orientation
+     */
+    void UpdateCameraView();
+
+    void ComputeCameraFromCurrentSlice(bool useCamera = true);
+
+    /** Animation control */
+    vtkSmartPointer<vtkAnimationScene> AnimationScene;
+    vtkSmartPointer<vtkAnimationCue> AnimationCue;
+    vtkSmartPointer<vtkFrameAnimationPlayer> AnimationPlayer;
+    int MaxFrameRate;
+    int FrameRate;
+
+  private:
+    vtkMedicalImageViewer(const vtkMedicalImageViewer&);  /** Not implemented. */
+    void operator=(const vtkMedicalImageViewer&);  /** Not implemented. */
 };
 
 #endif

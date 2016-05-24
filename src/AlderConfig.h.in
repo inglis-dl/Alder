@@ -1,0 +1,32 @@
+/*=========================================================================
+
+  Program:  Alder (CLSA Medical Image Quality Assessment Tool)
+  Module:   AlderConfig.h
+  Language: C++
+
+  Author: Patrick Emond <emondpd AT mcmaster DOT ca>
+  Author: Dean Inglis <inglisd AT mcmaster DOT ca>
+
+=========================================================================*/
+
+/**
+ * @class AlderConfig
+ *
+ * @author Patrick Emond <emondpd AT mcmaster DOT ca>
+ * @author Dean Inglis <inglisd AT mcmaster DOT ca>
+ *
+ * @brief AlderConfig includes CMake settings
+ *
+ */
+#ifndef __AlderConfig_h
+#define __AlderConfig_h
+
+#define ALDER_VERSION_MAJOR @ALDER_VERSION_MAJOR@
+#define ALDER_VERSION_MINOR @ALDER_VERSION_MINOR@
+#define ALDER_VERSION_PATCH @ALDER_VERSION_PATCH@
+
+#define ALDER_CONFIG_FILE "@ALDER_CONFIG_FILE@"
+#define ALDER_SALT_STRING "@ALDER_SALT_STRING@"
+#define ALDER_STACK_DEPTH @ALDER_STACK_DEPTH@
+
+#endif
