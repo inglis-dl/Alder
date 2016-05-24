@@ -4,9 +4,9 @@ PROJECT( Alder )
 # The major version number is incremented after major milestones are met
 SET( ALDER_VERSION_MAJOR 1 )
 # The minor version number is incremented after a development branch is merged to qa
-SET( ALDER_VERSION_MINOR 5 )
+SET( ALDER_VERSION_MINOR 6 )
 # The patch version number is incremented when changes are made to the release branch
-SET( ALDER_VERSION_PATCH 1 )
+SET( ALDER_VERSION_PATCH 0 )
 
 # Icons sizes to build
 SET( ALDER_ICON_SIZES 16x16 22x22 24x24 32x32 48x48 64x64 128x128 )
