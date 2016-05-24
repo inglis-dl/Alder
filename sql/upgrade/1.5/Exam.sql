@@ -88,10 +88,10 @@ CREATE PROCEDURE patch_Exam()
       FROM information_schema.COLUMNS
       WHERE TABLE_SCHEMA = DATABASE()
       AND TABLE_NAME = "Exam"
-      AND COLUMN_NAME = "ScanIndex");
+      AND COLUMN_NAME = "SideIndex");
 
     IF @test=0 THEN
-      SELECT "Adding ScanIndex column to Exam table" AS "";
+      SELECT "Adding SideIndex column to Exam table" AS "";
 
       ALTER TABLE Exam ADD COLUMN SideIndex TINYINT NULL DEFAULT NULL;
     END IF;  
