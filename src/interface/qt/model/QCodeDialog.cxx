@@ -185,7 +185,7 @@ void QCodeDialogPrivate::setupUi(QDialog* widget)
   QValidator* gv = new QRegExpValidator(grx, this);
   this->groupLineEdit->setValidator(gv);
 
-  QRegExp crx("[A-Z,a-z]{1,3}");
+  QRegExp crx("[A-Z,a-z]{1,3}\\d{2}");
   QValidator* cv = new QRegExpValidator(crx, this);
   this->codeLineEdit->setValidator(cv);
 }
