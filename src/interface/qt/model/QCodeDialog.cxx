@@ -58,6 +58,7 @@ void QCodeDialogPrivate::setupUi(QDialog* widget)
   std::vector<vtkSmartPointer<Alder::ScanType>> scanTypeList;
   Alder::ScanType::GetAll(&scanTypeList);
   this->scanTypeMap.clear();
+  // each ScanType Type can have multiple Ids due to changes in Waves
   for (auto it = scanTypeList.begin(); it != scanTypeList.end(); ++it)
   {
     Alder::ScanType *scanType = (*it);
@@ -79,7 +80,7 @@ void QCodeDialogPrivate::setupUi(QDialog* widget)
     }
     if (!list.isEmpty())
     {
-       this->scanTypeMap[type] = list;
+      this->scanTypeMap[type] = list;
     }
   }
 
@@ -646,7 +647,7 @@ void QCodeDialogPrivate::addCode()
   if (-1 != index)
     scanTypeIdList = this->scanTypeComboBox->itemData(index).toList();
 
-  if (scanTypeIdList.empty())
+  if (scanTypeIdList.isEmpty())
   {
     QString title = "Invalid Code";
     QString text = "A Code must be associated with a Type";
@@ -661,32 +662,46 @@ void QCodeDialogPrivate::addCode()
   if (-1 != index)
     groupId = this->codeGroupComboBox->itemData(index).toInt();
 
-  // ensure proposed CodeType Name, Value and GroupId are unique
-  bool unique = Alder::CodeType::IsUnique(code, value, groupId);
-  if (unique)
+  vtkNew<Alder::CodeType> codeType;
+  // has the proposed CodeType Name, Value and GroupId been created previously?
+  bool result = Alder::CodeType::IsUnique(code, value, groupId);
+  if (result)
   {
-    vtkNew<Alder::CodeType> codeType;
     codeType->Set("Code", code);
     codeType->Set("Value", value);
     if (-1 != groupId)
       codeType->Set("CodeGroupId", groupId);
     codeType->Save();
-
-    // get the ScanType and add the CodeType to the ScanTypeHasCodeType table
-    for (auto it = scanTypeIdList.begin(); it != scanTypeIdList.end(); ++it)
-    {
-      vtkNew<Alder::ScanType> scanType;
-      scanType->Load("Id", (*it).toInt());
-      vtkSmartPointer<Alder::CodeType> ptr = codeType.GetPointer();
-      scanType->AddRecord(ptr);
-    }
-
-    this->updateCodeUi();
   }
   else
   {
+    std::map<std::string, std::string> loader;
+    loader["Code"] = code;
+    loader["Value"] = vtkVariant(value).ToString();
+    if (-1 != groupId)
+      loader["CodeGroupId"] = vtkVariant(groupId).ToString();
+
+    result = codeType->Load(loader);
+  }
+
+  if (result)
+  {
+    vtkSmartPointer<Alder::CodeType> ptr = codeType.GetPointer();
+    // get the ScanType(s) and add the CodeType to the ScanTypeHasCodeType table
+    for (auto it = scanTypeIdList.begin(); it != scanTypeIdList.end(); ++it)
+    {
+      vtkNew<Alder::ScanType> scanType;
+      if (scanType->Load("Id", (*it).toInt()))
+        scanType->AddRecord(ptr);
+    }
+  }
+
+  if (result)
+    this->updateCodeUi();
+  else
+  {
     QString title = "Invalid Code";
-    QString text = "Code, value and group are not unique";
+    QString text = "Code, value, scan type and group are not unique";
     QMessageBox::warning(q, title, text);
   }
 }
