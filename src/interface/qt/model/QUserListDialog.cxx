@@ -249,11 +249,12 @@ void QUserListDialogPrivate::modalitySelectionChanged(QTableWidgetItem* item)
   if (modified)
   {
     user->Save();
+    vtkVariant id = user->Get("Id");
     // if the active user is this user, then update the active user record
     Alder::User* active = Alder::Application::GetInstance()->GetActiveUser();
-    if (active->Get("Id") == user->Get("Id"))
+    if (active && (active->Get("Id") == id))
     {
-      active->Load("Id", user->Get("Id").ToInt());
+      active->Load("Id", id.ToInt());
     }
     emit q->permissionChanged();
   }
