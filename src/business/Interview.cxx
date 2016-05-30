@@ -951,7 +951,20 @@ namespace Alder
       std::string identifier = interview->Get("UId").ToString();
       for (auto vit = vecExam.cbegin(); vit != vecExam.cend(); ++vit)
       {
-        (*vit)->UpdateImageData(identifier, source);
+        try
+        {
+          (*vit)->UpdateImageData(identifier, source);
+        }
+        catch (std::runtime_error& e)
+        {
+          std::string err =
+            "There was an error while trying to update image data (UId : ";
+          err += interview->Get("UId").ToString();
+          err += "). Error: ";
+          err += e.what();
+          app->Log(err);
+          continue;
+        }
       }
     }
     app->InvokeEvent(vtkCommand::EndEvent);
