@@ -605,7 +605,14 @@ namespace Alder
             vtkCommand::ProgressEvent, reinterpret_cast<void*>(&progressValue));
           lastProgress = progress;
         }
-        (*it)->UpdateImageData(identifier, source);
+        try
+        {
+          (*it)->UpdateImageData(identifier, source);
+        }
+        catch (std::runtime_error& e)
+        {
+          app->Log(e.what());
+        }
       }
       app->InvokeEvent(vtkCommand::EndEvent);
     }
