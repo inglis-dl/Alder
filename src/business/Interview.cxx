@@ -837,29 +837,46 @@ namespace Alder
   {
     // load images for Interviews already pulled from Opal
     // via the administrator UI
-    std::vector<vtkSmartPointer<Interview>> vecRevised;
-    vtkNew<Wave> wave;
+    Application* app = Application::GetInstance();
+    std::map<int, vtkSmartPointer<Interview>> revised;
+    std::map<std::string, vtkSmartPointer<Wave>> waveMap;
+    vtkSmartPointer<Wave> wave = vtkSmartPointer<Wave>::New();
     for (auto it = list.cbegin(); it != list.cend(); ++it)
     {
       std::string uidStr = it->first;
       std::string rankStr = it->second;
-      if (wave->Load("Rank", rankStr))
+      if (waveMap.end() == waveMap.find(rankStr))
       {
-        vtkSmartPointer<Interview> interview =
-          vtkSmartPointer<Interview>::New();
-        std::map<std::string, std::string> loader;
-        loader["UId"] = uidStr;
-        loader["WaveId"] = wave->Get("Id").ToString();
-        if (interview->Load(loader))
+        if (wave->Load("Rank", rankStr))
+          waveMap[rankStr] = wave;
+        else
         {
-          vecRevised.push_back(interview);
+          std::string err = "Error: failed to load UID, wave rank pair: ";
+          err += uidStr;
+          err += ", ";
+          err += rankStr;
+          app->Log(err);
+          continue;
         }
+      }
+      else
+        wave = waveMap[rankStr];
+
+      vtkSmartPointer<Interview> interview =
+        vtkSmartPointer<Interview>::New();
+      std::map<std::string, std::string> loader;
+      loader["UId"] = uidStr;
+      loader["WaveId"] = wave->Get("Id").ToString();
+      if (interview->Load(loader))
+      {
+        int id = interview->Get("Id").ToInt();
+        if (revised.end() == revised.find(id))
+          revised[id] = interview;
       }
     }
 
-    if (vecRevised.empty()) return 0;
+    if (revised.empty()) return 0;
 
-    Application* app = Application::GetInstance();
     OpalService* opal = app->GetOpal();
     bool sustain = opal->GetSustainConnection();
     if (!sustain)
@@ -885,7 +902,7 @@ namespace Alder
     int index = 0;
     int lastProgress = 0;
     int progress = 0;
-    double size = static_cast<double>(vecRevised.size());
+    double size = static_cast<double>(revised.size());
     double progressScale = 100.0/size;
     double progressValue = 0.;
     std::string message = "Downloading images of ";
@@ -894,7 +911,7 @@ namespace Alder
     app->InvokeEvent(
       vtkCommand::StartEvent,
       reinterpret_cast<void*>(const_cast<char*>(message.c_str())));
-    for (auto it = vecRevised.cbegin(); it != vecRevised.cend(); ++it, ++index)
+    for (auto it = revised.cbegin(); it != revised.cend(); ++it, ++index)
     {
       if (app->GetAbortFlag())
       {
@@ -910,7 +927,7 @@ namespace Alder
         lastProgress = progress;
       }
 
-      Interview* interview = *it;
+      Interview* interview = it->second;
       vtkSmartPointer<Wave> wave;
       interview->GetRecord(wave);
       try
