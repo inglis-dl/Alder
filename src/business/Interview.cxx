@@ -201,7 +201,8 @@ namespace Alder
       bool found = false;
       vtkVariant currentId = this->Get("Id");
 
-      // if the current id is last in the following loop then we need the first id
+      // if the current id is last in the following loop
+      // then we need the first id
       neighbourId = query->DataValue(0);
 
       do  // keep looping until we find the current Id
@@ -254,7 +255,7 @@ namespace Alder
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Interview::IsRatedBy(User* user)
   {
-   if (!user)
+    if (!user)
       throw std::runtime_error("Tried to get rating for null user");
 
     std::stringstream stream;
@@ -607,7 +608,10 @@ namespace Alder
         }
         try
         {
-          (*it)->UpdateImageData(identifier, source);
+          if (!(*it)->DownloadComplete())
+          {
+            (*it)->UpdateImageData(identifier, source);
+          }
         }
         catch (std::runtime_error& e)
         {
@@ -960,7 +964,10 @@ namespace Alder
       {
         try
         {
-          (*vit)->UpdateImageData(identifier, source);
+          if (!(*vit)->DownloadComplete())
+          {
+            (*vit)->UpdateImageData(identifier, source);
+          }
         }
         catch (std::runtime_error& e)
         {

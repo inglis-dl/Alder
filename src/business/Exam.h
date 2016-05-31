@@ -65,6 +65,12 @@ namespace Alder
       bool HasImageData();
 
       /**
+       * Returns whether this Exam has all the image data that can be downloaded.
+       * Use the Exam Downloaded column to determine if the image has been downloaded.
+       */
+      bool DownloadComplete();
+
+      /**
        * Updates all image data associated with the exam from Opal
        * @param aIdentifier The UID of a participant (Opal identifier)
        * @parem aSource     The Opal project name containing image data
