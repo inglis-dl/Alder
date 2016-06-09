@@ -28,9 +28,9 @@
 
 // Alder includes
 #include <ModelObject.h>
-#include <vtkMySQLQuery.h>
 
 // VTK includes
+#include <vtkMySQLQuery.h>
 #include <vtkSmartPointer.h>
 
 // curl includes
@@ -45,8 +45,6 @@
 #include <map>
 #include <string>
 #include <vector>
-
-class vtkMySQLOpalService;
 
 /**
  * @addtogroup Alder
