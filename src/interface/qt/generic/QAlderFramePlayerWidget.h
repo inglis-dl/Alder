@@ -50,7 +50,6 @@
 #include <QPointer>
 #include <QWidget>
 
-// Alder includes
 class vtkMedicalImageViewer;
 class QAlderSliceView;
 class QAlderFramePlayerWidgetPrivate;

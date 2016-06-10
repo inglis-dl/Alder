@@ -23,7 +23,6 @@
 #include <QPointer>
 #include <QWidget>
 
-// Alder includes
 class QAlderSliceView;
 class QAlderImageControlPrivate;
 
