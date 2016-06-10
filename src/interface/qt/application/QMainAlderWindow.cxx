@@ -130,7 +130,6 @@ void QMainAlderWindowPrivate::setupUi(QMainWindow* window)
   QApplication::setWindowIcon(icon);
 
   Alder::Application* app = Alder::Application::GetInstance();
-  this->qvtkConnection = vtkSmartPointer<vtkEventQtSlotConnect>::New();
 
   this->atlasWidget->setParent(q);
   this->atlasVisible = false;
