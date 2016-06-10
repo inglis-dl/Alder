@@ -1,6 +1,6 @@
 /*=======================================================================
 
-I  Module:    QAlderAbstractView.cxx
+  Module:    QAlderAbstractView.cxx
   Program:   Alder (CLSA Medical Image Quality Assessment Tool)
   Language:  C++
   Author:    Dean Inglis <inglisd AT mcmaster DOT ca>
