@@ -39,7 +39,7 @@ using namespace Alder;
 // main function
 int main(int argc, char** argv)
 {
-  int status = EXIT_FAILURE;
+  int status = EXIT_SUCCESS;
   try
   {
     Qt::Alignment topMiddle = Qt::AlignHCenter|Qt::AlignTop;
