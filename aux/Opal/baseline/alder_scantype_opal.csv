@@ -5,4 +5,3 @@
 "WholeBodyBoneDensity","Dexa","0","1","1","RES_WB_DICOM_1","RES_WB_DICOM_2",".dcm"
 "RetinalScan","Retinal","2","1","0","Measure.EYE","",".jpg"
 "CarotidIntima","Ultrasound","2","3","1","Measure.CINELOOP_%d","Measure.STILL_IMAGE",".dcm.gz"
-"Plaque","Ultrasound","2","1","0","Measure.CINELOOP_%d","",".dcm.gz"
