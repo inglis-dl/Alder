@@ -136,7 +136,7 @@ void QSelectWaveDialogPrivate::setupUi(QDialog* widget)
 
     // add most recent interview update timestamp to row
     s = wave->GetMaximumInterviewUpdateTimestamp();
-    s = Alder::Utilities::left(s, 10);
+    Alder::Utilities::left(s, 10);
     item = new QTableWidgetItem;
     item->setFlags(Qt::ItemIsEnabled);
     item->setText(s.c_str());

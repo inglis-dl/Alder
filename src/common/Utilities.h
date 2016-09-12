@@ -309,27 +309,23 @@ namespace Alder
     /**
      * Retain n characters from the left side of a string
      */
-    inline static std::string& left(std::string& s, const int& n)
+    inline static void left(std::string& s, const int& n)
     {
-      if (0 > n) return s;
-      size_t len = std::string::npos;
-      size_t pos = s.size();
-      pos = n >= pos ? 0 :  pos - n + 1;
-      s.erase(pos, len);
-      return s;
+      if (0 > n) return;
+      size_t pos = n;
+      s.erase(pos, std::string::npos);
     }
 
     /**
      * Retain n characters from the right side of a string
      */
-    inline static std::string& right(std::string& s, const int& n)
+    inline static void right(std::string& s, const int& n)
     {
-      if (0 > n ) return s;
-      size_t len = s.size();
+      if (0 > n ) return;
       size_t pos = 0;
-      len = n >= len ? std::string::npos : len - n - 1;
+      size_t len = s.size();
+      len = n >= len ? std::string::npos : len - n;
       s.erase(pos, len);
-      return s;
     }
 
   protected:
