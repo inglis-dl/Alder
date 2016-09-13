@@ -40,7 +40,6 @@ SET(VTK_LIBS
   vtkIOCore
   vtkIOMINC
   vtkIOXML
-  vtkRenderingFreeTypeFontConfig
   vtkRenderingFreeTypeOpenGL
   vtkRenderingImage
   vtkRenderingVolumeOpenGL

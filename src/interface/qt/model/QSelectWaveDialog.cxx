@@ -69,9 +69,9 @@ void QSelectWaveDialogPrivate::setupUi(QDialog* widget)
 
   this->waveTableWidget->setHorizontalHeaderLabels(labels);
   QHeaderView* header = this->waveTableWidget->horizontalHeader();
-  header->setResizeMode(QHeaderView::Stretch);
-  header->setClickable(true);
-  header->setResizeMode(QHeaderView::ResizeToContents);
+  header->setSectionResizeMode(QHeaderView::Stretch);
+  header->setSectionsClickable(true);
+  header->setSectionResizeMode(QHeaderView::ResizeToContents);
   header->setStretchLastSection(true);
 
   this->waveTableWidget->verticalHeader()->setVisible(false);

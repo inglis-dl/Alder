@@ -12,6 +12,7 @@
 // Qt includes
 #include <QByteArray>
 #include <QCryptographicHash>
+#include <QDataStream>
 #include <QDateTime>
 #include <QFile>
 #include <QFileInfo>

@@ -50,9 +50,9 @@ INCLUDE_DIRECTORIES(
 )
 
 # Wrap QT files
-QT4_WRAP_UI(       AlderQtGenericLib_UI  ${AlderQtGeneric_Uis} )
-QT4_WRAP_CPP(      AlderQtGenericLib_MOC ${AlderQtGeneric_MocHeaders} )
-QT4_ADD_RESOURCES( AlderQtGenericLib_QRC ${AlderQtGeneric_Resources} )
+QT5_WRAP_UI( AlderQtGenericLib_UI  ${AlderQtGeneric_Uis} )
+QT5_WRAP_CPP( AlderQtGenericLib_MOC ${AlderQtGeneric_MocHeaders} )
+QT5_ADD_RESOURCES( AlderQtGenericLib_QRC ${AlderQtGeneric_Resources} )
 
 ADD_LIBRARY( AlderQtGeneric
   ${AlderQtGenericLib_SRC}
@@ -61,10 +61,6 @@ ADD_LIBRARY( AlderQtGeneric
   ${AlderQtGenericLib_QRC}
 )
 
-TARGET_LINK_LIBRARIES( AlderQtGeneric
- Qt4::QtNetwork
-) 
+TARGET_LINK_LIBRARIES( AlderQtGeneric Qt5::Network )
 
-INSTALL( TARGETS AlderQtGeneric 
-  DESTINATION lib
-)
+INSTALL( TARGETS AlderQtGeneric DESTINATION lib )

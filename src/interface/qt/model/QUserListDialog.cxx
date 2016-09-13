@@ -64,17 +64,17 @@ void QUserListDialogPrivate::setupUi(QWidget* widget)
 
   labels << "Name";
   this->columnIndex["Name"] = index++;
-  header->setResizeMode(
+  header->setSectionResizeMode(
     this->columnIndex["Name"], QHeaderView::Stretch);
 
   labels << "Last Login";
   this->columnIndex["LastLogin"] = index++;
-  header->setResizeMode(
+  header->setSectionResizeMode(
     this->columnIndex["LastLogin"], QHeaderView::Stretch);
 
   labels << "Expert";
   this->columnIndex["Expert"] = index++;
-  header->setResizeMode(
+  header->setSectionResizeMode(
     this->columnIndex["Expert"], QHeaderView::ResizeToContents);
 
   // list all modalities (to see if user rates them)
@@ -86,12 +86,12 @@ void QUserListDialogPrivate::setupUi(QWidget* widget)
   {
     QString name = (*it)->Get("Name").ToString().c_str();
     labels << name;
-    header->setResizeMode(index, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(index, QHeaderView::ResizeToContents);
     this->columnIndex[name] = index++;
   }
 
   this->userTableWidget->setHorizontalHeaderLabels(labels);
-  this->userTableWidget->horizontalHeader()->setClickable(true);
+  this->userTableWidget->horizontalHeader()->setSectionsClickable(true);
   this->userTableWidget->verticalHeader()->setVisible(false);
   this->userTableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
   this->userTableWidget->setSelectionMode(QAbstractItemView::SingleSelection);

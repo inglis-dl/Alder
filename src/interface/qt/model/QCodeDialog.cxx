@@ -108,8 +108,8 @@ void QCodeDialogPrivate::setupUi(QDialog* widget)
   this->groupTableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
 
   QHeaderView* header = this->codeTableWidget->horizontalHeader();
-  header->setClickable(true);
-  header->setResizeMode(QHeaderView::ResizeToContents);
+  header->setSectionsClickable(true);
+  header->setSectionResizeMode(QHeaderView::ResizeToContents);
   header->setStretchLastSection(true);
 
   QObject::connect(
@@ -118,8 +118,8 @@ void QCodeDialogPrivate::setupUi(QDialog* widget)
 
   header = this->groupTableWidget->horizontalHeader();
 
-  header->setClickable(true);
-  header->setResizeMode(QHeaderView::ResizeToContents);
+  header->setSectionsClickable(true);
+  header->setSectionResizeMode(QHeaderView::ResizeToContents);
   header->setStretchLastSection(true);
 
   QObject::connect(

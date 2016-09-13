@@ -43,14 +43,12 @@ SET( AlderQtModel_MocHeaders
   QUserListDialog_p.h
 )
 
-SET( AlderQtModel_Resources
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/QAlderModelWidgets.qrc
-)
+SET( AlderQtModel_Resources ${CMAKE_CURRENT_SOURCE_DIR}/resources/QAlderModelWidgets.qrc )
 
 # Wrap QT files
-QT4_WRAP_UI(       AlderQtModelLib_UI  ${AlderQtModel_Uis} )
-QT4_WRAP_CPP(      AlderQtModelLib_MOC ${AlderQtModel_MocHeaders} )
-QT4_ADD_RESOURCES( AlderQtModelLib_QRC ${AlderQtModel_Resources} )
+QT5_WRAP_UI( AlderQtModelLib_UI  ${AlderQtModel_Uis} )
+QT5_WRAP_CPP( AlderQtModelLib_MOC ${AlderQtModel_MocHeaders} )
+QT5_ADD_RESOURCES( AlderQtModelLib_QRC ${AlderQtModel_Resources} )
 
 INCLUDE_DIRECTORIES(
   ${ALDER_COMMON_DIR}

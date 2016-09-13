@@ -91,9 +91,9 @@ void QSelectInterviewDialogPrivate::setupUi(QWidget* widget)
   }
 
   this->interviewTableWidget->setHorizontalHeaderLabels(labels);
-  this->interviewTableWidget->horizontalHeader()->setResizeMode(
+  this->interviewTableWidget->horizontalHeader()->setSectionResizeMode(
     QHeaderView::Stretch);
-  this->interviewTableWidget->horizontalHeader()->setClickable(true);
+  this->interviewTableWidget->horizontalHeader()->setSectionsClickable(true);
   this->interviewTableWidget->verticalHeader()->setVisible(false);
   this->interviewTableWidget->setSelectionBehavior(
     QAbstractItemView::SelectRows);

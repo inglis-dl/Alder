@@ -68,7 +68,7 @@ void QReportDialogPrivate::setupUi(QWidget* widget)
   labels << "Name";
   this->columnText[index] = "Name";
   this->columnIndex["Name"] = index++;
-  this->userTableWidget->horizontalHeader()->setResizeMode(
+  this->userTableWidget->horizontalHeader()->setSectionResizeMode(
     this->columnIndex["Name"], QHeaderView::Stretch);
 
   // list all modalities (to see if user rates them)
@@ -80,14 +80,14 @@ void QReportDialogPrivate::setupUi(QWidget* widget)
   {
     QString name = (*it)->Get("Name").ToString().c_str();
     labels << name;
-    this->userTableWidget->horizontalHeader()->setResizeMode(
+    this->userTableWidget->horizontalHeader()->setSectionResizeMode(
       index, QHeaderView::ResizeToContents);
     this->columnText[index] = name;
     this->columnIndex[name] = index++;
   }
 
   this->userTableWidget->setHorizontalHeaderLabels(labels);
-  this->userTableWidget->horizontalHeader()->setClickable(true);
+  this->userTableWidget->horizontalHeader()->setSectionsClickable(true);
   this->userTableWidget->verticalHeader()->setVisible(false);
   this->userTableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
   this->userTableWidget->setSelectionMode(QAbstractItemView::SingleSelection);
