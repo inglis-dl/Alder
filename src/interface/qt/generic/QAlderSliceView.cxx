@@ -1212,6 +1212,7 @@ void QAlderSliceView::writeSlice(const QString& fileName)
     vtkNew<vtkImagePermute> permute;
     permute->SetFilteredAxes(op);
     permute->SetInputConnection(change->GetOutputPort());
+    permute->Update();
 
     writer->SetInputData(permute->GetOutput());
     writer->Write();
