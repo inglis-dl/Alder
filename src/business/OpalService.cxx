@@ -144,6 +144,7 @@ namespace Alder
     std::string credentials, url, result;
     struct curl_slist* headers = NULL;
     CURLcode res = CURLE_OK;
+    char curl_error_buffer[CURLOPT_ERRORBUFFER];
     Json::Value root;
     Json::Reader reader;
     Application* app = Application::GetInstance();
@@ -153,6 +154,8 @@ namespace Alder
     url = urlStream.str();
     app->Log("Querying Opal: " + url);
 
+    curl_error_buffer[0] = 0;
+    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curl_error_buffer);
     if (!this->SustainConnection)
     {
       curl = curl_easy_init();
@@ -221,8 +224,14 @@ namespace Alder
         std::stringstream stream;
         stream << "Received cURL error "
                << res
-               << " when attempting to contact Opal: "
-               << curl_easy_strerror(res);
+               << " when attempting to contact Opal: ";
+
+        size_t len = strlen(curl_error_buffer);
+        if(0 < len)
+          stream << curl_error_buffer;
+        else
+          stream << curl_easy_strerror(res);
+
         throw std::runtime_error(stream.str().c_str());
       }
     }
@@ -232,7 +241,13 @@ namespace Alder
       if (0 == result.size())
         throw std::runtime_error("Empty response from Opal service");
       else if (!reader.parse(result.c_str(), root))
-        throw std::runtime_error("Unable to parse result from Opal service");
+      {
+        std::stringstream stream;
+        stream << "Unable to parse result from Opal service: "
+               << reader.getFormattedErrorMessages();
+
+        throw std::runtime_error(stream.str().c_str());
+      }
     }
 
     return root;
