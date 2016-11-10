@@ -515,7 +515,7 @@ void QSelectInterviewDialog::accepted()
           // the interview will activate displaying progress of image downloads
           Alder::Interview* interview = *it;
           interview->UpdateImageData();
-          if (Alder::Interview::ImageStatus::Complete ==
+          if (Alder::Interview::ImageStatus::None !=
               interview->GetImageStatus(modifier))
           {
             lastId = interview->Get("Id").ToInt();
