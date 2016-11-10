@@ -276,13 +276,12 @@ namespace Alder
           app->Log(e.what());
         }
         downloaded = 0;
-        break;
       }
     }
 
     // loop over the expected number of child images
-    std::string childId;
-    if (downloaded && 0 < childCount && !parentIdList.empty())
+    std::vector<std::string> vecChildId;
+    if (0 < childCount && !parentIdList.empty())
     {
       std::string childNameFormat = scanType->Get("ChildNameFormat").ToString();
       for (int acq = 1; acq <= childCount && !parentIdList.empty(); ++acq)
@@ -351,7 +350,7 @@ namespace Alder
 
         if (image->ValidateFile())
         {
-          childId = image->Get("Id").ToString();
+          vecChildId.push_back(image->Get("Id").ToString());
           if (dicom)
             image->SetDimensionalityFromDICOM();
         }
@@ -366,7 +365,6 @@ namespace Alder
             app->Log(e.what());
           }
           downloaded = 0;
-          break;
         }
       }
     }
@@ -376,9 +374,8 @@ namespace Alder
 
     if (!sustain) opal->SustainConnectionOff();
 
-    // parent an only child based on DatetimeAcquired
-    if (downloaded && 1 == childCount && 1 < acqCount
-        && !childId.empty() && dicom)
+    // parent dicom children based on parent and child DatetimeAcquired
+    if (!vecChildId.empty() && dicom)
     {
       std::vector<vtkSmartPointer<Image>> vecImage;
       this->GetList(&vecImage);
@@ -392,30 +389,35 @@ namespace Alder
           image->GetDICOMTag("AcquisitionDateTime");
       }
 
-      if (mapTime.find(childId) == mapTime.end()) return;
-
-      std::string acqDateTime = mapTime[childId];
-      std::string parentId;
-      for (auto it = mapTime.cbegin(); it != mapTime.cend(); ++it)
+      // loop over child images
+      for (auto it = vecChildId.cbegin(); it != vecChildId.cend(); ++it)
       {
-        if (it->first == childId) continue;
+        std::string childId = *it;
+        if (mapTime.find(childId) == mapTime.end()) continue;
 
-        if (it->second == acqDateTime)
+        std::string acqDateTime = mapTime[childId];
+        std::string parentId;
+        for (auto it = mapTime.cbegin(); it != mapTime.cend(); ++it)
         {
-          parentId = it->first;
-          break;
+          if (it->first == childId) continue;
+
+          if (it->second == acqDateTime)
+          {
+            parentId = it->first;
+            break;
+          }
         }
-      }
-      if (!parentId.empty())
-      {
-        vtkNew<Image> image;
-        image->Load("Id", childId);
-        image->Set("ParentImageId", parentId);
-        image->Save(true);
+        if (!parentId.empty())
+        {
+          vtkNew<Image> image;
+          image->Load("Id", childId);
+          image->Set("ParentImageId", parentId);
+          image->Save(true);
+        }
       }
     }
 
-    if (downloaded && dicom)
+    if (dicom)
     {
       this->CleanImages();
     }
