@@ -7,18 +7,20 @@
   <where class="org.obiba.magma.views.support.AllClause"/>
   <variables class="org.obiba.magma.js.views.VariablesClause">
     <variables class="linked-hash-set">
-      <variable name="Site" valueType="text" entityType="Participant" unit="" mimeType="" index="0">
+      <variable name="Site" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
-          <attribute name="script" valueType="text">$(&apos;Admin.ApplicationConfiguration.siteName&apos;);</attribute>
+          <attribute name="script" valueType="text">$(&apos;Admin.ApplicationConfiguration.siteName&apos;)</attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Interview/variable/Site</attribute>
         </attributes>
       </variable>
-      <variable name="VisitDate" valueType="text" entityType="Participant" unit="" mimeType="" index="0">
+      <variable name="VisitDate" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
-          <attribute name="script" valueType="text">$(&apos;Admin.Interview.startDate&apos;).format(&apos;yyyy-MM-dd&apos;);</attribute>
+          <attribute name="script" valueType="text">$(&apos;Admin.Interview.startDate&apos;).format(&apos;yyyy-MM-dd&apos;)</attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Interview/variable/VisitDate</attribute>
         </attributes>
       </variable>
     </variables>
   </variables>
-  <created valueType="datetime">2015-09-25T11:35:32.801-0400</created>
-  <updated valueType="datetime">2015-09-25T11:35:32.801-0400</updated>
+  <created valueType="datetime">2016-09-20T10:03:17.661-04</created>
+  <updated valueType="datetime">2016-11-10T13:37:40.603-05</updated>
 </org.obiba.magma.views.View>

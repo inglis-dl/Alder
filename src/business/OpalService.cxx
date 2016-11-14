@@ -250,6 +250,12 @@ namespace Alder
       }
     }
 
+    if(!root.empty() && Json::ValueType::objectValue == root.type()
+       && root.isMember(std::string("code")) && root.isMember(std::string("status")))
+    {
+      app->Log(root.toStyledString());
+    }
+
     return root;
   }
 
@@ -259,9 +265,10 @@ namespace Alder
   {
     std::stringstream stream;
     stream << "/datasource/" << dataSource << "/table/" << table << "/entities";
-    Json::Value root = this->Read(stream.str());
+    Json::Value root;
     try
     {
+      root = this->Read(stream.str());
     }
     catch (std::runtime_error& e)
     {
