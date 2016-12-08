@@ -42,7 +42,8 @@ class QMainAlderWindowPrivate : public QObject, public Ui_QMainAlderWindow
     virtual void changePassword();
     virtual void loadUIDs();
     virtual void userManagement();
-    virtual void updateDatabase();
+    virtual void updateInterviewDatabase();
+    virtual void updateWaveDatabase();
     virtual void ratingCodes();
     virtual void reports();
     virtual void saveImage();

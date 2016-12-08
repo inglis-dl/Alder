@@ -40,7 +40,8 @@ class QMainAlderWindow : public QMainWindow
     Q_DISABLE_COPY(QMainAlderWindow);
 
     void adminUserManagement();
-    void adminUpdateDatabase();
+    void adminUpdateInterviewDatabase();
+    void adminUpdateWaveDatabase();
     void adminReports();
     void adminRatingCodes();
     void adminLoginDo(void (QMainAlderWindow::*fn)());

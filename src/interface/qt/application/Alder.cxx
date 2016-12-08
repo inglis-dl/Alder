@@ -106,13 +106,6 @@ int main(int argc, char** argv)
 
     app->SetupOpalService();
 
-    splash.showMessage(QObject::tr("\nUpdating database..."), topMiddle, Qt::black);
-    dummy.lock();
-    wait.wait(&dummy,msec);
-    dummy.unlock();
-
-    app->UpdateDatabase();
-
     // now create the user interface
     QMainAlderWindow mainWindow;
 

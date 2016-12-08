@@ -166,8 +166,15 @@
     <property name="title">
      <string>Administration</string>
     </property>
+    <widget class="QMenu" name="menuUpdateDatabase">
+     <property name="title">
+      <string>Update Database</string>
+     </property>
+     <addaction name="actionUpdateWaveDatabase"/>
+     <addaction name="actionUpdateInterviewDatabase"/>
+    </widget>
     <addaction name="actionUserManagement"/>
-    <addaction name="actionUpdateDatabase"/>
+    <addaction name="menuUpdateDatabase"/>
     <addaction name="actionReports"/>
     <addaction name="actionRatingCodes"/>
    </widget>
@@ -253,11 +260,6 @@
     <string>User Management</string>
    </property>
   </action>
-  <action name="actionUpdateDatabase">
-   <property name="text">
-    <string>Update Database</string>
-   </property>
-  </action>
   <action name="actionShowDicomTags">
    <property name="text">
     <string>Show Dicom Tags</string>
@@ -295,6 +297,27 @@
   <action name="actionRatingCodes">
    <property name="text">
     <string>Rating Codes</string>
+   </property>
+  </action>
+  <action name="actionUpdateWaveDatabase">
+   <property name="text">
+    <string>Study Waves</string>
+   </property>
+   <property name="toolTip">
+    <string>Update study wave meta data in the database</string>
+   </property>
+  </action>
+  <action name="actionInterviewDatabase">
+   <property name="text">
+    <string>Interview Data</string>
+   </property>
+  </action>
+  <action name="actionUpdateInterviewDatabase">
+   <property name="text">
+    <string>Interview Data</string>
+   </property>
+   <property name="toolTip">
+    <string>Update interview meta data in the database</string>
    </property>
   </action>
  </widget>
