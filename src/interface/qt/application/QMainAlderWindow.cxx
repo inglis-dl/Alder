@@ -14,9 +14,11 @@
 // Alder includes
 #include <Application.h>
 #include <Common.h>
+#include <Configuration.h>
 #include <Interview.h>
 #include <User.h>
 #include <Utilities.h>
+#include <Wave.h>
 
 #include <QAboutDialog.h>
 #include <QAlderDicomTagWidget.h>
@@ -92,8 +94,11 @@ void QMainAlderWindowPrivate::setupUi(QMainWindow* window)
     this->actionUserManagement, SIGNAL(triggered()),
     this, SLOT(userManagement()));
   QObject::connect(
-    this->actionUpdateDatabase, SIGNAL(triggered()),
-    this, SLOT(updateDatabase()));
+    this->actionUpdateInterviewDatabase, SIGNAL(triggered()),
+    this, SLOT(updateInterviewDatabase()));
+  QObject::connect(
+    this->actionUpdateWaveDatabase, SIGNAL(triggered()),
+    this, SLOT(updateWaveDatabase()));
   QObject::connect(
     this->actionReports, SIGNAL(triggered()),
     this, SLOT(reports()));
@@ -326,10 +331,17 @@ void QMainAlderWindowPrivate::userManagement()
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindowPrivate::updateDatabase()
+void QMainAlderWindowPrivate::updateInterviewDatabase()
 {
   Q_Q(QMainAlderWindow);
-  q->adminLoginDo(&QMainAlderWindow::adminUpdateDatabase);
+  q->adminLoginDo(&QMainAlderWindow::adminUpdateInterviewDatabase);
+}
+
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindowPrivate::updateWaveDatabase()
+{
+  Q_Q(QMainAlderWindow);
+  q->adminLoginDo(&QMainAlderWindow::adminUpdateWaveDatabase);
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -619,7 +631,7 @@ void QMainAlderWindow::adminUserManagement()
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QMainAlderWindow::adminUpdateDatabase()
+void QMainAlderWindow::adminUpdateInterviewDatabase()
 {
   QSelectWaveDialog waveDialog(this);
   waveDialog.setModal(true);
@@ -629,6 +641,19 @@ void QMainAlderWindow::adminUpdateDatabase()
   {
     Alder::Interview::UpdateInterviewData(waveVec);
   }
+}
+
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QMainAlderWindow::adminUpdateWaveDatabase()
+{
+  Q_D(QMainAlderWindow);
+  Alder::Application* app = Alder::Application::GetInstance();
+  std::string waveSource = app->GetConfig()->GetValue("Opal", "WaveSource");
+  QString message = "Updating study wave and scan type information ...";
+  d->statusbar->showMessage(message);
+  d->statusbar->repaint();
+  Alder::Wave::UpdateWaveData(waveSource);
+  d->statusbar->clearMessage();
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
