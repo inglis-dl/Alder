@@ -213,6 +213,7 @@ namespace Alder
            << "Exam.Side AS SIDE, "
            << "Interview.UId AS UID, "
            << "Interview.VisitDate AS VISITDATE, "
+           << "Wave.Name AS WAVE, "
            << "Site.Name AS SITE, "
            << "Exam.Interviewer AS INTERVIEWER, "
            << "Rating.CreateTimestamp AS RATING_CREATE_DATETIME, "
@@ -220,10 +221,12 @@ namespace Alder
            << "FROM Rating "
            << "JOIN Image ON Image.Id=Rating.ImageId "
            << "JOIN Exam ON Exam.Id=Image.ExamId "
-           << "JOIN ScanType ON ScanType.Id=Exam.ScanTypeId "
-           << "JOIN Modality ON Modality.Id=ScanType.ModalityId "
            << "JOIN Interview ON Interview.Id=Exam.InterviewId "
+           << "JOIN Wave ON Wave.Id=Interview.WaveId "
            << "JOIN Site ON Site.Id=Interview.SiteId "
+           << "JOIN ScanType ON ScanType.Id=Exam.ScanTypeId "
+           << "AND ScanType.WaveId=Wave.Id "
+           << "JOIN Modality ON Modality.Id=ScanType.ModalityId "
            << "JOIN User ON User.Id=Rating.UserId "
            << "LEFT JOIN ("
            << "  SELECT "
@@ -266,10 +269,11 @@ namespace Alder
       {6, "SIDE"},
       {7, "UID"},
       {8, "VISITDATE"},
-      {9, "SITE"},
-      {10, "INTERVIEWER"},
-      {11, "RATING_CREATE_DATETIME"},
-      {12, "RATING_UPDATE_DATETIME"}
+      {9, "WAVE"},
+      {10, "SITE"},
+      {11, "INTERVIEWER"},
+      {12, "RATING_CREATE_DATETIME"},
+      {13, "RATING_UPDATE_DATETIME"}
     };
 
     while (query->NextRow())
