@@ -852,10 +852,13 @@ namespace Alder
     std::map<int, vtkSmartPointer<Interview>> revised;
     std::map<std::string, vtkSmartPointer<Wave>> waveMap;
     vtkSmartPointer<Wave> wave = vtkSmartPointer<Wave>::New();
+
+    // loop over UID, wave rank pairs
     for (auto it = list.cbegin(); it != list.cend(); ++it)
     {
       std::string uidStr = it->first;
       std::string rankStr = it->second;
+      // populate the rank/wave map as needed
       if (waveMap.end() == waveMap.find(rankStr))
       {
         if (wave->Load("Rank", rankStr))
@@ -878,6 +881,7 @@ namespace Alder
       std::map<std::string, std::string> loader;
       loader["UId"] = uidStr;
       loader["WaveId"] = wave->Get("Id").ToString();
+      //populate the interview list as needed
       if (interview->Load(loader))
       {
         int id = interview->Get("Id").ToInt();
@@ -886,6 +890,7 @@ namespace Alder
       }
     }
 
+    // no interviews were found
     if (revised.empty()) return 0;
 
     OpalService* opal = app->GetOpal();
@@ -941,6 +946,7 @@ namespace Alder
       Interview* interview = it->second;
       vtkSmartPointer<Wave> wave;
       interview->GetRecord(wave);
+      // update the Exam db records attributed to this Interview
       try
       {
         interview->UpdateExamData(wave);

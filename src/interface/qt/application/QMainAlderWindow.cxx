@@ -412,6 +412,11 @@ void QMainAlderWindowPrivate::loadUIDs()
     else
     {
       int numLoaded = Alder::Interview::LoadFromList(list);
+      if (0 == numLoaded)
+      {
+        error = true;
+        errorMsg  = "Failed to find any interviews attributed to data in csv file";
+      }
     }
   }
 
