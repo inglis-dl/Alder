@@ -79,6 +79,8 @@ namespace Alder
     int acqCount = scanType->Get("AcquisitionCount").ToInt();
     int childCount = scanType->Get("ChildCount").ToInt();
     std::string examId = this->Get("Id").ToString();
+    std::map<std::string, std::string> loader;
+    loader["ExamId"] = examId;
 
     // loop over the expected number of Acquisitions
     int acqGlobal = 1;
@@ -89,8 +91,6 @@ namespace Alder
     for (int acq = 1; acq <= acqCount; ++acq)
     {
       vtkNew<Image> image;
-      std::map<std::string, std::string> loader;
-      loader["ExamId"] = examId;
       loader["Acquisition"] = vtkVariant(acqGlobal++).ToString();
       if (image->Load(loader) && image->ValidateFile())
       {
@@ -99,29 +99,24 @@ namespace Alder
       }
     }
 
-    if (numParent == acqCount)
+    if (numParent == acqCount && 0 < childCount)
     {
-      if (0 < childCount)
+      for (int acq = 1; acq <= childCount && !parentIdList.empty(); ++acq)
       {
-        for (int acq = 1; acq <= childCount && !parentIdList.empty(); ++acq)
+        vtkNew<Image> image;
+        loader["Acquisition"] = vtkVariant(acqGlobal++).ToString();
+        if (image->Load(loader) && image->ValidateFile())
         {
-          vtkNew<Image> image;
-          std::map<std::string, std::string> loader;
-          loader["ExamId"] = examId;
-          loader["Acquisition"] = vtkVariant(acqGlobal++).ToString();
-          if (image->Load(loader) && image->ValidateFile())
+          vtkVariant vId = image->Get("ParentImageId");
+          if (vId.IsValid())
           {
-            vtkVariant vId = image->Get("ParentImageId");
-            if (vId.IsValid())
+            std::string parentId = vId.ToString();
+            if (std::find(parentIdList.begin(), parentIdList.end(), parentId)
+              != parentIdList.end())
             {
-              std::string parentId = vId.ToString();
-              if (std::find(parentIdList.begin(), parentIdList.end(), parentId)
-                != parentIdList.end())
-              {
-                if (childCount == acqCount)
-                  parentIdList.remove(parentId);
-                numChild++;
-              }
+              if (childCount == acqCount)
+                parentIdList.remove(parentId);
+              numChild++;
             }
           }
         }
