@@ -46,6 +46,22 @@ SET(VTK_LIBS
   vtkRenderingVolumeOpenGL
 )
 
+IF(${VTK_MAJOR_VERSION} GREATER 6)
+  SET(VTK_LIBS
+    vtkCommonCore
+    vtkCommonMath
+    vtkInteractionStyle
+    vtkInteractionWidgets
+    vtkIOCore
+    vtkIOMINC
+    vtkIOXML
+    vtkRenderingFreeType
+    vtkRenderingGL2PSOpenGL2
+    vtkRenderingImage
+    vtklibxml2
+  )
+ENDIF()
+
 TARGET_LINK_LIBRARIES( AlderVTK
   AlderCommon
   ${VTK_LIBS}
