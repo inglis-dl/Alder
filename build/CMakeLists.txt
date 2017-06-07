@@ -33,7 +33,7 @@ FIND_PACKAGE( DICOM REQUIRED )
 INCLUDE( ${DICOM_USE_FILE} )
 SET( VTK_DICOM_LBRARIES vtkDICOM )
 
-# We need QT4
+# We need Qt5
 SET( QT_MIN_VERSION 5.7.0 )
 FIND_PACKAGE( Qt5 COMPONENTS Core Widgets Network REQUIRED )
 INCLUDE_DIRECTORIES(
@@ -80,7 +80,7 @@ SET( ALDER_APP_DIR        ${ALDER_QT_DIR}/application )
 SET( ALDER_DOC_DIR        ${ALDER_ROOT_DIR}/doc )
 SET( ALDER_DOXY_DIR       ${PROJECT_BINARY_DIR}/doxygen )
 SET( ALDER_TESTING_DIR    ${ALDER_ROOT_DIR}/testing )
-SET( ALDER_PROGRAMS_DIR   ${ALDER_SRC_DIR}/programs )
+#SET( ALDER_PROGRAMS_DIR   ${ALDER_SRC_DIR}/programs )
 
 # Define the config file location, then test to see if it is in the install path when installing
 SET( ALDER_CONFIG_FILE ${PROJECT_BINARY_DIR}/config.xml CACHE PATH "The location of Alder's runtime config file" )
@@ -240,8 +240,3 @@ IF( BUILD_DOCUMENTATION )
 #    RESULT_VARIABLE rv )
 
 ENDIF( BUILD_DOCUMENTATION )
-
-SUBDIRS(
-  ${ALDER_TESTING_DIR}
-  ${ALDER_PROGRAMS_DIR}
-)
