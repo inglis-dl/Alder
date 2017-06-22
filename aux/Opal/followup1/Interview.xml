@@ -19,8 +19,15 @@
           <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Interview/variable/VisitDate</attribute>
         </attributes>
       </variable>
+      <variable name="Barcode" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
+        <attributes>
+          <attribute name="identifier" valueType="text">true</attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/clsa-dcs-f1/table/Participants/variable/Admin.Participant.barcode</attribute>
+          <attribute name="script" valueType="text">$(&apos;Admin.Participant.barcode&apos;)</attribute>
+        </attributes>
+      </variable>
     </variables>
   </variables>
   <created valueType="datetime">2016-09-20T10:03:17.661-04</created>
-  <updated valueType="datetime">2016-11-10T13:37:40.603-05</updated>
+  <updated valueType="datetime">2017-06-07T10:45:25.867-04</updated>
 </org.obiba.magma.views.View>

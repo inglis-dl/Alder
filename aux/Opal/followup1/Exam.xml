@@ -175,7 +175,7 @@
 if(sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;)
   var res=newValue(&apos;&apos;)
-  for(var i=0;i&lt;sides.size();i++) {
+  for(var i=0;i&lt;sides.size().value();i++) {
     if(false==sides.valueAt(i).isNull()) {
       var side=sides.valueAt(i).value()
       if(false==res.matches(RegExp(side))) {
@@ -197,7 +197,7 @@ if(sides.isNull().not().value()) {
 if(sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;)
   var res=newValue(&apos;&apos;)
-  for(var i=0;i&lt;sides.size();i++) {
+  for(var i=0;i&lt;sides.size().value();i++) {
     if(false==sides.valueAt(i).isNull()) {
       var side=sides.valueAt(i).value()
       if( false==res.matches(RegExp(side)) ) {
@@ -225,7 +225,7 @@ if(sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;)
   var res=newValue(&apos;&apos;)
   var index=newValue(&apos;&apos;)
-  for(var i=0;i&lt;sides.size();i++) {
+  for(var i=0;i&lt;sides.size().value();i++) {
     if(sides.valueAt(i).isNull().not().value()) {
       var side=sides.valueAt(i).value()
       if(res.matches(RegExp(side)).not().value()) {
@@ -249,7 +249,7 @@ if(sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;)
   var res=newValue(&apos;&apos;)
   var index=newValue(&apos;&apos;)
-  for(var i=0;i&lt;sides.size();i++) {
+  for(var i=0;i&lt;sides.size().value();i++) {
     if(sides.valueAt(i).isNull().not().value()) {
       var side=sides.valueAt(i).value()
       if(res.matches(RegExp(side)).not().value()) {
@@ -269,5 +269,5 @@ if(sides.isNull().not().value()) {
     </variables>
   </variables>
   <created valueType="datetime">2016-09-20T10:01:53.479-04</created>
-  <updated valueType="datetime">2016-11-10T13:36:51.750-05</updated>
+  <updated valueType="datetime">2017-03-03T09:20:09.949-05</updated>
 </org.obiba.magma.views.View>

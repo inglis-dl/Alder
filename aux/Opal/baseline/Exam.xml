@@ -146,14 +146,14 @@
 if(sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;)
   var res=newValue(&apos;&apos;)
-  for(var i=0;i&lt;sides.size();i++) {    
+  for(var i=0;i&lt;sides.size().value();i++) {
     if(sides.valueAt(i).isNull().not().value()) {
       var side=sides.valueAt(i).value()
       if(res.matches(RegExp(side)).not().value()) {
         res=res.concat(side,delim)
       }
-    }  
-  }  
+    }
+  }
   res=String(res.value())
   res.slice(0,res.length-1)
 } else {
@@ -168,14 +168,14 @@ if(sides.isNull().not().value()) {
 if(sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;)
   var res=newValue(&apos;&apos;)
-  for(var i=0;i&lt;sides.size();i++) {
+  for(var i=0;i&lt;sides.size().value();i++) {
     if(sides.valueAt(i).isNull().not().value()) {
       var side=sides.valueAt(i).value()
       if(res.matches(RegExp(side)).not().value()) {
         res=res.concat(side,delim)
-      }    
-    }  
-  }  
+      }
+    }
+  }
   res=String(res.value())
   res.slice(0,res.length-1)
 } else {
@@ -190,7 +190,7 @@ if(sides.isNull().not().value()) {
 if(sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;)
   var res=newValue(&apos;&apos;)
-  for(var i=0;i&lt;sides.size();i++) {
+  for(var i=0;i&lt;sides.size().value();i++) {
     if(sides.valueAt(i).isNull().not().value()) {
       var side=sides.valueAt(i).value()
       if(res.matches(RegExp(side)).not().value()) {
@@ -212,7 +212,7 @@ if(sides.isNull().not().value()) {
 if(sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;)
   var res=newValue(&apos;&apos;)
-  for(var i=0;i&lt;sides.size();i++) {
+  for(var i=0;i&lt;sides.size().value();i++) {
     if(sides.valueAt(i).isNull().not().value()) {
       var side=sides.valueAt(i).value()
       if(res.matches(RegExp(side)).not().value()) {
@@ -240,15 +240,15 @@ if(sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;)
   var res=newValue(&apos;&apos;)
   var index=newValue(&apos;&apos;)
-  for(var i=0;i&lt;sides.size();i++) {
+  for(var i=0;i&lt;sides.size().value();i++) {
     if(sides.valueAt(i).isNull().not().value()) {
       var side=sides.valueAt(i).value()
       if(res.matches(RegExp(side)).not().value()) {
         res=res.concat(side,delim)
-        index=index.concat(i,delim)
+        index=index.concat(String(i),delim)
       }
     }
-  }  
+  }
   res=String(index.value())
   res.slice(0,res.length-1)
 } else {
@@ -264,7 +264,7 @@ if(sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;)
   var res=newValue(&apos;&apos;)
   var index=newValue(&apos;&apos;)
-  for(var i=0;i&lt;sides.size();i++) {
+  for(var i=0;i&lt;sides.size().value();i++) {
     if(sides.valueAt(i).isNull().not().value()) {
       var side=sides.valueAt(i).value()
       if(res.matches(RegExp(side)).not().value()) {
@@ -272,7 +272,7 @@ if(sides.isNull().not().value()) {
         index=index.concat(String(i),delim)
       }
     }
-  }  
+  }
   res=String(index.value());
   res.slice(0,res.length-1)
 } else {
@@ -288,7 +288,7 @@ if(sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;)
   var res=newValue(&apos;&apos;)
   var index=newValue(&apos;&apos;)
-  for(var i=0;i&lt;sides.size();i++) {
+  for(var i=0;i&lt;sides.size().value();i++) {
     if(sides.valueAt(i).isNull().not().value()) {
       var side=sides.valueAt(i).value()
       if(res.matches(RegExp(side)).not().value()) {
@@ -312,7 +312,7 @@ if(sides.isNull().not().value()) {
   var delim=newValue(&apos;,&apos;)
   var res=newValue(&apos;&apos;)
   var index=newValue(&apos;&apos;)
-  for(var i=0;i&lt;sides.size();i++) {
+  for(var i=0;i&lt;sides.size().value();i++) {
     if(sides.valueAt(i).isNull().not().value()) {
       var side=sides.valueAt(i).value()
       if(res.matches(RegExp(side)).not().value()) {
@@ -332,5 +332,5 @@ if(sides.isNull().not().value()) {
     </variables>
   </variables>
   <created valueType="datetime">2016-09-20T09:55:35.959-04</created>
-  <updated valueType="datetime">2016-11-09T15:03:13.521-05</updated>
+  <updated valueType="datetime">2017-03-03T09:18:20.008-05</updated>
 </org.obiba.magma.views.View>
