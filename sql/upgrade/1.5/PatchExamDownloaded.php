@@ -5,45 +5,9 @@
  * @author Dean Inglis <inglisd@mcmaster.ca>
  */
 
-ini_set( 'display_errors', '1' );
-error_reporting( E_ALL | E_STRICT );
-ini_set( 'date.timezone', 'US/Eastern' );
-
-// utility functions
-function out( $msg ) { printf( '%s: %s'."\n", date( 'Y-m-d H:i:s' ), $msg ); }
-function error( $msg ) { out( sprintf( 'ERROR! %s', $msg ) ); die(); }
-
-  function my_execute( $connection, $sql )
-  {
-    $result = $connection->Execute( $sql );
-    if( false === $result )
-    {
-      out( $connection->ErrorMsg() );
-      error( $sql );
-    }
-  }
-
-  function my_get_one( $connection, $sql )
-  {
-    $result = $connection->GetOne( $sql );
-    if( false === $result )
-    {
-      out( $connection->ErrorMsg() );
-      error( $sql );
-    }
-    return $result;
-  }
-
-  function my_get_all( $connection, $sql )
-  {
-    $result = $connection->GetAll( $sql );
-    if( false === $result )
-    {
-      out( $connection->ErrorMsg() );
-      error( $sql );
-    }
-    return $result;
-  }
+require_once('../../../php/util.class.php');
+require_once('../../../php/database.class.php');
+util::initialize();
 
   function xml2assoc( &$xml )
   {
@@ -107,15 +71,11 @@ function error( $msg ) { out( sprintf( 'ERROR! %s', $msg ) ); die(); }
   }
 
   // open connection to the database
-  require_once '/usr/local/lib/adodb5/adodb.inc.php';
-  $db = ADONewConnection( 'mysql' );
-  $db->SetFetchMode( ADODB_FETCH_ASSOC );
-
-  $result = $db->Connect( $dbassoc['Host'], $dbassoc['Username'], $dbassoc['Password'],  $dbassoc['Name'] );
-  if( false === $result )
-  {
-    error( 'Unable to connect to database, quiting' );
-  }
+  $db = new database(
+    $dbassoc['Host'],
+    $dbassoc['Username'],
+    $dbassoc['Password'],
+    $dbassoc['Name'] );
 
   $debug = 1;
   if( 3 == $argc )
@@ -135,10 +95,10 @@ function error( $msg ) { out( sprintf( 'ERROR! %s', $msg ) ); die(); }
          'LEFT JOIN Image ON Image.ExamId=Exam.Id '.
          'WHERE Image.Id IS NULL '.
          'AND Exam.Downloaded=1';
-  $data = my_get_all( $db, $sql );
+  $data = $db->get_all( $sql );
   if( 0 < count( $data ) )
   {
-    out( 'repairing ' . count( $data ) .' Exam records having Downloaded with no Image record' );
+    util::out( 'repairing ' . count( $data ) .' Exam records having Downloaded with no Image record' );
     foreach( $data as $elem )
     {
       $sql = 'UPDATE Exam '.
@@ -148,7 +108,7 @@ function error( $msg ) { out( sprintf( 'ERROR! %s', $msg ) ); die(); }
              'AND InterviewId=' . $elem['interviewId'] . ' '.
              'AND ScanTypeId=' . $elem['typeId'];
       if( 0 == $debug )
-        my_execute( $db, $sql );
+        $db->execute( $sql );
       $reverse++;
       $numExamProcessed++;
     }
@@ -168,7 +128,7 @@ function error( $msg ) { out( sprintf( 'ERROR! %s', $msg ) ); die(); }
          'JOIN Interview ON Interview.Id=Exam.InterviewId '.
          'JOIN ScanType ON ScanType.Id=Exam.ScanTypeId '.
          'LEFT JOIN Image AS Child ON Child.ParentImageId=Image.Id';
-  $data = my_get_all( $db, $sql );
+  $data = $db->get_all( $sql );
   $imagepath = '';
   try
   {
@@ -220,7 +180,7 @@ function error( $msg ) { out( sprintf( 'ERROR! %s', $msg ) ); die(); }
     {
       if( !file_exists( $expectedFile ) )
       {
-        out( 'the expected file .' . $expectedFile . ' is not available among ' . implode( ',', $files ) );
+        util::out( 'the expected file .' . $expectedFile . ' is not available among ' . implode( ',', $files ) );
         $doRemove = 1;
         if( 1 == $downloaded )
           $doReverse = 1;
@@ -241,7 +201,7 @@ function error( $msg ) { out( sprintf( 'ERROR! %s', $msg ) ); die(); }
       if( 'none' != $elem['childId'] )
       {
         // remove both child and parent
-        out( 'removing Image record '. $elem['imageId'] . ' with child '. $elem['childId'] );
+        util::out( 'removing Image record '. $elem['imageId'] . ' with child '. $elem['childId'] );
         $sql = 'SELECT Image.Id AS imageId, '.
                'Exam.Id AS examId, '.
                'Exam.Side AS side, '.
@@ -252,15 +212,15 @@ function error( $msg ) { out( sprintf( 'ERROR! %s', $msg ) ); die(); }
                'JOIN Exam ON Exam.Id=Image.ExamId '.
                'WHERE Image.Id IN ('. implode( ',', array($elem['imageId'],$elem['childId']) ) . ') '.
                'ORDER BY Image.Id DESC';
-        $innerData = my_get_all( $db, $sql );
+        $innerData = $db->get_all( $sql );
         foreach( $innerData as $innerElem )
         {
           $sql = 'DELETE Image.* FROM Image WHERE Id='. $innerElem['imageId'];
           if( 0 == $debug )
-            my_execute( $db, $sql );
+            $db->execute( $sql );
           $remove++;
           $numImageProcessed++;
- 
+
           $sql = 'Update Exam SET '.
                  'Downloaded=0 '.
                  'WHERE Id='. $innerElem['examId'] . ' ' .
@@ -268,7 +228,7 @@ function error( $msg ) { out( sprintf( 'ERROR! %s', $msg ) ); die(); }
                  'AND InterviewId=' . $innerElem['interviewId'] . ' '.
                  'AND ScanTypeId=' . $innerElem['typeId'];
           if( 0 == $debug )
-            my_execute( $db, $sql );
+            $db->execute( $sql );
           $reverse++;
           $numExamProcessed++;
         }
@@ -277,7 +237,7 @@ function error( $msg ) { out( sprintf( 'ERROR! %s', $msg ) ); die(); }
       {
         $sql = 'DELETE Image.* FROM Image WHERE Id='. $elem['imageId'];
         if( 0 == $debug )
-          my_execute( $db, $sql );
+          $db->execute( $sql );
         $remove++;
         $numImageProcessed++;
       }
@@ -295,16 +255,16 @@ function error( $msg ) { out( sprintf( 'ERROR! %s', $msg ) ); die(); }
              'AND InterviewId=' . $elem['interviewId'] . ' '.
              'AND ScanTypeId=' . $elem['typeId'];
       if( 0 == $debug )
-        my_execute( $db, $sql );
+        $db->execute( $sql );
       $reverse++;
       $numExamProcessed++;
     }
   }
 
-  out( 'number of Image records processed: ' . $numImageProcessed );
-  out( 'number of Exam records processed: ' . $numExamProcessed );
-  out( 'number of Image record removals: '. $remove );
-  out( 'number of Exam Downloaded column reversals: '. $reverse );
-  out( 'number reversed to Downloaded: '. $reverseToDownloaded );
-  out( 'number reversed to NOT Downloaded: '. ($reverse - $reverseToDownloaded) );
+  util::out( 'number of Image records processed: ' . $numImageProcessed );
+  util::out( 'number of Exam records processed: ' . $numExamProcessed );
+  util::out( 'number of Image record removals: '. $remove );
+  util::out( 'number of Exam Downloaded column reversals: '. $reverse );
+  util::out( 'number reversed to Downloaded: '. $reverseToDownloaded );
+  util::out( 'number reversed to NOT Downloaded: '. ($reverse - $reverseToDownloaded) );
 ?>
