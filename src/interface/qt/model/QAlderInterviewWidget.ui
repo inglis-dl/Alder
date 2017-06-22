@@ -103,7 +103,7 @@
          <enum>QTabWidget::Triangular</enum>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>3</number>
         </property>
         <widget class="QWidget" name="noteTab">
          <attribute name="title">
@@ -308,22 +308,6 @@
             <property name="sizeConstraint">
              <enum>QLayout::SetFixedSize</enum>
             </property>
-            <item>
-             <widget class="QPushButton" name="swapSidesPushButton">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="toolTip">
-               <string>swap selected image's laterality with its sibling</string>
-              </property>
-              <property name="text">
-               <string>Swap</string>
-              </property>
-             </widget>
-            </item>
             <item>
              <widget class="QPushButton" name="anonymizePushButton">
               <property name="sizePolicy">

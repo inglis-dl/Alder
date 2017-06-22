@@ -116,9 +116,6 @@ void QAlderInterviewWidgetPrivate::setupUi(QWidget* widget)
   QObject::connect(
     this->anonymizePushButton, SIGNAL(clicked()),
     this, SLOT(imageAnonymize()));
-  QObject::connect(
-    this->swapSidesPushButton, SIGNAL(clicked()),
-    this, SLOT(imageSideSwap()));
 
   this->qvtkConnection->Connect(Alder::Application::GetInstance(),
     Alder::Common::UserChangedEvent,
@@ -860,9 +857,6 @@ void QAlderInterviewWidgetPrivate::updateEnabled()
   vtkSmartPointer<Alder::Exam> exam;
   if (image && image->GetRecord(exam))
   {
-    Alder::Exam::SideStatus status = exam->GetSideStatus();
-    this->swapSidesPushButton->setEnabled(
-      Alder::Exam::SideStatus::Fixed < status);
     bool isdicom = exam->IsDICOM();
     if (isdicom)
     {
@@ -874,7 +868,6 @@ void QAlderInterviewWidgetPrivate::updateEnabled()
   }
   else
   {
-    this->swapSidesPushButton->setEnabled(false);
     this->rgbFixPushButton->setEnabled(false);
     this->anonymizePushButton->setEnabled(false);
   }
@@ -1218,35 +1211,6 @@ void QAlderInterviewWidgetPrivate::imageYBRToRGB()
   {
     this->updateViewer();
     this->updateInfo();
-  }
-}
-
-// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderInterviewWidgetPrivate::imageSideSwap()
-{
-  Q_Q(QAlderInterviewWidget);
-  Alder::Image* image = this->participantData->GetActiveImage();
-  if (image)
-  {
-    // if this image is a child image, warn the user
-    vtkVariant v = image->Get("ParentImageId");
-    if (v.IsValid())
-    {
-      QString message = "This image is a child image. ";
-      message += "Consider selecting the parent ";
-      message += "of this image for swapping instead. ";
-      message += "Continue with this image?";
-      if (QMessageBox::No == QMessageBox::question(
-        q, QDialog::tr("Swap Images"), message,
-        QMessageBox::Yes|QMessageBox::No))
-        return;
-    }
-    if (image->SwapExamSide())
-    {
-      this->updateTree();
-      this->updateViewer();
-      this->updateInfo();
-    }
   }
 }
 

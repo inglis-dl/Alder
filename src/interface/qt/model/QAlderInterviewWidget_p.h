@@ -68,7 +68,6 @@ class QAlderInterviewWidgetPrivate : public QObject,
     void buildTree();
     void imageYBRToRGB();
     void imageAnonymize();
-    void imageSideSwap();
 
   private:
     // mapping between tree widget items and Alder::Interview and
