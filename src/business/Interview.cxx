@@ -178,6 +178,7 @@ namespace Alder
     }
 
     // order the query by UId (descending if not forward)
+    //
     stream << "ORDER BY UId ";
     if (!forward) stream << "DESC ";
 
@@ -196,6 +197,7 @@ namespace Alder
     vtkVariant neighbourId;
 
     // store the first record in case we need to loop over
+    //
     if (query->NextRow())
     {
       bool found = false;
@@ -203,6 +205,7 @@ namespace Alder
 
       // if the current id is last in the following loop
       // then we need the first id
+      //
       neighbourId = query->DataValue(0);
 
       do  // keep looping until we find the current Id
@@ -218,6 +221,7 @@ namespace Alder
       } while (query->NextRow());
 
       // we should always find the current interview id
+      //
       if (!found)
         throw std::runtime_error("Cannot find current Interview in database.");
     }
@@ -248,6 +252,7 @@ namespace Alder
     }
 
     // only one row
+    //
     query->NextRow();
     return query->DataValue(0).ToInt();
   }
@@ -279,6 +284,7 @@ namespace Alder
     }
 
     // only one row
+    //
     query->NextRow();
     return 0 < query->DataValue(0).ToInt();
   }
@@ -289,6 +295,17 @@ namespace Alder
     return 0 < this->GetCount("Exam");
   }
 
+  /**
+   * caller: accepted
+   * source: interface/qt/model/QSelectInterviewDialog.cxx
+   * caller: setActiveInterview
+   * source: interface/qt/model/QAlderInterviewWidget.cxx
+   *
+   * ImageStatus are:
+   * None (no image records)
+   * Pending (exams with image records but no image files)
+   * Complete (exams with image records with image files)
+   */
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   Interview::ImageStatus Interview::GetImageStatus(QueryModifier* modifier)
   {
@@ -304,6 +321,8 @@ namespace Alder
     int examCount = 0;
     for (auto it = vecExam.cbegin(); it != vecExam.cend(); ++it, ++examCount)
     {
+      // the exam has valid DatetimeAcquired, stage Completed
+      //
       if ((*it)->HasImageData())
       {
         if (0 == (*it)->Get("Downloaded").ToInt())
@@ -314,16 +333,27 @@ namespace Alder
       else
         missingCount++;
     }
-    if (missingCount == examCount)
+
+    // return status by precedence
+    //
+    if (missingCount == examCount) // none of the exams is valid
       status = Interview::ImageStatus::None;
-    else if (0 < pendingCount)
+    else if (0 < pendingCount)     // image record exists, no file downloaded
       status = Interview::ImageStatus::Pending;
-    else if (0 < downloadCount)
+    else if (0 < downloadCount)    // image record exists, file downloaded
       status = Interview::ImageStatus::Complete;
 
     return status;
   }
 
+  /**
+   * caller: selectionChanged
+   * source: interface/qt/model/QSelectInterviewDialog.cxx
+   * caller: setActiveInterview
+   * source: interface/qt/model/QAlderInterviewWidget.cxx
+   * caller: UpdateInterviewData, LoadFromList
+   * srouce: business/Interview.cxx
+   */
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Interview::UpdateExamData(Wave* aWave,
     const std::string& aMetaSource)
@@ -345,6 +375,7 @@ namespace Alder
     }
 
     // get the Wave associated with this Interview
+    //
     vtkSmartPointer<Wave> wave;
     if (NULL == aWave)
     {
@@ -358,8 +389,12 @@ namespace Alder
     if (source.empty())
       source = wave->Get("MetaDataSource").ToString();
 
-    // get the Opal Exam view data for the given UId
+    // get the Opal Exam table data for the given UId
+    //
     std::string identifier = this->Get("UId").ToString();
+
+    // Opal data are Exam table variable name key value pairs
+    //
     std::map<std::string, std::string> opalData =
       opal->GetRow(source, "Exam", identifier);
 
@@ -375,6 +410,7 @@ namespace Alder
 
     // build a map of Alder Exam db table rows
     // and populate with values particular to the given UId
+    //
     std::map<std::string, std::map<std::string, std::string>> examData;
     std::vector<vtkSmartPointer<ScanType>> scanTypeList;
     wave->GetList(&scanTypeList);
@@ -387,11 +423,17 @@ namespace Alder
       examData[typeStr]["SideCount"] = sideStr;
     }
 
-    // parse the opal data and populate the map by ScanType
+    // parse the Opal data and populate the map by ScanType
+    //
     for (auto it = opalData.cbegin(); it != opalData.cend(); ++it)
     {
       std::string opalVar = it->first;
       std::string opalVal = it->second;
+      // The Opal Exam table contains variable names of the form
+      // Type.VariableName (eg.,Type.Stage, Type.Interviewer etc.)
+      // where Type is the value of Alder ScanType table column Type
+      // and VariableName is the value of an Exam table column
+      //
       std::vector<std::string> tmp = Utilities::explode(opalVar, ".");
       if (2 != tmp.size())
       {
@@ -480,6 +522,7 @@ namespace Alder
         if (exam->Load(loader))
         {
           // check and update data as required
+          //
           bool save = false;
           std::string value = columns["Stage"];
           if (exam->Get("Stage").ToString() != value)
@@ -532,6 +575,12 @@ namespace Alder
     }
   }
 
+  /**
+   * caller: accepted
+   * source: interface/qt/model/QSelectInterviewDialog.cxx
+   * caller: setActiveInterview
+   * source: interface/qt/model/QAlderInterviewWidget.cxx
+   */
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Interview::UpdateImageData()
   {
@@ -594,6 +643,10 @@ namespace Alder
       app->InvokeEvent(
         vtkCommand::StartEvent,
         reinterpret_cast<void*>(const_cast<char*>(message.c_str())));
+
+      // loop over the exams, updating images based on UID and the Opal table
+      // that contains the images for the current wave
+      //
       for (auto it = vecExam.cbegin(); it != vecExam.cend(); ++it, ++index)
       {
         if (app->GetAbortFlag())
@@ -622,6 +675,10 @@ namespace Alder
     }
   }
 
+  /**
+   * caller: adminUpdateInterviewDatabase()
+   * source: /src/interface/qt/application/QMainAlderWindow.cxx
+   */
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Interview::UpdateInterviewData(
     const std::vector<std::pair< int, bool>>& waveList)
@@ -642,6 +699,9 @@ namespace Alder
       }
     }
 
+    // loop over requested Waves and determine the total number of
+    // participant identifiers to be updated
+    //
     double size = 0.;
     std::map<std::string,        // key Wave.Id
       std::vector<std::string>>  // value vector of Interview.UId
@@ -653,24 +713,29 @@ namespace Alder
       vtkNew<Wave> wave;
       if (!wave->Load("Id", waveId)) continue;
 
-      // get the list of UId's available in Opal
+      // get the Opal view that contains the Interview, Exam, and ScanType tables
+      //
       std::string source = wave->Get("MetaDataSource").ToString();
+
+      // get and sort the list of UId's available for the current Wave
+      //
       std::vector<std::string> vecOpal =
         opal->GetIdentifiers(source, "Interview");
 
       if (vecOpal.empty()) continue;
+
       std::sort(vecOpal.begin(), vecOpal.end());
       std::vector<std::string> vecUId;
 
       // if we are doing a partial update,
-      // then skip any existing identifiers that already have exam meta data
+      // skip any existing identifiers that already have Exam meta data
+      //
       if (!fullUpdate)
       {
         std::stringstream stream;
-        stream << "SELECT UId FROM Interview "
+        stream << "SELECT DISTINCT UId FROM Interview "
                << "JOIN Exam ON Exam.InterviewId=Interview.Id "
                << "WHERE WaveId=" << waveId << " "
-               << "GROUP BY UId "
                << "ORDER BY UId ";
         app->Log("Querying Database: " + stream.str());
         vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
@@ -691,13 +756,21 @@ namespace Alder
         }
       }
 
+      // there are no Exams records joined to the Interview table
+      // use all the identifiers retrieved from Opal
+      //
       if (vecUId.empty())
       {
         mapWave[waveId] = vecOpal;
       }
       else
       {
+        // the maximum number of identifiers comes from Opal
+        //
         std::vector<std::string> vecWave(vecOpal.size());
+
+        // get the set difference such that only new Opal identifiers remain
+        //
         std::vector<std::string>::iterator vit =
           std::set_difference(
             vecOpal.begin(), vecOpal.end(),
@@ -708,7 +781,7 @@ namespace Alder
       }
 
       size += mapWave[waveId].size();
-    }
+    } // end loop on Waves
 
     if (0. == size)
     {
@@ -718,6 +791,7 @@ namespace Alder
     }
 
     // get a map of site ids, names and aliases
+    //
     std::vector<vtkSmartPointer<Site>> vecSite;
     Site::GetAll(&vecSite);
     std::map<std::string, std::string> mapSite;
@@ -732,6 +806,7 @@ namespace Alder
     }
 
     // determine number of identifiers to pull per Opal curl call
+    //
     int limit = static_cast<int>(0.1*size);
     limit = limit > 500 ? 500 : (limit < 10 ? 10 : limit);
     int index = 0;
@@ -747,6 +822,9 @@ namespace Alder
     app->InvokeEvent(
       vtkCommand::StartEvent,
       reinterpret_cast<void*>(const_cast<char*>(message.c_str())));
+
+    // loop over Waves, updating records by participant identifier
+    //
     for (auto it = mapWave.cbegin(); it != mapWave.cend() && !done; ++it)
     {
       if (app->GetAbortFlag())
@@ -761,6 +839,9 @@ namespace Alder
       std::vector<std::string>::iterator ibegin = vecUId.begin();
       std::vector<std::string>::iterator iend = vecUId.end();
 
+      // storage structure of participant identifier key (UId) with value
+      // map of Opal variable name key value pairs
+      //
       std::map<std::string, std::map<std::string, std::string>> mapOpal;
       int localIndex = 0;
       do
@@ -783,23 +864,26 @@ namespace Alder
             break;
           }
           // skip identifiers that are not in the requested update list
+          //
           std::string uidStr = mit->first;
-          if (std::find(ibegin, iend, uidStr) == iend)
+          if (iend == std::find(ibegin, iend, uidStr))
             continue;
 
           // if found, try to load the interview
+          //
           std::map<std::string, std::string> mapVar = mit->second;
 
           // create a unique value map to load the interview
+          //
           std::map<std::string, std::string> loader;
           loader["WaveId"] = waveId;
           loader["UId"] = uidStr;
-          loader["VisitDate"] = mapVar["VisitDate"];
 
           vtkNew<Interview> interview;
           if (!interview->Load(loader))
           {
             // create the new interview
+            //
             std::string siteStr = mapVar["Site"];
             std::string siteId;
             auto sit = mapSite.find(siteStr);
@@ -823,12 +907,34 @@ namespace Alder
               siteId = sit->second;
             }
             loader["SiteId"] = siteId;
+            loader["Barcode"] = mapVar["Barcode"];
+            loader["VisitDate"] = mapVar["VisitDate"];
 
             interview->Set(loader);
             interview->Save();
             interview->Load(loader);
           }
+          else
+          {
+            bool modify = false;
+            if(interview->Get("Barcode").ToString() != mapVar["Barcode"])
+            {
+              interview->Set("Barcode",mapVar["Barcode"]);
+              modify = true;
+            }
+            if(interview->Get("VisitDate").ToString() != mapVar["VisitDate"])
+            {
+              interview->Set("VisitDate",mapVar["VisitDate"]);
+              modify = true;
+            }
+            if(modify)
+            {
+              interview->Save();
+            }
+          }
 
+          // update the Exam records linked to the interview
+          //
           interview->UpdateExamData(wave, source);
           index++;
         }
@@ -848,17 +954,20 @@ namespace Alder
   {
     // load images for Interviews already pulled from Opal
     // via the administrator UI
+    //
     Application* app = Application::GetInstance();
     std::map<int, vtkSmartPointer<Interview>> revised;
     std::map<std::string, vtkSmartPointer<Wave>> waveMap;
     vtkSmartPointer<Wave> wave = vtkSmartPointer<Wave>::New();
 
     // loop over UID, wave rank pairs
+    //
     for (auto it = list.cbegin(); it != list.cend(); ++it)
     {
       std::string uidStr = it->first;
       std::string rankStr = it->second;
       // populate the rank/wave map as needed
+      //
       if (waveMap.end() == waveMap.find(rankStr))
       {
         if (wave->Load("Rank", rankStr))
@@ -882,6 +991,7 @@ namespace Alder
       loader["UId"] = uidStr;
       loader["WaveId"] = wave->Get("Id").ToString();
       //populate the interview list as needed
+      //
       if (interview->Load(loader))
       {
         int id = interview->Get("Id").ToInt();
@@ -891,6 +1001,7 @@ namespace Alder
     }
 
     // no interviews were found
+    //
     if (revised.empty()) return 0;
 
     OpalService* opal = app->GetOpal();
@@ -909,6 +1020,7 @@ namespace Alder
     }
 
     // the active user can only load exam images they have permission for
+    //
     User* user = app->GetActiveUser();
 
     vtkSmartPointer<QueryModifier> modifier =
@@ -947,6 +1059,7 @@ namespace Alder
       vtkSmartPointer<Wave> wave;
       interview->GetRecord(wave);
       // update the Exam db records attributed to this Interview
+      //
       try
       {
         interview->UpdateExamData(wave);
@@ -962,6 +1075,7 @@ namespace Alder
         continue;
       }
       // get the list of exams this user can retrieve images for
+      //
       std::vector<vtkSmartPointer<Exam>> vecExam;
       interview->GetList(&vecExam, modifier);
       std::string source = wave->Get("ImageDataSource").ToString();
@@ -1009,6 +1123,7 @@ namespace Alder
 
     // given an image Id, find an image in this record having the same
     // characteristics
+    //
     stream << "SELECT Image.Id "
            << "FROM Image "
            << "JOIN Exam ON Image.ExamId = Exam.Id "

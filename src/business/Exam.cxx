@@ -58,7 +58,7 @@ namespace Alder
     vtkVariant date = this->Get("DatetimeAcquired");
     if (date.IsValid())
       dateStr = date.ToString();
-    if (dateStr.empty() ||  emptyDate == dateStr)
+    if (dateStr.empty() || emptyDate == dateStr)
       return false;
     vtkVariant stage = this->Get("Stage");
     if (stage.IsValid())
@@ -72,6 +72,7 @@ namespace Alder
   bool Exam::DownloadComplete()
   {
     // get the ScanType parameters
+    //
     vtkSmartPointer<ScanType> scanType;
     if (!this->GetRecord(scanType))
       throw std::runtime_error("Exam has no parent scantype");
@@ -83,6 +84,7 @@ namespace Alder
     loader["ExamId"] = examId;
 
     // loop over the expected number of Acquisitions
+    //
     int acqGlobal = 1;
     int downloaded = 0;
     int numParent = 0;
@@ -99,26 +101,26 @@ namespace Alder
       }
     }
 
-    if (numParent == acqCount && 0 < childCount)
+    for (int acq = 1; acq <= childCount; ++acq)
     {
-      for (int acq = 1; acq <= childCount && !parentIdList.empty(); ++acq)
+      vtkNew<Image> image;
+      loader["Acquisition"] = vtkVariant(acqGlobal++).ToString();
+      if (image->Load(loader) && image->ValidateFile())
       {
-        vtkNew<Image> image;
-        loader["Acquisition"] = vtkVariant(acqGlobal++).ToString();
-        if (image->Load(loader) && image->ValidateFile())
+        vtkVariant vId = image->Get("ParentImageId");
+        int orphan = image->Get("Orphan").ToInt();
+        if (vId.IsValid())
         {
-          vtkVariant vId = image->Get("ParentImageId");
-          if (vId.IsValid())
+          std::string parentId = vId.ToString();
+          if (std::find(parentIdList.begin(), parentIdList.end(), parentId)
+            != parentIdList.end())
           {
-            std::string parentId = vId.ToString();
-            if (std::find(parentIdList.begin(), parentIdList.end(), parentId)
-              != parentIdList.end())
-            {
-              if (childCount == acqCount)
-                parentIdList.remove(parentId);
-              numChild++;
-            }
+            numChild++;
           }
+        }
+        else if(orphan)
+        {
+          numChild++;
         }
       }
     }
@@ -178,6 +180,7 @@ namespace Alder
     }
 
     // get the ScanType parameters
+    //
     vtkSmartPointer<ScanType> scanType;
     if (!this->GetRecord(scanType))
       throw std::runtime_error("Exam has no parent scantype");
@@ -190,6 +193,7 @@ namespace Alder
       scanType->Get("AcquisitionNameFormat").ToString();
 
     // get the position index within the Opal sequence of images
+    //
     int sideIndex = -1;
     if (1 < sideCount)
       sideIndex = this->Get("SideIndex").ToInt();
@@ -215,6 +219,8 @@ namespace Alder
     }
 
     // loop over the expected number of Acquisitions
+    // this first loop retrieves parent images only
+    //
     int acqGlobal = 1;
     std::list<std::string> parentIdList;
     int downloaded = 1;
@@ -224,10 +230,17 @@ namespace Alder
       std::map<std::string, std::string> loader;
       loader["ExamId"] = examId;
       loader["Acquisition"] = vtkVariant(acqGlobal++).ToString();
+
+      // create or load an image for this exam record and expected
+      // acquisition
+      //
       if (!image->Load(loader))
       {
         image->Set(loader);
         image->Save();
+
+        // sanity check
+        //
         if (!image->Load(loader))
         {
           if (!sustain) opal->SustainConnectionOff();
@@ -275,11 +288,12 @@ namespace Alder
     }
 
     // loop over the expected number of child images
+    //
     std::vector<std::string> vecChildId;
-    if (0 < childCount && !parentIdList.empty())
+    if (0 < childCount)
     {
       std::string childNameFormat = scanType->Get("ChildNameFormat").ToString();
-      for (int acq = 1; acq <= childCount && !parentIdList.empty(); ++acq)
+      for (int acq = 1; acq <= childCount; ++acq)
       {
         vtkNew<Image> image;
         std::map<std::string, std::string> loader;
@@ -292,29 +306,15 @@ namespace Alder
           vtkVariant vId = image->Get("ParentImageId");
           if (vId.IsValid())
           {
-            if (std::find(parentIdList.begin(), parentIdList.end(),
-              vId.ToString()) != parentIdList.end())
+            if (parentIdList.end() != std::find(
+                parentIdList.begin(), parentIdList.end(), vId.ToString()))
             {
               parentId = vId.ToString();
-              if (childCount == acqCount) parentIdList.remove(parentId);
               parented = true;
             }
           }
         }
-        if (!parented)
-        {
-          // assign a unique parentId
-          if (childCount == acqCount)
-          {
-            parentId = parentIdList.back();
-            parentIdList.pop_back();
-          }
-          else
-            parentId = parentIdList.front();
-        }
-
-        loader["ParentImageId"] = parentId;
-        if (!image->Load(loader))
+        else
         {
           image->Set(loader);
           image->Save();
@@ -328,6 +328,7 @@ namespace Alder
           }
 
           // download the image from Opal
+          //
           std::string opalVar;
           if (1 < childCount || std::string::npos != childNameFormat.find("%d"))
           {
@@ -345,9 +346,16 @@ namespace Alder
 
         if (image->ValidateFile())
         {
-          vecChildId.push_back(image->Get("Id").ToString());
           if (dicom)
             image->SetDimensionalityFromDICOM();
+
+          if (!parented)
+          {
+            image->Set("Orphan",vtkVariant(1));
+            image->SetNull("ParentImageId");
+            image->Save();
+            vecChildId.push_back(image->Get("Id").ToString());
+          }
         }
         else
         {
@@ -364,50 +372,74 @@ namespace Alder
       }
     }
 
-    this->Set("Downloaded", vtkVariant(downloaded).ToString());
+    this->Set("Downloaded", vtkVariant(downloaded));
     this->Save();
 
     if (!sustain) opal->SustainConnectionOff();
 
     // parent dicom children based on parent and child DatetimeAcquired
-    if (!vecChildId.empty() && dicom)
+    //
+    if (dicom && !vecChildId.empty() && !parentIdList.empty())
     {
+      // get parent images
+      vtkSmartPointer<QueryModifier> modifier =
+        vtkSmartPointer<QueryModifier>::New();
+      modifier->Where("ParentImageId", "=", vtkVariant(), false);
+      modifier->Where("Orphan", "=", vtkVariant(0));
+
       std::vector<vtkSmartPointer<Image>> vecImage;
-      this->GetList(&vecImage);
+      this->GetList(&vecImage, modifier);
 
       // map AcquisitionDateTime from dicom file headers to Image Ids
+      //
       std::map<std::string, std::string> mapTime;
       for (auto it = vecImage.cbegin(); it != vecImage.cend(); ++it)
       {
         Image* image = it->GetPointer();
-        mapTime[image->Get("Id").ToString()] =
-          image->GetDICOMTag("AcquisitionDateTime");
+
+        // check that the image id is in the list of parent image ids
+        std::string parentId = image->Get("Id").ToString();
+        if (parentIdList.end() != std::find(
+            parentIdList.begin(), parentIdList.end(), parentId))
+        {
+          mapTime[parentId] =
+            image->GetDICOMTag("AcquisitionDateTime");
+        }
+        else
+        {
+          std::string err = "ERROR: parent image id ";
+          err += parentId;
+          err += " not among list of exptected, exam id ";
+          err += examId;
+          app->Log(err);
+        }
       }
 
       // loop over child images
+      //
       for (auto it = vecChildId.cbegin(); it != vecChildId.cend(); ++it)
       {
         std::string childId = *it;
-        if (mapTime.find(childId) == mapTime.end()) continue;
+        vtkNew<Image> image;
+        image->Load("Id", childId);
+        std::string acqTime = image->GetDICOMTag("AcquisitionDateTime");
 
-        std::string acqDateTime = mapTime[childId];
+        // find the parent with the matching time
         std::string parentId;
-        for (auto it = mapTime.cbegin(); it != mapTime.cend(); ++it)
+        for (auto mit = mapTime.cbegin(); mit != mapTime.cend(); ++mit)
         {
-          if (it->first == childId) continue;
-
-          if (it->second == acqDateTime)
+          parentId = mit->first;
+          parentTime = mit->second;
+          if (parentTime == acqTime)
           {
-            parentId = it->first;
             break;
           }
         }
         if (!parentId.empty())
         {
-          vtkNew<Image> image;
-          image->Load("Id", childId);
           image->Set("ParentImageId", parentId);
-          image->Save(true);
+          image->Set("Orphan", vtkVariant(0));
+          image->Save();
         }
       }
     }
@@ -478,6 +510,7 @@ namespace Alder
     }
 
     // only one row
+    //
     query->NextRow();
     return 0 <query->DataValue(0).ToInt();
   }

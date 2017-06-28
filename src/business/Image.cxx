@@ -109,6 +109,10 @@ namespace Alder
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void Image::Remove()
   {
+    if ( 0 < this->GetCount("Rating"))
+    {
+      throw std::runtime_error("Image has ratings and cannot be removed!");
+    }
     // get the exam and set its downloaded status to false
     vtkSmartPointer<Exam> exam;
     if (this->GetRecord(exam))
@@ -120,6 +124,10 @@ namespace Alder
       loader["ParentImageId"] = this->Get("Id").ToString();
       if (child->Load(loader))
       {
+        if (0 < child->GetCount("Rating"))
+        {
+          throw std::runtime_error("Child image has ratings and cannot be removed!");
+        }
         try
         {
           child->Remove();

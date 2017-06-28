@@ -201,6 +201,7 @@ namespace Alder
         vtkSmartPointer<Interview> interview = *i;
 
         // get the exams
+        //
         std::vector<vtkSmartPointer<Exam>> elist;
         modifier->Reset();
         modifier->Order("Side");
@@ -210,7 +211,8 @@ namespace Alder
         for (auto e = elist.begin(); e != elist.end(); ++e)
         {
           vtkSmartPointer<Exam> exam = *e;
-          // get the parent images
+          // get the parent and orphan images
+          //
           std::vector<vtkSmartPointer<Image>> plist;
           modifier->Reset();
           modifier->Where("ParentImageId", "=", vtkVariant(), false);
@@ -219,7 +221,8 @@ namespace Alder
 
           for (auto  p = plist.begin(); p != plist.end(); ++p)
           {
-            // get the child images
+            // get the child images of the current parent
+            //
             vtkSmartPointer<Image> image = *p;
             std::vector<vtkSmartPointer<Image>> clist;
             image->GetList(&clist, "ParentImageId");
