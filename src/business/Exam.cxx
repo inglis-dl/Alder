@@ -425,13 +425,13 @@ namespace Alder
         std::string acqTime = image->GetDICOMTag("AcquisitionDateTime");
 
         // find the parent with the matching time
+        //
         std::string parentId;
         for (auto mit = mapTime.cbegin(); mit != mapTime.cend(); ++mit)
         {
-          parentId = mit->first;
-          parentTime = mit->second;
-          if (parentTime == acqTime)
+          if (mit->second == acqTime)
           {
+            parentId = mit->first;
             break;
           }
         }
