@@ -126,7 +126,7 @@
        <item row="0" column="0">
         <widget class="QLabel" name="infoUIdLabel">
          <property name="text">
-          <string>UID</string>
+          <string>UID:</string>
          </property>
         </widget>
        </item>
@@ -146,7 +146,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Interviewer</string>
+          <string>Interviewer:</string>
          </property>
         </widget>
        </item>
@@ -166,7 +166,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Site</string>
+          <string>Site:</string>
          </property>
         </widget>
        </item>
@@ -186,7 +186,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Date</string>
+          <string>Date:</string>
          </property>
         </widget>
        </item>
@@ -198,13 +198,27 @@
         </widget>
        </item>
        <item row="4" column="0">
-        <widget class="QLabel" name="infoCodeLabel">
+        <widget class="QLabel" name="infoBarcodeLabel">
          <property name="text">
-          <string>Code</string>
+          <string>Barcode:</string>
          </property>
         </widget>
        </item>
        <item row="4" column="1">
+        <widget class="QLabel" name="infoBarcodeValueLabel">
+         <property name="text">
+          <string>N/A</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="infoCodeLabel">
+         <property name="text">
+          <string>Code:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
         <widget class="QLabel" name="infoCodeValueLabel">
          <property name="text">
           <string>N/A</string>

@@ -124,10 +124,11 @@ void QAlderAtlasWidgetPrivate::updateUi()
   Q_Q(QAlderAtlasWidget);
   QString helpString = "";
   QStringList noteString;
+  QString uidString = QLabel::tr("N/A");
   QString interviewerString = QLabel::tr("N/A");
   QString siteString = QLabel::tr("N/A");
   QString dateString = QLabel::tr("N/A");
-  QString uidString = QLabel::tr("N/A");
+  QString barcodeString = QLabel::tr("N/A");
   QString codeString = QLabel::tr("N/A");
 
   bool enable = false;
@@ -149,10 +150,11 @@ void QAlderAtlasWidgetPrivate::updateUi()
           noteString << (*it)->Get("Note").ToString().c_str();
         }
       }
+      uidString = interview->Get("UId").ToString().c_str();
       interviewerString = exam->Get("Interviewer").ToString().c_str();
       siteString = site->Get("Name").ToString().c_str();
       dateString = exam->Get("DatetimeAcquired").ToString().c_str();
-      uidString = interview->Get("UId").ToString().c_str();
+      barcodeString = interview->Get("Barcode").ToString().c_str();
       codeString = this->atlasImage->GetCode().c_str();
 
       vtkSmartPointer<Alder::ScanType> scanType;
@@ -190,11 +192,12 @@ void QAlderAtlasWidgetPrivate::updateUi()
     this->noteTextEdit->insertPlainText(noteString.at(i));
     this->noteTextEdit->moveCursor(QTextCursor::End);
   }
+  this->infoUIdValueLabel->setText(uidString);
   this->infoInterviewerValueLabel->setText(interviewerString);
   this->infoSiteValueLabel->setText(siteString);
   this->infoDateValueLabel->setText(dateString);
+  this->infoBarcodeValueLabel->setText(barcodeString);
   this->infoCodeValueLabel->setText(codeString);
-  this->infoUIdValueLabel->setText(uidString);
 
   // set all widget enable states
   this->previousPushButton->setEnabled(enable);

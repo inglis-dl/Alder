@@ -617,6 +617,7 @@ void QAlderInterviewWidgetPrivate::updateInfo()
   QString interviewerString = QLabel::tr("N/A");
   QString siteString = QLabel::tr("N/A");
   QString dateString = QLabel::tr("N/A");
+  QString barcodeString = QLabel::tr("N/A");
   QString codeString = QLabel::tr("N/A");
 
   QString originString = QLabel::tr("N/A");
@@ -658,6 +659,7 @@ void QAlderInterviewWidgetPrivate::updateInfo()
       siteString += "/";
       siteString += QLabel::tr(wave->Get("Name").ToString().c_str());
       dateString = QLabel::tr(exam->Get("DatetimeAcquired").ToString().c_str());
+      barcodeString = QLabel::tr(interview->Get("Barcode").ToString().c_str());
       codeString = QLabel::tr(image->GetCode().c_str());
 
       vtkImageData* vtkimage = this->imageWidget->imageData();
@@ -734,6 +736,7 @@ void QAlderInterviewWidgetPrivate::updateInfo()
   this->infoInterviewerValueLabel->setText(interviewerString);
   this->infoSiteValueLabel->setText(siteString);
   this->infoDateValueLabel->setText(dateString);
+  this->infoBarcodeValueLabel->setText(barcodeString);
   this->infoCodeValueLabel->setText(codeString);
 
   this->dimensionsValueLabel->setText(dimensionsString);
