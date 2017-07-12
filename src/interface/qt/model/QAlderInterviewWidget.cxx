@@ -238,12 +238,8 @@ void QAlderInterviewWidgetPrivate::setActiveInterview(
     if (Alder::Interview::ImageStatus::Pending == status)
     {
       interview->UpdateImageData();
-      status = interview->GetImageStatus(modifier);
     }
-    if (Alder::Interview::ImageStatus::Complete == status)
-    {
-      this->participantData->SetActiveInterview(interview);
-    }
+    this->participantData->SetActiveInterview(interview);
   }
 }
 

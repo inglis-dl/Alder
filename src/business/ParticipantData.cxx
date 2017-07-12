@@ -118,6 +118,24 @@ namespace Alder
         return;
     }
     vtkSetObjectBodyMacro(ActiveImage, Image, image);
+
+    // update the active interview
+    //
+    if (this->ActiveImage && this->ActiveInterview)
+    {
+      vtkSmartPointer<Exam> parentExam = vtkSmartPointer<Exam>::New();
+      if (this->ActiveImage->GetRecord(parentExam))
+      {
+        vtkSmartPointer<Interview> parentInterview = vtkSmartPointer<Interview>::New();
+        if (parentExam->GetRecord(parentInterview))
+        {
+          if(!parentInterview->Get("Id").IsEqual(this->ActiveInterview->Get("Id")))
+          {
+            vtkSetObjectBodyMacro(ActiveInterview, Interview, parentInterview.GetPointer());
+          }
+        }
+      }
+    }
     this->InvokeEvent(Common::ImageChangedEvent);
   }
 
@@ -188,6 +206,7 @@ namespace Alder
       this->rankWaveMap[v.ToInt()] = wave;
 
       // get the interviews
+      //
       std::vector<vtkSmartPointer<Interview>> ilist;
       modifier->Reset();
       modifier->Where("UId", "=", vuid);
