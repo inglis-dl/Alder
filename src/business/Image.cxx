@@ -289,6 +289,12 @@ namespace Alder
       if (meta->HasAttribute(tag))
         value = meta->GetAttributeValue(tag).AsString();
     }
+    else if ("PatientID" == tagName)
+    {
+      vtkDICOMTag tag(0x0010, 0x0020);
+      if (meta->HasAttribute(tag))
+        value = meta->GetAttributeValue(tag).AsString();
+    }
     else if ("Laterality" == tagName)
     {
       vtkDICOMTag tag(0x0020, 0x0060);

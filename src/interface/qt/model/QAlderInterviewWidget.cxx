@@ -651,11 +651,25 @@ void QAlderInterviewWidgetPrivate::updateInfo()
       interview->GetRecord(site);
       vtkSmartPointer<Alder::Wave> wave = vtkSmartPointer<Alder::Wave>::New();
       interview->GetRecord(wave);
-      siteString = QLabel::tr(site->Get("Name").ToString().c_str());
+      siteString = site->Get("Name").ToString().c_str();
       siteString += "/";
-      siteString += QLabel::tr(wave->Get("Name").ToString().c_str());
-      dateString = QLabel::tr(exam->Get("DatetimeAcquired").ToString().c_str());
-      barcodeString = QLabel::tr(interview->Get("Barcode").ToString().c_str());
+      siteString += wave->Get("Name").ToString().c_str();
+      dateString = exam->Get("DatetimeAcquired").ToString().c_str();
+      barcodeString = interview->Get("Barcode").ToString().c_str();
+      if (image->IsDICOM())
+      {
+        std::string dicomPatientId = image->GetDICOMTag("PatientID");
+        QPalette pal = QPalette(this->infoCodeValueLabel->palette());
+        if (dicomPatientId != barcodeString.toStdString())
+        {
+          pal.setColor(QPalette::Window, QColor(Qt::red));
+          barcodeString = QString(dicomPatientId.c_str()) +
+            QString(" (") +
+            barcodeString +
+            QString(")");
+        }
+        this->infoBarcodeValueLabel->setPalette(pal);
+      }
       codeString = QLabel::tr(image->GetCode().c_str());
 
       vtkImageData* vtkimage = this->imageWidget->imageData();
