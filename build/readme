@@ -11,7 +11,7 @@ Required Libraries
 ==================
 
 Alder uses the VTK library for visualization purposes and the Qt library for its user interface
-Furthermore it, along with VTK, is built using CMake.  Other 
+Furthermore it, along with VTK, is built using CMake.  Other
 
 
 libxml2 (xmlsoft.org)
@@ -21,9 +21,9 @@ building from the source, both of which are available from the website.  Many li
 managers also include this library in their repositories.
 
 
-Qt4 (qt.nokia.com)
+Qt5 (qt.nokia.com)
 ------------------
-You will need the Qt4 development/framework libraries.  You can download these from the Qt
+You will need the Qt5 development/framework libraries.  You can download these from the Qt
 website or install them using your distro's package manager.  The complete SDK isn't necessary.
 
 
@@ -75,7 +75,7 @@ VTK uses CMake to set up the build environment the same way that Alder does:
 3. Inside your build directory, run cmake:
 
    For linux: cmake -g "Unix Makefiles" /path/to/VTK/source
-   
+
    (If you want to build under a different operating system then just type cmake (without any
    arguments) to see a list of options along with (at the bottom) a list of "generators" which
    you can use in place of "Unix Makefiles" above.  Under windows it would be "Visual Studio" or
@@ -172,3 +172,12 @@ Building documentation
    doxygen.
 
 4. In the doxygen directory run cmake -P doc_makeall.cmake
+
+
+Current list of library dependencies
+===================================
+
+The minimum list of libraries required on Ubuntu with VTK 7.1.1, Qt5, GDCM 2.6, vtkDICOM 7.1
+is in the depend.txt file.
+
+
