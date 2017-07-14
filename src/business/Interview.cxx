@@ -29,6 +29,7 @@
 
 // C++ includes
 #include <algorithm>
+#include <list>
 #include <map>
 #include <stdexcept>
 #include <string>
@@ -41,140 +42,46 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   vtkSmartPointer<Interview> Interview::GetNeighbour(
-    const bool& forward, const bool& loaded, const bool& unrated)
+    const bool& forward, const bool& loaded, const bool& unRated)
   {
     Application* app = Application::GetInstance();
-    std::string interviewId = this->Get("Id").ToString();
+    vtkVariant currentId = this->Get("Id");
     std::string uId = this->Get("UId").ToString();
-    std::string userId = app->GetActiveUser()->Get("Id").ToString();
+
+    Alder::User* user = app->GetActiveUser();
+    vtkSmartPointer<Alder::QueryModifier> modifier =
+      vtkSmartPointer<Alder::QueryModifier>::New();
+    user->InitializeExamModifier(modifier);
+
+    std::string userId = user->Get("Id").ToString();
     std::stringstream stream;
+    bool simple = !loaded && !unRated;
 
     // use a special query to quickly get the next interview
-    if (!loaded && !unrated)
+    if (simple)
     {
       stream << "SELECT Id FROM Interview ";
     }
-    else if (!loaded && unrated)
+    else
     {
-      stream << "SELECT Id, UId FROM ("
-         <<   "SELECT Interview.Id, UId, Rating.Rating IS NOT NULL AS Rated "
-         <<   "FROM User "
-         <<   "CROSS JOIN Interview "
-         <<   "LEFT JOIN Exam ON Interview.Id = Exam.InterviewId "
-         <<   "LEFT JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
-         <<   "LEFT JOIN UserHasModality ON ScanType.ModalityId = UserHasModality.ModalityId "
-         <<   "AND UserHasModality.UserId = User.Id "
-         <<   "LEFT JOIN Image ON Exam.Id = Image.ExamId "
-         <<   "LEFT JOIN Rating ON Image.Id = Rating.ImageId "
-         <<   "AND User.Id = Rating.UserId "
-         <<   "WHERE User.Id = " << userId << " "
-         <<   "GROUP BY Interview.Id, Rating.Rating IS NOT NULL "
-         << ") AS temp1 "
-         << "WHERE Rated = false "
-         << "AND Id NOT IN ("
-         <<   "SELECT Id FROM ("
-         <<     "SELECT Interview.Id, Rating.Rating IS NOT NULL AS Rated "
-         <<     "FROM User "
-         <<     "CROSS JOIN Interview "
-         <<     "JOIN Exam ON Interview.Id = Exam.InterviewId "
-         <<     "JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
-         <<     "JOIN UserHasModality ON ScanType.ModalityId = UserHasModality.ModalityId "
-         <<     "AND UserHasModality.UserId = User.Id "
-         <<     "JOIN Image ON Exam.Id = Image.ExamId "
-         <<     "JOIN Rating ON Image.Id = Rating.ImageId "
-         <<     "AND User.Id = Rating.UserId "
-         <<     "WHERE User.Id = " << userId << " "
-         <<     "GROUP BY Interview.Id, Rating.Rating IS NOT NULL "
-         <<   ") AS temp2 "
-         <<   "WHERE Rated = true "
-         << ") "
-         << "UNION SELECT " << interviewId << ", '" << uId << "' ";
-    }
-    else if (loaded && !unrated)
-    {
-      stream << "SELECT Id, UId FROM ("
-         <<   "SELECT Interview.Id, UId, Exam.Downloaded "
-         <<   "FROM User "
-         <<   "CROSS JOIN Interview "
-         <<   "JOIN Exam ON Interview.Id = Exam.InterviewId "
-         <<   "JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
-         <<   "JOIN UserHasModality ON ScanType.ModalityId = UserHasModality.ModalityId "
-         <<   "AND UserHasModality.UserId = User.Id "
-         <<   "WHERE User.Id = " << userId << " "
-         <<   "AND Stage = 'Completed' "
-         <<   "GROUP BY Interview.Id, Downloaded "
-         << ") AS temp1 "
-         << "WHERE Downloaded = true "
-         << "AND Id NOT IN ("
-         <<   "SELECT Id FROM ("
-         <<     "SELECT Interview.Id, Exam.Downloaded "
-         <<     "FROM User "
-         <<     "CROSS JOIN Interview "
-         <<     "JOIN Exam ON Interview.Id = Exam.InterviewId "
-         <<     "JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
-         <<     "JOIN UserHasModality ON ScanType.ModalityId = UserHasModality.ModalityId "
-         <<     "AND UserHasModality.UserId = User.Id "
-         <<     "WHERE User.Id = " << userId << " "
-         <<     "AND Stage = 'Completed' "
-         <<     "GROUP BY Interview.Id, Downloaded "
-         <<   ") AS temp2 "
-         <<   "WHERE Downloaded = false "
-         << ") "
-         << "UNION SELECT " << interviewId << ", '" << uId << "' ";
-    }
-    else  // loaded && unrated
-    {
-      stream << "SELECT Id, UId FROM ("
-         <<   "SELECT Interview.Id, UId, "
-         <<   "Rating.Rating IS NOT NULL AS Rated, Exam.Downloaded "
-         <<   "FROM User "
-         <<   "CROSS JOIN Interview "
-         <<   "JOIN Exam ON Interview.Id = Exam.InterviewId "
-         <<   "JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
-         <<   "JOIN UserHasModality ON ScanType.ModalityId = UserHasModality.ModalityId "
-         <<   "AND UserHasModality.UserId = User.Id "
-         <<   "JOIN Image ON Exam.Id = Image.ExamId "
-         <<   "LEFT JOIN Rating ON Image.Id = Rating.ImageId "
-         <<   "AND User.Id = Rating.UserId "
-         <<   "WHERE User.Id = " << userId << " "
-         <<   "AND Stage = 'Completed' "
-         <<   "GROUP BY Interview.Id, Rating.Rating IS NOT NULL, Downloaded "
-         << ") AS temp1 "
-         << "WHERE Rated = false "
-         << "AND Downloaded = true "
-         << "AND Id NOT IN ("
-         <<   "SELECT Id FROM ("
-         <<     "SELECT Interview.Id, Rating.Rating IS NOT NULL AS Rated "
-         <<     "FROM User "
-         <<     "CROSS JOIN Interview "
-         <<     "JOIN Exam ON Interview.Id = Exam.InterviewId "
-         <<     "JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
-         <<     "JOIN UserHasModality ON ScanType.ModalityId = UserHasModality.ModalityId "
-         <<     "AND UserHasModality.UserId = User.Id "
-         <<     "JOIN Image ON Exam.Id = Image.ExamId "
-         <<     "JOIN Rating ON Image.Id = Rating.ImageId "
-         <<     "AND User.Id = Rating.UserId "
-         <<     "WHERE User.Id = " << userId << " "
-         <<     "GROUP BY Interview.Id, Rating.Rating IS NOT NULL "
-         <<   ") AS temp2 "
-         <<   "WHERE Rated = true "
-         << ") "
-         << "AND Id NOT IN ("
-         <<   "SELECT Id FROM ("
-         <<     "SELECT Interview.Id, Exam.Downloaded "
-         <<     "FROM User "
-         <<     "CROSS JOIN Interview "
-         <<     "JOIN Exam ON Interview.Id = Exam.InterviewId "
-         <<     "JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
-         <<     "JOIN UserHasModality ON ScanType.ModalityId = UserHasModality.ModalityId "
-         <<     "AND UserHasModality.UserId = User.Id "
-         <<     "WHERE User.Id = " << userId << " "
-         <<     "AND Stage = 'Completed' "
-         <<     "GROUP BY Interview.Id, Downloaded "
-         <<   ") AS temp2 "
-         <<   "WHERE Downloaded = false "
-         << ") "
-         << "UNION SELECT " << interviewId << ", '" << uId << "' ";
+      stream
+        << "SELECT Interview.Id, UId "
+        << "FROM User "
+        << "CROSS JOIN Interview "
+        << "JOIN Exam ON Interview.Id = Exam.InterviewId "
+        << "JOIN ScanType ON Exam.ScanTypeId = ScanType.Id "
+        << "JOIN UserHasModality ON ScanType.ModalityId = UserHasModality.ModalityId "
+        << "AND UserHasModality.UserId = User.Id "
+        << "JOIN Image ON Image.ExamId = Exam.Id "
+        << "WHERE User.Id = " << userId << " ";
+      if (loaded)
+      {
+        stream
+          << "AND Stage = 'Completed' AND Downloaded = true ";
+      }
+      stream
+        << "GROUP BY Interview.Id "
+        << "UNION SELECT " << currentId.ToString() << ", '" << uId << "' ";
     }
 
     // order the query by UId (descending if not forward)
@@ -194,40 +101,46 @@ namespace Alder
         "There was an error while trying to query the database.");
     }
 
-    vtkVariant neighbourId;
-
-    // store the first record in case we need to loop over
-    //
-    if (query->NextRow())
+    vtkSmartPointer<Interview> interview = vtkSmartPointer<Interview>::New();
+    std::list<int> idList;
+    while (query->NextRow())
     {
-      bool found = false;
-      vtkVariant currentId = this->Get("Id");
-
-      // if the current id is last in the following loop
-      // then we need the first id
-      //
-      neighbourId = query->DataValue(0);
-
-      do  // keep looping until we find the current Id
+      vtkVariant vId = query->DataValue(0);
+      if (vId.IsValid())
       {
-        vtkVariant id = query->DataValue(0);
-        if (found)
-        {
-          neighbourId = id;
-          break;
-        }
-
-        if (currentId == id) found = true;
-      } while (query->NextRow());
-
-      // we should always find the current interview id
-      //
-      if (!found)
-        throw std::runtime_error("Cannot find current Interview in database.");
+        idList.push_back(vId.ToInt());
+      }
     }
 
-    vtkSmartPointer<Interview> interview = vtkSmartPointer<Interview>::New();
-    if (neighbourId.IsValid()) interview->Load("Id", neighbourId.ToString());
+    // iterator to the current interview Id in the list
+    //
+    std::list<int>::iterator currentIt = find(idList.begin(), idList.end(), currentId.ToInt());
+
+    // append the list with all preceding Ids
+    //
+    if (currentIt != idList.begin())
+    {
+      std::list<int> append;
+      std::copy(idList.begin(), currentIt, std::back_inserter(append));
+      idList.insert(idList.end(), append.begin(), append.end());
+    }
+
+    // iterator from the current Id forward until a qualifying interview is found
+    //
+    bool found = false;
+    while (++currentIt != idList.end() && !found)
+    {
+      interview->Load("Id", *currentIt);
+      if (uId != interview->Get("UId").ToString())
+      {
+        if( unRated && interview->IsRatedBy(user))
+        {
+          continue;
+        }
+        found = true;
+      }
+    }
+    if(!found) interview->Load("Id", currentId.ToString());
     return interview;
   }
 
