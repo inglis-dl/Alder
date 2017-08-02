@@ -120,6 +120,16 @@ namespace Alder
        */
       Exam::SideStatus GetSideStatus();
 
+      /**
+       * Convenience method to get the number of image records attributed to this Exam.
+       */
+      int GetCurrentImageCount();
+
+      /**
+       * Convenience method to get the total number of possible images based on Exam ScanType.
+       */
+      int GetExpectedImageCount();
+
     protected:
       Exam() {}
       ~Exam() {}

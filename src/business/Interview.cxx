@@ -230,6 +230,7 @@ namespace Alder
 
     int downloadCount = 0;
     int pendingCount = 0;
+    int partialCount = 0;
     int missingCount = 0;
     int examCount = 0;
     for (auto it = vecExam.cbegin(); it != vecExam.cend(); ++it, ++examCount)
@@ -238,10 +239,19 @@ namespace Alder
       //
       if ((*it)->HasImageData())
       {
-        if (0 == (*it)->Get("Downloaded").ToInt())
-          pendingCount++;
-        else
+        int current = (*it)->GetCurrentImageCount();
+        int expected = (*it)->GetExpectedImageCount();
+        if (current == expected)
+        {
           downloadCount++;
+        }
+        else
+        {
+          if(0 == current)
+            pendingCount++;
+          else
+            partialCount++;
+        }
       }
       else
         missingCount++;
@@ -251,9 +261,11 @@ namespace Alder
     //
     if (missingCount == examCount) // none of the exams is valid
       status = Interview::ImageStatus::None;
-    else if (0 < pendingCount)     // image record exists, no file downloaded
+    else if (0 < pendingCount)  // image records exist, no file downloaded
       status = Interview::ImageStatus::Pending;
-    else if (0 < downloadCount)    // image record exists, file downloaded
+    else if (0 < partialCount)  // image records exist, some files downloaded
+      status = Interview::ImageStatus::Partial;
+    else if (0 < downloadCount)  // image records exist, all files downloaded
       status = Interview::ImageStatus::Complete;
 
     return status;

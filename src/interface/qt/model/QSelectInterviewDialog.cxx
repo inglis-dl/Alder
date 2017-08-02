@@ -221,15 +221,19 @@ void QSelectInterviewDialogPrivate::updateRow(
       continue;
 
     updateItemText.insert(name, true);
+
     if (exam->HasImageData())
     {
+      // the Exam has meta data indicating the stage was completed
       examCount[name]++;
-      if (1 == exam->Get("Downloaded").ToInt())
+
+      // the Exam has images downloaded
+      if (0 < exam->GetCurrentImageCount())
       {
         downloadCount[name]++;
-        if (exam->IsRatedBy(user))
-          ratedCount[name]++;
       }
+      if (exam->IsRatedBy(user))
+        ratedCount[name]++;
     }
   }
 
@@ -464,7 +468,8 @@ void QSelectInterviewDialog::accepted()
     Alder::Application* app = Alder::Application::GetInstance();
     int col = d->columnIndex.value("UId");
     int lastId = -1;
-    std::vector<vtkSmartPointer<Alder::Interview>> vecInterview;
+    std::vector<vtkSmartPointer<Alder::Interview>> vecInterviewPartial;
+    std::vector<vtkSmartPointer<Alder::Interview>> vecInterviewPending;
 
     // handle modalities the user is permitted access to
     vtkSmartPointer<Alder::QueryModifier> modifier =
@@ -484,25 +489,29 @@ void QSelectInterviewDialog::accepted()
         if (vId.isValid() && !vId.isNull() &&
             interview->Load("Id", vId.toInt()))
         {
-          if (Alder::Interview::ImageStatus::Complete ==
-              interview->GetImageStatus(modifier))
+          int status = interview->GetImageStatus(modifier);
+          if (Alder::Interview::ImageStatus::Complete == status)
           {
             lastId = interview->Get("Id").ToInt();
           }
-          else
+          else if (Alder::Interview::ImageStatus::Pending == status)
           {
-            vecInterview.push_back(interview);
+            vecInterviewPending.push_back(interview);
+          }
+          else if (Alder::Interview::ImageStatus::Partial == status)
+          {
+            vecInterviewPartial.push_back(interview);
           }
         }
       }
     }
 
-    if (!vecInterview.empty())
+    if (!vecInterviewPending.empty())
     {
       QString title = "Confirm Image Download";
       QString text = "There are ";
-      text += QString::number(vecInterview.size());
-      text += " interviews requiring download of images. ";
+      text += QString::number(vecInterviewPending.size());
+      text += " interviews requiring initial image download. ";
       if (1 < vecInterview.size())
         text += "This could take some time to complete. ";
       text += "Proceed with downloading?";
@@ -510,13 +519,42 @@ void QSelectInterviewDialog::accepted()
         title, text, QMessageBox::Yes|QMessageBox::No);
       if (QMessageBox::Yes == reply)
       {
-        for (auto it = vecInterview.cbegin(); it != vecInterview.cend(); ++it)
+        for (auto it = vecInterviewPending.cbegin(); it != vecInterviewPending.cend(); ++it)
         {
           // the interview will activate displaying progress of image downloads
           Alder::Interview* interview = *it;
           interview->UpdateImageData();
-          if (Alder::Interview::ImageStatus::None !=
-              interview->GetImageStatus(modifier))
+          int status = interview->GetImageStatus(modifier);
+          if (Alder::Interview::ImageStatus::Partial == status)
+          {
+            vecInterviewPartial.push_back(interview);
+          }
+          if (-1 == lastId)
+          {
+            lastId = interview->Get("Id").ToInt();
+          }
+        }
+      }
+    }
+    if (!vecInterviewPartial.empty())
+    {
+      QString title = "Confirm Continue Image Download";
+      QString text = "There are ";
+      text += QString::number(vecInterviewPartial.size());
+      text += " interviews requiring additional download of images. ";
+      if (1 < vecInterview.size())
+        text += "This could take some time to complete. ";
+      text += "Proceed with downloading?";
+      QMessageBox::StandardButton reply = QMessageBox::question(this,
+        title, text, QMessageBox::Yes|QMessageBox::No);
+      if (QMessageBox::Yes == reply)
+      {
+        for (auto it = vecInterviewPartial.cbegin(); it != vecInterviewPartial.cend(); ++it)
+        {
+          // the interview will activate displaying progress of image downloads
+          Alder::Interview* interview = *it;
+          interview->UpdateImageData();
+          if (-1 == lastId)
           {
             lastId = interview->Get("Id").ToInt();
           }

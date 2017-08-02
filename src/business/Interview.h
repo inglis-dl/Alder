@@ -52,6 +52,7 @@ namespace Alder
     {
       None = 0,
       Pending,
+      Partial,
       Complete
     };
 

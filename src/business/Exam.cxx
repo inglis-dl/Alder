@@ -69,6 +69,24 @@ namespace Alder
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  int Exam::GetCurrentImageCount()
+  {
+    return this->GetCount("Image");
+  }
+
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  int Exam::GetExpectedImageCount()
+  {
+    vtkSmartPointer<ScanType> scanType;
+    if (!this->GetRecord(scanType))
+      throw std::runtime_error("Exam has no parent scantype");
+
+    int acqCount   = scanType->Get("AcquisitionCount").ToInt();
+    int childCount = scanType->Get("ChildCount").ToInt();
+    return (acqCount + childCount);
+  }
+
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   bool Exam::DownloadComplete()
   {
     // get the ScanType parameters
