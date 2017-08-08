@@ -119,13 +119,22 @@ util::initialize();
          'ORDER BY source, type, uid';
 
   $data = $db->get_all( $sql );
-  
+
+
+
   util::out( 'repairing ' . count( $data ) .' Exam records having null SideIndex' );
   if( 0 < count( $data ) )
   {
+    $opalnet =
+        ' -o ' . $opalassoc['Host'] . ':' . $opalassoc['Port'] .
+        ' -u ' . $opalassoc['Username'] .
+        ' -p ' . $opalassoc['Password'];
+
     foreach( $data as $elem )
     {
-      var_dump($elem);
+      $opalvar = $elem['source'] . '.Exam:' . $elem['type'] . '.' . 'SideIndex ';
+      $opalcmd = 'opal data ' . $opalvar . $opalnet . ' -i ' . $elem['uid'];
+      util::out( shell_exec($opalcmd));
     }
 
   }
