@@ -41,7 +41,7 @@ util::initialize();
 
   if( $argc < 2  )
   {
-    util::error( 'usage: PatchExamSideIndex.php path_to/config.xml <debug> \n' );
+    util::error( 'usage: PatchExamSideIndex.php path_to/config.xml <debug> <verbose>\n' );
     exit();
   }
 
@@ -97,7 +97,12 @@ util::initialize();
   if( 3 == $argc )
     $debug = $argv[2];
 
-  $numExamProcessed=0;
+  $verbose = 1;
+  if( 4 == $argc )
+    $verbose = $argv[3];
+
+  $numExamProcessed = 0;
+  $numOrphanedRatings = 0;
 
   // correct Exam records with SideIndex = null
   $sql = 'SELECT Exam.Id AS examid, '.
@@ -120,13 +125,17 @@ util::initialize();
 
   $data = $db->get_all( $sql );
 
+  if($verbose)
+    util::out($sql);
 
+  if($verbose)
+    util::out( 'repairing ' . count( $data ) .' Exam records having null SideIndex' );
+  $sql_str = 'UPDATE Exam SET SideIndex = %d WHERE Exam.Id = %d';
 
-  util::out( 'repairing ' . count( $data ) .' Exam records having null SideIndex' );
   if( 0 < count( $data ) )
   {
     $opalnet =
-        ' -o ' . $opalassoc['Host'] . ':' . $opalassoc['Port'] .
+        ' -o https://' . $opalassoc['Host'] . ':' . $opalassoc['Port'] .
         ' -u ' . $opalassoc['Username'] .
         ' -p ' . $opalassoc['Password'];
 
@@ -134,8 +143,30 @@ util::initialize();
     {
       $opalvar = $elem['source'] . '.Exam:' . $elem['type'] . '.' . 'SideIndex ';
       $opalcmd = 'opal data ' . $opalvar . $opalnet . ' -i ' . $elem['uid'];
-      util::out( shell_exec($opalcmd));
+      if($verbose)
+        util::out( $opalcmd );
+      $res = json_decode(shell_exec($opalcmd), true);
+      if(!empty($res) || !is_null($res) && array_key_exists('value',$res))
+      {
+        $index = $res['value'];
+        $sql = sprintf($sql_str, $index, $elem['examid']);
+        if($verbose)
+          util::out($sql);
+        if(!$debug)
+        {
+          $db->execute($sql);
+          $numExamProcessed++;
+        }
+      }
+      if(-1 == $elem['imageid'] && -1 != $elem['ratingid'])
+      {
+        if($verbose)
+          util::out('found orphaned rating');
+        $numOrphanedRatings++;
+      }
     }
 
   }
+  util::out('number of exam records updated: ' . $numExamProcessed . ' of ' . count($data));
+  util::out('number of orphaned ratings: ' . $numOrphanedRatings . ' of ' . count($data));
 ?>
