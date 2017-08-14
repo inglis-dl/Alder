@@ -94,11 +94,11 @@ util::initialize();
     $dbassoc['Name'] );
 
   $debug = 1;
-  if( 3 == $argc )
+  if( $argc > 2 )
     $debug = $argv[2];
 
   $verbose = 1;
-  if( 4 == $argc )
+  if( $argc > 3 )
     $verbose = $argv[3];
 
   $numExamProcessed = 0;
@@ -152,7 +152,7 @@ util::initialize();
         $sql = sprintf($sql_str, $index, $elem['examid']);
         if($verbose)
           util::out($sql);
-        if(!$debug)
+        if(0 == $debug)
         {
           $db->execute($sql);
           $numExamProcessed++;
