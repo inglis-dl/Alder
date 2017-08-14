@@ -38,9 +38,13 @@
 #include <vtkNew.h>
 
 // Qt includes
+#include <QCompleter>
 #include <QFileInfo>
 #include <QMessageBox>
+#include <QRegExp>
+#include <QStringListModel>
 #include <QTreeWidgetItem>
+#include <QValidator>
 
 // C++ includes
 #include <algorithm>
@@ -116,6 +120,9 @@ void QAlderInterviewWidgetPrivate::setupUi(QWidget* widget)
   QObject::connect(
     this->anonymizePushButton, SIGNAL(clicked()),
     this, SLOT(imageAnonymize()));
+  QObject::connect(
+    this->uidLineEdit, SIGNAL(returnPressed()),
+    this, SLOT(textCompleted()));
 
   this->qvtkConnection->Connect(Alder::Application::GetInstance(),
     Alder::Common::UserChangedEvent,
@@ -158,16 +165,66 @@ void QAlderInterviewWidgetPrivate::setupUi(QWidget* widget)
   item = 0;
 
   // build the map between modality and user permission
-  std::vector<vtkSmartPointer<Alder::Modality>> mlist;
-  Alder::Modality::GetAll(&mlist);
-  for (auto m = mlist.begin(); m != mlist.end(); ++m)
+  // build the map between modality and available interview by UID
+  std::vector<vtkSmartPointer<Alder::Modality>> mVec;
+  Alder::Modality::GetAll(&mVec);
+  vtkSmartPointer<Alder::QueryModifier> modifier =
+    vtkSmartPointer<Alder::QueryModifier>::New();
+  std::string col = "UId";
+  for (auto m = mVec.begin(); m != mVec.end(); ++m)
   {
     QString name = (*m)->Get("Name").ToString().c_str();
     this->modalityPermission[name] = false;
+    modifier->Reset();
+    modifier->Join("Exam","Exam.InterviewId","Interview.Id");
+    modifier->Join("ScanType","ScanType.Id","Exam.ScanTypeId");
+    modifier->Join("Modality","Modality.Id","ScanType.ModalityId");
+    modifier->Join("Image","Image.ExamId","Exam.Id");
+    modifier->Where("Modality.Name","=",name.toStdString().c_str());
+    std::vector<std::string> uVec;
+    Alder::Interview::GetAll<Alder::Interview>(&uVec, col, true, modifier);
+    QStringList qList;
+    qList.reserve(uVec.size());
+    for(auto u = uVec.begin(); u != uVec.end(); ++u)
+      qList.append(QString::fromStdString(*u));
+    this->modalityUId[name] = qList;
   }
+
+  QRegExp uReg("[A-Z,a-z]{1,1}\\d{6}");
+  QValidator* uVal = new QRegExpValidator(uReg, this);
+  this->uidLineEdit->setValidator(uVal);
+  QStringListModel *model = new QStringListModel(this);
+  QCompleter *completer = new QCompleter(model,this);
+  completer->setCaseSensitivity(Qt::CaseInsensitive);
+  this->uidLineEdit->setCompleter(completer);
 
   this->filenameValueLabel->setWordWrap(true);
 };
+
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderInterviewWidgetPrivate::textCompleted()
+{
+  QString uid = this->uidLineEdit->text();
+  vtkSmartPointer<Alder::QueryModifier> modifier =
+    vtkSmartPointer<Alder::QueryModifier>::New();
+  Alder::Application* app = Alder::Application::GetInstance();
+  Alder::User* user = app->GetActiveUser();
+  user->InitializeExamModifier(modifier);
+  modifier->Join("Exam", "Exam.Id", "Exam.InterviewId", Alder::QueryModifier::PLAIN, false);
+  modifier->Where("UId", "=", vtkVariant(uid.toStdString()));
+  std::vector<vtkSmartPointer<Alder::Interview>> ilist;
+  Alder::Interview::GetAll(&ilist, modifier);
+  for (auto it = ilist.begin(); it != ilist.end(); ++it)
+  {
+    vtkSmartPointer<Alder::Interview> interview = *it;
+    Alder::Interview::ImageStatus status = interview->GetImageStatus();
+    if (Alder::Interview::ImageStatus::None != status)
+    {
+      this->setActiveInterview(interview);
+      break;
+    }
+  }
+}
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
 void QAlderInterviewWidgetPrivate::previous()
@@ -295,6 +352,28 @@ void QAlderInterviewWidgetPrivate::updatePermission()
       }
     }
   }
+
+  this->updateCompleter();
+}
+
+// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+void QAlderInterviewWidgetPrivate::updateCompleter()
+{
+  QStringList qList;
+  for (QMap<QString, bool>::iterator it = this->modalityPermission.begin();
+    it != modalityPermission.end(); ++it)
+  {
+    QString current = it.key();
+    bool permission = it.value();
+    if(permission)
+    {
+      qList = qList + modalityUId[current];
+    }
+  }
+  QSet<QString> qSet = QSet<QString>::fromList(qList);
+  QStringListModel *model = qobject_cast<QStringListModel *>(
+    this->uidLineEdit->completer()->model());
+  model->setStringList(QList<QString>::fromSet(qSet));
 }
 
 // build the tree with all available data
@@ -851,11 +930,13 @@ void QAlderInterviewWidgetPrivate::updateEnabled()
   Alder::User* user = Alder::Application::GetInstance()->GetActiveUser();
 
   // set all widget enable states
-  this->unratedCheckBox->setEnabled(interview);
-  this->loadedCheckBox->setEnabled(interview);
-  this->previousPushButton->setEnabled(interview);
-  this->nextPushButton->setEnabled(interview);
+  this->unratedCheckBox->setEnabled(user);
+  this->loadedCheckBox->setEnabled(user);
+  this->previousPushButton->setEnabled(user);
+  this->nextPushButton->setEnabled(user);
   this->treeWidget->setEnabled(interview);
+  this->uidLineEdit->clear();
+  this->uidLineEdit->setEnabled(user);
 
   bool expert = user && 0 < user->Get("Expert").ToInt();
   this->useDerivedCheckBox->setEnabled(image && expert);
@@ -1269,7 +1350,7 @@ void QAlderInterviewWidget::hideControls(bool hide)
   layouts.append(d->verticalLayout);
   layouts.append(d->infoLayout);
   layouts.append(d->ratingLayout);
-  layouts.append(d->buttonLayout);
+  layouts.append(d->interviewGridLayout);
 
   QList<QWidget*> widgets;
   for (int i = 0; i < layouts.count(); ++i)
@@ -1325,15 +1406,9 @@ void QAlderInterviewWidget::userChanged()
   {
     d->participantData->SetActiveInterview(NULL);
   }
-}
-
-// -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
-void QAlderInterviewWidget::updatePermission()
-{
-  Q_D(QAlderInterviewWidget);
-  d->updatePermission();
-  d->updateTree();
-  d->updateEnabled();
+  // setting the active interview will cause participantData to invoke
+  // InterviewChangedEvent which invokes the interviewChanged slot
+  // which in turn calls updateTree and updateEnabled
 }
 
 // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-

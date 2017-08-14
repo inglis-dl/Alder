@@ -52,10 +52,12 @@ class QAlderInterviewWidgetPrivate : public QObject,
     void updateEnabled();
     void updateCodeList();
     void updatePermission();
+    void updateCompleter();
     void updateSelected();
 
   public slots:
 
+    void textCompleted();
     void next();
     void previous();
     void ratingChanged(int value);
@@ -86,8 +88,10 @@ class QAlderInterviewWidgetPrivate : public QObject,
     vtkSmartPointer<Alder::ParticipantData> participantData;
 
     // mapping between Alder::Modality names and current Alder::User permissions
-    // sorted by Modalit Name
+    // sorted by Modality Name
     QMap<QString, bool> modalityPermission;
+
+    QMap<QString, QStringList> modalityUId;
 
     // method called by previous() and next() slots to change the interview
     void setActiveInterview(Alder::Interview* interview);
