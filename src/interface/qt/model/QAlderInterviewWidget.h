@@ -37,7 +37,6 @@ class QAlderInterviewWidget : public QWidget
     void imageChanged();
     void loadInterview(int id);
     void userChanged();
-    void updatePermission();
 
   protected:
     QScopedPointer<QAlderInterviewWidgetPrivate> d_ptr;

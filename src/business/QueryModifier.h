@@ -45,42 +45,44 @@ namespace Alder
 {
   class QueryModifier : public ModelObject
   {
-    enum BracketType
-    {
-      NONE,
-      OPEN,
-      CLOSE
-    };
+    public:
+      enum JoinType {
+        PLAIN,
+        LEFT,
+        RIGHT,
+        CROSS,
+        INNER
+      };
 
-    enum JoinType {
-      PLAIN,
-      LEFT,
-      RIGHT,
-      CROSS,
-      INNER
-    };
+    private:
+      enum BracketType
+      {
+        NONE,
+        OPEN,
+        CLOSE
+      };
 
-    struct WhereParameter
-    {
-      WhereParameter() :
-        format(true), logicalOr(false),
-        bracket(QueryModifier::NONE) {}
-      std::string column;
-      std::string oper;
-      vtkVariant value;
-      bool format;
-      bool logicalOr;
-      BracketType bracket;
-    };
+      struct WhereParameter
+      {
+        WhereParameter() :
+          format(true), logicalOr(false),
+          bracket(QueryModifier::NONE) {}
+        std::string column;
+        std::string oper;
+        vtkVariant value;
+        bool format;
+        bool logicalOr;
+        BracketType bracket;
+      };
 
-    struct JoinParameter
-    {
-      JoinParameter() : type(QueryModifier::PLAIN) {}
-      std::string table;
-      std::string onLeft;
-      std::string onRight;
-      JoinType type;
-    };
+      struct JoinParameter
+      {
+        JoinParameter() : type(QueryModifier::PLAIN) {}
+        std::string table;
+        std::string onLeft;
+        std::string onRight;
+        JoinType type;
+      };
 
     public:
       static QueryModifier *New();
@@ -214,16 +216,18 @@ namespace Alder
 
       /**
        * Add a join statement to the modifier.
-       * This method prepends join clauses onto already existing join clauses.
+       * This method appends (default) or prepends join clauses onto already existing join clauses.
        * @param table   name of the table to join
        * @param onLeft  left hand side of the join expression
        * @param onRight right hand side of the join expression
        * @param type    join prefix type (e.g., LEFT)
+       * @param append  push_back() or insert() the join onto the JoinParameter vector
        */
       virtual void Join(const std::string table,
                         const std::string onLeft,
                         const std::string onRight,
-                        const JoinType type = QueryModifier::PLAIN);
+                        const JoinType type = QueryModifier::PLAIN,
+                        const bool append = true);
 
     protected:
       QueryModifier();

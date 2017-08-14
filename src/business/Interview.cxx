@@ -49,10 +49,6 @@ namespace Alder
     std::string uId = this->Get("UId").ToString();
 
     Alder::User* user = app->GetActiveUser();
-    vtkSmartPointer<Alder::QueryModifier> modifier =
-      vtkSmartPointer<Alder::QueryModifier>::New();
-    user->InitializeExamModifier(modifier);
-
     std::string userId = user->Get("Id").ToString();
     std::stringstream stream;
     bool simple = !loaded && !unRated;

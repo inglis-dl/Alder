@@ -44,18 +44,28 @@
       </widget>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="buttonLayout">
-       <item>
+      <layout class="QGridLayout" name="interviewGridLayout">
+       <item row="0" column="1">
         <widget class="QPushButton" name="previousPushButton">
          <property name="text">
           <string>Previous Interview</string>
          </property>
         </widget>
        </item>
-       <item>
+       <item row="0" column="3">
         <widget class="QPushButton" name="nextPushButton">
          <property name="text">
           <string>Next Interview</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3" alignment="Qt::AlignHCenter">
+        <widget class="QLineEdit" name="uidLineEdit"/>
+       </item>
+       <item row="1" column="1" alignment="Qt::AlignRight">
+        <widget class="QLabel" name="uidLookupLabel">
+         <property name="text">
+          <string>UID lookup:</string>
          </property>
         </widget>
        </item>
