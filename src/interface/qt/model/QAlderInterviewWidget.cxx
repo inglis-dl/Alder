@@ -210,7 +210,7 @@ void QAlderInterviewWidgetPrivate::textCompleted()
   Alder::Application* app = Alder::Application::GetInstance();
   Alder::User* user = app->GetActiveUser();
   user->InitializeExamModifier(modifier);
-  modifier->Join("Exam", "Exam.Id", "Exam.InterviewId", Alder::QueryModifier::PLAIN, false);
+  modifier->Join("Exam", "Exam.InterviewId", "Interview.Id", Alder::QueryModifier::PLAIN, false);
   modifier->Where("UId", "=", vtkVariant(uid.toStdString()));
   std::vector<vtkSmartPointer<Alder::Interview>> ilist;
   Alder::Interview::GetAll(&ilist, modifier);
@@ -220,6 +220,7 @@ void QAlderInterviewWidgetPrivate::textCompleted()
     Alder::Interview::ImageStatus status = interview->GetImageStatus();
     if (Alder::Interview::ImageStatus::None != status)
     {
+      std::cout << "setting active interview from text completion " << uid.toStdString() << std::endl;
       this->setActiveInterview(interview);
       break;
     }
