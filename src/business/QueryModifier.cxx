@@ -48,14 +48,17 @@ namespace Alder
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   void QueryModifier::Join(const std::string table, const std::string onLeft,
-    const std::string onRight, const JoinType type)
+    const std::string onRight, const JoinType type, const bool append)
   {
     JoinParameter p;
     p.type = type;
     p.table = table;
     p.onLeft = onLeft;
     p.onRight = onRight;
-    this->JoinList.push_back(p);
+    if (append)
+      this->JoinList.push_back(p);
+    else
+      this->JoinList.insert(this->JoinList.begin(),p);
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
