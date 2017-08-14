@@ -160,7 +160,7 @@ namespace Alder
       // get the class name of T, return error if not found
       std::string type = app->GetUnmangledClassName(typeid(T).name());
       std::stringstream stream;
-      stream << "SELECT " << (distinct ? "DISTINCT ": "") << column << "FROM " << type;
+      stream << "SELECT " << (distinct ? "DISTINCT ": "") << column << " FROM " << type;
       if (NULL != modifier) stream << " " << modifier->GetSql();
       vtkSmartPointer<vtkMySQLQuery> query = app->GetDB()->GetQuery();
 
