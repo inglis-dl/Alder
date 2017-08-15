@@ -220,7 +220,6 @@ void QAlderInterviewWidgetPrivate::textCompleted()
     Alder::Interview::ImageStatus status = interview->GetImageStatus();
     if (Alder::Interview::ImageStatus::None != status)
     {
-      std::cout << "setting active interview from text completion " << uid.toStdString() << std::endl;
       this->setActiveInterview(interview);
       break;
     }
