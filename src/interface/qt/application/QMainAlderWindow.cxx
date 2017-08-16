@@ -42,6 +42,7 @@
 #include <QProgressBar>
 #include <QPushButton>
 #include <QSettings>
+#include <QStandardPaths>
 #include <QTextStream>
 
 // C++ includes
@@ -363,16 +364,16 @@ void QMainAlderWindowPrivate::loadUIDs()
 {
   Q_Q(QMainAlderWindow);
   std::vector<std::pair<std::string, std::string>> list;
-  QFileDialog dialog(q, QDialog::tr("Open File"));
-  dialog.setNameFilter(QDialog::tr("CSV files (*.csv)"));
-  dialog.setFileMode(QFileDialog::ExistingFile);
 
-  QStringList selectedFiles;
-  if (dialog.exec())
-    selectedFiles = dialog.selectedFiles();
-  if (selectedFiles.isEmpty()) return;
-  QString fileName = selectedFiles.front();
+  QString fileName = QFileDialog::getOpenFileName(
+    q,
+    QDialog::tr("Open File"),
+    QStandardPaths::writableLocation(QStandardPaths::HomeLocation),
+    QDialog::tr("CSV files (*.csv)"),
+    NULL,
+    QFileDialog::DontUseNativeDialog);
 
+  if (fileName.isEmpty()) return;
   bool error = false;
   QString errorMsg;
 
@@ -481,9 +482,13 @@ void QMainAlderWindowPrivate::manual()
 void QMainAlderWindowPrivate::saveImage()
 {
   Q_Q(QMainAlderWindow);
-  QString fileName = QFileDialog::getSaveFileName(q,
-    QDialog::tr("Save Image to File"), this->lastSavePath,
-    QDialog::tr("Images (*.png *.pnm *.bmp *.jpg *.jpeg *.tif *.tiff)"));
+  QString fileName = QFileDialog::getSaveFileName(
+    q,
+    QDialog::tr("Save Image to File"),
+    this->lastSavePath,
+    QDialog::tr("Images (*.png *.pnm *.bmp *.jpg *.jpeg *.tif *.tiff)"),
+    NULL,
+    QFileDialog::DontUseNativeDialog);
 
   if (fileName.isEmpty()) return;
   else
