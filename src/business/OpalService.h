@@ -54,6 +54,10 @@
 namespace Alder
 {
   class User;
+  struct debug_data {
+    char trace_ascii;
+    std::ofstream* log_stream;
+  };
   class OpalService : public ModelObject
   {
     public:
@@ -76,7 +80,7 @@ namespace Alder
         const std::string& host,
         const int& port = 8843,
         const int& timeout = 10,
-        const int& verbose = 0);
+        const int& verbose = 1L);
 
       /**
        *  Set/Get the Opal connection port.
@@ -96,6 +100,12 @@ namespace Alder
       void SetSustainConnection(int sustain);
       vtkGetMacro(SustainConnection, int);
       vtkBooleanMacro(SustainConnection, int);
+
+      /**
+       *  Set/Get Curl debugging.
+       */
+      vtkGetMacro(CurlDebug, int);
+      vtkSetMacro(CurlDebug, int);
 
       /**
        * Returns a list of all identifiers in a particular data source and table.
@@ -212,6 +222,9 @@ namespace Alder
         const std::string& variable,
         const int& position = -1) const;
 
+      struct debug_data CurlDebugData;
+      static int CurlTrace(CURL* handle, curl_infotype type, char* data, size_t size, void* ptr);
+
     protected:
       OpalService();
       ~OpalService();
@@ -236,6 +249,7 @@ namespace Alder
       int Port;
       int Timeout;
       int Verbose;
+      int CurlDebug;
       int SustainConnection;
       CURL* CurlConnection;
       struct curl_slist* CurlHeaders;

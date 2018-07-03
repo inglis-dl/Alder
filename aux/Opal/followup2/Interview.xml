@@ -1,7 +1,7 @@
 <org.obiba.magma.views.View>
   <name>Interview</name>
   <from class="org.obiba.magma.security.SudoValueTableReference">
-    <reference>clsa-dcs.Participants</reference>
+    <reference>clsa-dcs-f2.Participants</reference>
   </from>
   <select class="org.obiba.magma.views.support.NoneClause"/>
   <where class="org.obiba.magma.views.support.AllClause"/>
@@ -9,8 +9,8 @@
     <variables class="linked-hash-set">
       <variable name="Site" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
-          <attribute name="script" valueType="text">var res=$(&apos;Admin.ApplicationConfiguration.siteName&apos;)
-res=res.map({
+          <attribute name="script" valueType="text">$(&apos;Admin.ApplicationConfiguration.siteName&apos;).map({
+  &apos;BritishColumbia&apos;:&apos;University of BC DCS&apos;,
   &apos;British Columbia&apos;:&apos;University of BC DCS&apos;,
   &apos;Calgary&apos;:&apos;Calgary DCS&apos;,
   &apos;Dalhousie&apos;:&apos;Dalhousie DCS&apos;,
@@ -19,28 +19,33 @@ res=res.map({
   &apos;McGill&apos;:&apos;McGill DCS&apos;,
   &apos;McMaster&apos;:&apos;Hamilton DCS&apos;,
   &apos;Memorial&apos;:&apos;Memorial DCS&apos;,
+  &apos;Memorial University&apos;:&apos;Memorial DCS&apos;,
   &apos;Ottawa&apos;:&apos;Ottawa DCS&apos;,
   &apos;Sherbrooke&apos;:&apos;Sherbrooke DCS&apos;,
   &apos;Simon Fraser&apos;:&apos;Simon Fraser DCS&apos;,
-  &apos;Victoria&apos;:&apos;Victoria DCS&apos;},res,null)</attribute>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder/table/Interview/variable/Site</attribute>
+  &apos;SimonFraser&apos;:&apos;Simon Fraser DCS&apos;,
+  &apos;UniversityofBC&apos;:&apos;University of BC DCS&apos;,
+  &apos;University of Manitoba&apos;:&apos;Manitoba DCS&apos;,
+  &apos;University of Victoria&apos;:&apos;Victoria DCS&apos;,
+  &apos;Victoria&apos;:&apos;Victoria DCS&apos;},null) </attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f2/table/Interview/variable/Site</attribute>
         </attributes>
       </variable>
       <variable name="VisitDate" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
           <attribute name="script" valueType="text">$(&apos;Admin.Interview.startDate&apos;).format(&apos;yyyy-MM-dd&apos;)</attribute>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder/table/Interview/variable/VisitDate</attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f2/table/Interview/variable/VisitDate</attribute>
         </attributes>
       </variable>
-      <variable name="Barcode" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="3">
+      <variable name="Barcode" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
           <attribute name="identifier" valueType="text">true</attribute>
-          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/clsa-dcs/table/Participants/variable/Admin.Participant.barcode</attribute>
+          <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/clsa-dcs-f2/table/Participants/variable/Admin.Participant.barcode</attribute>
           <attribute name="script" valueType="text">$(&apos;Admin.Participant.barcode&apos;)</attribute>
         </attributes>
       </variable>
     </variables>
   </variables>
-  <created valueType="datetime">2018-01-02T14:34:01.613-05</created>
-  <updated valueType="datetime">2018-02-22T08:53:46.411-05</updated>
+  <created valueType="datetime">2018-07-03T11:50:39.779-04</created>
+  <updated valueType="datetime">2018-07-03T11:50:39.779-04</updated>
 </org.obiba.magma.views.View>

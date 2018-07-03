@@ -9,7 +9,25 @@
     <variables class="linked-hash-set">
       <variable name="Site" valueType="text" entityType="Participant" unit="" mimeType="" referencedEntityType="" index="0">
         <attributes>
-          <attribute name="script" valueType="text">$(&apos;Admin.ApplicationConfiguration.siteName&apos;)</attribute>
+          <attribute name="script" valueType="text">$(&apos;Admin.ApplicationConfiguration.siteName&apos;).map({
+  &apos;BritishColumbia&apos;:&apos;University of BC DCS&apos;,
+  &apos;British Columbia&apos;:&apos;University of BC DCS&apos;,
+  &apos;Calgary&apos;:&apos;Calgary DCS&apos;,
+  &apos;Dalhousie&apos;:&apos;Dalhousie DCS&apos;,
+  &apos;Hamilton&apos;:&apos;Hamilton DCS&apos;,
+  &apos;Manitoba&apos;:&apos;Manitoba DCS&apos;,
+  &apos;McGill&apos;:&apos;McGill DCS&apos;,
+  &apos;McMaster&apos;:&apos;Hamilton DCS&apos;,
+  &apos;Memorial&apos;:&apos;Memorial DCS&apos;,
+  &apos;Memorial University&apos;:&apos;Memorial DCS&apos;,
+  &apos;Ottawa&apos;:&apos;Ottawa DCS&apos;,
+  &apos;Sherbrooke&apos;:&apos;Sherbrooke DCS&apos;,
+  &apos;Simon Fraser&apos;:&apos;Simon Fraser DCS&apos;,
+  &apos;SimonFraser&apos;:&apos;Simon Fraser DCS&apos;,
+  &apos;UniversityofBC&apos;:&apos;University of BC DCS&apos;,
+  &apos;University of Manitoba&apos;:&apos;Manitoba DCS&apos;,
+  &apos;University of Victoria&apos;:&apos;Victoria DCS&apos;,
+  &apos;Victoria&apos;:&apos;Victoria DCS&apos;},null) </attribute>
           <attribute name="derivedFrom" namespace="opal" valueType="text">/datasource/alder_f1/table/Interview/variable/Site</attribute>
         </attributes>
       </variable>
@@ -28,6 +46,6 @@
       </variable>
     </variables>
   </variables>
-  <created valueType="datetime">2016-09-20T10:03:17.661-04</created>
-  <updated valueType="datetime">2017-06-07T10:45:25.867-04</updated>
+  <created valueType="datetime">2017-12-14T15:25:16.841-05</created>
+  <updated valueType="datetime">2018-04-30T14:14:12.012-04</updated>
 </org.obiba.magma.views.View>

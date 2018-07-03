@@ -35,6 +35,109 @@ namespace Alder
   vtkStandardNewMacro(OpalService);
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
+  int OpalService::CurlTrace(
+    CURL* handle,
+    curl_infotype type,
+    char* data,
+    size_t size,
+    void* ptr)
+  {
+    struct debug_data* config = (struct debug_data*)ptr;
+    (void)handle;
+    ofstream* log = config->log_stream;
+    const char* text;
+    std::stringstream str;
+
+    switch (type)
+    {
+      case CURLINFO_TEXT:
+        (*log) << "== Info:" <<  data << std::endl;
+        /* FALLTHROUGH */
+      default: /* in case a new one is introduced to shock us */
+        return 0;
+
+      case CURLINFO_HEADER_OUT:
+        text = "=> Send header";
+        break;
+      case CURLINFO_DATA_OUT:
+        text = "=> Send data";
+        break;
+      case CURLINFO_SSL_DATA_OUT:
+        text = "=> Send SSL data";
+        break;
+      case CURLINFO_HEADER_IN:
+        text = "<= Recv header";
+        break;
+      case CURLINFO_DATA_IN:
+        text = "<= Recv data";
+        break;
+      case CURLINFO_SSL_DATA_IN:
+        text = "<= Recv SSL data";
+        break;
+    }
+
+    size_t i;
+    size_t c;
+    unsigned int width = 0x10;
+    char nohex = config->trace_ascii;
+
+    if (nohex)
+      // without the hex output, we can fit more on screen
+      width = 0x40;
+    char buffer[512];
+    sprintf(buffer, "%s, %10.10ld bytes (0x%8.8lx)",
+      text, (long)size, (long)size);
+    str << buffer << std::endl;
+
+    unsigned char* cptr = (unsigned char*)data;
+
+    for (i = 0; i < size; i += width)
+    {
+      sprintf(buffer, "%4.4lx: ", (long)i);
+      str << buffer << std::endl;
+      if (!nohex)
+      {
+        // hex not disabled, show it
+        for (c = 0; c < width; c++)
+        {
+          if (i + c < size)
+          {
+            sprintf(buffer, "%02x ", cptr[i + c]);
+            str << buffer;
+          }
+          else
+            str << "   ";
+        }
+      }
+      str << std::endl;
+
+      for (c = 0; (c < width) && (i + c < size); c++)
+      {
+        // check for 0D0A; if found, skip past and start a new line of output
+        if (nohex && (i + c + 1 < size) && cptr[i + c] == 0x0D &&
+            cptr[i + c + 1] == 0x0A)
+        {
+          i += (c + 2 - width);
+          break;
+        }
+        sprintf(buffer, "%c",
+          (cptr[i + c] >= 0x20) && (cptr[i + c] < 0x80) ? cptr[i + c] : '.');
+        str << buffer;
+        // check again for 0D0A, to avoid an extra \n if it's at width
+        if (nohex && (i + c + 2 < size) && cptr[i + c + 1] == 0x0D &&
+            cptr[i + c + 2] == 0x0A)
+        {
+          i += (c + 3 - width);
+          break;
+        }
+      }
+      str << std::endl;
+    }
+    (*log) << str.str();
+    return 0;
+  }
+
+  // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
   OpalService::OpalService()
   {
     this->Username = "";
@@ -42,11 +145,13 @@ namespace Alder
     this->Host = "localhost";
     this->Port = 8843;
     this->Timeout = 10;
-    this->Verbose = 0;
+    this->Verbose = 1;
     this->SustainConnection = 0;
     this->CurlConnection = NULL;
     this->CurlHeaders = NULL;
     this->CurlCredentials = "";
+    this->CurlDebugData.trace_ascii = 1;
+    this->CurlDebug = 0;
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -59,6 +164,7 @@ namespace Alder
     curl_global_cleanup();
     this->CurlConnection = NULL;
     this->CurlHeaders = NULL;
+    this->CurlDebugData.log_stream = NULL;
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -80,6 +186,7 @@ namespace Alder
     app->Log(
       "Setup Opal service using cURL version: " + std::string(curl_version()));
     curl_global_init(CURL_GLOBAL_SSL);
+    this->CurlDebugData.log_stream = Application::GetInstance()->GetLogStream();
   }
 
   // -+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-+#+-
@@ -110,6 +217,13 @@ namespace Alder
       if (!this->CurlConnection)
         throw std::runtime_error("Unable to create cURL connection to Opal");
 
+      if (this->CurlDebug)
+      {
+        curl_easy_setopt(this->CurlConnection, CURLOPT_DEBUGFUNCTION, OpalService::CurlTrace);
+        curl_easy_setopt(this->CurlConnection, CURLOPT_DEBUGDATA, &(this->CurlDebugData));
+        curl_easy_setopt(this->CurlConnection, CURLOPT_FOLLOWLOCATION, 1L);
+      }
+
       // put the credentials in a header
       // and the option to return data in json format
       if (NULL != this->CurlHeaders)
@@ -121,7 +235,6 @@ namespace Alder
         curl_slist_append(this->CurlHeaders, "Accept: application/json");
       this->CurlHeaders =
         curl_slist_append(this->CurlHeaders, this->CurlCredentials.c_str());
-
       curl_easy_setopt(
         this->CurlConnection, CURLOPT_VERBOSE, this->Verbose);
       curl_easy_setopt(
@@ -149,23 +262,36 @@ namespace Alder
     Json::Reader reader;
     Application* app = Application::GetInstance();
 
-    urlStream << "https://" << this->Host << ":"
+    urlStream << "http://" << this->Host << ":"
               << this->Port << "/ws" + servicePath;
     url = urlStream.str();
     app->Log("Querying Opal: " + url);
 
     curl_error_buffer[0] = 0;
     curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curl_error_buffer);
+
+    std::string curl_debug = "curl \"";
+    curl_debug += url;
+    curl_debug += "\" --header \"Accept: application/json\" --header \"";
+
     if (!this->SustainConnection)
     {
       curl = curl_easy_init();
       if (!curl)
         throw std::runtime_error("Unable to create cURL connection to Opal");
 
+      if (this->CurlDebug)
+      {
+        curl_easy_setopt(this->CurlConnection, CURLOPT_DEBUGFUNCTION, OpalService::CurlTrace);
+        curl_easy_setopt(this->CurlConnection, CURLOPT_DEBUGDATA, &(this->CurlDebugData));
+        curl_easy_setopt(this->CurlConnection, CURLOPT_FOLLOWLOCATION, 1L);
+      }
+
       // encode the credentials
       Utilities::base64String(
         this->Username + ":" + this->Password, credentials);
       credentials = "Authorization:X-Opal-Auth " + credentials;
+      curl_debug += credentials;
 
       // put the credentials in a header
       // and the option to return data in json format
@@ -178,8 +304,12 @@ namespace Alder
     }
     else
     {
+      curl_debug += this->CurlCredentials;
       curl = this->CurlConnection;
     }
+    curl_debug += "\" --insecure";
+    if( this->Verbose )
+      curl_debug += " --verbose";
 
     // if we are writing to a file, open it
     if (toFile)
@@ -244,7 +374,8 @@ namespace Alder
       {
         std::stringstream stream;
         stream << "Unable to parse result from Opal service: "
-               << reader.getFormattedErrorMessages();
+               << reader.getFormattedErrorMessages()
+               << " [" << result.c_str() << "] ";
 
         throw std::runtime_error(stream.str().c_str());
       }

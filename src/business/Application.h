@@ -63,6 +63,7 @@ namespace Alder
     bool OpenLogFile();
     void Log(const std::string& message);
     void LogBacktrace();
+
     //@}
 
     /**
@@ -140,6 +141,8 @@ namespace Alder
 
     vtkSetMacro(AbortFlag, bool);
     vtkGetMacro(AbortFlag, bool);
+
+    std::ofstream* GetLogStream(){ return &this->LogStream; }
 
   protected:
     Application();

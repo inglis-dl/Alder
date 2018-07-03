@@ -1,3 +1,4 @@
 "Wave","Rank","MetaDataSource","ImageDataSource"
 "Baseline","1","alder","clsa-dcs-images"
 "Followup1","2","alder_f1","clsa-dcs-images-f1"
+"Followup2","3","alder_f2","clsa-dcs-images-f2"
